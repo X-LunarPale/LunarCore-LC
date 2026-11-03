@@ -1,8 +1,18 @@
 # Third-party notices / 第三方来源与修改说明
 
-## QQAuth optional module
+## QQAuth optional module(QQ验证插件)
 
-The user supplied both the Java 25 module binary (original SHA-256 `2abefa8fa0edbe903928d149b40cd2bc5b129c05fab14c15f20003089ad475a5`) and its source archive. The current distribution builds the adapted module from `modules/lbr-qqauth`, preserving GPLv3 texts and the MIT upstream notice rather than claiming original authorship. It is a LunarCore module, not a standalone Bukkit plugin. Enabling/disabling may disconnect online players and requires explicit bridge token/group configuration. New installations keep `modules.disabled: [qqauth]` and `modules.qqauth-autostart: false`; existing installations without this opt-in also skip QQAuth automatically. Configure the bridge/group, then deliberately set the opt-in and remove qqauth from disabled while the server is stopped. Source and modification details accompany the release.
+当前发行包会基于 `modules/lbr-qqauth` 编译适配后的模块；包内保留 GPLv3 许可文本与上游 MIT 声明
+这是一个 LunarCore 模块，并非独立 Bukkit 插件。
+启用 / 关闭该模块可能会导致在线玩家断开连接，且必须配置桥接令牌、分组信息才能正常使用。
+
+- 全新安装：默认配置为 `modules.disabled: [qqauth]`、`modules.qqauth-autostart: false`
+- 已有旧配置：如果没有主动开启该功能，QQAuth 同样默认不会自动加载
+
+**配置步骤**：先完成桥接与分组配置，**在服务端停止状态下**，手动开启启用选项、并把 qqauth 从禁用列表移除。
+发布包附带源码与修改记录。
+ **这是一个LunarCore模块，不是一个Minecraft服务器插件！**
+ 你可以参阅[开发文档](https://github.com/X-LunarPale/LunarCore/blob/master/DEVELOPMENT.md)以自行开发此模块
 
 ## LagFixer
 
