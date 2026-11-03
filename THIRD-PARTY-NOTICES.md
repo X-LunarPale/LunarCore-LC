@@ -6,7 +6,7 @@ The user supplied both the Java 25 module binary (original SHA-256 `2abefa8fa0ed
 
 ## LagFixer
 
-LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声明更正早期版本“未复制或打包LagFixer源码”的表述；本次分发含原始源码快照和单独维护的LBR适配代码。原作者及原项目不会因移植而改为LBR原创。
+LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声明更正早期版本“未复制或打包LagFixer源码”的表述；本次分发含原始源码快照和单独维护的LC适配代码。原作者及原项目不会因移植而改为LBR原创。
 
 | 项目 | 固定信息 |
 |---|---|
@@ -18,13 +18,13 @@ LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声
 | 本地来源记录 | [SOURCE.json](<third-party/lagfixer/SOURCE.json>) |
 | 未修改原始快照 | [README](<third-party/lagfixer/upstream/README.md>)及其所在upstream目录 |
 | 原许可证全文 | [上游LICENSE](<third-party/lagfixer/upstream/LICENSE>)，GNU GPL version3 |
-| LBR项目许可证 | [LICENSE](<LICENSE>)，GPL-3.0-only |
+| LC项目许可证 | [LICENSE](<LICENSE>)，GPL-3.0-only |
 
 ### 修改说明（2026-10-19）
 
-适配实现位于[EmbeddedLagFixer](<modules/lbr-performance/src/main/java/com/lunarboreal/performance/lagfixer/EmbeddedLagFixer.java>)及同包协作文件，与原始快照分开。修改包括LBR模块生命周期、配置命名空间、中文Web面板/权限、主线程任务、Paper/Bukkit事件适配及Paper26.3 NMS/CraftBukkit AI与载具适配、默认全部关闭、有界处理与状态计数。没有将上游插件改名后冒充原作者作品，也不宣称原作者认可本次修改。
+适配实现位于[EmbeddedLagFixer](<modules/lbr-performance/src/main/java/com/lunarboreal/performance/lagfixer/EmbeddedLagFixer.java>)及同包协作文件，与原始快照分开。修改包括LC模块生命周期、配置命名空间、中文Web面板/权限、主线程任务、Paper/Bukkit事件适配及Paper26.3 NMS/CraftBukkit AI与载具适配、默认全部关闭、有界处理与状态计数。没有将上游插件改名后冒充原作者作品，也不宣称原作者认可本次修改。
 
-上游ModuleManager注册12项：MobAiReducer、LagShield、RedstoneLimiter、EntityLimiter、ConsoleFilter、WorldCleaner、VehicleMotionReducer、InstantLeafDecay、AbilityLimiter、ExplosionOptimizer、AFKOptimizer、TrashDisposal。上游另有HopperOptimizer资源但未注册，LBR本次补接漏斗，总计暴露13个内置开关。上游原配置多项默认开启，LBR总开关全部false；其自动报告/更新/bStats和历史日志删除不因此自动引入。
+上游ModuleManager注册12项：MobAiReducer、LagShield、RedstoneLimiter、EntityLimiter、ConsoleFilter、WorldCleaner、VehicleMotionReducer、InstantLeafDecay、AbilityLimiter、ExplosionOptimizer、AFKOptimizer、TrashDisposal。上游另有HopperOptimizer资源但未注册，LC本次补接漏斗，总计暴露13个内置开关。上游原配置多项默认开启，LC总开关全部false；其自动报告/更新/bStats和历史日志删除不因此自动引入。
 
 上游包含版本化NMS实现至v26_2；LBR事件模块使用公开API，AI/载具模块在nms子包中包含针对Paper26.3重新编译的NMS/CraftBukkit移植，保留上游来源并增加关闭恢复逻辑，不直接加载旧v26_2二进制；没有宣称完整复刻所有封包和第三方插件hook。原始快照仅保存来源，不作为插件自动启动。独立LagFixer发布JAR未随包分发；可选的固定monitor桥接是另一条功能路径，上游Paper26.3兼容性尚未验证。内置适配的最终构建与实服证据由集成测试补充，不承诺TPS提升。
 
@@ -34,9 +34,9 @@ LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声
 
 ### 上游依赖及可选集成
 
-上游plugin构建声明Adventure platform/minimessage为implementation，其他多为compileOnly：Paper/Spigot支持、PlaceholderAPI、spark、WildStacker、RoseStacker、ModelEngine、MythicMobs、UltimateStacker、StackMob、LevelledMobs、BetterModel、PacketEvents及若干平台库；plugin.yml还声明OSHI运行库。原始源码快照中保留这些构建信息，不代表这些库二进制都由LBR重新分发，也不代表它们在LBR适配中全部可用。
+上游plugin构建声明Adventure platform/minimessage为implementation，其他多为compileOnly：Paper/Spigot支持、PlaceholderAPI、spark、WildStacker、RoseStacker、ModelEngine、MythicMobs、UltimateStacker、StackMob、LevelledMobs、BetterModel、PacketEvents及若干平台库；plugin.yml还声明OSHI运行库。原始源码快照中保留这些构建信息，不代表这些库二进制都由LC重新分发，也不代表它们在LC适配中全部可用。
 
-若将来实际打包额外第三方库或上游JAR，应按各实际依赖许可证补全版权、许可及对应源码义务；不能仅依赖LagFixer自身GPL声明覆盖所有依赖。当前适配的运行依赖以LBR构建文件和实际发布清单为准，不自动下载/启用上游构建中的可选插件。
+若将来实际打包额外第三方库或上游JAR，应按各实际依赖许可证补全版权、许可及对应源码义务；不能仅依赖LagFixer自身GPL声明覆盖所有依赖。当前适配的运行依赖以LC构建文件和实际发布清单为准，不自动下载/启用上游构建中的可选插件。
 
 本声明不改变第三方原有权利。完整使用与功能边界见[性能模块说明](<docs/PERFORMANCE.md>)。
 
