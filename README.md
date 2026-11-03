@@ -1,10 +1,10 @@
-# LunarCore 琉月
+# LunarCore 琉月核心
 
-**v0.0.6 测试预览版** · Paper 26.3 build 202 · Java 25 · GPL v3
+**预览测试版** Paper 26.3 build 202 · Java 25 · GPL v3
 
 [English](README.en.md) | [下载 v0.0.6](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview) | [安装与升级](docs/zh-CN/INSTALL.md) | [GitHub 模块市场](module-market/README.md) | [参与开发](CONTRIBUTING.md)
 
-LunarCore 琉月（简称 LC）为 Minecraft 生存服务器提供基础命令和网页管理面板。经济、领地、聊天与 AI 等功能可以单独安装。
+LunarCore 琉月 为 Minecraft 生存服务器提供基础命令和网页管理面板。经济、领地、聊天与 AI 等功能可以单独安装。
 
 ## 安装
 
@@ -42,8 +42,8 @@ LunarCore 琉月（简称 LC）为 Minecraft 生存服务器提供基础命令�
 - [开发与构建](DEVELOPMENT.md)
 - [文档目录](docs/README.md)
 
-这是测试预览版。第三方插件配合、地形显示和多人游戏体验仍需实测；突然崩溃时经济与领地记录可能需要人工核账，详见常见问题。
+**请注意**：测试预览版。与第三方插件的桥接、地形显示和多人游戏体验仍需多次测试；突然崩溃时经济与领地记录可能需要人工核账，详见常见问题。
 
 ## 许可
 
-项目代码使用 **GPL-3.0-only（GPL v3）**，见 [LICENSE](LICENSE) 与 [COPYING](COPYING)。第三方代码保留原作者与许可，见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。发布附件包含对应源码。
+项目代码使用 **GPL-3.0（GPL v3）**，见 [LICENSE](LICENSE) 与 [COPYING](COPYING)。第三方代码保留原作者与许可，见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。发布附件包含对应源码。
