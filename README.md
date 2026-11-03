@@ -6,7 +6,7 @@
 
 若出现问题，请**提交issue**！
 
-[English](README.en.md) | [下载 v0.0.6](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview) | [安装与升级](docs/zh-CN/INSTALL.md) | [GitHub 模块市场](module-market/README.md) | [参与开发](CONTRIBUTING.md)
+[English](README.en.md) | [下载最新测试预览包](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview-20261103) | [安装与升级](docs/zh-CN/INSTALL.md) | [GitHub 模块市场](module-market/README.md) | [参与开发](CONTRIBUTING.md)
 
 LunarCore 琉月 为 Minecraft 生存服务器提供基础命令和网页管理面板。经济、领地、聊天与 AI 等功能可以单独安装。
 

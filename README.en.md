@@ -6,7 +6,7 @@
 
 If you encounter any issues, please **submit an issue!**
 
-[简体中文](README.md) | [Download v0.0.6](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview) | [Install and upgrade](docs/en-US/INSTALL.md) | [GitHub module market](module-market/README.en.md) | [Contribute](CONTRIBUTING.en.md)
+[简体中文](README.md) | [Download latest test preview](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview-20261103) | [Install and upgrade](docs/en-US/INSTALL.md) | [GitHub module market](module-market/README.en.md) | [Contribute](CONTRIBUTING.en.md)
 
 LunarCore 琉月 (LC) provides basic commands and a web panel for Minecraft survival servers. Install economy, land claims, chat, AI and other features separately.
 
