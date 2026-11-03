@@ -8,7 +8,8 @@
 
 ## 安装方式
 
-推荐使用面板“模块管理 → 模块市场”。手动安装时，停服后将模块 JAR 放入 `plugins/LunarCore/modules/`，再启动服务器。不要直接放入 `plugins/`。
+推荐使用面板“模块管理 → 模块市场”。手动安装时，停服后将模块 JAR 放入 `plugins/LunarCore/modules/`，再启动服务器。
+**⚠注意：这里是LunarCore可选装的模块，并不是Minecraft服务器插件！不要直接放入 `plugins/`。**
 
 更新时替换旧文件，不保留重复 JAR。卸载只删除 JAR，配置和数据可以保留。依赖模块必须一起安装。
 
