@@ -28,10 +28,7 @@ Authors publish and update files in their own Releases without a token for this 
 | `source` | Public source repository HTTPS URL |
 | `download` | Public JAR HTTPS download URL |
 | `license` | Open source license |
-| `sha256` | Downloaded file's SHA-256 checksum |
 | `depends` | Required LC module IDs, or `[]` |
-
-On Windows, run `Get-FileHash .\module.jar -Algorithm SHA256`. Use a direct public file link without access tokens.
 
 Before submitting, run `python tools/validate-module-market.py` to check the format, duplicate IDs and dependencies. An [Actions template](.github/automation/README.md) is provided but is not active yet.
 
