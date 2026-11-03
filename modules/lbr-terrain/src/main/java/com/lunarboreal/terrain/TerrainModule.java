@@ -61,7 +61,7 @@ public final class TerrainModule extends LbrModule {
                 logger().log(Level.SEVERE, initializationError, e);
             }
         } else {
-            initializationError = "原生地形生成器需要 Paper 26.3 build 202";
+            initializationError = "原生地形生成器需要 Paper 26.3";
         }
         new TerrainWeb(this).register();
         placeholder((player, key) -> switch (key) {

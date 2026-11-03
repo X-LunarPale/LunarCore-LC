@@ -23,6 +23,7 @@ import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.RandomState;
@@ -56,7 +57,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Paper 26.3 build 202 adapter. Each world keeps its own native generation graph.
+ * Paper 26.3 adapter. Each world keeps its own native generation graph.
  * No vanilla registry entry or primary-world generation setting is replaced.
  */
 public final class NativeTectonicBridge implements Listener {
@@ -80,10 +81,11 @@ public final class NativeTectonicBridge implements Listener {
     public void initialize() throws Exception {
         requireMainThread();
         var build = ServerBuildInfo.buildInfo();
-        if (!build.minecraftVersionId().equals("26.3") || build.buildNumber().orElse(-1) != 202
+        if (!build.minecraftVersionId().equals("26.3")
                 || !build.brandId().equals(ServerBuildInfo.BRAND_PAPER_ID)) {
-            throw new IllegalStateException("Native Tectonic requires Paper 26.3 build 202");
+            throw new IllegalStateException("Native Tectonic requires Paper 26.3");
         }
+        requireNativeLayout();
         server = ((CraftServer) Bukkit.getServer()).getServer();
         registries = server.registryAccess();
         NativeTectonicFunctions.registerTypes();
@@ -118,6 +120,18 @@ public final class NativeTectonicBridge implements Listener {
         appendEntries(noises, noiseEntries);
         appendEntries(dimensions, dimensionEntries);
         initialized = true;
+    }
+
+    static void requireNativeLayout() {
+        try {
+            MappedRegistry.class.getDeclaredField("frozen");
+            Field allTags = MappedRegistry.class.getDeclaredField("allTags");
+            allTags.getType().getDeclaredMethod("unbound");
+            ChunkGenerator.class.getDeclaredField("generationSettingsGetter");
+            ChunkGenerator.class.getDeclaredField("featuresPerStep");
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Paper 26.3 native terrain API is incompatible", e);
+        }
     }
 
     public List<Integer> heights() {

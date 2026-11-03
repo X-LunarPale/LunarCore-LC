@@ -28,10 +28,15 @@ final class IslandPack implements Listener, AutoCloseable {
     private boolean closing;
     record Settings(boolean enabled, boolean autoOffer, String url) {
         Settings {
-            try {
-                URI uri = URI.create(url);
-                if (url.length() > 2048 || !("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme())) || uri.getHost() == null || uri.getUserInfo() != null || uri.getFragment() != null) throw new IllegalArgumentException();
-            } catch (RuntimeException ex) { throw new IllegalArgumentException("资源包地址须为有效HTTP或HTTPS直链"); }
+            if (url == null) throw new IllegalArgumentException("资源包地址不能为空值");
+            if (url.isBlank()) {
+                if (enabled && autoOffer) throw new IllegalArgumentException("自动发送资源包前须配置地址");
+            } else {
+                try {
+                    URI uri = URI.create(url);
+                    if (url.length() > 2048 || !("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme())) || uri.getHost() == null || uri.getUserInfo() != null || uri.getFragment() != null) throw new IllegalArgumentException();
+                } catch (RuntimeException ex) { throw new IllegalArgumentException("资源包地址须为有效HTTP或HTTPS直链"); }
+            }
         }
         Map<String,Object> values() { return Map.of("enabled", enabled, "autoOffer", autoOffer, "url", url); }
         static Settings from(Map<String,Object> map) {
@@ -81,7 +86,7 @@ final class IslandPack implements Listener, AutoCloseable {
         write(replacement); removeAll(); settings = replacement;
         if (settings.enabled() && settings.autoOffer()) for (Player player : Bukkit.getOnlinePlayers()) offer(player);
     }
-    private boolean available() { return hash != null && !widths.isEmpty(); }
+    private boolean available() { return hash != null && !widths.isEmpty() && settings != null && !settings.url().isBlank(); }
     Component wrapLoaded(Component text) { return wrap(text, widths); }
     boolean loaded(UUID player) { return available() && settings.enabled() && !closing && "SUCCESSFULLY_LOADED".equals(states.get(player)); }
     boolean offer(Player player) {

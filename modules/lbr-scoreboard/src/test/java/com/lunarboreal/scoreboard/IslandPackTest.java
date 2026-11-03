@@ -50,6 +50,8 @@ class IslandPackTest {
         assertFalse(IslandPack.accepts(IslandPack.ID,player,Set.of()));
     }
     @Test void validatesIndependentPackSettings() {
+        assertDoesNotThrow(()->new IslandPack.Settings(true,false,""));
+        assertThrows(IllegalArgumentException.class,()->new IslandPack.Settings(true,true,""));
         assertThrows(IllegalArgumentException.class,()->new IslandPack.Settings(true,true,"file:///x"));
         assertThrows(IllegalArgumentException.class,()->new IslandPack.Settings(true,true,"https://user:password@example.com/a.zip"));
         assertThrows(IllegalArgumentException.class,()->IslandPack.Settings.from(Map.of("enabled","true","autoOffer",true,"url","https://example.com/pack.zip")));

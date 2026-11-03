@@ -71,6 +71,10 @@ class OfflineNativeTectonicTest {
     private static MappedRegistry<NormalNoise> noises;
     private static MappedRegistry<DimensionType> dimensions;
 
+    @Test void requiredNativeLayoutIsAvailable() {
+        assertDoesNotThrow(NativeTectonicBridge::requireNativeLayout);
+    }
+
     @BeforeAll static void loadNativeRegistries() throws Exception {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
