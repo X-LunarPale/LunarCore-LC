@@ -23,7 +23,7 @@ SOURCE_TREES = (
 ROOT_FILES = (
     "settings.gradle.kts", "build.gradle.kts", "gradle.properties",
     "gradlew", "gradlew.bat", "gw.sh", "build.sh", "package-alpha.py",
-    "LICENSE", "COPYING", "THIRD-PARTY-NOTICES.md", "README.md",
+    "LICENSE", "THIRD-PARTY-NOTICES.md", "README.md",
     "DEVELOPMENT.md", ".gitignore", ".gitattributes",
 )
 EXCLUDED_DIRS = {
@@ -222,7 +222,7 @@ LbrMultiverseWeb.jar 与 LbrPlayerTitleWeb.jar 若随包提供，均为可选独
     with zipfile.ZipFile(bundle, "w") as archive:
         for path in (jar, source, *packaged_bridges):
             add_file(archive, path, path.name)
-        for name in ("LICENSE", "COPYING", "THIRD-PARTY-NOTICES.md", f"docs/RELEASE-{release}.md",
+        for name in ("LICENSE", "THIRD-PARTY-NOTICES.md", f"docs/RELEASE-{release}.md",
                      "docs/Alpha2-人工反馈修复测试清单.md"):
             add_file(archive, ROOT / name, name)
         add_bytes(archive, "INSTALL.txt", instructions.encode("utf-8"))
