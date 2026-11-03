@@ -1,6 +1,6 @@
 # Third-party notices / 第三方来源与修改说明
 
-## QQAuth optional module(QQ验证插件)
+## QQAuth optional module(QQ绑定模块)
 
 当前发行包会基于 `modules/lbr-qqauth` 编译适配后的模块；包内保留 GPLv3 许可文本与上游 MIT 声明
 这是一个 LunarCore 模块，并非独立 Bukkit 插件。
