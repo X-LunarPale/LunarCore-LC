@@ -4,8 +4,11 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../../api'
 import { t } from '../../i18n'
+import { useAuth } from '../../stores/auth'
+import { requireSuccess } from '../../utils/panel'
 import MinecraftTextPreview from '../text-preview/MinecraftTextPreview.vue'
 
+const auth = useAuth()
 const values = ref({})
 const messages = ref({})
 const revision = ref('')
@@ -15,6 +18,7 @@ const busy = ref(false)
 const loaded = ref(false)
 const error = ref('')
 const saved = ref(false)
+const pendingReload = ref(false)
 const selectedMessage = ref('login.bind-required')
 const filter = ref('')
 const plain = ref('')
@@ -53,6 +57,7 @@ function accept(result) {
   messages.value = result.messages
   revision.value = result.revision
   secrets.value = result.configuredSecrets
+  pendingReload.value = result.requiresReload === true
   clearSecrets.value = []
   quotas.value = Object.entries(result.values['binding.per-qq-limits'] || {}).map(([qq, limit]) => ({ qq, limit }))
   loaded.value = true
@@ -69,8 +74,12 @@ async function load(force = false) {
   if (!force && !await confirmDiscard()) return
   busy.value = true
   error.value = ''
-  try { accept(await api.get('/api/ext/qqauth/config')) }
-  catch (cause) { error.value = cause.message }
+  try {
+    accept(requireSuccess(await api.get('/api/ext/qqauth/config')))
+    saved.value = false
+    return true
+  }
+  catch (cause) { error.value = cause.message; return false }
   finally { busy.value = false }
 }
 async function save() {
@@ -81,9 +90,24 @@ async function save() {
       if (!/^[0-9]{5,20}$/.test(row.qq) || Object.hasOwn(limits, row.qq)) throw new Error(t('QQ 号码无效或重复'))
       limits[row.qq] = row.limit
     }
-    accept(await api.post('/api/ext/qqauth/config', { revision: revision.value, values: { ...values.value, 'binding.per-qq-limits': limits }, messages: messages.value, clearSecrets: clearSecrets.value }))
+    accept(requireSuccess(await api.post('/api/ext/qqauth/config', { revision: revision.value, values: { ...values.value, 'binding.per-qq-limits': limits }, messages: messages.value, clearSecrets: clearSecrets.value })))
     saved.value = true
-    ElMessage.success(t('已保存，重载模块后生效'))
+    ElMessage.success(t(pendingReload.value ? '已保存，重载模块后生效' : '提示消息已生效'))
+  } catch (cause) { ElMessage.error(cause.message) }
+  finally { busy.value = false }
+}
+async function applyConfig() {
+  if (busy.value || dirty.value || !pendingReload.value || !auth.can('core.modules.manage')) return
+  busy.value = true
+  try {
+    const confirmed = await ElMessageBox.confirm(t('重载 QQauth 会撤销在线玩家认证并断开连接。'), t('应用配置'),
+      { type: 'warning', confirmButtonText: t('应用配置'), cancelButtonText: t('取消') }).then(() => true).catch(() => false)
+    if (!confirmed) return
+    requireSuccess(await api.post('/api/modules/qqauth/reload', {}))
+    saved.value = false
+    const refreshed = await load(true)
+    window.dispatchEvent(new CustomEvent('lbr:panel-changed', { detail: { namespace: 'qqauth' } }))
+    if (refreshed && !pendingReload.value) ElMessage.success(t('配置已应用'))
   } catch (cause) { ElMessage.error(cause.message) }
   finally { busy.value = false }
 }
@@ -104,9 +128,9 @@ onBeforeRouteUpdate(confirmDiscard)
 
 <template>
   <section class="qq-config" v-loading="busy">
-    <header><h2>{{ t('QQauth 配置') }} <small v-if="dirty">{{ t('尚未保存') }}</small></h2><el-button :disabled="busy" @click="load()"><Icon name="refresh-cw" :size="15" />{{ t('重新加载') }}</el-button></header>
+    <header><h2>{{ t('QQauth 配置') }} <small v-if="dirty">{{ t('尚未保存') }}</small></h2><el-button :disabled="busy" @click="load()"><Icon name="refresh-cw" :size="15" />{{ t('重新读取') }}</el-button></header>
     <el-alert v-if="error" :title="error" type="error" :closable="false" />
-    <el-alert v-if="saved" :title="t('已保存，重载模块后生效')" :description="t('重载 QQauth 会撤销在线玩家认证并断开连接。')" type="warning" :closable="false" />
+    <el-alert v-if="saved || pendingReload" :title="t(pendingReload ? '已保存，重载模块后生效' : '提示消息已生效')" :description="pendingReload ? t('重载 QQauth 会撤销在线玩家认证并断开连接。') : undefined" :type="pendingReload ? 'warning' : 'success'" :closable="false" />
     <template v-if="loaded">
       <section v-for="group in groups" :key="group.prefix" class="config-section">
         <h3>{{ t(group.title) }}</h3>
@@ -144,7 +168,10 @@ onBeforeRouteUpdate(confirmDiscard)
           </div>
         </div>
       </section>
-      <footer><el-button type="primary" :disabled="busy || !dirty" @click="save"><Icon name="save" :size="15" />{{ t('保存设置') }}</el-button></footer>
+      <footer>
+        <el-button type="primary" :disabled="busy || !dirty" @click="save"><Icon name="save" :size="15" />{{ t('保存设置') }}</el-button>
+        <el-button v-if="auth.can('core.modules.manage')" :disabled="busy || dirty || !pendingReload" @click="applyConfig"><Icon name="refresh-cw" :size="15" />{{ t('应用配置') }}</el-button>
+      </footer>
     </template>
   </section>
 </template>

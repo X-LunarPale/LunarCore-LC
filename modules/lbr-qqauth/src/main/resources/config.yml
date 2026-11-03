@@ -40,7 +40,7 @@ auth:
 
 # 所有玩家、管理员、QQ群与 Web 提示。支持 YAML 多行文本或字符串列表。
 # 使用 {code}、{player}、{group}、{ttl} 等占位符；游戏内支持受限 MiniMessage 与 &/§ 格式码，QQ/Web 输出纯文本。动态占位符会转义标签。
-# 修改后执行 lbr module reload qqauth；旧配置自动补默认项，不覆盖已修改文案。
+# 面板保存提示消息后立即生效；其他配置执行 qqauth reload 应用。
 messages:
   command:
     account-identity-mismatch: "账号身份不一致"
@@ -48,6 +48,8 @@ messages:
     admin-error: "操作未完成：{error}"
     admin-queue-full: "认证队列已满，请稍后。"
     admin-reload: "请从控制台执行 lbr module reload qqauth；重新加载会撤销当前认证。"
+    admin-reloaded: "QQAuth 已重载，请重新连接服务器。"
+    admin-reload-failed: "QQAuth 重载失败，请查看控制台日志。"
     admin-reset: "为避免密码进入控制台/审计日志，请使用受权限保护的 Web 账号重置操作，或玩家 QQ 验证恢复。"
     admin-status: "QQAuth ready={ready}，账号数={count}"
     admin-success: "操作完成。"
@@ -129,7 +131,7 @@ messages:
       SUCCESS: "成功"
   usage:
     admin-actions: "/qqauth forceunbind|lock|unlock|delete <玩家>；/qqauth importbindings confirm"
-    admin-help: "QQAuth：/login /register /changepassword /logout /unbind /qqauthreset；管理员 /qqauth status|forceunbind|lock|unlock|delete|reset|importbindings"
+    admin-help: "QQAuth：/login /register /changepassword /logout /unbind /qqauthreset；管理员 /qqauth status|reload|forceunbind|lock|unlock|delete|reset|importbindings"
     change-password: "/changepassword <旧密码> <新密码>"
     login: "/login <密码>"
     register: "/register <密码> <重复密码>"

@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class QQAuthConfigTest {
-    @Test void savesValidatedSettingsWithoutChangingLiveAuthAndNeverReturnsTokens(@TempDir Path directory) throws Exception {
+    @Test void savesMessagesImmediatelyWhileAuthSettingsWaitForReload(@TempDir Path directory) throws Exception {
         QQAuthModule module = new QQAuthModule();
         module.init(null, directory.toFile(), getClass().getClassLoader(), Logger.getAnonymousLogger());
         module.config().set("integration.astrbot.token", "fixture-private-bridge-secret");
@@ -25,6 +25,8 @@ class QQAuthConfigTest {
         var saved = store.save(Map.of("revision", initial.get("revision"), "values", values,
                 "messages", Map.of("login.required", "&a你好 {player}"), "clearSecrets", List.of()));
         assertEquals("REPLACE_WITH_QQ_GROUP_ID", module.config().getString("integration.group-id"));
+        assertEquals("你好 Steve", module.plainMsg("login.required", "player", "Steve"));
+        assertEquals(true, saved.get("requiresReload"));
         var disk = YamlConfiguration.loadConfiguration(directory.resolve("config.yml").toFile());
         assertEquals("12345678", disk.getString("integration.group-id"));
         assertEquals("fixture-private-bridge-secret", disk.getString("integration.astrbot.token"));
@@ -32,6 +34,23 @@ class QQAuthConfigTest {
         assertFalse(saved.toString().contains("fixture-private-bridge-secret"));
         assertThrows(RuntimeException.class, () -> store.save(Map.of("revision", initial.get("revision"),
                 "values", values, "messages", Map.of())));
+    }
+
+    @Test void messageOnlySaveAppliesColorsAndNewlinesWithoutReload(@TempDir Path directory) throws Exception {
+        QQAuthModule module = new QQAuthModule();
+        module.init(null, directory.toFile(), getClass().getClassLoader(), Logger.getAnonymousLogger());
+        module.config().set("integration.astrbot.token", "fixture-private-bridge-secret");
+        module.saveConfig();
+        QQAuthConfig store = new QQAuthConfig(module);
+        var initial = store.read();
+        assertEquals(false, initial.get("requiresReload"));
+        var saved = store.save(Map.of("revision", initial.get("revision"), "values", Map.of(),
+                "messages", Map.of("login.bind-required", "&e发送 &a/验证 {code}\n完成后重新连接。")));
+        assertEquals("发送 /验证 123456\n完成后重新连接。",
+                module.plainMsg("login.bind-required", "code", "123456"));
+        assertEquals(false, saved.get("requiresReload"));
+        assertFalse(module.ready);
+        assertNull(module.auth);
     }
 
     @Test void rejectsUnknownKeysAndInvalidPoliciesWithoutPartialWrites(@TempDir Path directory) throws Exception {

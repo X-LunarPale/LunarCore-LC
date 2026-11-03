@@ -9,7 +9,7 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.util.*;
 
-/** Edits the persisted configuration without changing the live authentication snapshot. */
+/** Saves settings; message changes apply without restarting authentication. */
 final class QQAuthConfig {
     private final QQAuthModule module;
     private final YamlConfiguration defaults;
@@ -50,7 +50,18 @@ final class QQAuthConfig {
                     ? String.join("\n", config.getStringList(path)) : config.getString(path, defaults.getString(path)));
         }
         return Map.of("values", values, "messages", messages, "configuredSecrets", configured,
-                "revision", digest(source), "requiresReload", true);
+                "revision", digest(source), "requiresReload", requiresReload(config));
+    }
+
+    private boolean requiresReload(YamlConfiguration saved) {
+        for (var field : fields.entrySet()) {
+            if (!Objects.equals(saved.get(field.getKey(), field.getValue()),
+                    module.config().get(field.getKey(), field.getValue()))) return true;
+        }
+        var savedQuotas = saved.getConfigurationSection("binding.per-qq-limits");
+        var liveQuotas = module.config().getConfigurationSection("binding.per-qq-limits");
+        return !Objects.equals(savedQuotas == null ? Map.of() : savedQuotas.getValues(false),
+                liveQuotas == null ? Map.of() : liveQuotas.getValues(false));
     }
 
     synchronized Map<String, Object> save(Map<String, Object> body) throws Exception {
@@ -114,6 +125,7 @@ final class QQAuthConfig {
             try { Files.move(temporary, file(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING); }
             catch (java.nio.file.AtomicMoveNotSupportedException ex) { Files.move(temporary, file(), StandardCopyOption.REPLACE_EXISTING); }
         } finally { Files.deleteIfExists(temporary); }
+        module.applyMessages(next);
         return read();
     }
 

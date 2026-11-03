@@ -20,6 +20,7 @@ public final class QQAuthModule extends LbrModule {
     String formattedMsg(String key, Object... args) { return messages.formatted(key, args); }
     String plainMsg(String key, Object... args) { return Messages.plain(messages.formatted(key, args)); }
     net.kyori.adventure.text.Component componentMsg(String key, Object... args) { return Messages.render(messages.formatted(key, args)); }
+    void applyMessages(org.bukkit.configuration.file.YamlConfiguration configuration) { messages = new Messages(configuration); }
     String authStatus(AuthService.Result result) { return plainMsg("status.auth." + result.name()); }
     String bindingStatus(BindingService.Status status) { return plainMsg("status.binding." + status.name()); }
     net.kyori.adventure.text.Component authStatusComponent(AuthService.Result result) { return componentMsg("status.auth." + result.name()); }
@@ -50,7 +51,7 @@ public final class QQAuthModule extends LbrModule {
     final MovementFreeze movement = new MovementFreeze();
 
     @Override public void onEnable() {
-        messages = new Messages(config());
+        applyMessages(config());
         if (Bukkit.getPluginManager().getPlugin("AuthMe") != null)
             throw new IllegalStateException(msg("lifecycle.authme-conflict"));
         if (!config().getBoolean("auth.enabled", true))

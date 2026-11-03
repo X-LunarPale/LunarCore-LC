@@ -13,7 +13,7 @@ final class QQAuthWeb {
             r.get("/config", "qqauth.manage", c -> c.json(configuration.read()));
             r.post("/config", "qqauth.manage", c -> {
                 c.json(configuration.save(c.bodyMap()));
-                m.audit(c.user().username(), "web-config", "保存 QQAuth 配置，等待重载");
+                m.audit(c.user().username(), "web-config", "保存 QQAuth 配置并应用提示消息");
             });
             r.post("/messages/preview", "qqauth.manage", c -> {
                 Object value = c.bodyMap().get("text");

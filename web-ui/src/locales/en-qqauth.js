@@ -1,6 +1,9 @@
 export default {
   'QQauth 配置': 'QQauth settings',
   '已保存，重载模块后生效': 'Saved. Reload the module to apply.',
+  '应用配置': 'Apply settings',
+  '配置已应用': 'Settings applied.',
+  '提示消息已生效': 'Messages are now active.',
   '重载 QQauth 会撤销在线玩家认证并断开连接。': 'Reloading QQauth revokes player authentication and disconnects online players.',
   'QQ 桥接': 'QQ bridge',
   '验证码与绑定': 'Codes and bindings',

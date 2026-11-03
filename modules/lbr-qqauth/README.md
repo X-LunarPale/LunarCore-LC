@@ -6,7 +6,7 @@
 
 ## 自定义所有提示
 
-编辑模块目录 `config.yml` 的 `messages:`，共 113 个默认消息项。包括进服提示、验证码踢出页、定时 ActionBar、命令反馈、QQ群回复、账号状态说明及 Web 文案。旧配置启动时自动补齐默认项，保留已有配置。
+在面板中编辑提示消息，或修改模块目录 `config.yml` 的 `messages:`。可修改进服提示、验证码踢出页、定时 ActionBar、命令反馈、QQ群回复、账号状态说明及 Web 文案。旧配置启动时自动补齐默认项，保留已有配置。
 
 ```yaml
 messages:
@@ -21,7 +21,7 @@ messages:
     login: "请使用 /login <密码> 登录"
 ```
 
-也可将文本写成 YAML 字符串列表，每项显示为一行。文案按纯文本处理，不解析 MiniMessage 或颜色代码。占位符只做一次字面替换，不执行命令、不暴露密码。
+也可将文本写成 YAML 字符串列表，每项显示为一行。游戏内支持 MiniMessage 颜色、文字样式与 `&` 颜色代码；QQ 和 Web 的纯文本预览会去除样式。占位符只替换一次，不执行命令。
 
 | 配置项 | 可用占位符 |
 |---|---|
@@ -34,7 +34,9 @@ messages:
 | command.admin-status | {ready}、{count} |
 | command.admin-error | {error}（异常类型，不含异常详情） |
 
-修改后从控制台执行 `lbr module reload qqauth`。该操作重建 Web 面板和桥接，撤销当前认证并踢出在线玩家，重新连接后生效。AstrBot 网络故障提示仍在 AstrBot 插件设置中的 `error_reply` 配置；HTTP 协议错误码、日志诊断及审计内容不作为消息模板。
+面板保存提示消息后立即生效，无需重载，也不会断开玩家连接。其他配置保存后点击“应用配置”，或在控制台执行 `qqauth reload`。直接编辑配置文件后也需执行该命令。重载会重新连接 QQ 桥接，并断开在线玩家，玩家需重新连接和登录。
+
+“重新读取”只读取已保存的配置，不会重载模块。AstrBot 网络故障提示仍在 AstrBot 插件设置中的 `error_reply` 配置。
 
 ## 已实现流程
 
@@ -48,7 +50,7 @@ messages:
 | 退出登录 | `/logout`，留在游戏内并恢复未登录限制 |
 | QQ 恢复密码 | 未登录时 `/qqauthreset password <新密码>`，绑定 QQ 在群里发送 `/改密 <码>`；成功后旧认证失效 |
 | QQ 解绑 | 登录后 `/unbind` 拿码，绑定 QQ 在同一群发送 `/解绑 <码>`；成功后踢出 |
-| 管理员 | `/qqauth status`、`forceunbind <玩家>`、`lock <玩家>`、`unlock <玩家>`、`delete <玩家>`；权限 `qqauth.admin` 默认 OP，但玩家执行仍须已认证 |
+| 管理员 | `/qqauth status`、`reload`、`forceunbind <玩家>`、`lock <玩家>`、`unlock <玩家>`、`delete <玩家>`；权限 `qqauth.admin` 默认 OP，但玩家执行仍须已认证 |
 | Web | 账号列表、登录/锁定状态、锁定/解锁/删除注册/重置密码/解除绑定；后端权限 `qqauth.view`、`qqauth.manage` |
 | 可选重连会话 | 默认关闭；开启后只允许相同 UUID、名字、IP、账号版本及固定 TTL 内重连，无重启持久化 |
 | 名称身份 | 名字 3–16 位字母数字下划线；大小写无关唯一；已注册 UUID 唯一；稳定 UUID 改名更新账号并撤销旧版本；离线 UUID 因改大小写变化时拒绝冒认 |
@@ -65,7 +67,7 @@ messages:
 4. 设置 `integration.group-id` 为真实群号或官方机器人 group_openid；默认占位值拒绝群请求。QQ 官方 sender openid 是不透明身份，不是真实 QQ 号码。
 5. 同机 AstrBot 默认连接 `http://127.0.0.1:12312/qqauth/group`。跨机器先配置可信网络或 HTTPS 反代；确需外部监听时明确改 bind-address。不要把持有 token 的接口交给不可信调用者：token 持有者可声明群和发消息者身份。
 6. 把 [AstrBot 插件目录](<bridge/astrbot_plugin_qqauth/README.md>)整体安装到 AstrBot 的 `data/plugins/`。配置 URL、相同 token、明确 group_id；前缀默认 `/验证`、`/解绑`、`/改密`。桥接 schema 已包含 password_reset_prefix。
-7. 从服务器控制台执行 `lbr module reload qqauth`。该操作重建传输并撤销当前游戏认证，在线玩家被踢出后重新登录。`/qqauth reload` 仅提示正确操作。
+7. 从服务器控制台执行 `qqauth reload`，或在面板点击“应用配置”。在线玩家会断开连接，需重新进入服务器并登录。
 
 Java 端允许 `group-id: "*"`，表示信任认证桥接的群声明；建议明确群 ID。新的 AstrBot 桥接要求明确群 ID，不接受空或星号转发。
 

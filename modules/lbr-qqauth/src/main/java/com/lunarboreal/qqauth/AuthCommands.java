@@ -22,8 +22,8 @@ final class AuthCommands {
         });
     }
     static void execute(QQAuthModule m, CommandSender sender, String label, String[] args) {
-        if (!m.ready) { sender.sendMessage(m.componentMsg("command.not-ready")); return; }
         if (label.equals("qqauth")) { admin(m,sender,args); return; }
+        if (!m.ready) { sender.sendMessage(m.componentMsg("command.not-ready")); return; }
         if (!(sender instanceof Player p)) { sender.sendMessage(m.componentMsg("command.player-only")); return; }
         UUID id=p.getUniqueId(); String name=p.getName(),ip=m.ip(p);
         boolean logged=m.authenticated(p);
@@ -101,8 +101,13 @@ final class AuthCommands {
         if(sender instanceof Player p && !m.authenticated(p)) { sender.sendMessage(m.componentMsg("command.login-required")); return; }
         if(!sender.hasPermission("qqauth.admin")) { sender.sendMessage(m.componentMsg("command.no-permission")); return; }
         String sub=args[0].toLowerCase(Locale.ROOT);
+        if(sub.equals("reload")) {
+            boolean ok=m.api().modules().reload("qqauth");
+            sender.sendMessage(m.componentMsg(ok ? "command.admin-reloaded" : "command.admin-reload-failed"));
+            return;
+        }
+        if (!m.ready) { sender.sendMessage(m.componentMsg("command.not-ready")); return; }
         if(sub.equals("status")) { sender.sendMessage(m.componentMsg("command.admin-status","ready",m.ready,"count",m.auth.accounts().size())); return; }
-        if(sub.equals("reload")) { sender.sendMessage(m.componentMsg("command.admin-reload")); return; }
         if(sub.equals("reset")) { sender.sendMessage(m.componentMsg("command.admin-reset")); return; }
         if(args.length!=2 || !Set.of("forceunbind","lock","unlock","delete","importbindings").contains(sub)) { sender.sendMessage(m.componentMsg("usage.admin-actions")); return; }
         String actor=sender.getName(),target=args[1];
