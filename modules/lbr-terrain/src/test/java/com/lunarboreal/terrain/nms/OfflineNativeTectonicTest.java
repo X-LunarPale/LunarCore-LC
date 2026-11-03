@@ -175,6 +175,25 @@ class OfflineNativeTectonicTest {
                 highestX, highestZ, Heightmap.Types.WORLD_SURFACE_WG, height, RandomState.create(noises, 123456789L, settings)));
     }
 
+    @Test void nativeContinentalLayoutDiffersFromVanillaAtTheSameSeed() {
+        TerrainOptions options = new TerrainOptions(384, 1.125, 1, true, true, true, true);
+        NoiseGeneratorSettings tectonicSettings = NoiseGeneratorSettings.DIRECT_CODEC.parse(
+                lookup.createSerializationContext(JsonOps.INSTANCE), TectonicModel.noiseSettings(options)).getOrThrow();
+        NoiseGeneratorSettings vanillaSettings = lookup.lookupOrThrow(Registries.NOISE_SETTINGS)
+                .getOrThrow(NoiseGeneratorSettings.OVERWORLD).value();
+        var tectonic = generator(tectonicSettings);
+        var overworld = generator(vanillaSettings);
+        var tectonicRandom = RandomState.create(noises, 123456789L, tectonicSettings);
+        var vanillaRandom = RandomState.create(noises, 123456789L, vanillaSettings);
+        var height = LevelHeightAccessor.create(-64, 384);
+        int x = 8384;
+        int z = 6144;
+        int tectonicY = tectonic.getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, height, tectonicRandom);
+        int vanillaY = overworld.getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, height, vanillaRandom);
+        assertTrue(Math.abs(tectonicY - vanillaY) >= 8,
+                "Tectonic continental layout must differ from vanilla at the same seed");
+    }
+
     @Test void installsFeatureOverlaysOnlyOnTheirOwnNativeGenerator() throws Exception {
         TerrainOptions options = new TerrainOptions(1024, 2.8, 1.5, true, true, true, true,
                 Map.of("caves.ore_fix", true, "caves.carvers_enabled", false, "continents.river_ice", true));
