@@ -2,6 +2,10 @@
 
 **v0.0.6 Test Preview** · Paper 26.3 build 202 · Java 25 · GPL v3
 
+**Note: Most of this project is created by AI and their Agents such as GPT-6.1-Sol, GPT-6-Astra, Claude-Opus-5.5, Deepseek-V4.1-Flash! Most have passed manual testing!**
+
+If you encounter any issues, please **submit an issue!**
+
 [简体中文](README.md) | [Download v0.0.6](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview) | [Install and upgrade](docs/en-US/INSTALL.md) | [GitHub module market](module-market/README.en.md) | [Contribute](CONTRIBUTING.en.md)
 
 LunarCore 琉月 (LC) provides basic commands and a web panel for Minecraft survival servers. Install economy, land claims, chat, AI and other features separately.
