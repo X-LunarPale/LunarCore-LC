@@ -46,4 +46,4 @@ LunarCore 琉月 为 Minecraft 生存服务器提供基础命令和网页管理�
 
 ## 许可
 
-项目代码使用 **GPL-3.0（GPL v3）**，见 [LICENSE](LICENSE) 与 [COPYING](COPYING)。第三方代码保留原作者与许可，见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。发布附件包含对应源码。
+项目代码使用 **GPL-3.0（GPL v3）**，全文见 [LICENSE](LICENSE)。第三方代码保留原作者与许可，见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。发布附件包含对应源码。

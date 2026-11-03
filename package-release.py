@@ -121,7 +121,7 @@ def main():
             legacy.add_file(archive, path, path.name)
         for path in modules:
             legacy.add_file(archive, path, "modules/" + path.name)
-        for name in ("LICENSE", "COPYING", "THIRD-PARTY-NOTICES.md", "README.md", "README.en.md"):
+        for name in ("LICENSE", "THIRD-PARTY-NOTICES.md", "README.md", "README.en.md"):
             legacy.add_file(archive, ROOT / name, name)
         for language in ("zh-CN", "en-US"):
             for path in sorted((ROOT / "docs" / language).glob("*.md")):

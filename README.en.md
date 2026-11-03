@@ -46,4 +46,4 @@ This is a test preview. Third-party compatibility, terrain rendering and multipl
 
 ## License
 
-Project code uses **GPL-3.0-only (GPL v3)**. See [LICENSE](LICENSE) and [COPYING](COPYING). Third-party credits and licenses are retained in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Releases include corresponding source.
+Project code uses **GPL-3.0-only (GPL v3)**. See [LICENSE](LICENSE) for the full text. Third-party credits and licenses are retained in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Releases include corresponding source.

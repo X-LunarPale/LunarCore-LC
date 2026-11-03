@@ -57,7 +57,6 @@ subprojects {
     }
     tasks.withType<Jar>().configureEach {
         from(rootProject.file("LICENSE")) { into("META-INF") }
-        from(rootProject.file("COPYING")) { into("META-INF") }
     }
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
