@@ -32,6 +32,7 @@ import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
@@ -40,7 +41,9 @@ import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.world.WorldInitEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -73,6 +76,7 @@ public final class NativeTectonicBridge implements Listener {
     private final Map<String, NativeTectonicFeatures.Prepared> pending = new LinkedHashMap<>();
     private final Map<String, Throwable> setupErrors = new LinkedHashMap<>();
     private final Set<String> configured = new HashSet<>();
+    private final Map<String, Integer> snowOffsets = new LinkedHashMap<>();
     private final List<Integer> registeredHeights = new ArrayList<>();
 
     private record ExpectedSettings(NoiseGeneratorSettings settings, JsonElement canonical) {}
@@ -162,6 +166,30 @@ public final class NativeTectonicBridge implements Listener {
         }
         NativeTectonicFeatures.install(generator, NativeTectonicFeatures.prepare(
                 generator, level.getChunkSource().randomState(), registries, options));
+        snowOffsets.put(world.getKey().getKey(), (int) options.number("general.snow_start_offset"));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockForm(BlockFormEvent event) {
+        World world = event.getBlock().getWorld();
+        if (!world.getKey().getNamespace().equals(NAMESPACE)) return;
+        int offset = snowOffsets.getOrDefault(world.getKey().getKey(), 0);
+        if (offset == 0) return;
+        Material formed = event.getNewState().getType();
+        if (formed != Material.SNOW && formed != Material.ICE) return;
+        var level = ((CraftWorld) world).getHandle();
+        var block = event.getBlock();
+        var pos = new net.minecraft.core.BlockPos(block.getX(), block.getY(), block.getZ());
+        if (!SnowlineFeature.coldAtSnowline(level.getBiome(pos).value(), pos, level.getSeaLevel(), offset)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onWorldUnload(WorldUnloadEvent event) {
+        if (event.getWorld().getKey().getNamespace().equals(NAMESPACE)) {
+            snowOffsets.remove(event.getWorld().getKey().getKey());
+        }
     }
 
     /**
@@ -227,6 +255,7 @@ public final class NativeTectonicBridge implements Listener {
         if (failure != null) throw new IOException("Native terrain decoration setup failed", failure);
         if (!configured.remove(name)) throw new IOException("Paper did not initialize the terrain decoration hooks");
         verifyLoaded(world, seed, options);
+        snowOffsets.put(name, (int) options.number("general.snow_start_offset"));
         return world;
     }
 

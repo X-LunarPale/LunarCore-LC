@@ -15,7 +15,8 @@ class TerrainPresetsTest {
                 presets.stream().map(preset -> preset.get("id")).toList());
         assertEquals(TerrainOptions.defaults(), options(find("alpine")));
         assertEquals(1024, options(find("monumental")).height());
-        assertEquals(options(find("classic")), options(find("default")));
+        assertEquals(0, options(find("classic")).number("general.snow_start_offset"));
+        assertEquals(128, options(find("default")).number("general.snow_start_offset"));
 
         TerrainOptions largeBiomes = options(find("large_biomes"));
         assertEquals(0.06, largeBiomes.number("biomes.temperature_scale"));
@@ -48,18 +49,17 @@ class TerrainPresetsTest {
         assertFalse(overkill.junglePillars());
         assertEquals(0.08, overkill.number("continents.erosion_scale"));
         assertEquals(-0.2, overkill.number("biomes.vegetation_offset"));
+        assertEquals(512, overkill.number("general.snow_start_offset"));
         assertTrue(overkill.flag("experimental.alternate_erosion_scaling"));
     }
 
-    @Test void officialPresetsDiscloseTheSnowAndMonumentBehaviorNotYetPorted() {
+    @Test void officialPresetsDiscloseTheMonumentBehaviorNotYetPorted() {
         for (var preset : TerrainPresets.all()) {
             options(preset);
             if (List.of("classic", "alpine", "monumental").contains(preset.get("id"))) {
                 assertFalse(preset.containsKey("unsupported"));
             } else {
                 assertEquals(List.of(
-                        Map.of("key", "general.snow_start_offset", "label", "积雪起点偏移",
-                                "value", "overkill".equals(preset.get("id")) ? 512 : 128),
                         Map.of("key", "oceans.monument_offset", "label", "海底神殿高度偏移", "value", -30)),
                         preset.get("unsupported"));
             }

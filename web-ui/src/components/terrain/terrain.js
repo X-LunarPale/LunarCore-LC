@@ -31,7 +31,8 @@ export function parseConfig(value, schema = []) {
   for (const field of schema) {
     const setting = Object.hasOwn(supplied, field.key) ? supplied[field.key] : field.defaultValue
     if (field.type === 'boolean' ? typeof setting !== 'boolean'
-      : !Number.isFinite(setting) || setting < field.min || setting > field.max) throw new Error('地形高级参数接口返回格式错误')
+      : !Number.isFinite(setting) || setting < field.min || setting > field.max ||
+        field.key === 'general.snow_start_offset' && !Number.isInteger(setting)) throw new Error('地形高级参数接口返回格式错误')
     advanced[field.key] = setting
   }
   return { ...Object.fromEntries(baseConfigKeys.map(key => [key, value[key]])), advanced }

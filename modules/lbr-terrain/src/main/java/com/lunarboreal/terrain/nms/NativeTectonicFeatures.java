@@ -92,6 +92,14 @@ public final class NativeTectonicFeatures {
             for (int step = 0; step < original.features().size(); step++) {
                 for (Holder<PlacedFeature> feature : original.features().get(step)) {
                     Holder<PlacedFeature> replacement = feature.unwrapKey().map(ores::get).orElse(null);
+                    if (replacement == null && options.number("general.snow_start_offset") > 0
+                            && feature.unwrapKey().map(key -> key.identifier().toString())
+                                    .filter("minecraft:freeze_top_layer"::equals).isPresent()) {
+                        PlacedFeature vanilla = feature.value();
+                        replacement = Holder.direct(new PlacedFeature(
+                                Holder.direct(new SnowlineFeature((int) options.number("general.snow_start_offset"))),
+                                vanilla.placement()));
+                    }
                     builder.addFeature(step, replacement == null ? feature : replacement);
                 }
             }

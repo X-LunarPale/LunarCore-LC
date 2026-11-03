@@ -154,18 +154,20 @@ test('status distinguishes registered heights from valid preset heights without 
 
 test('official preset differences are validated and copied independently of editable settings', () => {
   const source = fixture()
+  source.schema = [{ key: 'general.snow_start_offset', group: '整体地形', label: '积雪起点偏移', type: 'number', defaultValue: 0, min: 0, max: 1024, step: 16 }]
+  source.presets[0].config.advanced = { 'general.snow_start_offset': 512 }
   source.presets[0].unsupported = [
-    { key: 'general.snow_start_offset', label: '积雪起点偏移', value: 512 },
     { key: 'oceans.monument_offset', label: '海底神殿高度偏移', value: -30 }
   ]
   const parsed = parseStatus(source)
   assert.deepEqual(parsed.presets[0].unsupported, source.presets[0].unsupported)
   assert.notEqual(parsed.presets[0].unsupported, source.presets[0].unsupported)
   assert.notEqual(parsed.presets[0].unsupported[0], source.presets[0].unsupported[0])
-  assert.equal(parsed.presets[0].config.advanced['general.snow_start_offset'], undefined)
+  assert.equal(parsed.presets[0].config.advanced['general.snow_start_offset'], 512)
+  assert.throws(() => parseConfig({ ...defaultConfig, advanced: { 'general.snow_start_offset': 512.5 } }, source.schema))
   for (const unsupported of [null, {}, [null], [{ key: 'invalid', label: '设置', value: 1 }],
-    [{ key: 'general.snow_start_offset', label: '', value: 512 }],
-    [{ key: 'general.snow_start_offset', label: '积雪起点偏移', value: Infinity }],
+    [{ key: 'oceans.monument_offset', label: '', value: -30 }],
+    [{ key: 'oceans.monument_offset', label: '海底神殿高度偏移', value: Infinity }],
     [source.presets[0].unsupported[0], source.presets[0].unsupported[0]]]) {
     const malformed = fixture()
     malformed.presets[0].unsupported = unsupported

@@ -25,7 +25,9 @@ public final class TerrainAdvancedOptions {
                 if (!(value instanceof Boolean)) throw new IllegalArgumentException(field.key() + " must be true or false");
             } else {
                 if (!(value instanceof Number number) || !Double.isFinite(number.doubleValue())
-                        || number.doubleValue() < field.min() || number.doubleValue() > field.max()) {
+                        || number.doubleValue() < field.min() || number.doubleValue() > field.max()
+                        || field.key().equals("general.snow_start_offset")
+                                && number.doubleValue() != Math.rint(number.doubleValue())) {
                     throw new IllegalArgumentException(field.key() + " is outside its allowed range");
                 }
                 value = ((Number) value).doubleValue();
@@ -64,6 +66,7 @@ public final class TerrainAdvancedOptions {
 
     private static List<Field> fields() {
         return List.of(
+                number("general.snow_start_offset", "整体地形", "积雪起点偏移", 0, 0, 1024, 16),
                 number("global_terrain.elevation_boost", "整体地形", "地形抬升", 0, 0, 2, 0.01),
                 flag("global_terrain.ultrasmooth", "整体地形", "超平滑地形", false),
                 number("continents.ocean_offset", "大陆与河流", "海洋偏移", -0.8, -2, 0, 0.05),

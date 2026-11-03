@@ -67,7 +67,8 @@ class TerrainOptionsTest {
         legacy.remove("advanced");
         TerrainOptions options = TerrainOptions.parse(legacy);
         assertEquals(TerrainOptions.defaults(), options);
-        assertEquals(30, options.advanced().size());
+        assertEquals(31, options.advanced().size());
+        assertEquals(0, options.number("general.snow_start_offset"));
         assertEquals(0, options.number("global_terrain.elevation_boost"));
         assertTrue(options.flag("continents.river_lanterns"));
         assertFalse(options.flag("caves.ore_fix"));
@@ -95,7 +96,9 @@ class TerrainOptionsTest {
                 Map.of("islands.noise_multiplier", Double.NaN),
                 Map.of("islands.noise_multiplier", Double.POSITIVE_INFINITY),
                 Map.of("islands.noise_multiplier", -0.01),
-                Map.of("islands.noise_multiplier", 5.01))) {
+                Map.of("islands.noise_multiplier", 5.01),
+                Map.of("general.snow_start_offset", 128.5),
+                Map.of("general.snow_start_offset", 1025))) {
             assertThrows(IllegalArgumentException.class,
                     () -> new TerrainOptions(640, 1.8, 1.2, true, true, true, true, advanced));
         }
@@ -112,7 +115,7 @@ class TerrainOptionsTest {
     @Test void schemaDefaultsMatchValidatedValuesAndCannotBeMutated() {
         var schema = TerrainOptions.schema();
         TerrainOptions options = TerrainOptions.defaults();
-        assertEquals(30, schema.size());
+        assertEquals(31, schema.size());
         assertEquals(schema.size(), schema.stream().map(field -> field.get("key")).distinct().count());
         for (var field : schema) {
             String key = (String) field.get("key");
