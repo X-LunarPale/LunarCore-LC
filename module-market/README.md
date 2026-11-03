@@ -2,9 +2,9 @@
 
 [English](README.en.md) | [安装说明](../docs/zh-CN/MODULES.md) | [全部下载](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview)
 
-公开市场，无需登录或令牌即可下载。[社区模块](community/) · [提交模块](../CONTRIBUTING.md) · [填表投稿](https://github.com/X-LunarPale/LunarCore-LC/issues/new?template=module-submission.yml)
+[社区模块](community/) · [提交模块](../CONTRIBUTING.md) · [填表投稿](https://github.com/X-LunarPale/LunarCore-LC/issues/new?template=module-submission.yml)
 
-适用于 **v0.0.6 测试预览版**，需要 Java 25、Paper 26.3 build 202。核心只带基础命令，以下模块按需安装。
+需要 Java 25、Paper 26.3 。核心只带基础命令，以下模块按需安装。
 
 ## 安装方式
 
@@ -58,10 +58,10 @@
 - [对应源码](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/LunarCore-0.0.6-preview-source.zip)
 - [文件校验值](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/SHA256SUMS.txt)
 
-Multiverse 与 PlayerTitle 的管理入口是独立插件，需放入 `plugins/` 并安装对应第三方插件，详见[模块使用](../docs/zh-CN/MODULES.md)。
+GrimAC、Multiverse 与 PlayerTitle 的管理入口/桥接需要其独立插件，需放入 `plugins/` 并安装对应第三方插件，详见[模块使用](../docs/zh-CN/MODULES.md)。
 
 ## 发布与收录
 
 所有人都可以上传自己的模块：在自己的公开 Release 上传 JAR，然后通过 PR 将模块条目加入 `community/`，也可使用 Issues 投稿表单。填写用途、适用版本、依赖、许可、源码和下载链接，提交前可运行附带的目录校验脚本。
 
-上方 19 个官方模块支持面板一键安装，社区模块下载后手动安装。投稿目录通过 PR 合入，不需要仓库访问令牌。本项目代码使用 GPL v3，第三方许可保留。
+上方 19 个官方模块支持面板一键安装，社区模块下载后手动安装。投稿目录通过 PR 合入。本项目代码使用 GPL v3，第三方许可保留。
