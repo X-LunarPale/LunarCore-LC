@@ -1,4 +1,4 @@
-# LunarCore 琉月核心
+<p style="text-align:center"># LunarCore 琉月核心</p>
 
 **预览测试版** Paper 26.3 build 202 · Java 25 · GPL v3
 
