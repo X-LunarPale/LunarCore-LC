@@ -217,6 +217,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
     <div class="terrain-layout">
       <section class="creation-section" aria-labelledby="terrain-create">
         <h2 id="terrain-create">{{ t('创建地形世界') }}</h2>
+        <p class="creation-scope">{{ t('Tectonic 参数只作用于新建专属地形世界的新区块，不会改变原主世界或已生成区块。') }}</p>
         <form novalidate @submit.prevent="submit('create')">
           <fieldset :disabled="blocked || !canManage">
             <div class="field"><label for="terrain-name">{{ t('世界名称') }}</label><el-input id="terrain-name" v-model="draft.name" maxlength="32" :disabled="blocked || !canManage" placeholder="alpine" /><small>{{ t('小写字母开头，最长 32 位；现有同名存档会被拒绝。') }}</small></div>
@@ -306,6 +307,7 @@ h3 { font-size:15px; margin:0; overflow-wrap:anywhere; }
 .terrain-layout { display:grid; grid-template-columns:minmax(300px,.85fr) minmax(0,1.25fr); gap:32px; }
 .creation-section,.worlds-section { min-width:0; }
 .creation-section { padding-right:30px; border-right:1px solid var(--el-border-color-light); }
+.creation-scope { margin:4px 0 18px; color:var(--lbr-text-soft); font-size:11px; line-height:1.65; }
 fieldset { padding:0; margin:0; border:0; min-width:0; }
 .field { margin-bottom:17px; min-width:0; }
 .field > label,.teleport-form > label { display:block; margin-bottom:6px; font-size:12px; font-weight:600; }

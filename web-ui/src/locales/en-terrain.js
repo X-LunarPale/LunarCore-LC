@@ -4,6 +4,7 @@ export default {
   '生成器状态待核对': 'Generator status needs verification',
   '正在生成世界': 'Generating a world',
   '创建地形世界': 'Create terrain world',
+  'Tectonic 参数只作用于新建专属地形世界的新区块，不会改变原主世界或已生成区块。': 'Tectonic settings apply only to new chunks in a dedicated terrain world. They do not change the original main world or chunks already generated.',
   '世界名称': 'World name',
   '世界种子': 'World seed',
   '小写字母开头，最长 32 位；现有同名存档会被拒绝。': 'Start with a lowercase letter, up to 32 characters. Existing saves with the same name are rejected.',
