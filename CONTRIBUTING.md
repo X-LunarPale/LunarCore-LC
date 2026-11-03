@@ -28,12 +28,9 @@
 | `source` | 公开源码仓库的 HTTPS 地址 |
 | `download` | 公开 JAR 的 HTTPS 下载地址 |
 | `license` | 模块所用开源许可 |
-| `sha256` | 下载文件的 SHA-256 校验值 |
 | `depends` | 必需的 LC 模块 ID，没有则填 `[]` |
 
-Windows 可用 `Get-FileHash .\模块.jar -Algorithm SHA256` 查看校验值。下载链接应直接指向公开文件，不包含登录令牌。
-
-提交前运行 `python tools/validate-module-market.py`，检查文件格式、重复 ID 和依赖。GitHub 自动校验模板见 [Actions 设置](.github/automation/README.md)，当前尚未启用。
+提交前运行 `python tools/validate-module-market.py`，检查文件格式、重复 ID 和依赖。
 
 ## 修改项目
 
