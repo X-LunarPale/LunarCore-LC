@@ -30,8 +30,7 @@ Authors publish and update files in their own Releases without a token for this 
 | `license` | Open source license |
 | `depends` | Required LC module IDs, or `[]` |
 
-Before submitting, run `python tools/validate-module-market.py` to check the format, duplicate IDs and dependencies. An [Actions template](.github/automation/README.md) is provided but is not active yet.
-
+Before submitting, run `python tools/validate-module-market.py` to check the format, duplicate IDs and dependencies.
 ## Project Changes
 
 Run relevant checks from [Development and Builds](DEVELOPMENT.en.md), describe the change and results, and open a PR. Keep Chinese and English guides aligned. Preserve GPL v3 and third-party licenses.
