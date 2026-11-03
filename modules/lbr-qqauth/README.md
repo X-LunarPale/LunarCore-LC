@@ -106,4 +106,4 @@ QQ 验证码按用途隔离，默认 6 位，TTL 绑定/解绑 600 秒、恢复 
 
 未实现邮箱、TOTP/2FA、验证码图形挑战、代理/正版自动认证、AuthMe 协议或密码库迁移、自动执行认证后玩家命令。旧 QQAuth 在 QQ 群内验证的身份凭据仍是安全边界。
 
-上游 QQAuth 适配代码的 MIT 许可保留在模块 JAR 的 `META-INF/QQAuth-UPSTREAM-LICENSE` 及 [bridge/LICENSE](<bridge/LICENSE>)，LunarCore 源码许可沿用仓库要求。
+QQAuth 由 LunarCore 作者与 [qqauth-private](https://github.com/crx97220130101-dotcom/qqauth-private) 的协作者共同开发。该模块随 LunarCore 以 GPL v3 发布；既有贡献者署名与许可说明保留在 `META-INF/QQAuth-UPSTREAM-LICENSE` 和 [bridge/LICENSE](<bridge/LICENSE>)。

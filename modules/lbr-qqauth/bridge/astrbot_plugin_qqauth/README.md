@@ -35,4 +35,4 @@ From the LunarCore Gradle root, run `./gradlew :lbr-qqauth:test --tests 'com.lun
 
 ## Attribution
 
-Adapted from QQAuth's AstrBot bridge by QQAuth contributors (2026), MIT licensed; see [LICENSE](LICENSE). The LunarCore adaptation adds password-reset schema, command-boundary/slash handling, explicit group checks, bounded forwarding and redacted failure logs.
+QQAuth is jointly developed by LunarCore's author and the [qqauth-private](https://github.com/crx97220130101-dotcom/qqauth-private) collaborators. This bridge retains the existing QQAuth contributor credits and MIT notice; see [LICENSE](LICENSE). Its LC integration adds password reset, command handling, group checks and forwarding.

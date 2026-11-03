@@ -1,8 +1,11 @@
-# Third-party notices / 第三方来源与修改说明
+# Project attribution and third-party notices / 项目署名与第三方声明
 
-## QQAuth optional module(QQ绑定模块)
+## QQAuth / QQ 认证模块
 
-当前发行包会基于 `modules/lbr-qqauth` 编译适配后的模块；包内保留 GPLv3 许可文本与上游 MIT 声明
+QQAuth 由 LunarCore 作者与 [qqauth-private](https://github.com/crx97220130101-dotcom/qqauth-private) 的协作者共同开发。当前发行包从 `modules/lbr-qqauth` 构建模块，随 LunarCore 以 GPL v3 发布，并保留 QQAuth 既有贡献者署名和许可说明。
+
+QQAuth is jointly developed by LunarCore's author and the qqauth-private collaborators. This distribution builds the module from `modules/lbr-qqauth` under GPL v3, preserving existing QQAuth contributor credits and license notices.
+
 这是一个 LunarCore 模块，并非独立 Bukkit 插件。
 启用 / 关闭该模块可能会导致在线玩家断开连接，且必须配置桥接令牌、分组信息才能正常使用。
 
