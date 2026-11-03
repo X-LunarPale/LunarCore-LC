@@ -1,6 +1,8 @@
 # LunarCore 琉月核心
 
 **预览测试版** Paper 26.3 build 202 · Java 25 · GPL v3
+**注意：本项目绝大多数由GPT-6.1-Sol、GPT-6-Astra、Claude-Opus-5.5、Deepseek-V4.1-Flash等AI及其Agent创作！绝大多数已通过人工测试！**
+若出现问题，请**提交issue**！
 
 [English](README.en.md) | [下载 v0.0.6](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview) | [安装与升级](docs/zh-CN/INSTALL.md) | [GitHub 模块市场](module-market/README.md) | [参与开发](CONTRIBUTING.md)
 
