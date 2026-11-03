@@ -62,6 +62,6 @@ Multiverse and PlayerTitle management integrations are standalone plugins for `p
 
 ## Publishing and Contributions
 
-Everyone can publish a module: upload its JAR to your public Release, then add its entry under `community/` through a PR or use the Issues form. Provide purpose, supported versions, dependencies, license, source and download links. Automated checks validate the entry format.
+Everyone can publish a module: upload its JAR to your public Release, then add its entry under `community/` through a PR or use the Issues form. Provide purpose, supported versions, dependencies, license, source and download links. Run the included catalog checker before submitting.
 
 The 19 official modules above support in-panel installation. Community modules use manual installation. Catalog entries are merged through PRs without a repository access token. Project code uses GPL v3 with third-party licenses retained.

@@ -1,0 +1,30 @@
+name: Module catalog
+
+on:
+  push:
+    paths:
+      - 'module-market/**'
+      - 'tools/validate-module-market.py'
+      - 'tools/test-module-market-validator.py'
+      - '.github/workflows/module-market.yml'
+  pull_request:
+    paths:
+      - 'module-market/**'
+      - 'tools/validate-module-market.py'
+      - 'tools/test-module-market-validator.py'
+      - '.github/workflows/module-market.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check module entries
+        run: python3 tools/validate-module-market.py
+      - name: Check validator behavior
+        run: python3 tools/test-module-market-validator.py

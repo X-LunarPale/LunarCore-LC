@@ -9,7 +9,7 @@ Everyone may download, modify, report problems and submit modules. Browsing, dow
 1. Publish the source in a public repository and upload the JAR to its Release.
 2. Fork this repository and add `module-market/community/module-id.json`.
 3. Copy the [example](module-market/submission.example.json). Fill in the name, purpose, versions, download, source, license and file checksum.
-4. Select **Contribute → Open pull request**. Automated checks validate the format, duplicate IDs and dependencies.
+4. Select **Contribute → Open pull request**. Include catalog check results. The entry appears in the directory after merging.
 
 If you prefer a form, choose **Issues → New issue → Module submission** and provide a public download link. Both submission routes are open to everyone.
 
@@ -32,6 +32,8 @@ Authors publish and update files in their own Releases without a token for this 
 | `depends` | Required LC module IDs, or `[]` |
 
 On Windows, run `Get-FileHash .\module.jar -Algorithm SHA256`. Use a direct public file link without access tokens.
+
+Before submitting, run `python tools/validate-module-market.py` to check the format, duplicate IDs and dependencies. An [Actions template](.github/automation/README.md) is provided but is not active yet.
 
 ## Project Changes
 

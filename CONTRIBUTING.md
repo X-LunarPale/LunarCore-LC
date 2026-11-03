@@ -9,7 +9,7 @@
 1. 将模块源码放到公开仓库，并在该仓库的 Release 上传 JAR。
 2. 在本仓库点击 **Fork**，在 `module-market/community/` 新建 `模块ID.json`。
 3. 复制 [示例](module-market/submission.example.json)，填写名称、用途、版本、下载链接、源码地址、许可和文件校验值。
-4. 点击 **Contribute → Open pull request** 提交。系统会自动检查文件格式、重复 ID 和依赖关系。
+4. 点击 **Contribute → Open pull request** 提交。附上目录校验结果，维护者合入后即可在目录看到条目。
 
 不会编辑 JSON 时，可在 **Issues → New issue → 模块投稿** 填表提交公开下载地址。两种方式都对所有人开放。
 
@@ -32,6 +32,8 @@
 | `depends` | 必需的 LC 模块 ID，没有则填 `[]` |
 
 Windows 可用 `Get-FileHash .\模块.jar -Algorithm SHA256` 查看校验值。下载链接应直接指向公开文件，不包含登录令牌。
+
+提交前运行 `python tools/validate-module-market.py`，检查文件格式、重复 ID 和依赖。GitHub 自动校验模板见 [Actions 设置](.github/automation/README.md)，当前尚未启用。
 
 ## 修改项目
 
