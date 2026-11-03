@@ -1,0 +1,3 @@
+greet: "<prefix>{greeting}"
+reward: "<prefix><green>Greeting reward: <gold>{amount}</gold>"
+count: "<prefix><gray>You have said hello <yellow>{count}</yellow> times."

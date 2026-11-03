@@ -1,0 +1,8 @@
+id: vote
+name: 全服玩法投票
+version: '${version}'
+main: com.lunarboreal.vote.VoteModule
+description: 有门槛的一人一票及可撤销白名单周期效果
+authors: [琉月·冰澜]
+depends: []
+softdepends: []

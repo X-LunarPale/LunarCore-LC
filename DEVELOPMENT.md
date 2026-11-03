@@ -1,0 +1,53 @@
+# 开发与构建
+
+[English](DEVELOPMENT.en.md) | [使用说明](README.md)
+
+本页面向修改代码或编写扩展的人，安装插件无需执行这些步骤。
+
+## 构建
+
+使用 JDK 25 和 Node.js/npm。首次构建需要联网下载依赖。
+
+```bash
+cd web-ui
+npm ci
+npm run build
+cd ..
+./gradlew test :lbr-core:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar
+python package-release.py
+```
+
+Windows 使用 `gradlew.bat`。产物位于 `dist/0.0.6-preview/`。核心只内置基础命令，其余模块单独构建。
+
+若 Paper 本地工具处理失败，可用 `-Plbr.paperServerHome=服务端目录` 指向匹配版本的完整 Paper 安装。普通构建无需该参数。
+
+## 测试
+
+```bash
+./gradlew test
+cd web-ui
+node --test tests/*.test.js tests/*.test.mjs
+npm run test:i18n
+```
+
+浏览器检查使用 `tools/verify-module-market-ui.py`，需要本地前端与 Playwright。脚本只使用模拟数据，不操作运行服。
+
+## 目录与约定
+
+`lbr-api/` 提供接口，`lbr-core/` 提供面板和基础服务，`modules/` 为功能模块，`integrations/` 为独立插件，`web-ui/` 为前端。
+
+模块通过 API 通信，不直接引用其他模块实现。数据库查询和下载不阻塞游戏线程；访问 Bukkit 玩家、世界与模块启停时回到主线程。模块停止时释放任务、线程和连接。
+
+界面提供中英文，用户说明只写用途、条件与结果。实现细节放在代码或开发资料。
+
+简称统一为 LC，主命令为 `/lc`，变量使用 `%lc_模块_变量%`，扩展入口为 `LC.get()`。旧命令、变量和 `LBR` 入口继续兼容。已有 `lbr.*` 游戏权限、数据标识、项目目录和模块文件名保持不变，避免升级后权限或数据失效。
+
+## 发布
+
+版本由 `gradle.properties` 决定：`0.0.6-preview`，对应 GitHub 标签 `v0.0.6-preview`。
+
+`module-market/catalog.json` 定义名称、说明、分类和必需模块。构建自动记录文件大小与 SHA-256（用于检查文件是否一致的校验值）。发布必须上传同次打包的模块；模块重建后也要重建核心，不能混用产物。
+
+普通 Bukkit 插件与内部模块分开安装。二进制发布附对应源码、构建文件、GPL v3 与第三方许可。
+
+公开发布仓库为 `X-LunarPale/LunarCore-LC`。市场直接下载公开 Release 文件，不需要访问令牌。`python tools/validate-module-market.py` 检查社区目录，`python tools/test-module-market-validator.py` 检查投稿校验逻辑。公开快照与源码包只包含当前文档，不包含旧交接记录或运行数据。

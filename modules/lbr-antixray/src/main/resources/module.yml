@@ -1,0 +1,8 @@
+id: antixray
+name: 反矿透
+version: '${version}'
+main: com.lunarboreal.antixray.AntiXrayModule
+description: Paper anti-xray 配置管理、轻量假矿伪装、挖矿行为检测与告警
+authors: [琉月·冰澜]
+depends: []
+softdepends: []

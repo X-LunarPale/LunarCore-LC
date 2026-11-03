@@ -1,0 +1,8 @@
+id: economy
+name: 经济系统
+version: '${version}'
+main: com.lunarboreal.economy.EconomyModule
+description: 金币、转账、排行榜、流水账、Vault 桥接
+authors: [琉月·冰澜]
+depends: []
+softdepends: []

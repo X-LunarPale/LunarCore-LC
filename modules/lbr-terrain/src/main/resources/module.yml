@@ -1,0 +1,8 @@
+id: terrain
+name: Tectonic 宏伟地形
+version: '${version}'
+main: com.lunarboreal.terrain.TerrainModule
+description: 原生高山、扩展世界高度与独立地形世界
+authors: [琉月·冰澜]
+depends: []
+softdepends: []

@@ -1,0 +1,21 @@
+[
+  {"id":"economy","name":"经济","nameEn":"Economy","description":"余额、转账与交易记录。","descriptionEn":"Balances, transfers and transaction history.","category":"survival","icon":"coins","depends":[]},
+  {"id":"signin","name":"签到","nameEn":"Daily rewards","description":"每日签到与连续奖励。","descriptionEn":"Daily check-ins and streak rewards.","category":"survival","icon":"calendar-check","depends":[]},
+  {"id":"land","name":"领地","nameEn":"Land claims","description":"圈定领地，设置成员与访问权限。","descriptionEn":"Claim land and control member access.","category":"survival","icon":"map","depends":[]},
+  {"id":"ban","name":"处罚","nameEn":"Moderation","description":"封禁、禁言、警告与处罚记录。","descriptionEn":"Bans, mutes, warnings and moderation history.","category":"security","icon":"shield","depends":[]},
+  {"id":"antixray","name":"反矿透","nameEn":"Anti-xray","description":"管理矿物隐藏设置与挖矿告警。","descriptionEn":"Ore-hiding settings and mining alerts.","category":"security","icon":"pickaxe","depends":[]},
+  {"id":"anticheat","name":"反作弊","nameEn":"Anti-cheat","description":"查看 GrimAC 状态、违规与配置。需另装 GrimAC。","descriptionEn":"GrimAC status, violations and settings. Requires GrimAC.","category":"security","icon":"shield-check","depends":[]},
+  {"id":"motd","name":"服务器列表","nameEn":"Server list","description":"设置服务器列表中的介绍与图标。","descriptionEn":"Server-list description and icon.","category":"server","icon":"server","depends":[]},
+  {"id":"teleport","name":"传送","nameEn":"Teleportation","description":"传送请求、家、传送点与安全落点。","descriptionEn":"Teleport requests, homes, warps and safe destinations.","category":"players","icon":"compass","depends":[]},
+  {"id":"chat","name":"聊天与 AI","nameEn":"Chat and AI","description":"聊天格式、私聊、公告与游戏内 AI。","descriptionEn":"Chat formatting, messages, announcements and in-game AI.","category":"players","icon":"message-circle","depends":[]},
+  {"id":"titles","name":"称号","nameEn":"Titles","description":"创建、授予与佩戴玩家称号。","descriptionEn":"Create, grant and equip player titles.","category":"players","icon":"award","depends":[]},
+  {"id":"scoreboard","name":"计分板","nameEn":"Scoreboard","description":"设置侧栏与顶部信息。","descriptionEn":"Sidebar and top information display.","category":"players","icon":"list","depends":[]},
+  {"id":"permissions","name":"游戏权限","nameEn":"Game permissions","description":"管理玩家权限、用户组与临时授权。","descriptionEn":"Player permissions, groups and temporary access.","category":"security","icon":"key-round","depends":[]},
+  {"id":"world","name":"世界管理","nameEn":"World management","description":"创建、加载与卸载世界。","descriptionEn":"Create, load and unload worlds.","category":"server","icon":"globe","depends":[]},
+  {"id":"terrain","name":"宏伟地形","nameEn":"Mountain terrain","description":"创建使用 Tectonic 地形的新世界。需重启。","descriptionEn":"Create new worlds with Tectonic terrain. Restart required.","category":"server","icon":"mountain","depends":[]},
+  {"id":"performance","name":"性能","nameEn":"Performance","description":"查看服务器负载，按需启用优化。","descriptionEn":"Monitor server load and enable selected optimizations.","category":"server","icon":"activity","depends":[]},
+  {"id":"vote","name":"玩法投票","nameEn":"Gameplay votes","description":"由玩家投票决定限时玩法。","descriptionEn":"Player votes for temporary gameplay effects.","category":"survival","icon":"vote","depends":[]},
+  {"id":"journal","name":"探索手册","nameEn":"Exploration journal","description":"记录生物群系、进度与钓获收藏。","descriptionEn":"Record discovered biomes, advancements and catches.","category":"survival","icon":"book-open","depends":[]},
+  {"id":"landmarks","name":"建筑地标","nameEn":"Building landmarks","description":"投稿、审核与浏览领地建筑。需领地模块。","descriptionEn":"Submit, review and browse builds. Requires Land claims.","category":"survival","icon":"map-pin","depends":["land"]},
+  {"id":"qqauth","name":"QQ 认证","nameEn":"QQ authentication","description":"QQ 群绑定与玩家登录验证。需另行配置。","descriptionEn":"QQ group binding and player sign-in. Setup required.","category":"security","icon":"lock-keyhole","depends":[]}
+]

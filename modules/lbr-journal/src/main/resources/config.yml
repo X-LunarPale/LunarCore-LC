@@ -1,0 +1,10 @@
+enabled: true
+worlds:
+  - world
+  - world_nether
+  - world_the_end
+sample-seconds: 5
+record-biomes: true
+record-advancements: true
+record-fishing: true
+notify-discoveries: false

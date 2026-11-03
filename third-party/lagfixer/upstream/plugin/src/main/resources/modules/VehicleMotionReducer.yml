@@ -1,0 +1,21 @@
+# A server restart is required to apply changes.
+# Optimizes collisions by replacing them with new, optimized objects.
+VehicleMotionReducer:
+  enabled: false
+  worlds: # Use '*' to enable for all worlds.
+    - '*'
+  values:
+    # Experimental feature
+    force_load: false
+
+    minecart:
+      enabled: true
+      collides: false
+      pushable: false
+      silent: true
+
+    boat:
+      enabled: true
+      collides: false
+      pushable: false
+      silent: true

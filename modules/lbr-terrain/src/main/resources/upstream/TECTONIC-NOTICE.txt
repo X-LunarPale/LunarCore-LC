@@ -1,0 +1,87 @@
+Tectonic 3.0.29 for Fabric / Minecraft 26.3
+Author: Apollo (Apollounknowndev) and Tectonic contributors
+Source: https://github.com/Apollounknowndev/tectonic
+Artifact: https://cdn.modrinth.com/data/lWDHr9jE/versions/irrtYKCq/tectonic-3.0.29-fabric-26.3.jar
+SHA-512: 3fa046943f05d58b5dfc486d8dd7a073085b81aec5c96692e7626b87cb64ab295b5e6a3214f6ccc28746b1eddbcc16360d1c7adee9f97ad29126ac7daca0a257
+
+The official release's fabric.mod.json and its Modrinth project metadata
+identify this release as MIT-licensed. Older repository branches identify
+older releases as CC0; they are not used as the license for this artifact.
+
+tectonic-model.json contains the mod's density functions, noise parameters,
+noise settings and five mountain surface rules. tectonic-features.json
+contains the upstream underground-river features, placed features, twelve
+ore/gravel placement overrides, carver overrides, modifier specifications
+and ultrasmooth density overlay. They are reproducibly extracted from the
+pinned artifact with extract-model.ps1 and extract-features.ps1.
+The presence of an original modifier specification does not imply that
+every operation in that specification is implemented by this port.
+
+Vanilla 26.3 density, material and feature dependencies are read from the
+running Paper server's own resources or registries. Minecraft resources,
+mod classes, a loader, datapack metadata, a data pack ZIP and a Lithostitched
+runtime are not included or installed.
+
+LunarCore adapts Tectonic's ConfigConstant, ConfigNoise and ConfigClamp
+operations into native 26.3 density functions. Thirty effective advanced
+options, base height and scale options, and the five official parameter
+presets are resolved independently for each new world. ConfigNoise retains
+the pinned artifact's float point arithmetic and normal/alternate volume
+sampling order. Its interval bounds conservatively include configured
+multipliers and offsets. Tectonic parameter noises retain their own
+parameters and holder keys, while native samplers apply the mod's seed-name
+aliases, including parameter/ridge -> minecraft:ridge.
+
+LunarCore also adapts the upstream island-disable predicate, ultrasmooth
+overlay, underground-river lichen, lanterns/chains and ice placement, ore
+height-stabilized counts, and suppression of the three vanilla carvers
+covered by the official no-carvers overlay. Decorations and generation
+settings are attached to an individual generator without replacing shared
+biomes.
+
+The fixed release's spaghetti_enabled configuration key is not handled by
+ConfigState.getValue and therefore resolves to zero. Its unused
+alternate_continents_scaling flag is not exposed; the effective
+alternate_erosion_scaling flag affects both continent and erosion noise as
+it does in the artifact.
+
+The snow-start temperature adjustments (128 by default, 512 in Overkill),
+ocean monument offset (-30 in the official presets), frozen-ocean ice
+removal, old-chunk blending/compatibility metadata and /tectonic debug or
+locate commands are not implemented. The Paper port does not replace
+client configuration screens or support arbitrary minimum/maximum height
+changes. It is not a complete mod port and does not promise block-for-block
+identity with the original mod.
+
+Lithostitched attribution
+
+Author: Apollo
+Source: https://github.com/Apollounknowndev/lithostitched
+Reference: 26.3 branch, commit 9a12e653447f1c4c9c489107d4cbb7c82bc78afe
+The official 26.3 Fabric and NeoForge metadata declare the MIT license.
+The native adaptation includes corresponding slope-range, density-filter
+and noise-slope placement behavior. Slope checks each absolute surface
+gradient against the original inclusive range rather than substituting
+Minecraft's steep predicate. No Lithostitched binary is distributed.
+
+MIT License
+
+Copyright (c) Apollo and Tectonic contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

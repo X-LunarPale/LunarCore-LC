@@ -1,0 +1,6 @@
+id: scoreboard
+name: Scoreboard
+version: '${version}'
+main: com.lunarboreal.scoreboard.ScoreboardModule
+description: Sidebar and vanilla top information bar
+authors: [LunarBoreal]

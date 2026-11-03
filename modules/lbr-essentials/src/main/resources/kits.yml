@@ -1,0 +1,16 @@
+# 礼包配置。可用 /createkit 从背包创建，也可在网页面板管理。
+# cooldown: 冷却（如 1d、12h、30m，0 为无冷却）；once: 每人限领一次；first-join: 首次进服自动发放；
+# require-permission: 是否需要权限 lbr.essentials.kits.<名称>；icon: GUI 图标
+# items: 插件序列化的完整物品（/createkit 生成）；simple-items: 手写的简单物品 "物品ID[:数量]"
+kits:
+  starter:
+    display: "<green>新手礼包"
+    cooldown: '0'
+    once: true
+    first-join: true
+    require-permission: false
+    icon: STONE_SWORD
+    simple-items:
+    - stone_sword
+    - stone_pickaxe
+    - bread:16

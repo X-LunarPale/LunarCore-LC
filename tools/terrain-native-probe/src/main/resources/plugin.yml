@@ -1,0 +1,12 @@
+name: TerrainNativeProbe
+version: '1'
+main: com.lunarboreal.terrainprobe.TerrainNativeProbe
+api-version: '26.3'
+depend: [LunarCore]
+commands:
+  terrainprobe:
+    permission: terrainprobe.run
+    usage: /terrainprobe <world>
+permissions:
+  terrainprobe.run:
+    default: op

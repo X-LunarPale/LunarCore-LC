@@ -1,0 +1,63 @@
+# 签到模块语言文件（MiniMessage 格式），引用 key：signin.<路径>
+prefix: "<dark_gray>[</dark_gray><yellow><bold>签到</bold></yellow><dark_gray>]</dark_gray> "
+usage: "<prefix><gray>用法：<yellow>/signin</yellow> 打开签到日历，<yellow>/signin sign</yellow> 直接签到，<yellow>/signin top [streak|total] [页]</yellow> 排行榜"
+usage-admin: "<prefix><gray>用法：<yellow>/signin admin reset <玩家>"
+
+sign:
+  success: "<prefix><green>签到成功！已连续签到 <gold>{streak}</gold> 天，累计 <gold>{total}</gold> 天。<gray>奖励：</gray>{reward}"
+  already: "<prefix><yellow>你今天已经签到过了（连续 {streak} 天，累计 {total} 天）。"
+  streak-reward: "<prefix><light_purple>连续签到 {days} 天额外奖励：</light_purple>{reward}"
+  milestone-reward: "<prefix><aqua>累计签到 {days} 天里程碑奖励：</aqua>{reward}"
+  broadcast: "<prefix><gray><white>{player}</white> 完成了今日签到，已连续 <gold>{streak}</gold> 天！输入 <click:run_command:'/signin'><yellow><u>/signin</u></yellow></click> 一起签到吧~"
+
+makeup:
+  success: "<prefix><green>已补签 <white>{date}</white>（花费 <gold>{cost}</gold>），当前连续 <gold>{streak}</gold> 天，累计 <gold>{total}</gold> 天，本月剩余补签 {left} 次。"
+  disabled: "<prefix><red>补签功能未开启或你没有权限。"
+  invalid-date: "<prefix><red>只能补签本月今天之前的日期。"
+  already: "<prefix><yellow>该日期已经签到过了。"
+  limit: "<prefix><red>本月补签次数已用完（上限 {limit} 次）。"
+  no-economy: "<prefix><red>经济模块未启用，无法补签。"
+  no-money: "<prefix><red>余额不足，补签需要 <gold>{cost}</gold>，你只有 <gold>{balance}</gold>。"
+
+remind:
+  join: "<prefix><yellow>你今天还没有签到哦！<click:run_command:'/signin'><green><u>[点击签到]</u></green></click>"
+  new-day: "<prefix><yellow>新的一天开始了，记得签到！<click:run_command:'/signin'><green><u>[点击签到]</u></green></click>"
+
+top:
+  header-streak: "<gold>===== 连续签到排行 <gray>(第 {page} 页)</gray> ====="
+  header-total: "<gold>===== 累计签到排行 <gray>(第 {page} 页)</gray> ====="
+  entry: "<gray>#{rank} <white>{player}</white> <dark_gray>-</dark_gray> 连续 <gold>{streak}</gold> 天 / 累计 <yellow>{total}</yellow> 天"
+  empty: "<gray>暂无数据。"
+
+admin:
+  reset: "<prefix><green>已重置 <white>{player}</white> 的全部签到数据。"
+
+error:
+  no-permission: "<prefix><red>你没有权限这样做。"
+  player-not-found: "<prefix><red>找不到玩家 <white>{player}</white>。"
+  database: "<prefix><red>数据库操作失败，请稍后再试。"
+  loading: "<prefix><yellow>签到数据加载中，请稍后再试。"
+
+gui:
+  title: "<dark_aqua>每日签到 · {year} 年 {month} 月"
+  filler: "<gray> "
+  close: "<red>关闭"
+  info: "<gold>我的签到"
+  info-lore: "<gray>连续签到：<gold>{streak}</gold> 天\n<gray>累计签到：<gold>{total}</gold> 天\n<gray>本月签到：<gold>{month}</gold> 天\n<gray>本月剩余补签：<gold>{left}</gold>/{limit} 次\n<dark_gray>日历每行从周一开始"
+  sign-button: "<green><b>点击签到"
+  sign-done: "<green>今日已签到"
+  rewards: "<light_purple>奖励一览"
+  rewards-streak-line: "<gray>连续 <gold>{days}</gold> 天：</gray>{reward}"
+  rewards-milestone-line: "<gray>累计 <aqua>{days}</aqua> 天：</gray>{reward}"
+  day:
+    signed: "<green>{date} 已签到"
+    signed-lore: "<gray>✔ 已完成"
+    makeup-signed: "<yellow>{date} 已补签"
+    makeup-signed-lore: "<gray>✔ 补签完成"
+    today: "<gold><b>{date} 今天"
+    today-lore: "<yellow>点击签到\n<gray>奖励：</gray>{reward}"
+    missed: "<red>{date} 未签到"
+    missed-lore: "<yellow>点击补签\n<gray>花费：<gold>{cost}</gold>\n<gray>本月剩余补签：<gold>{left}</gold> 次"
+    locked: "<dark_red>{date} 未签到"
+    locked-lore: "<gray>本月补签次数已用完或补签未开启"
+    future: "<gray>{date}"

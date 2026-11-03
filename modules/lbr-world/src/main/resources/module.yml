@@ -1,0 +1,8 @@
+id: world
+name: 多世界管理
+version: '${version}'
+main: com.lunarboreal.world.WorldModule
+description: 多世界创建、安全卸载与独立配置
+authors: [琉月·冰澜]
+depends: []
+softdepends: []

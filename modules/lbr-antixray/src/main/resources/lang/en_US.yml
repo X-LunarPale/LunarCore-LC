@@ -1,0 +1,68 @@
+# Anti-xray language file (MiniMessage)
+command-desc: "Anti-xray management"
+help:
+  - "<prefix><aqua>Anti-xray commands:"
+  - "<gray>/antixray stats <player> <dark_gray>- <white>mining statistics"
+  - "<gray>/antixray alerts [player] [page] <dark_gray>- <white>alert log"
+  - "<gray>/antixray top <dark_gray>- <white>suspect ranking"
+  - "<gray>/antixray paper [world|defaults] [preset|show|set <key> <value>] <dark_gray>- <white>Paper anti-xray"
+  - "<gray>/antixray fakeore <dark_gray>- <white>fake ore status"
+  - "<gray>/antixray reload <dark_gray>- <white>reload configuration"
+
+words:
+  on: "<green>enabled"
+  off: "<red>disabled"
+
+types:
+  direct: "Direct hit"
+  dense: "Dense mining"
+  ratio: "Abnormal ore ratio"
+  unknown: "Unknown"
+
+detail:
+  direct: "{count} direct hits on hidden veins in {minutes} min ({ore})"
+  dense: "{veins} rare veins in {minutes} min (weighted {weight})"
+  ratio: "{veins} veins with only {stone} common blocks in {minutes} min ({per} per vein)"
+
+alert:
+  notify: "<prefix><red>[X-Ray]</red> <yellow>{player}</yellow> <gray>{type}: <white>{detail}</white> <dark_gray>({world} {x},{y},{z})"
+
+fakeore:
+  status: "<prefix><gray>Fake ore: {enabled} <gray>| cached chunks <white>{chunks}</white> <gray>| hidden ores <white>{hidden}"
+
+reloaded: "<prefix><green>Anti-xray configuration reloaded."
+usage: "<prefix><red>Usage: <white>{usage}"
+player-not-found: "<prefix><red>Player <white>{player}</white> not found."
+database-error: "<prefix><red>Database query failed, see console."
+no-permission: "<prefix><red>You don't have permission."
+
+stats:
+  header: "<prefix><aqua>{player} <gray>mining: common <white>{stone}</white>, rare <white>{rare}</white> ({per}‰), alerts <red>{alerts}"
+  entry: "<gray> - {ore}: <white>{amount}"
+  window: "<gray> Last {minutes} min: veins <white>{veins}</white> (weighted {weight}), common <white>{stone}</white>, direct hits <white>{direct}</white>, session alerts <red>{alerts}"
+  offline: "<gray> (player offline, no live window data)"
+
+alerts:
+  empty: "<prefix><gray>No alerts."
+  header: "<prefix><aqua>X-Ray alerts <gray>(page {page})"
+  entry: "<gray>#{id} {time} <yellow>{player}</yellow> <red>{type}</red> <white>{detail}</white> <dark_gray>{world} {x},{y},{z}"
+
+top:
+  empty: "<prefix><gray>No data yet."
+  header: "<prefix><aqua>Top suspects"
+  entry: "<gray>{rank}. <yellow>{player}</yellow> score <red>{score}</red> | alerts {alerts} | {per}‰ | rare {rare} / common {stone}"
+
+paper:
+  unavailable: "<prefix><red>Not running on Paper: built-in anti-xray is unavailable. Consider enabling fake-ore."
+  list-header: "<prefix><aqua>Paper anti-xray settings:"
+  list-entry: "<gray> - <white>{target}</white>: {summary}"
+  presets: "<gray>Presets: <white>{presets}"
+  no-world: "<prefix><red>World {world} does not exist (use defaults for global)."
+  show-header: "<prefix><aqua>{target} <gray>anti-xray ({file}):"
+  show-entry: "<gray> - {key}: <white>{value}</white> {inherit}"
+  inherited: "<dark_gray>(inherited)"
+  show-list: "<gray> - {key}: <white>{value}"
+  bad-key: "<prefix><red>Editable keys: {keys}"
+  bad-preset: "<prefix><red>Unknown action or preset. Presets: {presets}"
+  saved: "<prefix><green>Updated {target}: {change}. <yellow>Restart the server to apply."
+  io-error: "<prefix><red>Failed to read/write config file: {error}"

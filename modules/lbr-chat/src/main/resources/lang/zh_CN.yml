@@ -1,0 +1,56 @@
+prefix: "<dark_gray>[</dark_gray><aqua><bold>聊天</bold></aqua><dark_gray>]</dark_gray> "
+usage: "<prefix><red>用法：<gray>{usage}"
+player-not-found: "<prefix><red>找不到玩家 <white>{player}"
+only-player: "<prefix><red>该命令只能由玩家执行"
+reloaded: "<prefix><green>聊天模块配置已重载"
+filter:
+  cooldown: "<prefix><red>发言太快了，请稍等片刻"
+  duplicate: "<prefix><red>请不要重复发送相同的消息"
+  advertising: "<prefix><red>消息包含广告或链接，已被拦截"
+  global-muted: "<prefix><red>全服禁言中，暂时无法发言"
+  muted: "<prefix><red>你已被禁言，无法发送私聊"
+chatmute:
+  on: "<prefix><red>管理员 <white>{actor}</white> 开启了全服禁言"
+  off: "<prefix><green>管理员 <white>{actor}</white> 关闭了全服禁言"
+msg:
+  self: "<prefix><red>不能给自己发私聊"
+  disabled: "<prefix><red>{player} 关闭了私聊"
+  ignored: "<prefix><red>{player} 已屏蔽你的消息"
+  no-reply: "<prefix><red>没有可以回复的人"
+  toggle-on: "<prefix><green>已开启私聊接收"
+  toggle-off: "<prefix><yellow>已关闭私聊接收"
+socialspy:
+  on: "<prefix><green>社交监听已开启"
+  off: "<prefix><yellow>社交监听已关闭"
+ignore:
+  added: "<prefix><yellow>已屏蔽 <white>{player}</white> 的消息"
+  removed: "<prefix><green>已取消屏蔽 <white>{player}"
+  self: "<prefix><red>不能屏蔽自己"
+  exempt: "<prefix><red>无法屏蔽该玩家"
+  list: "<prefix><gray>已屏蔽：<white>{list}"
+  none: "<prefix><gray>你没有屏蔽任何人"
+mail:
+  sent: "<prefix><green>邮件已发送给 <white>{player}"
+  sent-all: "<prefix><green>已向 <white>{count}</white> 名玩家发送邮件"
+  header: "<prefix><gold>你的邮件（{count} 封）："
+  entry: "<gray>[{time}] <aqua>{sender}</aqua>: <white>{message}"
+  empty: "<prefix><gray>没有邮件"
+  cleared: "<prefix><green>邮件已清空"
+  unread: "<prefix><yellow>你有 <white>{count}</white> 封未读邮件，<click:run_command:'/mail read'><hover:show_text:'点击查看'><aqua>[点击查看]</aqua></hover></click>"
+  help: "<prefix><gray>/mail read | send <玩家> <内容> | sendall <内容> | clear"
+nick:
+  set: "<prefix><green>昵称已设置为 <white>{nick}"
+  set-other: "<prefix><green>已将 {player} 的昵称设置为 <white>{nick}"
+  reset: "<prefix><green>昵称已重置"
+  too-long: "<prefix><red>昵称长度需在 {min}-{max} 个字符之间"
+  taken: "<prefix><red>该昵称已被使用"
+  realname: "<prefix><gray>{nick} <dark_gray>→</dark_gray> <white>{player}"
+  realname-none: "<prefix><red>没有玩家使用该昵称"
+staffchat:
+  on: "<prefix><green>已切换到管理频道，再次输入 /sc 切回"
+  off: "<prefix><yellow>已切回公共聊天"
+helpop:
+  sent: "<prefix><green>你的求助已发送给在线管理员"
+clearchat:
+  done: "<prefix><gray>聊天已被 <white>{actor}</white> 清空"
+me: "<gray>* <white>{player}</white> {message}"

@@ -1,0 +1,4 @@
+# key 为 hello.<路径>；模块内用 msg(sender, "greet", ...) 引用
+greet: "<prefix>{greeting}"
+reward: "<prefix><green>获得问候奖励 <gold>{amount}</gold>"
+count: "<prefix><gray>你已经打了 <yellow>{count}</yellow> 次招呼。"

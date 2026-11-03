@@ -1,0 +1,17 @@
+enabled: true
+line1: '<gradient:#9cecff:#8ea8ff><bold>Lunazure 琉月·冰澜</bold></gradient>'
+line2: '<gray>共赴冰澜之境 <dark_gray>｜ <aqua>{online}<gray>/{max} 人在线 <dark_gray>｜ <white>{version}'
+
+maintenance:
+  enabled: false
+  allow-join: false
+  # 仅后台保存启用维护并开启此选项，或维护中从关闭切换为开启时，发起一次踢出。
+  # 启动、重载以及修改提示/白名单不会踢出；后台另提供独立的手动踢出动作。
+  kick-online: false
+  # 每项为玩家名称或完整 UUID；名称忽略大小写，UUID 支持标准格式或 32 位十六进制。
+  whitelist: []
+  join-message: '<yellow>服务器正在维护，暂时无法加入。请稍后重试。'
+  kick-message: '<yellow>服务器已进入维护模式，您的连接已断开。请稍后重试。'
+  # 维护期间独立显示以下两行，不受正常 MOTD enabled 设置影响。
+  line1: '<gold><bold>服务器维护中</bold></gold>'
+  line2: '<gray>服务器正在维护，请稍后重试。'

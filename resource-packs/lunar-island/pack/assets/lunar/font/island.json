@@ -1,0 +1,22 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "lunar:font/island-left.png",
+      "height": 18,
+      "ascent": 7,
+      "chars": [
+        ""
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "lunar:font/island-right.png",
+      "height": 18,
+      "ascent": 7,
+      "chars": [
+        ""
+      ]
+    }
+  ]
+}

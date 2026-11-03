@@ -1,0 +1,6 @@
+# hello 模块配置（首次启用时复制到 plugins/LunarCore/modules/hello/config.yml）
+
+# /hello 的问候语（MiniMessage，{player} 为玩家名）
+greeting: "<aqua>欢迎来到服务器，<white>{player}</white>！"
+# 每次 /hello 奖励的金币（需要 economy 模块；0 关闭）
+reward: 0

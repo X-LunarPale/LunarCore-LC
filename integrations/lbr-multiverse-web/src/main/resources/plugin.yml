@@ -1,0 +1,7 @@
+name: LbrMultiverseWeb
+version: '${version}'
+main: com.lunarboreal.integration.multiverse.MultiverseWebPlugin
+api-version: '1.21'
+depend: [LunarCore]
+softdepend: [Multiverse-Core]
+description: Separate LunarCore WebUI bridge for Multiverse-Core public API

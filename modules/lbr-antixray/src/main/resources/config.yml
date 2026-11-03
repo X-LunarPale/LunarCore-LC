@@ -1,0 +1,108 @@
+# ============================================================
+#  LunarCore 反矿透（antixray）配置
+#  修改后执行 /antixray reload 或在 Web 面板保存即可生效
+#
+#  方案一（推荐）：Paper 内置 anti-xray —— 使用 /antixray paper 或 Web 面板管理，修改后需重启服务器
+#  方案二：自研轻量假矿（fake-ore，默认关闭）
+#  方案三：挖矿行为检测（detection）
+# ============================================================
+
+# ---------------- 方案二：假矿伪装 ----------------
+# 把玩家附近"六面都被不透明方块包围"的矿石，用 sendBlockChange 对玩家伪装成石头/深板岩/下界岩，
+# 矿石暴露（相邻方块被挖、爆炸、活塞、液体流动）时再发送真实方块。
+# 局限：区块原始数据先于伪装包到达客户端，收包即缓存的作弊端无法防御；会额外产生网络包。
+# Paper 服务器请优先使用方案一，本方案适合非 Paper 环境或作为补充。
+fake-ore:
+  enabled: false
+  # 生效的世界（留空表示全部世界）
+  worlds: []
+  # 只处理此高度及以下的矿石
+  max-y: 64
+  # 处理半径（区块），0 表示跟随世界发送视距（最大 16）。Paper 上按"区块发送事件"即时处理
+  radius-chunks: 0
+  # 每 2 tick 最多计算的区块数（每个区块需要主线程获取 5 个区块快照）
+  chunks-per-tick: 2
+  # 每位玩家每 2 tick 最多发送的方块伪装包数量
+  packets-per-tick: 256
+  # 矿石暴露时，向多远范围内的玩家发送真实方块
+  reveal-distance: 160
+  # 需要伪装的矿石
+  ores:
+    - DIAMOND_ORE
+    - DEEPSLATE_DIAMOND_ORE
+    - EMERALD_ORE
+    - DEEPSLATE_EMERALD_ORE
+    - GOLD_ORE
+    - DEEPSLATE_GOLD_ORE
+    - IRON_ORE
+    - DEEPSLATE_IRON_ORE
+    - LAPIS_ORE
+    - DEEPSLATE_LAPIS_ORE
+    - REDSTONE_ORE
+    - DEEPSLATE_REDSTONE_ORE
+    - COPPER_ORE
+    - DEEPSLATE_COPPER_ORE
+    - ANCIENT_DEBRIS
+    - NETHER_GOLD_ORE
+    - NETHER_QUARTZ_ORE
+
+# ---------------- 方案三：挖矿检测 ----------------
+detection:
+  enabled: true
+  # 统计时间窗口（分钟）
+  window-minutes: 20
+  # 高于此 Y 坐标挖到的矿不参与告警判断（仍计入统计）
+  max-y: 320
+  # 稀有矿及权重（矿脉加权计数，"密集"告警按加权和判断）
+  rare-ores:
+    DIAMOND_ORE: 1.0
+    DEEPSLATE_DIAMOND_ORE: 1.0
+    ANCIENT_DEBRIS: 1.5
+    EMERALD_ORE: 1.0
+    DEEPSLATE_EMERALD_ORE: 1.0
+    GOLD_ORE: 0.3
+    DEEPSLATE_GOLD_ORE: 0.3
+    LAPIS_ORE: 0.2
+    DEEPSLATE_LAPIS_ORE: 0.2
+  # 作为"普通方块"计入比率分母的方块
+  common-blocks:
+    - STONE
+    - DEEPSLATE
+    - TUFF
+    - GRANITE
+    - DIORITE
+    - ANDESITE
+    - CALCITE
+    - NETHERRACK
+    - BASALT
+    - BLACKSTONE
+    - COBBLED_DEEPSLATE
+  # 密集：窗口内稀有矿脉加权和 >= threshold
+  dense:
+    threshold: 8
+  # 比率：窗口内矿脉数 >= min-veins 且 (普通方块数 / 矿脉数) < max-stone-per-vein
+  ratio:
+    min-veins: 4
+    max-stone-per-vein: 25
+  # 直线命中：挖到的矿脉之前完全未暴露（周围空气都是该玩家自己挖的），
+  # 且最近 lookback-blocks 个挖掘点中有 approach-ratio 比例在持续逼近矿脉，起点距离 >= min-start-distance；
+  # 窗口内命中次数 >= threshold 时告警
+  direct:
+    enabled: true
+    lookback-blocks: 12
+    min-start-distance: 6
+    approach-ratio: 0.85
+    threshold: 3
+  # 同一玩家同类告警的冷却时间（秒）
+  alert-cooldown-seconds: 300
+
+# ---------------- 告警自动处理 ----------------
+actions:
+  enabled: false
+  # 触发的告警类型（DIRECT / DENSE / RATIO），留空表示全部
+  types: [DIRECT, DENSE]
+  # 玩家本次在线累计告警次数达到多少才执行
+  min-alerts: 2
+  # 以控制台身份执行的命令，占位符：{player} {uuid} {type} {detail} {alerts}
+  commands:
+    - "warn {player} 疑似矿物透视（{type}） -s"

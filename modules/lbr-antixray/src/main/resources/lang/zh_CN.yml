@@ -1,0 +1,70 @@
+# 反矿透语言文件（MiniMessage）
+prefix: "<dark_gray>[</dark_gray><gold><bold>矿透检测</bold></gold><dark_gray>]</dark_gray> "
+command-desc: "反矿透管理"
+help:
+  - "<prefix><aqua>反矿透命令："
+  - "<gray>/antixray stats <玩家> <dark_gray>- <white>查看挖矿统计"
+  - "<gray>/antixray alerts [玩家] [页] <dark_gray>- <white>查看告警记录"
+  - "<gray>/antixray top <dark_gray>- <white>可疑玩家排行"
+  - "<gray>/antixray paper [世界|defaults] [预设|show|set <键> <值>] <dark_gray>- <white>Paper anti-xray 设置"
+  - "<gray>/antixray fakeore <dark_gray>- <white>假矿方案状态"
+  - "<gray>/antixray reload <dark_gray>- <white>重载配置"
+
+words:
+  on: "<green>已开启"
+  off: "<red>未开启"
+
+types:
+  direct: "直线命中"
+  dense: "密集挖矿"
+  ratio: "矿石比率异常"
+  unknown: "未知"
+
+# 告警详情（写入数据库与通知）
+detail:
+  direct: "{minutes} 分钟内 {count} 次直接挖向未暴露矿脉（{ore}）"
+  dense: "{minutes} 分钟内挖到 {veins} 条稀有矿脉（加权 {weight}）"
+  ratio: "{minutes} 分钟内 {veins} 条矿脉仅挖 {stone} 个普通方块（每条 {per}）"
+
+alert:
+  notify: "<prefix><gold><bold>矿透检测</bold></gold> <yellow>{player}</yellow> <gray>{type}：<white>{detail}</white> <dark_gray>({world} {x},{y},{z})"
+
+fakeore:
+  status: "<prefix><gray>假矿方案：{enabled} <gray>| 缓存区块 <white>{chunks}</white> <gray>| 伪装中的矿石 <white>{hidden}"
+
+reloaded: "<prefix><green>反矿透配置已重载。"
+usage: "<prefix><red>用法：<white>{usage}"
+player-not-found: "<prefix><red>找不到玩家 <white>{player}</white>。"
+database-error: "<prefix><red>查询数据库失败，请查看控制台。"
+no-permission: "<prefix><red>你没有权限这样做。"
+
+stats:
+  header: "<prefix><aqua>{player} <gray>的挖矿统计：普通方块 <white>{stone}</white>，稀有矿 <white>{rare}</white>（每千 {per}），历史告警 <red>{alerts}"
+  entry: "<gray> - {ore}：<white>{amount}"
+  window: "<gray> 最近 {minutes} 分钟：矿脉 <white>{veins}</white>（加权 {weight}），普通方块 <white>{stone}</white>，直线命中 <white>{direct}</white>，本次在线告警 <red>{alerts}"
+  offline: "<gray> （玩家不在线，无实时窗口数据）"
+
+alerts:
+  empty: "<prefix><gray>没有告警记录。"
+  header: "<prefix><aqua>矿透告警 <gray>（第 {page} 页）"
+  entry: "<gray>#{id} {time} <yellow>{player}</yellow> <red>{type}</red> <white>{detail}</white> <dark_gray>{world} {x},{y},{z}"
+
+top:
+  empty: "<prefix><gray>暂无数据。"
+  header: "<prefix><aqua>可疑玩家排行（前 10）"
+  entry: "<gray>{rank}. <yellow>{player}</yellow> 分数 <red>{score}</red> | 告警 {alerts} | 每千石头稀有矿 {per} | 稀有 {rare} / 普通 {stone}"
+
+paper:
+  unavailable: "<prefix><red>当前服务端不是 Paper，内置 anti-xray 不可用。可在配置中开启 fake-ore（方案二）。"
+  list-header: "<prefix><aqua>Paper anti-xray 设置："
+  list-entry: "<gray> - <white>{target}</white>：{summary}"
+  presets: "<gray>可用预设：<white>{presets}"
+  no-world: "<prefix><red>世界 {world} 不存在（全局默认请用 defaults）。"
+  show-header: "<prefix><aqua>{target} <gray>的 anti-xray 设置（{file}）："
+  show-entry: "<gray> - {key}：<white>{value}</white> {inherit}"
+  inherited: "<dark_gray>(继承默认)"
+  show-list: "<gray> - {key}：<white>{value}"
+  bad-key: "<prefix><red>可修改的键：{keys}"
+  bad-preset: "<prefix><red>未知操作或预设，可用预设：{presets}"
+  saved: "<prefix><green>已修改 {target}：{change}。<yellow>Paper 只在启动时读取该配置，请重启服务器生效。"
+  io-error: "<prefix><red>读写配置文件失败：{error}"

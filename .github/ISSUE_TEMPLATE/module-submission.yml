@@ -1,0 +1,57 @@
+name: 模块投稿 / Module submission
+description: 提交公开模块，任何人均可投稿。Submit a public module.
+title: "[Module] "
+labels: ["module-submission"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: 模块名称 / Module name
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 用途说明 / Description
+      description: 说明功能和安装条件。Describe the purpose and requirements.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: 公开源码 / Public source URL
+      placeholder: https://github.com/author/module
+    validations:
+      required: true
+  - type: input
+    id: download
+    attributes:
+      label: 公开 JAR 下载 / Public JAR download URL
+      description: 填写 Release 文件链接，无需登录或令牌。Use a public Release file link.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 模块版本与核心版本 / Module and core versions
+      placeholder: "1.0.0 / LC 0.0.6-preview"
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: 开源许可 / Open source license
+      placeholder: GPL-3.0-only
+    validations:
+      required: true
+  - type: input
+    id: sha256
+    attributes:
+      label: 文件 SHA-256 / File SHA-256
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 必需模块与其他说明 / Dependencies and notes
+      description: 无依赖填“无”。Write “none” if no dependencies are required.

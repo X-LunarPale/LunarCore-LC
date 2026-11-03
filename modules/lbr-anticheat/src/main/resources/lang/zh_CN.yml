@@ -1,0 +1,6 @@
+prefix: "<dark_gray>[</dark_gray><aqua>反作弊</aqua><dark_gray>]</dark_gray> "
+command:
+  usage: "<prefix><gray>/ac status 查看 GrimAC 状态；/ac reload 重载桥接配置。"
+  status: "<prefix><gray>GrimAC：<white>{status}</white>，版本：<white>{version}</white>，近期记录：<white>{count}</white>。"
+  no-permission: "<prefix><red>您没有权限执行此操作。"
+  reloaded: "<prefix><green>桥接配置已重载。检测及处罚由 GrimAC 配置管理。"

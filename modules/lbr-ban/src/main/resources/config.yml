@@ -1,0 +1,96 @@
+# ============================================================
+#  LunarCore 封禁系统（ban）配置
+#  修改后执行 /lcbanreload 或在 Web 面板保存即可生效
+# ============================================================
+
+# 服务器名（写入处罚记录的 server 字段，多服共用 MySQL 时便于区分）
+server-name: "default"
+
+# 多服共享同一个 MySQL 数据库时开启：
+# - 预登录在本地缓存未命中时会再查一次数据库（其它服的新封禁立即生效）
+# - 每隔 sync-seconds 秒增量同步其它服的新增处罚（禁言等）与撤销（修改间隔需重载模块）
+multi-server:
+  enabled: false
+  sync-seconds: 15
+
+# 申诉链接，会显示在封禁踢出界面中（{appeal} 占位符）
+appeal-url: "https://example.com/appeal"
+
+# 日期格式（用于到期时间显示）
+date-format: "yyyy-MM-dd HH:mm"
+
+# 未填写原因时使用的默认原因
+default-reason: "违反服务器规则"
+
+# 全服广播
+broadcast:
+  # 是否向全服广播处罚（使用 -s 参数的处罚只通知拥有 lbr.ban.notify 的管理员）
+  enabled: true
+  # 哪些类型会广播：BAN / IPBAN / MUTE / WARN / KICK
+  types: [BAN, IPBAN, MUTE, WARN, KICK]
+  # 其它模块（如反作弊）通过 BanService 发起的处罚是否广播
+  api: true
+
+# 处罚原因模板：命令中原因位置填写模板 ID（或 #ID）即可套用
+# duration 留空或不写表示不指定时长（/ban 等永久命令会改用模板时长）
+reasons:
+  hack:
+    reason: "使用作弊客户端"
+    duration: "30d"
+  xray:
+    reason: "使用矿物透视"
+    duration: "14d"
+  spam:
+    reason: "刷屏"
+    duration: "1h"
+  abuse:
+    reason: "辱骂他人"
+    duration: "1d"
+  grief:
+    reason: "恶意破坏"
+    duration: "7d"
+  ad:
+    reason: "发布广告"
+    duration: ""
+
+# 警告设置
+warn:
+  # 警告的有效期（过期后不再计入次数），留空或 perm 表示永不过期
+  expire: "30d"
+  # 达到指定警告次数时自动执行的处罚
+  # 格式："<类型> [时长] [原因]"，类型可选 kick / mute / tempmute / ban / tempban
+  actions:
+    "3": "tempmute 1h 警告次数达到 3 次"
+    "5": "tempban 1d 警告次数达到 5 次"
+    "7": "ban 警告次数达到 7 次"
+  # 执行了自动处罚后是否清空（撤销）该玩家的全部有效警告
+  reset-after-action: false
+
+# 禁言期间禁止使用的命令（不带 /，自动匹配 "插件名:命令" 形式）
+muted-commands:
+  - msg
+  - tell
+  - w
+  - whisper
+  - me
+  - r
+  - reply
+  - mail
+  - say
+  - teammsg
+  - tm
+
+# 时长上限（可选功能）
+# 开启后，没有 lbr.ban.limit.bypass 权限的执行者在使用临时处罚命令时，
+# 最大时长取其拥有的 lbr.ban.<命令>.max.<档位> 中最大的一档（例如 lbr.ban.tempban.max.7d），
+# 若一个档位权限都没有，则使用 default 值。
+duration-limits:
+  enabled: false
+  steps: ["1h", "6h", "1d", "3d", "7d", "14d", "30d", "90d", "1y"]
+  default: "1d"
+
+# 不能被处罚的玩家权限：lbr.ban.exempt（控制台不受限制）
+exempt-enabled: true
+
+# 预登录检查等待缓存加载的最长时间（毫秒），超时则直接查询数据库
+login-wait-millis: 5000

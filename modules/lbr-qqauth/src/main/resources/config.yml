@@ -1,0 +1,181 @@
+# QQAuth transport and account authentication settings.
+integration:
+  mode: astrbot # astrbot | onebot | disabled
+  group-id: "REPLACE_WITH_QQ_GROUP_ID" # Exact group id; '*' disables group filtering and trusts the authenticated bridge.
+  astrbot:
+    bind-address: "127.0.0.1"
+    port: 12312
+    token: "CHANGE_THIS_LONG_RANDOM_TOKEN"
+  onebot:
+    endpoint: "ws://127.0.0.1:3001"
+    token: ""
+    reconnect-seconds: 5
+binding:
+  code-length: 6
+  bind-ttl-seconds: 600
+  unbind-ttl-seconds: 600
+  reset-ttl-seconds: 300
+  max-pending-codes: 10000
+  max-per-qq: 1
+  per-qq-limits: {}
+auth:
+  enabled: true
+  # New and existing players must register/login in-game; no AuthMe password hashes are imported.
+  min-password-length: 10
+  max-password-length: 64
+  bcrypt-cost: 12
+  max-attempts: 8
+  attempt-window-seconds: 300
+  max-attempt-entries: 20000
+  max-accounts-per-ip: 3
+  sessions:
+    enabled: false
+    ttl-seconds: 86400
+    max-sessions: 100000
+  restrictions:
+    # Only extra commands go here. login/register/recovery are handled directly.
+    # Do not add privileged or gameplay commands; their permissions alone do not prove identity.
+    allow-commands: [qqauth, qqauthreset, help]
+    # Chat, movement, interactions, damage, items and inventory stay blocked until login.
+
+# 所有玩家、管理员、QQ群与 Web 提示。支持 YAML 多行文本或字符串列表。
+# 使用 {code}、{player}、{group}、{ttl} 等占位符；游戏内支持受限 MiniMessage 与 &/§ 格式码，QQ/Web 输出纯文本。动态占位符会转义标签。
+# 修改后执行 lbr module reload qqauth；旧配置自动补默认项，不覆盖已修改文案。
+messages:
+  command:
+    account-identity-mismatch: "账号身份不一致"
+    account-not-registered: "账号尚未注册"
+    admin-error: "操作未完成：{error}"
+    admin-queue-full: "认证队列已满，请稍后。"
+    admin-reload: "请从控制台执行 lbr module reload qqauth；重新加载会撤销当前认证。"
+    admin-reset: "为避免密码进入控制台/审计日志，请使用受权限保护的 Web 账号重置操作，或玩家 QQ 验证恢复。"
+    admin-status: "QQAuth ready={ready}，账号数={count}"
+    admin-success: "操作完成。"
+    already-logged-in: "你已经登录。"
+    busy: "上一次认证仍在处理，请稍后。"
+    failed: "操作未完成：{status}"
+    import-console-only: "仅控制台：qqauth importbindings confirm。先将旧 bindings.yml 复制到模块目录 import-bindings.yml。"
+    logged-out: "已退出账号，请重新 /login。"
+    login-required: "请先登录。"
+    namespaced: "请使用不带命名空间的认证命令。"
+    no-permission: "权限不足。"
+    not-ready: "QQAuth 尚未就绪。"
+    operation-error: "操作未完成，请检查密码要求、绑定及账号状态，稍后重试。"
+    password-mismatch: "两次输入的密码不一致。"
+    player-only: "此命令仅限玩家，管理员操作使用 /qqauth。"
+    queue-full: "认证队列已满，请稍后重试。"
+    reset-code: "请使用绑定的 QQ 在群里发送 /改密 {code}。验证后使用新密码重新登录。"
+    success: "操作成功。"
+    unbind-code: "请使用绑定的 QQ 在群里发送 /解绑 {code}。验证后会踢出游戏，验证码请勿转发。"
+  group:
+    failed: "验证未完成：{status}。请检查有效期、绑定 QQ 和配额。"
+    not-ready: "QQAuth 正在加载，请稍后重试。"
+    rate-limited: "验证请求过多，请在五分钟后重试。"
+    success: "{command}成功，请重新连接游戏服务器。"
+    unavailable: "服务暂时不可用，请稍后重试。"
+    usage: "格式：/{command} <验证码>"
+  join:
+    instructions: "QQ 身份已绑定，请使用 /login <密码>；首次使用 /register <密码> <重复密码>。"
+    session-restored: "QQAuth 会话已恢复。"
+  kick:
+    account-updated: "账号已更新，请重新连接验证。"
+    admin-unbound: "管理员已解除 QQ 绑定，请重新连接。"
+    admin-updated: "管理员已更新账号状态，请重新连接。"
+    disabled: "QQAuth 认证模块已关闭，请在重新启用后连接。"
+    loading: "QQAuth 正在加载，请重新连接完成身份验证。"
+    qq-completed: "QQ 验证已完成，请重新连接并验证身份。"
+    timeout: "身份验证超时，请重新连接。"
+    web-updated: "管理员已更新账号认证，请重新连接。"
+  lifecycle:
+    auth-required: "auth.enabled 必须为 true；请通过模块禁用明确关闭认证。"
+    authme-conflict: "QQAuth 内置认证不能与 AuthMe 同时启用，请移除 AuthMe；本模块使用独立账号库，不迁移旧密码。"
+    reload-instructions: "请使用 /lc module reload qqauth 重建配置、传输和认证状态。"
+  login:
+    bind-required: "请先在 QQ 群发送 /验证 {code}，完成绑定后重新连接。验证码请勿转发，有效期以服务器配置为准。"
+    changed: "身份验证已变化，请重新连接。"
+    identity-mismatch: "账号名称身份不一致，请使用原始大小写与认证方式连接。"
+    invalid-name: "玩家名必须为 3–16 位英文字母、数字或下划线。"
+    locked: "账号已锁定或身份不一致，请联系管理员。"
+    not-ready: "QQAuth 正在加载或配置异常，请稍后再试。"
+    rename-conflict: "玩家名更新冲突，请联系管理员。"
+    required: "请先登录或注册。"
+    unavailable: "身份验证服务暂不可用，请稍后重试。"
+  permission:
+    admin: "管理 QQ 绑定与账号认证"
+  reminder:
+    login: "请使用 /login <密码> 登录；忘记密码：/qqauthreset password <新密码>"
+    register: "请使用 /register <密码> <重复密码> 注册"
+  status:
+    auth:
+      ALREADY_REGISTERED: "账号已经注册"
+      IDENTITY_MISMATCH: "账号身份不一致"
+      INVALID_PASSWORD: "密码不符合要求"
+      IP_LIMIT: "此 IP 注册数量已达上限"
+      LOCKED: "账号已锁定"
+      NOT_AUTHENTICATED: "请先登录"
+      NOT_REGISTERED: "账号尚未注册"
+      STALE_GENERATION: "账号状态已变化，请重新操作"
+      SUCCESS: "成功"
+      THROTTLED: "尝试过于频繁，请稍后重试"
+      WRONG_PASSWORD: "密码错误"
+    binding:
+      ALREADY_BOUND: "账号已经绑定"
+      IDENTITY_CONFLICT: "账号身份冲突"
+      INVALID_CODE: "验证码无效或已过期"
+      LIMIT_REACHED: "绑定数量已达上限"
+      NOT_BOUND: "账号尚未绑定"
+      QQ_MISMATCH: "验证 QQ 不匹配"
+      STALE_GENERATION: "账号状态已变化，请重新申请验证码"
+      SUCCESS: "成功"
+  usage:
+    admin-actions: "/qqauth forceunbind|lock|unlock|delete <玩家>；/qqauth importbindings confirm"
+    admin-help: "QQAuth：/login /register /changepassword /logout /unbind /qqauthreset；管理员 /qqauth status|forceunbind|lock|unlock|delete|reset|importbindings"
+    change-password: "/changepassword <旧密码> <新密码>"
+    login: "/login <密码>"
+    register: "/register <密码> <重复密码>"
+    reset-password: "/qqauthreset password <新密码>"
+    unbind: "/unbind"
+    unregister: "/unregister <密码>"
+  web:
+    action:
+      delete: "删除注册"
+      forceunbind: "解除QQ绑定"
+      lock: "锁定"
+      reset: "重置密码"
+      unlock: "解锁"
+    column:
+      authenticated: "已登录"
+      created-at: "注册时间"
+      locked: "锁定"
+      name: "玩家"
+      uuid: "UUID"
+    configuration-description: "桥接 token 仅保存在模块 config.yml，不通过 Web 显示。修改配置后从控制台重载 qqauth 模块。旧 QQ 绑定可通过控制台显式导入；AuthMe 密码数据库尚不导入。"
+    confirm:
+      action: "确认执行？旧认证将被撤销。"
+      reset: "确认重置并撤销旧认证？"
+    error:
+      account-not-found: "账号不存在。"
+      not-ready: "QQAuth 尚未就绪。"
+      operation-failed: "操作未完成：{status}"
+      password-required: "请输入密码。"
+      queue-full: "认证队列已满，请稍后重试。"
+      unknown-action: "未知操作。"
+    field:
+      new-password: "新密码"
+    operation-complete: "操作完成，旧认证已撤销。"
+    panel:
+      title: "QQ验证与账号认证"
+    permission:
+      manage: "管理游戏账号、QQ 绑定与密码恢复"
+      view: "查看游戏账号认证状态（不含 QQ 标识与密码）"
+    section:
+      auth-status: "认证状态"
+      configuration: "配置与迁移"
+    stats:
+      account-count: "账号数"
+      module-status: "模块状态"
+    status:
+      not-ready: "未就绪"
+      ready: "就绪"
+    table:
+      title: "游戏认证账号"

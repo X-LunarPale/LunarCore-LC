@@ -1,0 +1,15 @@
+{
+  "id": "example-addon",
+  "name": "示例模块",
+  "nameEn": "Example module",
+  "description": "替换为模块用途。",
+  "descriptionEn": "Replace with the module purpose.",
+  "version": "1.0.0",
+  "coreVersions": ["0.0.6-preview"],
+  "author": "your-name",
+  "source": "https://github.com/your-name/your-module",
+  "download": "https://github.com/your-name/your-module/releases/download/v1.0.0/example-addon.jar",
+  "license": "GPL-3.0-only",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "depends": []
+}

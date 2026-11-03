@@ -1,0 +1,8 @@
+id: landmarks
+name: 建筑地标册
+version: '${version}'
+main: com.lunarboreal.landmarks.LandmarksModule
+description: 自愿投稿、版本审核及遵循领地访问权限的建筑地标册
+authors: [LunarBoreal]
+depends: [land]
+softdepends: []

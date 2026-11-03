@@ -1,0 +1,12 @@
+name: LagFixerProbe
+version: 1.0
+main: com.lunarboreal.probe.LagFixerProbe
+api-version: '26.3'
+depend: [LunarCore]
+commands:
+  lagfixerprobe:
+    description: Isolated-server NMS lifecycle assertions
+    permission: lagfixerprobe.admin
+permissions:
+  lagfixerprobe.admin:
+    default: op

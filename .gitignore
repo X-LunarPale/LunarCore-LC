@@ -1,0 +1,50 @@
+.gradle/
+build/
+**/build/
+web-ui/node_modules/
+web-ui/dist/
+.idea/
+run/
+run-26.3/
+run-alpha2/
+dist-alpha2/
+dist-alpha2-embedded/
+zip-probe*.zip
+__pycache__/
+dist/
+dist-report-fixes/
+.dsh/
+# Local diagnostic probes and runtime verification scripts
+ZipProbe.java
+zip-probe*
+create-probe-script.py
+prepare-probe.py
+repair-codebook.py
+verify-*.mjs
+# Reproducible checks for the terrain module
+!tools/verify-terrain-native.mjs
+!tools/verify-terrain-ui.mjs
+package-alpha2.py
+package-report-fixes.py
+third-party/qqauth/*.jar
+
+# Local acceptance screenshots/logs and crash dumps
+artifacts/
+hs_err_pid*.log
+logs/
+**/logs/
+
+# Local test-server deployment helpers (contain machine-specific paths)
+tools/deploy-test-integrations.py
+tools/start-test-server.ps1
+tools/test-server-control.py
+
+# Private reverse-engineering helper scripts with local artifact paths
+integrations/lbr-playertitle-web/inspect-*.sh
+
+# Generated/private resource-pack deliverables
+resource-packs/lunar-island/NotoSansSC.ttf
+resource-packs/lunar-island/*.zip
+resource-packs/lunar-island/*.sha256
+resource-packs/lunar-island/pack-preview.png
+resource-packs/lunar-island/build-manifest.json

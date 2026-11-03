@@ -1,0 +1,51 @@
+# Economy module language file (MiniMessage), key: economy.<path>
+usage:
+  money: "<prefix><gray>Usage: <yellow>/money [player]</yellow> or <yellow>/money log [player] [page]"
+  pay: "<prefix><gray>Usage: <yellow>/pay <player> <amount></yellow>, large payments require <yellow>/pay confirm</yellow>"
+  eco: "<prefix><gray>Usage: <yellow>/eco <give|take|set|reset> <player|*> [amount]"
+
+balance:
+  self: "<prefix><gray>Your balance: <gold>{amount}"
+  other: "<prefix><gray>Balance of <white>{player}</white>: <gold>{amount}"
+
+pay:
+  min: "<prefix><red>The minimum payment is <gold>{min}</gold>."
+  self: "<prefix><red>You cannot pay yourself."
+  confirm: "<prefix><yellow>You are about to pay <white>{player}</white> <gold>{amount}</gold> (fee <gold>{fee}</gold>, total <gold>{total}</gold>).<br><prefix><yellow>Type <click:run_command:'/pay confirm'><green><u>/pay confirm</u></green></click> within {seconds}s to confirm."
+  no-pending: "<prefix><red>You have no pending payment."
+  expired: "<prefix><red>The confirmation has expired, please try again."
+  sent: "<prefix><green>Paid <gold>{amount}</gold> to <white>{player}</white>. Balance: <gold>{balance}</gold>."
+  sent-fee: "<prefix><green>Paid <gold>{amount}</gold> to <white>{player}</white> (fee <gold>{fee}</gold>). Balance: <gold>{balance}</gold>."
+  received: "<prefix><green>You received <gold>{amount}</gold> from <white>{player}</white>."
+
+baltop:
+  header: "<gold>===== Richest Players <gray>({page}/{pages})</gray> Server total <yellow>{total}</yellow> ====="
+  entry: "<gray>#{rank} <white>{player}</white> <dark_gray>-</dark_gray> <gold>{amount}"
+  self: "<gray>Your rank: <yellow>#{rank}"
+  empty: "<gray>No data yet."
+
+eco:
+  give: "<prefix><green>Gave <gold>{amount}</gold> to <white>{player}</white>, balance <gold>{balance}</gold>."
+  take: "<prefix><green>Took <gold>{amount}</gold> from <white>{player}</white>, balance <gold>{balance}</gold>."
+  set: "<prefix><green>Set balance of <white>{player}</white> to <gold>{balance}</gold>."
+  reset: "<prefix><green>Reset balance of <white>{player}</white> to <gold>{balance}</gold>."
+  batch: "<prefix><green>Batch done: {count}/{total} succeeded."
+  notify: "<prefix><gray>Your balance was adjusted by an admin. Current balance: <gold>{amount}"
+
+log:
+  header: "<gold>===== Transactions of <white>{player}</white> <gray>({page}/{pages})</gray> ====="
+  entry-in: "<dark_gray>[{time}]</dark_gray> <green>+{change}</green> <gray>bal {balance}</gray> <white>{reason}</white> <dark_gray>by {operator}"
+  entry-out: "<dark_gray>[{time}]</dark_gray> <red>-{change}</red> <gray>bal {balance}</gray> <white>{reason}</white> <dark_gray>by {operator}"
+  empty: "<gray>No transactions."
+
+error:
+  no-permission: "<prefix><red>You don't have permission."
+  player-not-found: "<prefix><red>Player <white>{player}</white> not found or has no account."
+  invalid-amount: "<prefix><red>Invalid amount: <white>{input}</white>"
+  database: "<prefix><red>Database query failed, try again later."
+  invalid_amount: "<prefix><red>Invalid amount."
+  insufficient_funds: "<prefix><red>Insufficient funds (need <gold>{need}</gold>, have <gold>{balance}</gold>)."
+  max_balance: "<prefix><red>That would exceed the maximum balance."
+  no_account: "<prefix><red>Account does not exist."
+  same_account: "<prefix><red>You cannot pay yourself."
+  loading: "<prefix><yellow>Economy data is loading, please try again shortly."

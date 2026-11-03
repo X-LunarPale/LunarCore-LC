@@ -1,0 +1,8 @@
+id: ban
+name: 封禁系统
+version: '${version}'
+main: com.lunarboreal.ban.BanModule
+description: 封禁 / IP 封禁 / 禁言 / 警告阶梯 / 踢出 / 处罚记录，提供 BanService
+authors: [琉月·冰澜]
+depends: []
+softdepends: []

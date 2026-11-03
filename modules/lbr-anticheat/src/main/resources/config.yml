@@ -1,0 +1,6 @@
+# LunarCore GrimAC 桥接设置。检测、豁免和处罚请通过 GrimAC 配置管理。
+# 旧版 general/checks/alerts/storage 配置不再使用。
+bridge:
+  capture-enabled: true
+  # 1 至 10000；仅在内存中保存近期违规快照。
+  recent-capacity: 500

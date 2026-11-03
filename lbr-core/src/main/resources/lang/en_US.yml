@@ -1,0 +1,100 @@
+# ==========================================================
+#   LunarCore 琉月 core messages
+#   Format: MiniMessage, legacy & codes supported. <prefix> = global prefix, {name} = placeholder.
+#   Lists are sent as multiple lines; empty string = do not send.
+# ==========================================================
+
+prefix: "<gradient:#7ec8ff:#b98cff><bold>LC</bold></gradient> <dark_gray>» "
+
+word-yes: "<green>yes"
+word-no: "<red>no"
+
+no-permission: "<prefix><red>You don't have permission to do that. <dark_gray>({permission})"
+player-only: "<prefix><red>This command can only be used by players."
+command-error: "<prefix><red>An internal error occurred, please check the console."
+unknown-subcommand: "<prefix><red>Unknown sub-command, type <yellow>/{label} help</yellow>."
+player-not-found: "<prefix><red>Player <yellow>{player}</yellow> not found."
+web-offline: "<red>offline"
+web-usage: "<prefix><gray>Usage: <yellow>/{label} web <sub-command></yellow>"
+
+help:
+  - "<gradient:#7ec8ff:#b98cff><bold>LunarCore 琉月</bold></gradient> <dark_gray>— Help"
+  - "<yellow>/{label} info</yellow> <dark_gray>- <gray>Version, platform, database and modules"
+  - "<yellow>/{label} reload</yellow> <dark_gray>- <gray>Reload core config, languages and module configs"
+  - "<yellow>/{label} module list</yellow> <dark_gray>- <gray>List modules"
+  - "<yellow>/{label} module enable|disable|reload|info <module></yellow> <dark_gray>- <gray>Manage modules"
+  - "<yellow>/{label} web</yellow> <dark_gray>- <gray>Web panel commands"
+  - "<yellow>/{label} debug</yellow> <dark_gray>- <gray>Toggle debug output"
+
+info:
+  - "<gradient:#7ec8ff:#b98cff><bold>LunarCore 琉月</bold></gradient> <white>v{version}"
+  - "<gray>Platform: <white>{platform}</white> <dark_gray>(Paper: {paper}<dark_gray>)"
+  - "<gray>Minecraft: <white>{minecraft}</white> <dark_gray>| <gray>Java: <white>{java}"
+  - "<gray>Database: <white>{database}</white> <dark_gray>| <gray>Language: <white>{language}"
+  - "<gray>Modules: <green>{modules}</green><gray>/<white>{discovered}</white> enabled"
+  - "<gray>PlaceholderAPI: {papi}"
+  - "<gray>Web panel: <aqua>{web}"
+
+reload:
+  done: "<prefix><green>Reloaded core config, languages and <yellow>{modules}</yellow> module configs. <dark_gray>({time}ms)"
+
+debug:
+  enabled: "<prefix><yellow>Debug mode enabled (this run only)."
+  disabled: "<prefix><gray>Debug mode disabled."
+
+module:
+  usage: "<prefix><gray>Usage: <yellow>/{label} module <list|enable|disable|reload|info> [id]"
+  list-header: "<prefix><gray>Modules (<green>{count}</green>/<white>{total}</white> enabled):"
+  list-entry: " <dark_gray>• <white>{name}</white> <gray>({id}) <dark_gray>v{version} {status}"
+  status:
+    enabled: "<green>● enabled"
+    failed: "<red>✖ failed"
+    disabled: "<gray>○ disabled in config"
+    stopped: "<yellow>○ stopped"
+  not-found: "<prefix><red>Module <yellow>{id}</yellow> not found in modules/."
+  already-enabled: "<prefix><yellow>Module {id} is already enabled."
+  not-enabled: "<prefix><yellow>Module {id} is not enabled."
+  enabled: "<prefix><green>Module <yellow>{id}</yellow> enabled."
+  enable-failed: "<prefix><red>Failed to enable module <yellow>{id}</yellow>: <gray>{reason}"
+  disabled: "<prefix><green>Module <yellow>{id}</yellow> disabled (until restart; add <white>--save</white> to persist)."
+  disabled-saved: "<prefix><green>Module <yellow>{id}</yellow> disabled and saved to modules.disabled."
+  reloaded: "<prefix><green>Module <yellow>{id}</yellow> reloaded."
+  reload-failed: "<prefix><red>Failed to reload module <yellow>{id}</yellow>: <gray>{reason}"
+  info:
+    - "<gradient:#7ec8ff:#b98cff>Module</gradient> <white>{name}</white> <gray>({id})"
+    - "<gray>Version: <white>{version}</white> <dark_gray>| <gray>Status: {status}"
+    - "<gray>Description: <white>{description}"
+    - "<gray>Authors: <white>{authors}"
+    - "<gray>Depends: <white>{depends}</white> <dark_gray>| <gray>Soft: <white>{softdepends}"
+    - "<gray>File: <white>{file}"
+    - "<gray>Last error: <red>{error}"
+
+# /lc web sub-commands
+web:
+  no-permission: "<prefix><red>You don't have permission to manage the web panel."
+  usage:
+    - "<aqua><bold>LunarCore Web Panel</bold>"
+    - "<gray>/lc web status|url|reload"
+    - "<gray>/lc web user list|add <name> <password> [role]|remove <name>|passwd <name> <password>|role <name> <role>"
+    - "<gray>/lc web resetadmin | bind"
+  status:
+    - "<prefix><aqua>Web panel: {state}"
+    - "<gray>URL: <white><click:open_url:'{url}'><u>{url}</u></click> <gray>Port: <white>{port}"
+    - "<gray>Accounts: <white>{users} <gray>WebSockets: <white>{ws} <gray>Routes: <white>{routes} <gray>Panels: <white>{panels}"
+  url: "<prefix><gray>Web panel: <aqua><click:open_url:'{url}'><u>{url}</u></click>"
+  reload-start: "<prefix><gray>Reloading web panel..."
+  reload-done: "<prefix><green>Web panel reloaded: <aqua>{url}"
+  reload-failed: "<prefix><red>Web panel failed to start, see console."
+  not-ready: "<prefix><red>Web account system is not ready."
+  error: "<prefix><red>Failed: {message}"
+  user-list-header: "<prefix><aqua>Web accounts ({count}):"
+  user-list-entry: "<gray> - <white>{user} <dark_gray>[<aqua>{role}</aqua>] <gray>MC: <white>{mc}"
+  user-added: "<prefix><green>Created web account {user} ({role})."
+  user-removed: "<prefix><green>Deleted web account {user}."
+  user-passwd: "<prefix><green>Password of {user} reset."
+  user-role: "<prefix><green>Role of {user} set to {role}."
+  console-only: "<prefix><red>Console or OP only."
+  resetadmin: "<prefix><yellow>New password for {user}: <aqua><click:copy_to_clipboard:'{password}'>{password}</click>"
+  resetadmin-console: "<prefix><yellow>Admin password reset, see console output above."
+  player-only: "<prefix><red>Players only."
+  bind-code: "<prefix><aqua>Your web code: <white><bold>{code}</bold> <gray>(valid {minutes} min)"

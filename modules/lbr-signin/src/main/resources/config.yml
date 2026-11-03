@@ -1,0 +1,51 @@
+# ============================================================
+#  LunarCore 琉月（LC） - 每日签到（signin）配置
+#  修改后执行 /lc module reload signin 或在 Web 面板保存即可生效
+# ============================================================
+
+# 签到使用的时区，每天该时区 0 点刷新
+timezone: "Asia/Shanghai"
+
+# /signin 是否打开日历界面；false 时 /signin 直接签到
+gui-enabled: true
+
+# 签到成功后是否全服广播
+broadcast: false
+
+reminder:
+  # 登录时若今日未签到是否提醒
+  on-join: true
+  # 登录后延迟多少秒提醒
+  delay-seconds: 3
+  # 跨天（0 点）时是否提醒在线且未签到的玩家
+  on-new-day: true
+
+makeup:
+  # 是否允许补签（只能补签本月今天之前的日期）
+  enabled: true
+  # 每次补签消耗的金币（需要 economy 模块；为 0 时免费）
+  cost: 500
+  # 每月最多补签次数
+  monthly-limit: 3
+  # 补签是否发放每日基础奖励
+  give-daily-reward: true
+  # 补签后是否检查累计里程碑奖励
+  check-milestones: true
+
+# 变量 %lc_signin_today% 的显示文本
+placeholder:
+  signed: "已签到"
+  unsigned: "未签到"
+
+# 日历界面物品材质（Material 名称）
+gui:
+  signed: LIME_STAINED_GLASS_PANE
+  makeup-signed: YELLOW_STAINED_GLASS_PANE
+  today: SUNFLOWER
+  missed: ORANGE_STAINED_GLASS_PANE
+  missed-locked: RED_STAINED_GLASS_PANE
+  future: GRAY_STAINED_GLASS_PANE
+  info: CLOCK
+  rewards: BOOK
+  close: BARRIER
+  filler: BLACK_STAINED_GLASS_PANE

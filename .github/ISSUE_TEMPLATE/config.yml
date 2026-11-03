@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 模块投稿说明 / Submission guide
+    url: https://github.com/X-LunarPale/LunarCore-LC/blob/main/CONTRIBUTING.md
+    about: 投稿步骤与字段说明 / Steps and fields

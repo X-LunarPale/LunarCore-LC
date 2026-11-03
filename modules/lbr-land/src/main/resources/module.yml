@@ -1,0 +1,8 @@
+id: land
+name: 领地系统
+version: '${version}'
+main: com.lunarboreal.land.LandModule
+description: 圈地、领地保护、成员/flag 管理、领地交易与领地税
+authors: [琉月·冰澜]
+depends: []
+softdepends: [economy]

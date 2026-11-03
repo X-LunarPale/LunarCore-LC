@@ -1,0 +1,152 @@
+# Ban module language file (MiniMessage)
+words:
+  permanent: "Permanent"
+  active: "<green>Active"
+  revoked: "<gray>Revoked ({operator})"
+  inactive: "<dark_gray>Inactive"
+
+types:
+  ban: "Ban"
+  ban-temp: "Temp ban"
+  ipban: "IP ban"
+  ipban-temp: "Temp IP ban"
+  mute: "Mute"
+  mute-temp: "Temp mute"
+  warn: "Warning"
+  kick: "Kick"
+
+screen:
+  ban:
+    - "<gradient:#7ec8ff:#b98cff><bold>Lunar Boreal</bold></gradient>"
+    - ""
+    - "<red><bold>You are permanently banned</bold>"
+    - ""
+    - "<gray>Reason: <white>{reason}"
+    - "<gray>By: <white>{operator}"
+    - "<gray>Date: <white>{date}"
+    - "<gray>ID: <white>#{id}"
+    - ""
+    - "<gray>Appeal: <aqua>{appeal}"
+  tempban:
+    - "<gradient:#7ec8ff:#b98cff><bold>Lunar Boreal</bold></gradient>"
+    - ""
+    - "<red><bold>You are temporarily banned</bold>"
+    - ""
+    - "<gray>Reason: <white>{reason}"
+    - "<gray>By: <white>{operator}"
+    - "<gray>Expires: <white>{expires}"
+    - "<gray>Remaining: <yellow>{remaining}"
+    - "<gray>ID: <white>#{id}"
+    - ""
+    - "<gray>Appeal: <aqua>{appeal}"
+  ipban:
+    - "<gradient:#7ec8ff:#b98cff><bold>Lunar Boreal</bold></gradient>"
+    - ""
+    - "<red><bold>Your IP is permanently banned</bold>"
+    - ""
+    - "<gray>Reason: <white>{reason}"
+    - "<gray>ID: <white>#{id}"
+    - ""
+    - "<gray>Appeal: <aqua>{appeal}"
+  tempipban:
+    - "<gradient:#7ec8ff:#b98cff><bold>Lunar Boreal</bold></gradient>"
+    - ""
+    - "<red><bold>Your IP is temporarily banned</bold>"
+    - ""
+    - "<gray>Reason: <white>{reason}"
+    - "<gray>Remaining: <yellow>{remaining}"
+    - "<gray>ID: <white>#{id}"
+    - ""
+    - "<gray>Appeal: <aqua>{appeal}"
+  kick:
+    - "<gradient:#7ec8ff:#b98cff><bold>Lunar Boreal</bold></gradient>"
+    - ""
+    - "<yellow><bold>You were kicked</bold>"
+    - ""
+    - "<gray>Reason: <white>{reason}"
+
+notify:
+  muted: "<prefix><red>You have been permanently muted. <gray>Reason: <white>{reason}"
+  tempmuted: "<prefix><red>You have been muted for <yellow>{duration}</yellow>. <gray>Reason: <white>{reason}"
+  warned: "<prefix><gold>You received a warning ({count} total). <gray>Reason: <white>{reason}"
+  unmuted: "<prefix><green>Your mute has been lifted."
+  muted-chat: "<prefix><red>You are muted ({remaining} left). <gray>Reason: <white>{reason}"
+  muted-command: "<prefix><red>You cannot use this command while muted ({remaining} left)."
+
+broadcast:
+  ban: "<prefix><red>{player}</red> <gray>was permanently banned by <white>{operator}</white>: <white>{reason}"
+  ban-temp: "<prefix><red>{player}</red> <gray>was banned for <yellow>{duration}</yellow> by <white>{operator}</white>: <white>{reason}"
+  ipban: "<prefix><red>{player}</red> <gray>was IP banned by <white>{operator}</white>: <white>{reason}"
+  ipban-temp: "<prefix><red>{player}</red> <gray>was IP banned for <yellow>{duration}</yellow> by <white>{operator}</white>: <white>{reason}"
+  mute: "<prefix><gold>{player}</gold> <gray>was permanently muted by <white>{operator}</white>: <white>{reason}"
+  mute-temp: "<prefix><gold>{player}</gold> <gray>was muted for <yellow>{duration}</yellow> by <white>{operator}</white>: <white>{reason}"
+  warn: "<prefix><yellow>{player}</yellow> <gray>was warned by <white>{operator}</white>: <white>{reason}"
+  kick: "<prefix><yellow>{player}</yellow> <gray>was kicked by <white>{operator}</white>: <white>{reason}"
+  silent-prefix: "<dark_gray>[Silent]</dark_gray> {message}"
+  unban: "<prefix><green>{player}</green> <gray>was unbanned by <white>{operator}</white>."
+  unbanip: "<prefix><green>{player}</green> <gray>was IP-unbanned by <white>{operator}</white>."
+  unmute: "<prefix><green>{player}</green> <gray>was unmuted by <white>{operator}</white>."
+
+warn:
+  auto-reason: "Reached {count} warnings"
+
+error:
+  usage: "<prefix><red>Usage: <white>{usage}"
+  player-not-found: "<prefix><red>Player <white>{player}</white> not found."
+  no-ip: "<prefix><red>Cannot determine the IP of <white>{player}</white>."
+  not-online: "<prefix><red>Player <white>{player}</white> is not online."
+  exempt: "<prefix><red>{player} is exempt from punishments."
+  self: "<prefix><red>You cannot punish yourself."
+  invalid-duration: "<prefix><red>Invalid duration <white>{input}</white>. Examples: 30m, 12h, 7d, 1mo, perm"
+  duration-limit: "<prefix><red>You may only set durations up to <white>{max}</white>."
+  no-silent: "<prefix><red>You are not allowed to use -s."
+  not-banned: "<prefix><red>{player} is not banned."
+  not-ipbanned: "<prefix><red>IP {ip} is not banned."
+  not-muted: "<prefix><red>{player} is not muted."
+  no-warns: "<prefix><red>{player} has no active warnings."
+  no-permission: "<prefix><red>You don't have permission."
+  database: "<prefix><red>Database query failed, see console."
+
+notice:
+  replaced: "<prefix><yellow>{player} already has an active punishment of this type; it will be replaced."
+
+command:
+  done: "<prefix><green>{type} applied: <white>{player}</white> <gray>(#{id})"
+  unwarned: "<prefix><green>Removed {count} warning(s) from {player}, {remaining} left."
+  reloaded: "<prefix><green>Ban configuration reloaded."
+
+command-desc:
+  ban: "Ban a player"
+  tempban: "Temporarily ban a player"
+  ipban: "Ban an IP"
+  tempipban: "Temporarily ban an IP"
+  mute: "Mute a player"
+  tempmute: "Temporarily mute a player"
+  warn: "Warn a player"
+  kick: "Kick a player"
+  unban: "Unban a player"
+  unbanip: "Unban an IP"
+  unmute: "Unmute a player"
+  unwarn: "Remove warnings"
+  history: "Show punishment history"
+  banlist: "List active bans"
+  checkban: "Check punishment status"
+  reload: "Reload ban configuration"
+
+history:
+  empty: "<prefix><gray>{player} has no punishments."
+  header: "<prefix><aqua>Punishments of {player} <gray>(page {page}/{pages}, {total} total)"
+  entry: "<gray>#{id} <white>{type}</white> | {date} | <white>{reason}</white> | {operator} | expires {expires} {state}"
+
+banlist:
+  empty: "<prefix><gray>No active bans."
+  header: "<prefix><aqua>Active bans <gray>(page {page}/{pages}, {total} total)"
+  entry: "<gray>#{id} <red>{player}</red> <white>{type}</white> | {reason} | <yellow>{remaining}</yellow> left"
+
+check:
+  header: "<prefix><aqua>{player} <gray>status (IP: {ip})"
+  ban: "<gray> - <red>{type}</red> #{id}: <white>{reason}</white> by {operator}, <yellow>{remaining}</yellow> left"
+  ipban: "<gray> - <red>{type}</red> #{id}: <white>{reason}</white> by {operator}, <yellow>{remaining}</yellow> left"
+  mute: "<gray> - <gold>{type}</gold> #{id}: <white>{reason}</white> by {operator}, <yellow>{remaining}</yellow> left"
+  clean: "<gray> - <green>No active ban or mute"
+  warns: "<gray> - Active warnings: <yellow>{count}</yellow>"

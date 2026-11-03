@@ -1,0 +1,6 @@
+id: titles
+name: Titles
+version: '${version}'
+main: com.lunarboreal.titles.TitlesModule
+description: Persistent player titles with command and Web administration
+authors: [LunarBoreal]

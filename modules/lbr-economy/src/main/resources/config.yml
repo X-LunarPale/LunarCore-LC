@@ -1,0 +1,54 @@
+# ============================================================
+#  LunarCore 琉月（LC） - 经济系统（economy）配置
+#  修改后执行 /lc module reload economy 或在 Web 面板保存即可生效
+# ============================================================
+
+currency:
+  # 货币单数名称（金额恰好为 1 时使用）
+  singular: "金币"
+  # 货币复数名称
+  plural: "金币"
+  # 小数位数（0-8），所有金额会向下截断到该精度
+  decimals: 2
+  # 金额显示格式：{amount} 为带千分位的数字，{currency} 为货币名
+  format: "{amount} {currency}"
+  # 是否显示千分位分隔符
+  grouping: true
+
+account:
+  # 新玩家初始余额
+  initial-balance: 100
+  # 单个账户最大余额（<= 0 表示不限制）
+  max-balance: 1000000000000
+
+storage:
+  # 内存缓存定期异步写入数据库的间隔（秒）
+  flush-interval: 30
+  # 排行榜缓存刷新间隔（秒）
+  top-refresh: 60
+
+pay:
+  # 单笔转账最小金额
+  min-amount: 1
+  # 手续费百分比（0-100），由付款方额外支付；0 表示免手续费
+  fee-percent: 0
+  # 单笔最少手续费（仅在 fee-percent > 0 时生效）
+  min-fee: 0
+  # 金额 >= 该值时需要 /pay confirm 二次确认（<= 0 表示不需要确认）
+  confirm-threshold: 10000
+  # 二次确认有效期（秒）
+  confirm-timeout: 30
+
+baltop:
+  # /baltop 每页条数
+  page-size: 10
+
+log:
+  # /money log 每页条数
+  page-size: 10
+
+vault:
+  # 检测到 Vault 时是否注册为 Vault 经济提供者（优先级 High）
+  enabled: true
+  # 在 Vault 中显示的经济插件名称
+  name: "LunarCore-Economy"

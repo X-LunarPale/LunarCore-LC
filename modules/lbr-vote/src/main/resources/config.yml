@@ -1,0 +1,25 @@
+enabled: true
+worlds: ['*'] # 推荐专用娱乐世界；收益和代价也会影响PVP/跑酷/饱食度
+minimum-online: 3
+quorum: 0.5 # 固定选民至少一半参与
+approval: 0.6 # 支持/有效票至少60%，且支持严格多于反对
+vote-seconds: 60
+max-vote-seconds: 300 # 硬限制30..300秒
+effect-seconds: 60
+max-effect-seconds: 300 # 硬限制15..300秒
+cooldown-seconds: 300 # 硬限制60..86400秒
+# 每项始终是固定收益+代价组合，无法单独移除代价或配置任意命令。
+# 仅一级、有时限药水；不直接伤害、不改地形，但饥饿会消耗食物，弱化会影响战斗。
+# 同一玩家已有组合任一同类药水时整组跳过；创造/旁观者不参与也不受影响。
+effects:
+  speed:
+    enabled: true # 收益：速度I赶路快；代价：饥饿I更快消耗饱食度
+  jump:
+    enabled: true # 收益：跳跃提升I跳高；代价：虚弱I降低近战伤害
+  slow:
+    enabled: false # 可选组合：收益急迫I挖掘快；代价缓慢I走得慢；保留旧ID
+# 灵感来自愚人节；自动模式仍只发起投票，通过后才施加整组效果。
+automatic:
+  enabled: false
+  interval-seconds: 900 # 硬限制300..86400
+  pool: [speed, jump]

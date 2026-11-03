@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="description" content="琉月·冰澜服务器管理中心，统一管理玩家、模块、权限与服务器运行状态。" />
+    <meta name="theme-color" content="#111e30" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>LunarCore 琉月</title>
+    <script>
+      // 主题在 Vue 加载前生效，避免闪烁
+      try {
+        var t = localStorage.getItem('lbr-theme')
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        }
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

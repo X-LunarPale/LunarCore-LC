@@ -1,0 +1,8 @@
+id: signin
+name: 每日签到
+version: '${version}'
+main: com.lunarboreal.signin.SigninModule
+description: 每日签到、连续/累计奖励、补签、签到日历界面
+authors: [琉月·冰澜]
+depends: []
+softdepends: [economy]

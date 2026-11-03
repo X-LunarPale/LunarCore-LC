@@ -1,0 +1,8 @@
+id: qqauth
+name: QQ验证与账号认证
+version: '${version}'
+main: com.lunarboreal.qqauth.QQAuthModule
+description: QQ 群绑定验证与 AuthMe 风格玩家账号认证
+authors: [LunarCore]
+depends: []
+softdepends: []

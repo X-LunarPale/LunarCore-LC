@@ -1,0 +1,7 @@
+name: LbrPlayerTitleWeb
+version: '${version}'
+main: com.lunarboreal.playertitleweb.PlayerTitleWebPlugin
+api-version: '1.21'
+depend: [LunarCore]
+softdepend: [PlayerTitle]
+description: Visual LunarCore administration using PlayerTitle public API

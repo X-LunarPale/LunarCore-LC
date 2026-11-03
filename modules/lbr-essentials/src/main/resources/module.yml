@@ -1,0 +1,8 @@
+id: essentials
+name: 基础命令
+version: '${version}'
+main: com.lunarboreal.essentials.EssentialsModule
+description: 玩家状态、物品、工作台、时间、天气与礼包命令
+authors: [琉月·冰澜]
+depends: []
+softdepends: [economy]

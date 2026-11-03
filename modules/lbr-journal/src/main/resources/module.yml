@@ -1,0 +1,8 @@
+id: journal
+name: 探索手册
+version: '${version}'
+main: com.lunarboreal.journal.JournalModule
+description: 原版探索、进度与钓获的个人收藏记录
+authors: [琉月·冰澜]
+depends: []
+softdepends: []

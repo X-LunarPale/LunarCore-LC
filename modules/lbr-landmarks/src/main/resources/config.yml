@@ -1,0 +1,3 @@
+enabled: true
+worlds: [world]
+max-per-player: 3

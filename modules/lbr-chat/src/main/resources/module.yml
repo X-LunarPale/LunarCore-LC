@@ -1,0 +1,8 @@
+id: chat
+name: 聊天与社交
+version: '${version}'
+main: com.lunarboreal.chat.ChatModule
+description: 聊天格式、反刷屏、私聊、邮件、昵称、公告、Tab 列表
+authors: [琉月·冰澜]
+depends: []
+softdepends: [ban]

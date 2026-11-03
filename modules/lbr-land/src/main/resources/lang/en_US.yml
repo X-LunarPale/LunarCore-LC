@@ -1,0 +1,170 @@
+# Land module language file (MiniMessage)
+help:
+  - "<gold><bold>━━━━ Lands ━━━━"
+  - "<yellow>Select: <gray>left/right click with the selection tool, or <white>/land pos1</white> <white>/land pos2"
+  - "<yellow>/land create [name] <gray>create a land (priced by area)"
+  - "<yellow>/land delete [name] <gray>delete a land (partial refund)"
+  - "<yellow>/land info [name] <gray>show land info"
+  - "<yellow>/land list [player] <gray>list lands"
+  - "<yellow>/land rename [old] [new] <gray>rename"
+  - "<yellow>/land settp <gray>set teleport  <yellow>/land tp [name] <gray>teleport"
+  - "<yellow>/land trust [player] [member|manager] <gray>trust  <yellow>/land untrust [player]"
+  - "<yellow>/land flag [flag] [true|false] [global|member] <gray>set flags"
+  - "<yellow>/land expand [north|south|east|west|facing] [blocks] <gray>expand/shrink"
+  - "<yellow>/land sell [price|cancel] <gray>sell  <yellow>/land buy [name] <gray>buy"
+  - "<yellow>/land transfer [player] <gray>transfer  <yellow>/land show [name] <gray>show border"
+  - "<yellow>/land message [enter|leave] [text|clear] <gray>enter/leave messages"
+  - "<yellow>/land admin [delete|tp|list|bypass] <gray>admin commands"
+
+placeholder:
+  wilderness: "Wilderness"
+
+word:
+  "yes": "yes"
+  "no": "no"
+
+role:
+  member: "member"
+  manager: "manager"
+
+scope:
+  global: "visitor/global"
+  member: "member"
+
+usage:
+  create: "<prefix><red>Usage: /land create [name]"
+  list: "<prefix><red>Usage: /land list [player]"
+  rename: "<prefix><red>Usage: /land rename [old] [new]"
+  tp: "<prefix><red>Usage: /land tp [land]"
+  trust: "<prefix><red>Usage: /land trust [player] [member|manager]"
+  untrust: "<prefix><red>Usage: /land untrust [player]"
+  flag: "<prefix><red>Usage: /land flag [flag] [true|false] [global|member]"
+  expand: "<prefix><red>Usage: /land expand [north|south|east|west|facing] [blocks] (negative shrinks)"
+  sell: "<prefix><red>Usage: /land sell [price] or /land sell cancel"
+  transfer: "<prefix><red>Usage: /land transfer [online player]"
+  message: "<prefix><red>Usage: /land message [enter|leave] [text|clear]"
+  admin: "<prefix><red>Usage: /land admin delete|tp|list|bypass"
+
+error:
+  loading: "<prefix><red>Land data is loading, try again later."
+  player-only: "<prefix><red>Players only."
+  no-permission: "<prefix><red>You don't have permission."
+  no-economy: "<prefix><red>Economy service is not available."
+  not-enough-money: "<prefix><red>Not enough money: need <gold>{cost}</gold>, you have <gold>{balance}</gold>."
+  no-selection: "<prefix><red>Select two points with <yellow>{tool}</yellow> or /land pos1, /land pos2 first."
+  invalid-name: "<prefix><red>Invalid land name."
+  name-taken: "<prefix><red>Land name <yellow>{land}</yellow> is taken."
+  no-such-land: "<prefix><red>Land <yellow>{land}</yellow> not found."
+  not-in-land: "<prefix><red>You are not standing in a land."
+  not-owner: "<prefix><red>You are not the owner of <yellow>{land}</yellow>."
+  not-manager: "<prefix><red>You can't manage <yellow>{land}</yellow>."
+  frozen: "<prefix><red>Land <yellow>{land}</yellow> is frozen due to unpaid tax."
+  world-blacklisted: "<prefix><red>Claiming is disabled in this world."
+  too-small: "<prefix><red>Each side must be at least <yellow>{min}</yellow> blocks."
+  too-large: "<prefix><red>Each side must be at most <yellow>{max}</yellow> blocks."
+  area-too-small: "<prefix><red>Area must be at least <yellow>{min}</yellow>."
+  overlap: "<prefix><red>Overlaps with land <yellow>{land}</yellow>."
+  near-spawn: "<prefix><red>Too close to spawn (min <yellow>{distance}</yellow> blocks)."
+  total-area: "<prefix><red>Exceeds your total area limit <yellow>{max}</yellow>."
+  max-lands: "<prefix><red>You can own at most <yellow>{max}</yellow> lands."
+  unknown-player: "<prefix><red>Unknown player <yellow>{player}</yellow>."
+  player-offline: "<prefix><red>Player <yellow>{player}</yellow> is offline."
+  world-missing: "<prefix><red>The land's world is not loaded."
+
+select:
+  pos1: "<prefix><gray>Point 1 set: <white>{x}, {y}, {z}"
+  pos2: "<prefix><gray>Point 2 set: <white>{x}, {y}, {z}"
+  done: "<prefix><green>Selection <white>{width}×{length}</white>, area <yellow>{area}</yellow>, cost <gold>{cost}</gold>. Use /land create to claim."
+
+create:
+  success: "<prefix><green>Land <yellow>{land}</yellow> created! Area {area}, cost <gold>{cost}</gold>."
+
+delete:
+  confirm: "<prefix><yellow>Delete <red>{land}</red>? Refund <gold>{refund}</gold>. Type <white>/land delete confirm</white> within 30s."
+  no-pending: "<prefix><red>Nothing to confirm."
+  success: "<prefix><green>Land <yellow>{land}</yellow> deleted, refunded <gold>{refund}</gold>."
+
+info:
+  - "<gold><bold>━━━━ Land {land} <gray>#{id}</gray> ━━━━"
+  - "<yellow>Owner: <white>{owner}  <yellow>World: <white>{world}"
+  - "<yellow>Bounds: <white>{coords}  <gray>({width}×{length}, area {area})"
+  - "<yellow>Created: <white>{created}  <yellow>Sale: <white>{sale}  <yellow>Frozen: <white>{frozen}"
+  - "<yellow>Managers: <white>{managers}"
+  - "<yellow>Members: <white>{members}"
+  - "<yellow>Visitor/global flags: {global_flags}"
+  - "<yellow>Member flags: {member_flags}"
+
+list:
+  header: "<gold>━━━━ Lands of {player} ({count}, total area {area}) ━━━━"
+  entry: "<yellow>{land} <gray>[{world}] {coords} area {area} owner {owner}</gray> {sale}"
+  on-sale: "<green>[for sale {price}]"
+
+rename:
+  success: "<prefix><green>Renamed <yellow>{old}</yellow> to <yellow>{land}</yellow>."
+
+settp:
+  success: "<prefix><green>Teleport point of <yellow>{land}</yellow> set."
+
+tp:
+  success: "<prefix><green>Teleported to <yellow>{land}</yellow>."
+
+trust:
+  success: "<prefix><green><yellow>{player}</yellow> is now {role} of <yellow>{land}</yellow>."
+  notify: "<prefix><green>You were trusted in <yellow>{owner}</yellow>'s land <yellow>{land}</yellow>."
+  is-owner: "<prefix><red>That player is already the owner."
+
+untrust:
+  success: "<prefix><green>Removed <yellow>{player}</yellow> from <yellow>{land}</yellow>."
+  not-member: "<prefix><red>{player} is not a member."
+
+flag:
+  success: "<prefix><green>{scope} flag <aqua>{flag}</aqua> of <yellow>{land}</yellow> set to <white>{value}</white>."
+  unknown: "<prefix><red>Unknown flag, available: {flags}"
+  not-member-flag: "<prefix><red>{flag} is an environment flag and can only be set globally."
+
+expand:
+  success: "<prefix><green>Land <yellow>{land}</yellow> changed {amount} blocks {dir}, area {area}, cost <gold>{cost}</gold>."
+
+sell:
+  success: "<prefix><green>Land <yellow>{land}</yellow> listed for <gold>{price}</gold> (tax {tax}%)."
+  cancelled: "<prefix><green>Sale of <yellow>{land}</yellow> cancelled."
+
+buy:
+  payment-failed: "<prefix><red>Settlement failed; ownership is unchanged. Check funds and seller balance cap."
+  not-for-sale: "<prefix><red>Land <yellow>{land}</yellow> is not for sale."
+  own-land: "<prefix><red>You can't buy your own land."
+  success: "<prefix><green>You bought <yellow>{land}</yellow> for <gold>{price}</gold>!"
+  sold: "<prefix><green>Your land <yellow>{land}</yellow> was bought by {player}, received <gold>{amount}</gold> (tax {tax})."
+
+transfer:
+  success: "<prefix><green>Transferred <yellow>{land}</yellow> to <yellow>{player}</yellow>."
+  received: "<prefix><green>{player} transferred land <yellow>{land}</yellow> to you."
+  target-limit: "<prefix><red>{player} has reached the land limit."
+
+show:
+  success: "<prefix><green>Showing border of <yellow>{land}</yellow> ({seconds}s)."
+  none: "<prefix><red>No land nearby."
+
+message:
+  success: "<prefix><green>{type} message of <yellow>{land}</yellow> set."
+  cleared: "<prefix><green>{type} message of <yellow>{land}</yellow> cleared."
+
+notice:
+  enter: "<green>Entering <yellow>{land}</yellow> <gray>(owner {owner})"
+  leave: "<gray>Leaving <yellow>{land}</yellow>"
+
+protect:
+  denied: "<prefix><red>You lack <aqua>{flag}</aqua> permission in <yellow>{land}</yellow> (owner {owner})."
+  enter: "<prefix><red>You can't enter <yellow>{land}</yellow>."
+  teleport: "<prefix><red>You can't teleport into <yellow>{land}</yellow>."
+
+tax:
+  paid: "<prefix><gray>Daily tax <gold>{amount}</gold> paid for <yellow>{land}</yellow>."
+  failed: "<prefix><red>Failed to pay tax <gold>{amount}</gold> for <yellow>{land}</yellow>, land frozen!"
+  unfrozen: "<prefix><green>Tax paid, <yellow>{land}</yellow> unfrozen."
+
+admin:
+  bypass-on: "<prefix><green>Land admin bypass: ON"
+  bypass-off: "<prefix><yellow>Land admin bypass: OFF"
+  deleted: "<prefix><green>Deleted land <yellow>{land}</yellow> (owner {owner})."
+  deleted-notify: "<prefix><red>Your land <yellow>{land}</yellow> was deleted by an admin."

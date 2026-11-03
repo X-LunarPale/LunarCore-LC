@@ -1,0 +1,6 @@
+id: permissions
+name: 权限管理
+version: '${version}'
+main: com.lunarboreal.permissions.PermissionsModule
+description: 用户组、权限节点、继承与临时授权管理
+authors: [LunarBoreal]

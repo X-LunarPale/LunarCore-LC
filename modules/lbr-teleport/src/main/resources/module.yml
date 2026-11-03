@@ -1,0 +1,8 @@
+id: teleport
+name: 传送系统
+version: '${version}'
+main: com.lunarboreal.teleport.TeleportModule
+description: tpa、home、warp、spawn、back、rtp 与管理传送（预热/冷却/费用/安全落点/领地检查）
+authors: [琉月·冰澜]
+depends: []
+softdepends: [economy, land]

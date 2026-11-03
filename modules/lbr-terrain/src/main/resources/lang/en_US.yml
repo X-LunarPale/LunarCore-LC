@@ -1,0 +1,3 @@
+world:
+  ready: "<prefix><green>Terrain world {name} is ready."
+  failed: "<prefix><red>Could not load terrain world {name}: {error}"

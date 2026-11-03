@@ -1,0 +1,43 @@
+# ============================================================
+#  LunarCore 琉月（LC） - 签到奖励（rewards.yml）
+#  单独成文件：删除的条目不会被默认值补回。Web 面板可直接编辑。
+# ------------------------------------------------------------
+# 奖励配置。每个奖励可包含：
+#   money: 金币数量（需要 economy 模块）
+#   exp: 经验值
+#   items: 物品列表，每项 material / amount / name(MiniMessage, 可选) / lore(列表, 可选)
+#   commands: 以控制台执行的命令，{player} 替换为玩家名
+#   description: 在界面和提示中展示的奖励说明（MiniMessage，可选）
+
+rewards:
+  # 每日基础奖励
+  daily:
+    description: "<gold>100 金币</gold> + <green>10 经验"
+    money: 100
+    exp: 10
+    items: []
+    commands: []
+  # 连续签到第 N 天的额外奖励
+  streak:
+    "3":
+      description: "<gold>300 金币"
+      money: 300
+    "7":
+      description: "<gold>1000 金币</gold> + <aqua>钻石 x2"
+      money: 1000
+      items:
+        - material: DIAMOND
+          amount: 2
+          name: "<aqua>七日签到钻石"
+  # 连续奖励循环周期（天）。>0 时连续天数超过周期后按周期循环计算，例如 7 表示第 8 天视为第 1 天；0 表示不循环
+  streak-cycle: 7
+  # 累计签到达到 N 天时的里程碑奖励（一次性）
+  milestones:
+    "30":
+      description: "<gold>5000 金币</gold> + 称号命令"
+      money: 5000
+      commands:
+        - "say 恭喜 {player} 累计签到 30 天！"
+    "100":
+      description: "<gold>20000 金币"
+      money: 20000

@@ -1,0 +1,11 @@
+{
+  "qqauth_url": {"description":"QQAuth HTTP 地址", "type":"string", "default":"http://127.0.0.1:8080/qqauth/group"},
+  "qqauth_token": {"description":"QQAuth HTTP 密钥", "type":"string", "hint":"与 LunarCore QQAuth 配置一致；不要公开"},
+  "group_id": {"description":"允许的 QQ 官方机器人 group_openid", "type":"string", "hint":"必须明确指定；空值和 * 禁止处理"},
+  "bind_prefix": {"description":"绑定命令前缀", "type":"string", "default":"/验证"},
+  "unbind_prefix": {"description":"解绑命令前缀", "type":"string", "default":"/解绑"},
+  "password_reset_prefix": {"description":"改密命令前缀", "type":"string", "default":"/改密", "hint":"可填 改密 或 /改密"},
+  "timeout_seconds": {"description":"HTTP 超时秒数（1-60）", "type":"int", "default":5},
+  "tls_ca_file": {"description":"HTTPS 自定义可信证书路径（可选）", "type":"string", "default":"", "hint":"例如 FRP 自动 HTTPS 自签名证书的 PEM 绝对路径；保持主机名和证书校验"},
+  "error_reply": {"description":"请求失败时群内回复（空值静默）", "type":"string", "default":""}
+}

@@ -1,0 +1,9 @@
+{
+  "project": "LagFixer",
+  "author": "lychee",
+  "repository": "https://github.com/lajczik/lagfixer",
+  "tag": "build-151",
+  "commit": "0dede033f7dc2950a08f8a461bfcff84f64c7d3c",
+  "license": "GPL-3.0",
+  "snapshot": "upstream/ unmodified source snapshot; LBR adaptations are separate and documented"
+}

@@ -1,0 +1,22 @@
+# 物品单价表（/worth 查询、/sell 出售）。键为物品 ID，值为单个物品价格。
+worth:
+  COBBLESTONE: 0.1
+  DIRT: 0.05
+  OAK_LOG: 1.0
+  WHEAT: 0.5
+  CARROT: 0.5
+  POTATO: 0.5
+  COAL: 2.0
+  IRON_INGOT: 5.0
+  GOLD_INGOT: 8.0
+  COPPER_INGOT: 1.5
+  REDSTONE: 1.0
+  LAPIS_LAZULI: 2.0
+  DIAMOND: 50.0
+  EMERALD: 30.0
+  NETHERITE_INGOT: 500.0
+  ROTTEN_FLESH: 0.1
+  BONE: 0.3
+  STRING: 0.3
+  GUNPOWDER: 1.0
+  ENDER_PEARL: 5.0

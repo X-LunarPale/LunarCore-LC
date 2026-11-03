@@ -1,0 +1,4 @@
+# 到期权限与插件新增节点的重新检查间隔，单位tick。
+refresh-ticks: 20
+# 已有其他权限管理插件时停止启用，避免多个权限附件争夺结果。
+refuse-other-providers: true

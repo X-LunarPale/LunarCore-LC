@@ -1,0 +1,8 @@
+id: performance
+name: 性能监控与轻量优化
+version: '${version}'
+main: com.lunarboreal.performance.PerformanceModule
+description: TPS/MSPT/内存/世界指标、可选有界掉落物清理、独立 LagFixer 状态与只读桥接
+authors: [琉月·冰澜]
+depends: []
+softdepends: []

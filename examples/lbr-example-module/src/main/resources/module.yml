@@ -1,0 +1,9 @@
+# 模块描述文件（jar 根目录）
+id: hello                      # 小写唯一 ID，同时作为语言 / 权限 / Web / 变量命名空间
+name: 你好示例
+version: '${version}'
+main: com.lunarboreal.examples.hello.HelloModule
+description: 最小 LC 模块示例
+authors: [琉月·冰澜]
+depends: []                    # 硬依赖的其它模块 ID
+softdepends: [economy]         # 软依赖：存在时先于本模块启用

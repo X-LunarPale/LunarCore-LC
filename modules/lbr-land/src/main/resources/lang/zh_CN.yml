@@ -1,0 +1,171 @@
+# 领地模块语言文件（MiniMessage 格式），<prefix> 为领地前缀，{xxx} 为占位符
+prefix: "<dark_gray>[</dark_gray><green><bold>领地</bold></green><dark_gray>]</dark_gray> "
+help:
+  - "<gold><bold>━━━━ 领地系统 ━━━━"
+  - "<yellow>选区：<gray>手持选区工具 左键/右键 选两点，或 <white>/land pos1</white> <white>/land pos2"
+  - "<yellow>/land create <名字> <gray>创建领地（按面积收费）"
+  - "<yellow>/land delete [名字] <gray>删除领地（按比例退款）"
+  - "<yellow>/land info [名字] <gray>查看领地信息"
+  - "<yellow>/land list [玩家] <gray>领地列表"
+  - "<yellow>/land rename [旧名] <新名> <gray>重命名"
+  - "<yellow>/land settp <gray>设置传送点  <yellow>/land tp <名字> <gray>传送"
+  - "<yellow>/land trust <玩家> [member|manager] <gray>添加成员  <yellow>/land untrust <玩家>"
+  - "<yellow>/land flag <flag> <true|false> [global|member] <gray>设置权限"
+  - "<yellow>/land expand <north|south|east|west|facing> <格数> <gray>扩建/缩小"
+  - "<yellow>/land sell <价格|cancel> <gray>出售  <yellow>/land buy [名字] <gray>购买"
+  - "<yellow>/land transfer <玩家> <gray>转让  <yellow>/land show [名字] <gray>显示边界"
+  - "<yellow>/land message <enter|leave> <文字|clear> <gray>进出提示"
+  - "<yellow>/land admin <delete|tp|list|bypass> <gray>管理员命令"
+
+placeholder:
+  wilderness: "野外"
+
+word:
+  "yes": "是"
+  "no": "否"
+
+role:
+  member: "成员"
+  manager: "管理员"
+
+scope:
+  global: "访客/全局"
+  member: "成员"
+
+usage:
+  create: "<prefix><red>用法：/land create <名字>"
+  list: "<prefix><red>用法：/land list <玩家>"
+  rename: "<prefix><red>用法：/land rename [旧名] <新名>"
+  tp: "<prefix><red>用法：/land tp <领地名>"
+  trust: "<prefix><red>用法：/land trust <玩家> [member|manager]"
+  untrust: "<prefix><red>用法：/land untrust <玩家>"
+  flag: "<prefix><red>用法：/land flag <flag> <true|false> [global|member]"
+  expand: "<prefix><red>用法：/land expand <north|south|east|west|facing> <格数>（负数为缩小）"
+  sell: "<prefix><red>用法：/land sell <价格> 或 /land sell cancel"
+  transfer: "<prefix><red>用法：/land transfer <在线玩家>"
+  message: "<prefix><red>用法：/land message <enter|leave> <文字|clear>，文字支持 MiniMessage 与 {land} {owner} {player}"
+  admin: "<prefix><red>用法：/land admin <delete [名字/ID]|tp <名字/ID>|list [玩家]|bypass>"
+
+error:
+  loading: "<prefix><red>领地数据正在加载，请稍后再试。"
+  player-only: "<prefix><red>该命令只能由玩家执行。"
+  no-permission: "<prefix><red>你没有权限执行此操作。"
+  no-economy: "<prefix><red>经济服务不可用。"
+  not-enough-money: "<prefix><red>余额不足：需要 <gold>{cost}</gold>，当前 <gold>{balance}</gold>。"
+  no-selection: "<prefix><red>请先用 <yellow>{tool}</yellow> 左右键或 /land pos1、/land pos2 选择两个点。"
+  invalid-name: "<prefix><red>领地名不合法（1~16 位字母、数字、下划线、横线或中文）。"
+  name-taken: "<prefix><red>领地名 <yellow>{land}</yellow> 已被使用。"
+  no-such-land: "<prefix><red>找不到领地 <yellow>{land}</yellow>。"
+  not-in-land: "<prefix><red>你没有站在任何领地内。"
+  not-owner: "<prefix><red>你不是领地 <yellow>{land}</yellow> 的主人。"
+  not-manager: "<prefix><red>你没有管理领地 <yellow>{land}</yellow> 的权限。"
+  frozen: "<prefix><red>领地 <yellow>{land}</yellow> 因欠缴领地税已冻结，请充值后等待自动扣费。"
+  world-blacklisted: "<prefix><red>该世界禁止圈地。"
+  too-small: "<prefix><red>领地边长不能小于 <yellow>{min}</yellow> 格。"
+  too-large: "<prefix><red>领地边长不能大于 <yellow>{max}</yellow> 格。"
+  area-too-small: "<prefix><red>领地面积不能小于 <yellow>{min}</yellow>。"
+  overlap: "<prefix><red>与领地 <yellow>{land}</yellow> 重叠。"
+  near-spawn: "<prefix><red>距离出生点太近（至少 <yellow>{distance}</yellow> 格）。"
+  total-area: "<prefix><red>超出你的总面积上限 <yellow>{max}</yellow>。"
+  max-lands: "<prefix><red>你最多只能拥有 <yellow>{max}</yellow> 块领地。"
+  unknown-player: "<prefix><red>找不到玩家 <yellow>{player}</yellow>。"
+  player-offline: "<prefix><red>玩家 <yellow>{player}</yellow> 不在线。"
+  world-missing: "<prefix><red>领地所在世界未加载。"
+
+select:
+  pos1: "<prefix><gray>第一点已选择：<white>{x}, {y}, {z}"
+  pos2: "<prefix><gray>第二点已选择：<white>{x}, {y}, {z}"
+  done: "<prefix><green>选区 <white>{width}×{length}</white> 面积 <yellow>{area}</yellow>，预计花费 <gold>{cost}</gold>。使用 <white>/land create <名字></white> 创建。"
+
+create:
+  success: "<prefix><green>领地 <yellow>{land}</yellow> 创建成功！面积 {area}，花费 <gold>{cost}</gold>。"
+
+delete:
+  confirm: "<prefix><yellow>确定删除领地 <red>{land}</red>？将退还 <gold>{refund}</gold>。30 秒内输入 <white>/land delete confirm</white> 确认。"
+  no-pending: "<prefix><red>没有待确认的删除操作。"
+  success: "<prefix><green>领地 <yellow>{land}</yellow> 已删除，退还 <gold>{refund}</gold>。"
+
+info:
+  - "<gold><bold>━━━━ 领地 {land} <gray>#{id}</gray> ━━━━"
+  - "<yellow>主人：<white>{owner}  <yellow>世界：<white>{world}"
+  - "<yellow>范围：<white>{coords}  <gray>({width}×{length}，面积 {area})"
+  - "<yellow>创建：<white>{created}  <yellow>出售：<white>{sale}  <yellow>冻结：<white>{frozen}"
+  - "<yellow>管理员：<white>{managers}"
+  - "<yellow>成员：<white>{members}"
+  - "<yellow>访客/全局 flag：{global_flags}"
+  - "<yellow>成员 flag：{member_flags}"
+
+list:
+  header: "<gold>━━━━ {player} 的领地（{count} 块，总面积 {area}）━━━━"
+  entry: "<yellow>{land} <gray>[{world}] {coords} 面积 {area} 主人 {owner}</gray> {sale}"
+  on-sale: "<green>[出售 {price}]"
+
+rename:
+  success: "<prefix><green>领地 <yellow>{old}</yellow> 已重命名为 <yellow>{land}</yellow>。"
+
+settp:
+  success: "<prefix><green>已设置领地 <yellow>{land}</yellow> 的传送点。"
+
+tp:
+  success: "<prefix><green>已传送到领地 <yellow>{land}</yellow>。"
+
+trust:
+  success: "<prefix><green>已将 <yellow>{player}</yellow> 设为领地 <yellow>{land}</yellow> 的{role}。"
+  notify: "<prefix><green>你被加入了 <yellow>{owner}</yellow> 的领地 <yellow>{land}</yellow>。"
+  is-owner: "<prefix><red>该玩家已是领地主人。"
+
+untrust:
+  success: "<prefix><green>已将 <yellow>{player}</yellow> 移出领地 <yellow>{land}</yellow>。"
+  not-member: "<prefix><red>{player} 不是该领地成员。"
+
+flag:
+  success: "<prefix><green>领地 <yellow>{land}</yellow> 的 {scope} flag <aqua>{flag}</aqua> 已设为 <white>{value}</white>。"
+  unknown: "<prefix><red>未知 flag，可用：{flags}"
+  not-member-flag: "<prefix><red>{flag} 为领地环境开关，只能设置全局值。"
+
+expand:
+  success: "<prefix><green>领地 <yellow>{land}</yellow> 向 {dir} 调整 {amount} 格，现面积 {area}，花费 <gold>{cost}</gold>。"
+
+sell:
+  success: "<prefix><green>领地 <yellow>{land}</yellow> 已挂牌出售，价格 <gold>{price}</gold>（交易税 {tax}%）。"
+  cancelled: "<prefix><green>已取消出售领地 <yellow>{land}</yellow>。"
+
+buy:
+  payment-failed: "<prefix><red>交易结算失败，领地未过户，请检查余额与卖家余额上限。"
+  not-for-sale: "<prefix><red>领地 <yellow>{land}</yellow> 未出售。"
+  own-land: "<prefix><red>你不能购买自己的领地。"
+  success: "<prefix><green>你以 <gold>{price}</gold> 购买了领地 <yellow>{land}</yellow>！"
+  sold: "<prefix><green>你的领地 <yellow>{land}</yellow> 已被 {player} 购买，到账 <gold>{amount}</gold>（税 {tax}）。"
+
+transfer:
+  success: "<prefix><green>已将领地 <yellow>{land}</yellow> 转让给 <yellow>{player}</yellow>。"
+  received: "<prefix><green>{player} 将领地 <yellow>{land}</yellow> 转让给了你。"
+  target-limit: "<prefix><red>{player} 的领地数量已达上限。"
+
+show:
+  success: "<prefix><green>正在显示领地 <yellow>{land}</yellow> 的边界（{seconds} 秒）。"
+  none: "<prefix><red>附近没有领地。"
+
+message:
+  success: "<prefix><green>已设置领地 <yellow>{land}</yellow> 的 {type} 提示。"
+  cleared: "<prefix><green>已清除领地 <yellow>{land}</yellow> 的 {type} 提示。"
+
+notice:
+  enter: "<green>进入领地 <yellow>{land}</yellow> <gray>(主人 {owner})"
+  leave: "<gray>离开领地 <yellow>{land}</yellow>"
+
+protect:
+  denied: "<prefix><red>你没有在领地 <yellow>{land}</yellow> 的 <aqua>{flag}</aqua> 权限（主人 {owner}）。"
+  enter: "<prefix><red>你不能进入领地 <yellow>{land}</yellow>。"
+  teleport: "<prefix><red>你不能传送进入领地 <yellow>{land}</yellow>。"
+
+tax:
+  paid: "<prefix><gray>领地 <yellow>{land}</yellow> 已扣除今日领地税 <gold>{amount}</gold>。"
+  failed: "<prefix><red>领地 <yellow>{land}</yellow> 领地税 <gold>{amount}</gold> 扣费失败，领地已冻结！"
+  unfrozen: "<prefix><green>领地 <yellow>{land}</yellow> 已缴清领地税，解除冻结。"
+
+admin:
+  bypass-on: "<prefix><green>领地管理员绕过模式：开启"
+  bypass-off: "<prefix><yellow>领地管理员绕过模式：关闭"
+  deleted: "<prefix><green>已删除领地 <yellow>{land}</yellow>（主人 {owner}）。"
+  deleted-notify: "<prefix><red>你的领地 <yellow>{land}</yellow> 已被管理员删除。"

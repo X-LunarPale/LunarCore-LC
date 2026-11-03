@@ -1,0 +1,6 @@
+id: motd
+name: Motd
+version: '${version}'
+main: com.lunarboreal.motd.MotdModule
+description: Configurable Minecraft server-list presentation
+authors: [LunarBoreal]

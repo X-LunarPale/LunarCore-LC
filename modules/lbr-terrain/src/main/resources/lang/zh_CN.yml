@@ -1,0 +1,3 @@
+world:
+  ready: "<prefix><green>地形世界 {name} 已就绪。"
+  failed: "<prefix><red>地形世界 {name} 加载失败：{error}"

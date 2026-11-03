@@ -1,0 +1,6 @@
+name: astrbot_plugin_qqauth
+display_name: LunarCore QQAuth Bridge
+desc: Forward QQ Official group authentication commands to LunarCore QQAuth.
+version: v2.0.0
+author: QQAuth contributors / LunarBoreal
+repo: ""
