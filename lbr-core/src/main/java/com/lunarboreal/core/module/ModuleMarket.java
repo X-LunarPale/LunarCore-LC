@@ -228,7 +228,7 @@ public final class ModuleMarket implements AutoCloseable {
             // Do not expose upstream response bodies or access-bearing URLs.
             error = exception instanceof IOException && exception.getMessage() != null
                     && exception.getMessage().contains(" / ") ? exception.getMessage()
-                    : "模块下载失败，请检查网络及仓库访问令牌 / Download failed; check network and repository token";
+                    : "模块下载失败，请检查网络与发布附件 / Download failed; check network and release assets";
             state = "failed";
         } finally {
             current = "";
