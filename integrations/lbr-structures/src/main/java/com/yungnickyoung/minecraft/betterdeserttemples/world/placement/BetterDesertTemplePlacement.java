@@ -1,0 +1,72 @@
+// Paper port; original source and LGPL-3.0 notice: third-party/yungs/desert-temples/
+package com.yungnickyoung.minecraft.betterdeserttemples.world.placement;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.yungnickyoung.minecraft.betterdeserttemples.mixin.accessor.ChunkGeneratorStructureStateAccessor;
+import com.yungnickyoung.minecraft.betterdeserttemples.module.StructurePlacementTypeModule;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.tags.BiomeTags;
+import net.minecraft.util.ExtraCodecs;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
+import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
+import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadType;
+
+
+import java.util.Optional;
+
+/**
+ * Custom structure placement that avoids intersecting with oceans and rivers.
+ */
+public class BetterDesertTemplePlacement extends RandomSpreadStructurePlacement {
+    public static final MapCodec<BetterDesertTemplePlacement> CODEC = RecordCodecBuilder.mapCodec((instance) -> instance.group(
+            Vec3i.offsetCodec(16).optionalFieldOf("locate_offset", Vec3i.ZERO).forGetter(BetterDesertTemplePlacement::locateOffset),
+            FrequencyReductionMethod.CODEC.optionalFieldOf("frequency_reduction_method", FrequencyReductionMethod.DEFAULT).forGetter(BetterDesertTemplePlacement::frequencyReductionMethod),
+            Codec.floatRange(0.0F, 1.0F).optionalFieldOf("frequency", 1.0F).forGetter(BetterDesertTemplePlacement::frequency),
+            ExtraCodecs.NON_NEGATIVE_INT.fieldOf("salt").forGetter(BetterDesertTemplePlacement::salt),
+            ExclusionZone.CODEC.optionalFieldOf("exclusion_zone").forGetter(BetterDesertTemplePlacement::exclusionZone),
+            ExtraCodecs.NON_NEGATIVE_INT.fieldOf("spacing").forGetter(BetterDesertTemplePlacement::spacing),
+            ExtraCodecs.NON_NEGATIVE_INT.fieldOf("separation").forGetter(BetterDesertTemplePlacement::separation),
+            RandomSpreadType.CODEC.optionalFieldOf("spread_type", RandomSpreadType.LINEAR).forGetter(BetterDesertTemplePlacement::spreadType)
+    ).apply(instance, instance.stable(BetterDesertTemplePlacement::new)));
+
+    public BetterDesertTemplePlacement(Vec3i locateOffset,
+                                       FrequencyReductionMethod frequencyReductionMethod,
+                                       Float frequency,
+                                       Integer salt,
+                                       Optional<ExclusionZone> exclusionZone,
+                                       Integer spacing,
+                                       Integer separation,
+                                       RandomSpreadType randomSpreadType) {
+        super(locateOffset, frequencyReductionMethod, frequency, salt, exclusionZone, spacing, separation, randomSpreadType);
+    }
+
+    @Override
+    protected boolean isPlacementChunk(ChunkGeneratorStructureState chunkGeneratorStructureState, int chunkX, int chunkZ) {
+        BiomeSource biomeSource = com.lunarboreal.structures.nms.PaperAccess.view(chunkGeneratorStructureState, ChunkGeneratorStructureStateAccessor.class).getBiomeSource();
+        RandomState randomState = chunkGeneratorStructureState.randomState();
+        long seed = chunkGeneratorStructureState.getLevelSeed();
+        ChunkPos chunkPos = this.getPotentialStructureChunk(seed, chunkX, chunkZ);
+        if (chunkPos.x() == chunkX && chunkPos.z() == chunkZ) {
+            BlockPos structurePos = chunkPos.getMiddleBlockPosition(120);
+            boolean isOceanOrRiverNear = biomeSource.findBiomeHorizontal(
+                    structurePos.getX(), structurePos.getY(), structurePos.getZ(),
+                    48, 2,
+                    biomeHolder -> biomeHolder.is(BiomeTags.IS_RIVER) || biomeHolder.is(BiomeTags.IS_OCEAN),
+                    randomState.getOrCreateRandomFactory(net.minecraft.resources.Identifier.withDefaultNamespace("ore")).at(structurePos), true,
+                    randomState
+            ) != null;
+            return !isOceanOrRiverNear;
+        }
+        return false;
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public MapCodec<RandomSpreadStructurePlacement> codec() { return (MapCodec) CODEC; }
+}

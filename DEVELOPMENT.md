@@ -13,13 +13,15 @@ cd web-ui
 npm ci
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar
+./gradlew test :lbr-core:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures:jar
 python package-release.py
 ```
 
 Windows 使用 `gradlew.bat`。产物位于 `dist/0.0.6-preview/`。核心只内置基础命令，其余模块单独构建。
 
 若 Paper 本地工具处理失败，可用 `-Plbr.paperServerHome=服务端目录` 指向匹配版本的完整 Paper 安装。普通构建无需该参数。
+
+本地原生构建按服务端 JAR 的 SHA-256 匹配该目录中的 Paper 启动包，并读取包内依赖清单；请保留启动包。不会混用 `libraries/` 中其他构建遗留的库。结构美化移植及恢复验证见 [STRUCTURES-VALIDATION](docs/zh-CN/STRUCTURES-VALIDATION.md)。
 
 ## 测试
 

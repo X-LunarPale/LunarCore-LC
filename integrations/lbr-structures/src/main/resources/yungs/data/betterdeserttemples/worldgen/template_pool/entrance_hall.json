@@ -1,0 +1,26 @@
+{
+  "name": "betterdeserttemples:entrance_hall",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 4,
+      "element": {
+        "location": "betterdeserttemples:main_entrance_hall/main_entrance_hall_0",
+        "processors": "betterdeserttemples:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "location": "betterdeserttemples:main_entrance_hall/main_entrance_hall_2",
+        "processors": "betterdeserttemples:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    }
+  ]
+}

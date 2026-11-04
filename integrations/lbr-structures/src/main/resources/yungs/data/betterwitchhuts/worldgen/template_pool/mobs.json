@@ -1,0 +1,26 @@
+{
+  "name": "betterwitchhuts:mobs",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "location": "betterwitchhuts:witch",
+        "processors": "minecraft:empty",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "location": "betterwitchhuts:cat",
+        "processors": "minecraft:empty",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    }
+  ]
+}

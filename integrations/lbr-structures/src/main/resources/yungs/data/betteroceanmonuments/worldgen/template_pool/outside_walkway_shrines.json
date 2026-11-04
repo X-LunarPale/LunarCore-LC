@@ -1,0 +1,16 @@
+{
+  "name": "betteroceanmonuments:outside_walkway_shrines",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "location": "betteroceanmonuments:outside_walkway_shrine_0",
+        "processors": "betteroceanmonuments:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    }
+  ]
+}

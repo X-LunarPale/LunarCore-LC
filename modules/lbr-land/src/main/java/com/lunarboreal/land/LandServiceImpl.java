@@ -34,4 +34,14 @@ final class LandServiceImpl implements LandService {
         for (Land l : module.manager().ownedBy(owner)) out.add(l.info());
         return out;
     }
+
+    @Override
+    public Optional<List<LandInfo>> intersecting(String world, int minX, int minY, int minZ,
+                                                 int maxX, int maxY, int maxZ) {
+        if (!module.loaded()) return Optional.empty();
+        if (world == null || minX > maxX || minY > maxY || minZ > maxZ)
+            throw new IllegalArgumentException("Invalid claim query bounds");
+        return Optional.of(module.manager().overlapping(world, minX, minY, minZ, maxX, maxY, maxZ, null)
+                .stream().map(Land::info).toList());
+    }
 }

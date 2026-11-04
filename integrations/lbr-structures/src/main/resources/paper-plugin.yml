@@ -1,0 +1,15 @@
+name: LunarCoreStructures
+version: '${version}'
+main: com.lunarboreal.structures.StructuresPlugin
+bootstrapper: com.lunarboreal.structures.StructuresBootstrap
+api-version: '26.3'
+load: STARTUP
+description: YUNG's Better structures port for LunarCore on Paper 26.3
+authors: [RayT, YUNGNICKYOUNG]
+website: https://github.com/X-LunarPale/LunarCore-LC
+dependencies:
+  server:
+    LunarCore:
+      load: BEFORE
+      required: true
+      join-classpath: true

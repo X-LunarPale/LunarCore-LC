@@ -1,0 +1,983 @@
+{
+  "pieces": 460,
+  "blockEntities": [
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:decorated_pot"
+    },
+    {
+      "loot": "betterdeserttemples:chests/pot",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:decorated_pot"
+    },
+    {
+      "loot": "betterdeserttemples:chests/lab",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "minecraft:chests/desert_pyramid",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:decorated_pot"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/statue",
+      "id": "minecraft:trapped_chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:decorated_pot"
+    },
+    {
+      "loot": "minecraft:chests/desert_pyramid",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:brewing_stand"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterdeserttemples:chests/wardrobe",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "betterdeserttemples:chests/wardrobe",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:decorated_pot"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:decorated_pot"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:decorated_pot"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:decorated_pot"
+    },
+    {
+      "loot": "betterdeserttemples:chests/pot",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/tomb",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "minecraft:chests/desert_pyramid",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:lectern"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "betterdeserttemples:chests/wardrobe",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterdeserttemples:chests/library",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterdeserttemples:chests/lab",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:brewing_stand"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/wardrobe",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "minecraft:chests/desert_pyramid",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "minecraft:chests/desert_pyramid",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "minecraft:chests/desert_pyramid",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "minecraft:chests/desert_pyramid",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/food_storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "betterdeserttemples:chests/food_storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:lectern"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/library",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/library",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:lectern"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:lectern"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "minecraft:chests/desert_pyramid",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "betterdeserttemples:chests/tomb_pharaoh",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/tomb_pharaoh",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "betterdeserttemples:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:banner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "minecraft:archaeology/desert_pyramid",
+      "id": "minecraft:brushable_block"
+    },
+    {
+      "loot": "betterdeserttemples:chests/pharaoh_hidden",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    }
+  ],
+  "blockCounts": {
+    "minecraft:air": 248627,
+    "minecraft:andesite": 7302,
+    "minecraft:anvil": 2,
+    "minecraft:barrel": 14,
+    "minecraft:birch_fence": 9,
+    "minecraft:birch_planks": 6,
+    "minecraft:birch_pressure_plate": 9,
+    "minecraft:birch_slab": 27,
+    "minecraft:birch_trapdoor": 2,
+    "minecraft:black_carpet": 2,
+    "minecraft:black_concrete": 408,
+    "minecraft:black_stained_glass": 3,
+    "minecraft:black_wall_banner": 6,
+    "minecraft:black_wool": 4,
+    "minecraft:blackstone": 4,
+    "minecraft:blackstone_wall": 27,
+    "minecraft:blue_carpet": 8,
+    "minecraft:blue_terracotta": 2352,
+    "minecraft:blue_wall_banner": 8,
+    "minecraft:bookshelf": 42,
+    "minecraft:brewing_stand": 2,
+    "minecraft:brown_candle": 21,
+    "minecraft:cactus": 1,
+    "minecraft:cactus_flower": 1,
+    "minecraft:cake": 1,
+    "minecraft:campfire": 33,
+    "minecraft:candle": 29,
+    "minecraft:cauldron": 4,
+    "minecraft:cave_air": 63,
+    "minecraft:chest": 24,
+    "minecraft:chiseled_sandstone": 226,
+    "minecraft:coal_ore": 721,
+    "minecraft:coarse_dirt": 33,
+    "minecraft:cobweb": 308,
+    "minecraft:comparator": 26,
+    "minecraft:composter": 14,
+    "minecraft:copper_ore": 757,
+    "minecraft:crimson_button": 6,
+    "minecraft:cut_sandstone": 28771,
+    "minecraft:cut_sandstone_slab": 246,
+    "minecraft:dead_bush": 29,
+    "minecraft:decorated_pot": 8,
+    "minecraft:diorite": 5014,
+    "minecraft:dirt": 2159,
+    "minecraft:dispenser": 5,
+    "minecraft:dripstone_block": 45,
+    "minecraft:dropper": 7,
+    "minecraft:flower_pot": 10,
+    "minecraft:gilded_blackstone": 2,
+    "minecraft:glow_lichen": 26,
+    "minecraft:gold_block": 3,
+    "minecraft:gold_ore": 26,
+    "minecraft:granite": 4595,
+    "minecraft:gravel": 1092,
+    "minecraft:gray_candle": 25,
+    "minecraft:grindstone": 2,
+    "minecraft:hopper": 11,
+    "minecraft:iron_bars": 6,
+    "minecraft:iron_chain": 62,
+    "minecraft:iron_ore": 212,
+    "minecraft:kelp": 3,
+    "minecraft:kelp_plant": 3,
+    "minecraft:ladder": 46,
+    "minecraft:lapis_ore": 57,
+    "minecraft:lava": 30,
+    "minecraft:lectern": 4,
+    "minecraft:lever": 2,
+    "minecraft:light_gray_candle": 28,
+    "minecraft:light_weighted_pressure_plate": 3,
+    "minecraft:loom": 2,
+    "minecraft:magma_block": 6,
+    "minecraft:oak_planks": 3,
+    "minecraft:oak_trapdoor": 140,
+    "minecraft:observer": 10,
+    "minecraft:orange_candle": 20,
+    "minecraft:piston": 5,
+    "minecraft:piston_head": 8,
+    "minecraft:podzol": 12,
+    "minecraft:pointed_dripstone": 65,
+    "minecraft:polished_blackstone": 11,
+    "minecraft:polished_blackstone_stairs": 9,
+    "minecraft:potted_blue_orchid": 2,
+    "minecraft:potted_red_mushroom": 2,
+    "minecraft:raw_copper_block": 8,
+    "minecraft:raw_gold_block": 4,
+    "minecraft:red_concrete_powder": 3,
+    "minecraft:redstone_block": 10,
+    "minecraft:redstone_lamp": 26,
+    "minecraft:redstone_torch": 34,
+    "minecraft:redstone_wall_torch": 41,
+    "minecraft:redstone_wire": 408,
+    "minecraft:repeater": 70,
+    "minecraft:sand": 17564,
+    "minecraft:sandstone": 78337,
+    "minecraft:sandstone_slab": 1915,
+    "minecraft:sandstone_stairs": 2295,
+    "minecraft:sandstone_wall": 453,
+    "minecraft:scaffolding": 58,
+    "minecraft:seagrass": 1,
+    "minecraft:short_dry_grass": 38,
+    "minecraft:skeleton_skull": 10,
+    "minecraft:smooth_sandstone": 5097,
+    "minecraft:smooth_sandstone_slab": 67,
+    "minecraft:smooth_sandstone_stairs": 190,
+    "minecraft:spawner": 9,
+    "minecraft:sticky_piston": 42,
+    "minecraft:stone": 68578,
+    "minecraft:stone_button": 1,
+    "minecraft:stone_pressure_plate": 9,
+    "minecraft:suspicious_sand": 19,
+    "minecraft:tall_dry_grass": 47,
+    "minecraft:target": 1,
+    "minecraft:tnt": 30,
+    "minecraft:trapped_chest": 1,
+    "minecraft:wall_torch": 4,
+    "minecraft:water": 1085,
+    "minecraft:water_cauldron": 2,
+    "minecraft:white_candle": 27,
+    "minecraft:yellow_carpet": 10,
+    "minecraft:yellow_terracotta": 1753,
+    "minecraft:yellow_wall_banner": 22,
+    "minecraft:zombie_head": 2
+  },
+  "build": "26.3-238-df120fd (MC: 26.3)",
+  "structure": "betterdeserttemples:desert_temple",
+  "bounds": [
+    -2377,
+    33,
+    6807,
+    -2295,
+    102,
+    6889
+  ]
+}

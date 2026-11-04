@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "package": "com.yungnickyoung.minecraft.betterendisland.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "EnderDragonFightMixin",
+    "EndergeticExpansionMixins",
+    "EndGatewayFeatureMixin",
+    "EndPlatformFeatureMixin",
+    "EndSpikeMixin",
+    "PrimaryLevelDataMixin",
+    "ServerLevelMixin",
+    "EndSpikeFeatureMixin",
+    "TheEndGatewayBlockEntityMixin",
+    "accessor.EnderDragonFightAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixinPriority": 500,
+  "minVersion": "0.8"
+}

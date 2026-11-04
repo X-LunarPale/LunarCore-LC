@@ -1,0 +1,356 @@
+{
+  "pieces": 661,
+  "blockEntities": [
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:mob_spawner"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/hall",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/beacon",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/quarters",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/hall",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "betterfortresses:chests/puzzle",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "betterfortresses:chests/quarters",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/quarters",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/storage",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/keep",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/hall",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/hall",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "betterfortresses:chests/hall",
+      "id": "minecraft:barrel"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "minecraft:chests/nether_bridge",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "betterfortresses:chests/beacon",
+      "id": "minecraft:chest"
+    }
+  ],
+  "blockCounts": {
+    "minecraft:air": 2721272,
+    "minecraft:ancient_debris": 354,
+    "minecraft:barrel": 43,
+    "minecraft:basalt": 91,
+    "minecraft:bedrock": 184744,
+    "minecraft:blackstone": 41258,
+    "minecraft:blackstone_stairs": 34,
+    "minecraft:brown_mushroom": 75,
+    "minecraft:cauldron": 4,
+    "minecraft:chest": 16,
+    "minecraft:chiseled_nether_bricks": 1875,
+    "minecraft:coal_block": 14,
+    "minecraft:comparator": 4,
+    "minecraft:cracked_nether_bricks": 5662,
+    "minecraft:crimson_button": 1,
+    "minecraft:crimson_door": 40,
+    "minecraft:crimson_fungus": 360,
+    "minecraft:crimson_nylium": 22010,
+    "minecraft:crimson_planks": 7,
+    "minecraft:crimson_roots": 2847,
+    "minecraft:crimson_slab": 7,
+    "minecraft:crimson_stairs": 24,
+    "minecraft:crimson_stem": 6115,
+    "minecraft:crimson_trapdoor": 64,
+    "minecraft:crying_obsidian": 3,
+    "minecraft:fire": 321,
+    "minecraft:glowstone": 757,
+    "minecraft:gravel": 41085,
+    "minecraft:lava": 239065,
+    "minecraft:lava_cauldron": 4,
+    "minecraft:magma_block": 72150,
+    "minecraft:nether_brick_fence": 1551,
+    "minecraft:nether_brick_slab": 3144,
+    "minecraft:nether_brick_stairs": 15842,
+    "minecraft:nether_brick_wall": 1169,
+    "minecraft:nether_bricks": 79828,
+    "minecraft:nether_gold_ore": 10236,
+    "minecraft:nether_quartz_ore": 29477,
+    "minecraft:nether_sprouts": 476,
+    "minecraft:nether_wart": 22,
+    "minecraft:nether_wart_block": 33562,
+    "minecraft:netherrack": 3749543,
+    "minecraft:obsidian": 19,
+    "minecraft:polished_basalt": 10,
+    "minecraft:polished_blackstone": 21,
+    "minecraft:polished_blackstone_button": 1,
+    "minecraft:polished_blackstone_slab": 10,
+    "minecraft:polished_blackstone_stairs": 9,
+    "minecraft:polished_blackstone_wall": 3,
+    "minecraft:red_mushroom": 128,
+    "minecraft:red_nether_brick_slab": 341,
+    "minecraft:red_nether_brick_stairs": 4832,
+    "minecraft:red_nether_brick_wall": 17,
+    "minecraft:red_nether_bricks": 20110,
+    "minecraft:red_terracotta": 8,
+    "minecraft:redstone_wall_torch": 10,
+    "minecraft:redstone_wire": 25,
+    "minecraft:repeater": 5,
+    "minecraft:shroomlight": 1475,
+    "minecraft:soul_fire": 30,
+    "minecraft:soul_lantern": 120,
+    "minecraft:soul_sand": 629,
+    "minecraft:spawner": 3,
+    "minecraft:tnt": 1,
+    "minecraft:twisting_vines": 110,
+    "minecraft:twisting_vines_plant": 301,
+    "minecraft:warped_fungus": 188,
+    "minecraft:warped_nylium": 7261,
+    "minecraft:warped_planks": 6,
+    "minecraft:warped_roots": 835,
+    "minecraft:warped_slab": 1,
+    "minecraft:warped_stem": 2401,
+    "minecraft:warped_wart_block": 11001,
+    "minecraft:weeping_vines": 1180,
+    "minecraft:weeping_vines_plant": 2610
+  },
+  "build": "26.3-238-df120fd (MC: 26.3)",
+  "structure": "betterfortresses:fortress",
+  "bounds": [
+    -491,
+    -4,
+    21,
+    -245,
+    118,
+    269
+  ]
+}

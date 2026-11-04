@@ -1,0 +1,171 @@
+{
+  "type": "bettermineshafts:mineshaft",
+  "biomes": "#bettermineshafts:has_structure/better_mineshaft_jungle",
+  "step": "underground_structures",
+  "spawn_overrides": {},
+  "config": {
+    "replacementRate": 0.6,
+    "legVariant": "edge",
+    "decorationChances": {
+      "vineChance": 0.5,
+      "snowChance": 0,
+      "cactusChance": 0,
+      "deadBushChance": 0,
+      "mushroomChance": 0,
+      "gravelPileChance": 0.1,
+      "lushDecorations": false,
+      "dripstoneDecorations": false
+    },
+    "blockStates": {
+      "mainBlockState": {
+        "id": "minecraft:jungle_planks"
+      },
+      "supportBlockState": {
+        "id": "minecraft:jungle_fence"
+      },
+      "slabBlockState": {
+        "id": "minecraft:jungle_slab"
+      },
+      "gravelBlockState": {
+        "id": "minecraft:gravel"
+      },
+      "stoneWallBlockState": {
+        "id": "minecraft:cobblestone_wall"
+      },
+      "stoneSlabBlockState": {
+        "id": "minecraft:cobblestone_slab"
+      },
+      "trapdoorBlockState": {
+        "id": "minecraft:jungle_trapdoor"
+      },
+      "smallLegBlockState": {
+        "id": "minecraft:stripped_jungle_log",
+        "properties": {
+          "axis": "y"
+        }
+      }
+    },
+    "blockStateRandomizers": {
+      "mainRandomizer": {
+        "defaultBlockState": {
+          "id": "minecraft:jungle_planks"
+        },
+        "entries": [
+          {
+            "blockState": {
+              "id": "minecraft:mossy_cobblestone"
+            },
+            "probability": 0.1
+          },
+          {
+            "blockState": {
+              "id": "minecraft:stone_bricks"
+            },
+            "probability": 0.05
+          },
+          {
+            "blockState": {
+              "id": "minecraft:mossy_stone_bricks"
+            },
+            "probability": 0.2
+          },
+          {
+            "blockState": {
+              "id": "minecraft:cracked_stone_bricks"
+            },
+            "probability": 0.05
+          },
+          {
+            "blockState": {
+              "id": "minecraft:chiseled_stone_bricks"
+            },
+            "probability": 0.05
+          },
+          {
+            "blockState": {
+              "id": "minecraft:cave_air"
+            },
+            "probability": 0.2
+          }
+        ]
+      },
+      "floorRandomizer": {
+        "defaultBlockState": {
+          "id": "minecraft:jungle_planks"
+        },
+        "entries": [
+          {
+            "blockState": {
+              "id": "minecraft:mossy_cobblestone"
+            },
+            "probability": 0.1
+          },
+          {
+            "blockState": {
+              "id": "minecraft:stone_bricks"
+            },
+            "probability": 0.05
+          },
+          {
+            "blockState": {
+              "id": "minecraft:mossy_stone_bricks"
+            },
+            "probability": 0.2
+          },
+          {
+            "blockState": {
+              "id": "minecraft:cracked_stone_bricks"
+            },
+            "probability": 0.05
+          },
+          {
+            "blockState": {
+              "id": "minecraft:chiseled_stone_bricks"
+            },
+            "probability": 0.05
+          }
+        ]
+      },
+      "brickRandomizer": {
+        "defaultBlockState": {
+          "id": "minecraft:stone_bricks"
+        },
+        "entries": [
+          {
+            "blockState": {
+              "id": "minecraft:stone_bricks"
+            },
+            "probability": 0.25
+          },
+          {
+            "blockState": {
+              "id": "minecraft:mossy_stone_bricks"
+            },
+            "probability": 0.25
+          },
+          {
+            "blockState": {
+              "id": "minecraft:cracked_stone_bricks"
+            },
+            "probability": 0.25
+          },
+          {
+            "blockState": {
+              "id": "minecraft:chiseled_stone_bricks"
+            },
+            "probability": 0.25
+          }
+        ]
+      },
+      "legRandomizer": {
+        "defaultBlockState": {
+          "id": "minecraft:stripped_jungle_log",
+          "properties": {
+            "axis": "y"
+          }
+        },
+        "entries": []
+      }
+    }
+  }
+}

@@ -13,13 +13,15 @@ cd web-ui
 npm ci
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar
+./gradlew test :lbr-core:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures:jar
 python package-release.py
 ```
 
 Use `gradlew.bat` on Windows. Outputs are in `dist/0.0.6-preview/`. Only basic commands are embedded in the core.
 
 If local Paper tooling fails, use `-Plbr.paperServerHome=server-directory` with a matching complete Paper installation. Normal builds do not require it.
+
+Local native builds match the patched server SHA-256 to a Paper bundle in that directory and use its dependency manifest. Keep the bundle JAR; stale libraries from other builds are not mixed in. See [structure validation](docs/en-US/STRUCTURES-VALIDATION.md) for generation and recovery checks.
 
 ## Test
 

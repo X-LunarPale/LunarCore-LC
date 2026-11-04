@@ -1,0 +1,46 @@
+{
+  "name": "betterstrongholds:hallway",
+  "fallback": "betterstrongholds:terminators",
+  "elements": [
+    {
+      "weight": 2,
+      "element": {
+        "location": "betterstrongholds:hallways/hallway_2",
+        "processors": "betterstrongholds:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    },
+    {
+      "weight": 2,
+      "element": {
+        "location": "betterstrongholds:hallways/hallway_3",
+        "processors": "betterstrongholds:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    },
+    {
+      "weight": 2,
+      "element": {
+        "location": "betterstrongholds:hallways/hallway_4",
+        "processors": "betterstrongholds:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "location": "betterstrongholds:hallways/hallway_turn",
+        "processors": "betterstrongholds:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    }
+  ]
+}

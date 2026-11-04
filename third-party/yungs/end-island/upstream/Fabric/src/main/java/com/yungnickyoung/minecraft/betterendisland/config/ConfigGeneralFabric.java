@@ -1,0 +1,23 @@
+package com.yungnickyoung.minecraft.betterendisland.config;
+
+import me.shedaniel.autoconfig.annotation.ConfigEntry;
+
+public class ConfigGeneralFabric {
+    @ConfigEntry.Gui.Tooltip
+    public boolean resummonedDragonDropsEgg = false;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean useVanillaSpawnPlatform = false;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean useVanillaEndGateways = false;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean playBellSound = true;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean spawnCentralTowerInitially = true;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean spawnCentralTowerOnResummon = true;
+}

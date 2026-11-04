@@ -1,0 +1,18 @@
+{
+  "structures": [
+    {
+      "structure": "betterdungeons:zombie_dungeon",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "lunarcore:guarded",
+    "family": "dungeons",
+    "delegate": {
+      "salt": 280667671,
+      "spacing": 48,
+      "separation": 24,
+      "type": "minecraft:random_spread"
+    }
+  }
+}

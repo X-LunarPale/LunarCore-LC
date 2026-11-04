@@ -30,6 +30,8 @@ third-party/qqauth/*.jar
 
 # Local acceptance screenshots/logs and crash dumps
 artifacts/
+.playwright-cli/
+output/playwright/
 hs_err_pid*.log
 logs/
 **/logs/

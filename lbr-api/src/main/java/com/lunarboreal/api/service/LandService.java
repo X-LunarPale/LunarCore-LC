@@ -37,4 +37,14 @@ public interface LandService {
     boolean can(Player player, Location location, Flag flag);
 
     List<LandInfo> landsOf(UUID owner);
+
+    /**
+     * Inclusive XYZ intersection query. Empty Optional means unsupported/not ready;
+     * Optional.of(emptyList()) means the area was checked and has no claims.
+     * Destructive world maintenance must treat the former as protected/unknown.
+     */
+    default Optional<List<LandInfo>> intersecting(String world, int minX, int minY, int minZ,
+                                                  int maxX, int maxY, int maxZ) {
+        return Optional.empty();
+    }
 }

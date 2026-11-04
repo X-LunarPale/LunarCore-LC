@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.yungnickyoung.minecraft.betterwitchhuts.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "DisableVanillaWitchHutsMixin",
+
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

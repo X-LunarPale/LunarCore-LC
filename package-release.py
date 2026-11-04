@@ -130,8 +130,10 @@ def main():
             "LunarCore 琉月 v0.0.6 测试预览版 / Test Preview\n"
             "Java 25 / Paper 26.3 build 202\n"
             "核心 JAR 放入 plugins/。附加模块按需放入 plugins/LunarCore/modules/。\n"
+            "结构美化：LunarCoreStructures.jar 放入 plugins/，在服务器页面设置，完整重启生效。\n"
             "停服后安装或更新，保留数据目录。详见 docs/zh-CN/INSTALL.md。\n"
             "Core JAR: plugins/. Optional modules: plugins/LunarCore/modules/.\n"
+            "Structure upgrades: place LunarCoreStructures.jar in plugins/, configure on the Server page, then restart.\n"
             "Stop before installing or updating. Keep the data folder. See docs/en-US/INSTALL.md.\n"
         ).encode("utf-8"))
     assets.append(bundle)

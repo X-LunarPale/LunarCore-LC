@@ -31,7 +31,7 @@ modules.forEach {
 }
 
 // 独立桥接插件；第三方原插件及其代码不打包到 LunarCore。
-listOf("lbr-playertitle-web", "lbr-multiverse-web").forEach {
+listOf("lbr-playertitle-web", "lbr-multiverse-web", "lbr-structures").forEach {
     include(it)
     project(":$it").projectDir = file("integrations/$it")
 }

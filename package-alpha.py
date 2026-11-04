@@ -18,7 +18,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parent
 SOURCE_TREES = (
     "lbr-api", "lbr-core", "modules", "integrations", "examples", "web-ui", "docs",
-    "gradle", "third-party/lagfixer", "tools", "resource-packs",
+    "gradle", "third-party/lagfixer", "third-party/yungs", "tools", "resource-packs",
 )
 ROOT_FILES = (
     "settings.gradle.kts", "build.gradle.kts", "gradle.properties",
@@ -48,6 +48,8 @@ SOURCE_BINARIES = {
     "gradle/wrapper/gradle-wrapper.jar",
     "third-party/lagfixer/upstream/gradle/wrapper/gradle-wrapper.jar",
 }
+SOURCE_BINARIES.update(path.relative_to(ROOT).as_posix()
+                       for path in (ROOT / "third-party/yungs").glob("*/upstream/gradle/wrapper/gradle-wrapper.jar"))
 REQUIRED = (
     "gradlew", "gradlew.bat", "gradle/wrapper/gradle-wrapper.jar",
     "gradle/wrapper/gradle-wrapper.properties", "lbr-core/build.gradle.kts",
@@ -73,6 +75,7 @@ REQUIRED = (
 BRIDGES = (
     ("lbr-multiverse-web", "LbrMultiverseWeb"),
     ("lbr-playertitle-web", "LbrPlayerTitleWeb"),
+    ("lbr-structures", "LunarCoreStructures"),
 )
 
 
@@ -155,7 +158,8 @@ def add_file(archive: zipfile.ZipFile, path: Path, name: str) -> None:
 
 def validate_plugin(path: Path, release: str, plugin_name: str) -> None:
     with zipfile.ZipFile(path) as archive:
-        plugin = archive.read("plugin.yml").decode("utf-8")
+        descriptor = "paper-plugin.yml" if "paper-plugin.yml" in archive.namelist() else "plugin.yml"
+        plugin = archive.read(descriptor).decode("utf-8")
         if not re.search(r"^name:\s*['\"]?" + re.escape(plugin_name) + r"['\"]?\s*$", plugin, re.MULTILINE):
             raise ValueError(f"Unexpected plugin name in {path.relative_to(ROOT)}")
         if not re.search(r"^version:\s*['\"]?" + re.escape(release) + r"['\"]?\s*$", plugin, re.MULTILINE):

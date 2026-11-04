@@ -1,0 +1,27 @@
+{
+  "paperBuild": 202,
+  "seed": 1234,
+  "family": "desert_temples",
+  "startChunk": [
+    -154,
+    402
+  ],
+  "replacementPieces": 477,
+  "beforeChunks": 36,
+  "afterChunks": 36,
+  "bounds": [
+    -2505,
+    45,
+    6391,
+    -2423,
+    114,
+    6473
+  ],
+  "verifiedRestoredBlockStates": 482230,
+  "blockEntitiesMatch": true,
+  "originalStructureStartRestored": true,
+  "replacementStartRemoved": true,
+  "recoveryCheckpoint": "world saved before COMMITTED journal write",
+  "restartedWithReplacementDisabled": true,
+  "finalJournalStatus": "ROLLED_BACK"
+}

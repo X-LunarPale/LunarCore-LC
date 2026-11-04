@@ -1,0 +1,26 @@
+{
+  "name": "betterdeserttemples:hall_wall",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "location": "betterdeserttemples:hall_wall/hall_wall_0",
+        "processors": "betterdeserttemples:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "location": "betterdeserttemples:hall_wall/hall_wall_forced",
+        "processors": "betterdeserttemples:main",
+        "projection": "rigid",
+        "element_type": "lunarcore:processed_single",
+        "legacy": false
+      }
+    }
+  ]
+}

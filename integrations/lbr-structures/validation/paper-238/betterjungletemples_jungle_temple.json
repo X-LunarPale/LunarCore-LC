@@ -1,0 +1,356 @@
+{
+  "pieces": 42,
+  "blockEntities": [
+    {
+      "loot": "betterjungletemples:chests/campsite",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:beehive"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "minecraft:chests/jungle_temple",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:skull"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:comparator"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "betterjungletemples:chests/treasure",
+      "id": "minecraft:trapped_chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:campfire"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "betterjungletemples:chests/campsite",
+      "id": "minecraft:chest"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:hopper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dispenser"
+    },
+    {
+      "loot": "",
+      "id": "minecraft:dropper"
+    }
+  ],
+  "blockCounts": {
+    "minecraft:air": 78619,
+    "minecraft:andesite": 446,
+    "minecraft:bamboo": 3359,
+    "minecraft:bee_nest": 1,
+    "minecraft:big_dripleaf": 12,
+    "minecraft:big_dripleaf_stem": 18,
+    "minecraft:campfire": 5,
+    "minecraft:cauldron": 2,
+    "minecraft:cave_vines": 41,
+    "minecraft:chest": 3,
+    "minecraft:chiseled_stone_bricks": 61,
+    "minecraft:coal_ore": 545,
+    "minecraft:cobblestone": 20553,
+    "minecraft:cobblestone_slab": 312,
+    "minecraft:cobblestone_stairs": 255,
+    "minecraft:comparator": 5,
+    "minecraft:copper_ore": 13,
+    "minecraft:creeper_head": 1,
+    "minecraft:detector_rail": 1,
+    "minecraft:dirt": 5161,
+    "minecraft:dispenser": 47,
+    "minecraft:dropper": 15,
+    "minecraft:emerald_block": 2,
+    "minecraft:fern": 186,
+    "minecraft:glow_lichen": 2,
+    "minecraft:granite": 456,
+    "minecraft:grass_block": 1720,
+    "minecraft:gravel": 582,
+    "minecraft:hanging_roots": 40,
+    "minecraft:honey_block": 1,
+    "minecraft:honeycomb_block": 1,
+    "minecraft:hopper": 7,
+    "minecraft:infested_cobblestone": 1787,
+    "minecraft:iron_ore": 34,
+    "minecraft:jungle_leaves": 2040,
+    "minecraft:jungle_log": 676,
+    "minecraft:jungle_trapdoor": 16,
+    "minecraft:light_gray_bed": 4,
+    "minecraft:moss_block": 80,
+    "minecraft:mossy_cobblestone": 9245,
+    "minecraft:mossy_cobblestone_slab": 330,
+    "minecraft:mossy_cobblestone_stairs": 278,
+    "minecraft:mossy_stone_brick_slab": 133,
+    "minecraft:mossy_stone_brick_stairs": 451,
+    "minecraft:mossy_stone_brick_wall": 102,
+    "minecraft:mossy_stone_bricks": 2326,
+    "minecraft:note_block": 1,
+    "minecraft:oak_leaves": 576,
+    "minecraft:oak_log": 13,
+    "minecraft:observer": 1,
+    "minecraft:piston_head": 45,
+    "minecraft:podzol": 583,
+    "minecraft:pointed_dripstone": 143,
+    "minecraft:redstone_torch": 56,
+    "minecraft:redstone_wall_torch": 50,
+    "minecraft:redstone_wire": 236,
+    "minecraft:repeater": 119,
+    "minecraft:seagrass": 35,
+    "minecraft:short_grass": 562,
+    "minecraft:small_dripleaf": 10,
+    "minecraft:sticky_piston": 51,
+    "minecraft:stone": 28732,
+    "minecraft:stone_brick_slab": 136,
+    "minecraft:stone_brick_stairs": 309,
+    "minecraft:stone_brick_wall": 65,
+    "minecraft:stone_bricks": 1499,
+    "minecraft:stone_pressure_plate": 176,
+    "minecraft:trapped_chest": 1,
+    "minecraft:vine": 1748,
+    "minecraft:wall_torch": 3,
+    "minecraft:water": 116
+  },
+  "build": "26.3-238-df120fd (MC: 26.3)",
+  "structure": "betterjungletemples:jungle_temple",
+  "bounds": [
+    2103,
+    89,
+    -974,
+    2153,
+    142,
+    -915
+  ]
+}
