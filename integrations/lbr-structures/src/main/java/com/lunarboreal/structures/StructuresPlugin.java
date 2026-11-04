@@ -76,9 +76,13 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
     private Map<String, Object> status() {
         var worlds = new ArrayList<Map<String, Object>>();
         Bukkit.getWorlds().stream().filter(world -> !com.lunarboreal.structures.retrofit.StagingWorlds.internal(world.getKey().toString()))
-                .forEach(world -> worlds.add(Map.of("key", world.getKey().toString(), "name", world.getName(),
-                "environment", world.getEnvironment().name(), "active", active.forWorld(world.getKey().toString()).map(),
-                "error", worldErrors.getOrDefault(world.getKey().toString(), ""))));
+                .forEach(world -> {
+                    boolean supported = WorldStructures.supported(world);
+                    worlds.add(Map.of("key", world.getKey().toString(), "name", world.getName(),
+                            "environment", world.getEnvironment().name(), "supported", supported,
+                            "active", (supported ? active.forWorld(world.getKey().toString()) : GenerationPolicy.vanilla()).map(),
+                            "error", worldErrors.getOrDefault(world.getKey().toString(), "")));
+                });
         var families = Arrays.stream(StructureFamily.values()).map(f -> Map.of("id", f.id, "label", f.label)).toList();
         var saved = store.saved();
         return Map.of("active", active.map(), "saved", saved.map(), "restartRequired", !saved.sameRules(active),

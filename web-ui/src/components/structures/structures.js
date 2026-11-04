@@ -18,7 +18,8 @@ export function structureMessage(value, translate) {
   for (const [prefix, key] of [
     ['无法重放生成来源：', '无法重放生成来源：{detail}'],
     ['与原版重放不一致，已保留原样；', '与原版重放不一致，已保留原样；{detail}'],
-    ['方块不一致：', '方块不一致：{detail}']
+    ['方块不一致：', '方块不一致：{detail}'],
+    ['范围内有无法确认来源的实体：', '范围内有无法确认来源的实体：{detail}']
   ]) {
     if (text.startsWith(prefix)) return translate(key, { detail: structureMessage(text.slice(prefix.length), translate) })
   }

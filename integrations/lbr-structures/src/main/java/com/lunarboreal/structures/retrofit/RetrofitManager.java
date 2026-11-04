@@ -20,6 +20,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 /** Serialized background replay with main-thread world access and a write-ahead rollback journal. */
 public final class RetrofitManager implements Listener, AutoCloseable {
@@ -75,7 +76,7 @@ public final class RetrofitManager implements Listener, AutoCloseable {
         if (StagingWorlds.internal(world.getKey().toString())) return;
         var policy = active.forWorld(world.getKey().toString());
         boolean recovery = history.stream().anyMatch(j -> j.world().equals(world.getUID().toString()) && needsRecovery(j));
-        if (recovery || policy.overwriteExisting() && policy.anyEnabled()) {
+        if (recovery || policy.overwriteExisting() && policy.anyEnabled() && com.lunarboreal.structures.nms.WorldStructures.supported(world)) {
             var job = new Job(world, recovery);
             jobs.put(world.getUID(), job);
             if (recovery || !restoreCompletedReport(job, policy)) maintenance.add(world.getUID());
@@ -150,8 +151,8 @@ public final class RetrofitManager implements Listener, AutoCloseable {
                 if (journal.world().equals(job.world.toString()) && needsRecovery(journal)) recover(job, world, journal);
             }
             var policy = active.forWorld(job.key);
-            if (!policy.overwriteExisting() || !policy.anyEnabled() || job.cancel.get()) return;
-            sync(() -> { if (!world.getPlayers().isEmpty()) throw new IllegalStateException("世界仍有玩家，拒绝覆盖"); world.save(); return null; });
+            if (!policy.overwriteExisting() || !policy.anyEnabled() || job.cancel.get() || !com.lunarboreal.structures.nms.WorldStructures.supported(world)) return;
+            sync(() -> { if (!world.getPlayers().isEmpty()) throw new IllegalStateException("世界仍有玩家，拒绝覆盖"); world.save(true); return null; });
             job.phase = "scanning";
             Path region = sync(() -> dimensionPath(world).resolve("region"));
             var candidates = RegionScanner.scan(region, world.getUID(), policy, () -> job.cancel.get() || closing.get(), p -> {
@@ -173,6 +174,7 @@ public final class RetrofitManager implements Listener, AutoCloseable {
                 job.skipped++;
                 job.detail("end_island", "末地岛需验证完整龙战历史；已有岛屿未自动覆盖");
             }
+            if (closing.get()) throw new InterruptedException("Structure plugin is stopping"); // A stop is not an administrator's cancel.
             job.phase = job.cancel.get() ? "cancelled" : "completed";
         } catch (Throwable failure) {
             job.error = message(failure);
@@ -205,48 +207,77 @@ public final class RetrofitManager implements Listener, AutoCloseable {
             for (ChunkPos pos : chunks) {
                 if (job.cancel.get()) throw new Skip("任务已取消");
                 if (!sync(() -> world.isChunkGenerated(pos.x(), pos.z()))) throw new Skip("扩展范围包含尚未生成的区块");
-                load(scene.baseline(), pos, true); load(scene.replacement(), pos, true); load(world, pos, false);
-                sync(() -> { world.addPluginChunkTicket(pos.x(), pos.z(), plugin); return null; });
+                sync(() -> { hold(scene.baseline(), pos); hold(scene.replacement(), pos); hold(world, pos); return null; });
                 pinned.add(pos);
+                load(scene.baseline(), pos, true); load(scene.replacement(), pos, true); load(world, pos, false);
             }
             job.phase = "checking";
             sync(() -> { requireProtectedAreaClear(world, bounds); return null; });
+            if (candidate.dungeonOrigin() == null && !sync(() -> capture(scene.baseline(), candidate.start())).hasStart(candidate.vanillaId()))
+                throw new Skip("原版重放不含该结构，无法确认来源");
             var before = new ArrayList<ChunkImage>();
+            var baseline = new ArrayList<ChunkImage>();
             var after = new ArrayList<ChunkImage>();
+            var images = new HashMap<ChunkPos, ChunkImage[]>();
             for (ChunkPos pos : chunks) {
                 ChunkImage current = sync(() -> capture(world, pos));
                 ChunkImage expected = sync(() -> capture(scene.baseline(), pos));
-                String mismatch = current.difference(expected, bounds);
+                ChunkImage target = sync(() -> capture(scene.replacement(), pos));
+                String mismatch = current.conflict(expected, target, bounds);
                 if (mismatch != null) throw new Skip("与原版重放不一致，已保留原样；" + mismatch);
                 before.add(current);
-                after.add(sync(() -> capture(scene.replacement(), pos)));
+                baseline.add(expected);
+                after.add(target);
+                images.put(pos, new ChunkImage[]{expected, target});
             }
+            var pieces = scene.replacementStart().getPieces().stream().map(net.minecraft.world.level.levelgen.structure.StructurePiece::getBoundingBox).toList();
+            // Entities follow the structures: both old and new footprints swap, as does anything touching a changed cell.
+            Predicate<Location> swapped = at -> {
+                var cell = new BlockPos(at.getBlockX(), at.getBlockY(), at.getBlockZ());
+                if (candidate.bounds().isInside(cell) || pieces.stream().anyMatch(piece -> piece.isInside(cell))) return true;
+                var cells = images.get(new ChunkPos(at.getBlockX() >> 4, at.getBlockZ() >> 4));
+                if (cells == null) return false;
+                for (int y = at.getBlockY() - 1; y <= at.getBlockY() + 1; y++)
+                    if (cells[0].block(at.getBlockX(), y, at.getBlockZ()) != cells[1].block(at.getBlockX(), y, at.getBlockZ())) return true;
+                return false;
+            };
             if (candidate.dungeonOrigin() != null) {
                 var origin = candidate.dungeonOrigin();
-                var room = before.stream().filter(i -> i.position.equals(candidate.start())).findFirst().orElseThrow();
-                if (!room.block(origin.getX(), origin.getY(), origin.getZ()).is(net.minecraft.world.level.block.Blocks.SPAWNER))
-                    throw new Skip("未找到可验证的原版小地牢");
+                for (var evidence : List.of(before, baseline)) {
+                    var room = evidence.stream().filter(i -> i.position.equals(candidate.start())).findFirst().orElseThrow();
+                    if (!room.block(origin.getX(), origin.getY(), origin.getZ()).is(net.minecraft.world.level.block.Blocks.SPAWNER))
+                        throw new Skip("未找到可验证的原版小地牢");
+                }
             }
-            var entities = sync(() -> captureEntities(scene.replacement(), pairBounds(scene), bounds));
+            var generated = sync(() -> generatedEntities(scene.baseline(), bounds));
+            var displaced = sync(() -> displaced(world, bounds, generated, swapped));
+            var displacedData = sync(() -> saveEntities(world, displaced));
+            var entities = sync(() -> captureEntities(scene.replacement(), bounds, swapped));
             String replacementId = sync(() -> ((CraftWorld) world).getHandle().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.STRUCTURE)
                     .getKey(scene.replacementStart().getStructure()).toString());
             Set<String> replaced = Set.of(candidate.vanillaId(), replacementId);
             if (job.cancel.get()) throw new Skip("任务已取消");
             job.phase = "backing_up";
-            journal = JobJournal.prepare(backups, world.getUID(), job.key, active.revision(), candidate, bounds, replaced, before, after, entities);
+            journal = JobJournal.prepare(backups, world.getUID(), job.key, active.revision(), candidate, bounds, replaced, before, after, entities, displacedData);
             history.add(journal);
             // Recheck after IO; an administrator or another plugin may have changed the world while backing up.
             sync(() -> { requireProtectedAreaClear(world, bounds); return null; });
             for (int i = 0; i < before.size(); i++) {
-                ChunkImage original = before.get(i);
-                if (!original.sameContents(sync(() -> capture(world, original.position)), bounds)) throw new Skip("备份期间世界发生变化，已取消覆盖");
+                var expected = baseline.get(i); var target = after.get(i);
+                if (sync(() -> capture(world, expected.position)).conflict(expected, target, bounds) != null) throw new Skip("备份期间世界发生变化，已取消覆盖");
             }
+            if (!new HashSet<>(sync(() -> displaced(world, bounds, generated, swapped))).equals(new HashSet<>(displaced))) throw new Skip("备份期间世界发生变化，已取消覆盖");
             if (job.cancel.get()) throw new Skip("任务已取消");
             journal.status("APPLYING");
             job.phase = "applying";
-            for (var image : after) sync(() -> image.apply(((CraftWorld) world).getHandle(), bounds, replaced));
+            sync(() -> { displaced.forEach(RetrofitManager::discard); return null; });
+            var swap = new ChunkImage.StructureSwap(candidate.start(), candidate.vanillaId(), replacementId);
+            for (int i = 0; i < after.size(); i++) {
+                var image = after.get(i); var expected = baseline.get(i);
+                sync(() -> image.replace(((CraftWorld) world).getHandle(), bounds, expected, swap));
+            }
             var operation = journal;
-            sync(() -> { spawnEntities(world, entities, operation.id); world.save(); return null; });
+            sync(() -> { spawnEntities(world, entities, operation.id); world.save(true); return null; });
             journal.status("COMMITTED");
             try { LC.get().audit().log("structures", "system", "retrofit", job.key + " " + candidate.id() + " backup=" + journal.id); }
             catch (Exception auditError) { plugin.getLogger().warning("Committed retrofit " + journal.id + "; audit log unavailable: " + auditError.getMessage()); }
@@ -257,7 +288,7 @@ public final class RetrofitManager implements Listener, AutoCloseable {
             }
             throw failure;
         } finally {
-            if (!closing.get()) sync(() -> { pinned.forEach(pos -> world.removePluginChunkTicket(pos.x(), pos.z(), plugin)); return null; });
+            if (!closing.get()) sync(() -> { pinned.forEach(pos -> release(world, pos)); return null; });
             if (pair != null && !closing.get()) {
                 var cleanup = pair;
                 sync(() -> { StagingWorlds.unload(cleanup); return null; });
@@ -280,13 +311,14 @@ public final class RetrofitManager implements Listener, AutoCloseable {
                     for (var entity : world.getChunkAt(pos.x(), pos.z()).getEntities())
                         if (journal.id.equals(entity.getPersistentDataContainer().get(ENTITY_JOB, PersistentDataType.STRING))) {
                             entity.getPersistentDataContainer().set(new NamespacedKey("lunarcorestructures", "rollback_removal"), PersistentDataType.BYTE, (byte) 1);
-                            entity.remove();
+                            discard(entity);
                         }
-                    new ChunkImage(((CraftWorld) world).getHandle(), image).apply(((CraftWorld) world).getHandle(), bounds, structureIds);
+                    new ChunkImage(((CraftWorld) world).getHandle(), image).restore(((CraftWorld) world).getHandle(), bounds, structureIds);
                     return null;
                 });
             }
-            sync(() -> { world.save(); return null; });
+            for (var tag : journal.displacedEntities()) restoreEntity(world, tag);
+            sync(() -> { world.save(true); return null; });
             journal.status("ROLLED_BACK");
         } catch (Exception e) {
             job.phase = "recovery_required";
@@ -295,20 +327,82 @@ public final class RetrofitManager implements Listener, AutoCloseable {
         }
     }
 
-    private static BoundingBox pairBounds(StagingWorlds.Pair pair) { return pair.replacementStart().getBoundingBox(); }
-    private static List<CompoundTag> captureEntities(World staging, BoundingBox structure, BoundingBox operation) {
-        var level = ((CraftWorld) staging).getHandle();
-        var result = new ArrayList<CompoundTag>();
-        for (var entity : staging.getNearbyEntities(box(structure))) {
-            if (entity instanceof org.bukkit.entity.Player) throw new IllegalStateException("Player entered staging world");
-            var output = net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess());
-            if (((CraftEntity) entity).getHandle().save(output)) {
-                var tag = output.buildResult(); tag.remove("UUID"); result.add(tag);
+    /** The FULL ticket level keeps a chunk and its entities loaded without ticking, so nothing moves between check and write. */
+    private static final int HELD_LEVEL = net.minecraft.server.level.ChunkLevel.byStatus(net.minecraft.server.level.FullChunkStatus.FULL);
+    private void hold(World world, ChunkPos pos) {
+        ((CraftWorld) world).getHandle().moonrise$getChunkTaskScheduler().chunkHolderManager
+                .addTicketAtLevel(net.minecraft.server.level.TicketType.PLUGIN_TICKET, pos, HELD_LEVEL, plugin);
+    }
+    private void release(World world, ChunkPos pos) {
+        ((CraftWorld) world).getHandle().moonrise$getChunkTaskScheduler().chunkHolderManager
+                .removeTicketAtLevel(net.minecraft.server.level.TicketType.PLUGIN_TICKET, pos, HELD_LEVEL, plugin);
+    }
+
+    private static List<EntityPolicy.Fixed> generatedEntities(World baseline, BoundingBox bounds) {
+        return baseline.getNearbyEntities(box(bounds)).stream().filter(entity -> !(entity instanceof org.bukkit.entity.Mob))
+                .map(EntityPolicy.Fixed::of).toList();
+    }
+
+    /** Container entities spill their rolled loot on removal; the backup already holds them. */
+    private static void discard(org.bukkit.entity.Entity entity) {
+        if (entity instanceof org.bukkit.loot.Lootable loot) loot.clearLootTable();
+        if (entity instanceof org.bukkit.inventory.InventoryHolder holder) holder.getInventory().clear();
+        entity.remove();
+    }
+
+    /** Entities the swap replaces. One that may be a player's blocks the structure. */
+    private static List<org.bukkit.entity.Entity> displaced(World world, BoundingBox bounds, List<EntityPolicy.Fixed> generated, Predicate<Location> swapped) throws Skip {
+        var area = box(bounds);
+        var result = new ArrayList<org.bukkit.entity.Entity>();
+        for (var entity : world.getNearbyEntities(area)) {
+            if (EntityPolicy.transientEntity(entity) || !swapped.test(entity.getLocation())) continue;
+            var vehicle = entity.getVehicle();
+            if (!EntityPolicy.replaceable(entity, generated) || vehicle != null && !area.contains(vehicle.getLocation().toVector())) {
+                var at = entity.getLocation();
+                throw new Skip("范围内有无法确认来源的实体：" + entity.getType().getKey() + " " + at.getBlockX() + "," + at.getBlockY() + "," + at.getBlockZ());
             }
+            result.add(entity);
         }
         return List.copyOf(result);
     }
-    private static void spawnEntities(World world, List<CompoundTag> tags, String operation) {
+
+    private static List<CompoundTag> saveEntities(World world, List<org.bukkit.entity.Entity> entities) {
+        var level = ((CraftWorld) world).getHandle();
+        var result = new ArrayList<CompoundTag>();
+        for (var entity : entities) {
+            var output = net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess());
+            if (((CraftEntity) entity).getHandle().save(output)) result.add(output.buildResult()); // Passengers save with their vehicle.
+        }
+        return List.copyOf(result);
+    }
+
+    private static List<CompoundTag> captureEntities(World staging, BoundingBox operation, Predicate<Location> swapped) {
+        var entities = new ArrayList<org.bukkit.entity.Entity>();
+        for (var entity : staging.getNearbyEntities(box(operation))) {
+            if (entity instanceof org.bukkit.entity.Player) throw new IllegalStateException("Player entered staging world");
+            if (swapped.test(entity.getLocation()) && !(entity instanceof org.bukkit.entity.FallingBlock || entity instanceof org.bukkit.entity.ExperienceOrb)) entities.add(entity);
+        }
+        var result = saveEntities(staging, entities);
+        result.forEach(tag -> tag.remove("UUID"));
+        return result;
+    }
+
+    /** Keeps the saved UUID: a crash before the world save leaves the original on disk, and it must not come back twice. */
+    private void restoreEntity(World world, CompoundTag tag) throws Exception {
+        var level = ((CraftWorld) world).getHandle();
+        var input = net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess(), tag);
+        var entity = sync(() -> net.minecraft.world.entity.EntityType.loadEntityRecursive(input, level, net.minecraft.world.entity.EntitySpawnReason.LOAD,
+                net.minecraft.world.entity.EntityProcessor.NOP));
+        if (entity == null) { plugin.getLogger().warning("Cannot decode a backed up entity during rollback"); return; }
+        load(world, entity.chunkPosition(), false);
+        sync(() -> {
+            if (level.getEntity(entity.getUUID()) != null) return null;
+            level.tryAddFreshEntityWithPassengers(entity); // Spawn listeners can cancel this and it still reports success.
+            if (level.getEntity(entity.getUUID()) != entity) plugin.getLogger().warning("Cannot restore backed up entity " + entity.getUUID());
+            return null;
+        });
+    }
+    private static void spawnEntities(World world, List<CompoundTag> tags, String operation) throws Skip {
         var level = ((CraftWorld) world).getHandle();
         for (var original : tags) {
             var tag = original.copy();
@@ -316,7 +410,8 @@ public final class RetrofitManager implements Listener, AutoCloseable {
             var input = net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess(), tag);
             var entity = net.minecraft.world.entity.EntityType.loadEntityRecursive(input, level, net.minecraft.world.entity.EntitySpawnReason.STRUCTURE,
                     net.minecraft.world.entity.EntityProcessor.NOP);
-            if (entity == null || !level.tryAddFreshEntityWithPassengers(entity)) throw new IllegalStateException("Cannot restore generated structure entity");
+            if (entity != null) level.tryAddFreshEntityWithPassengers(entity); // Spawn listeners can cancel this and it still reports success.
+            if (entity == null || level.getEntity(entity.getUUID()) != entity) throw new Skip("新结构实体未能生成，已回滚");
         }
     }
 
@@ -339,7 +434,6 @@ public final class RetrofitManager implements Listener, AutoCloseable {
         } else if (LC.get().modules().discovered().stream().anyMatch(d -> d.id().equals("land"))) {
             throw new Skip("领地模块已安装但保护数据不可用");
         }
-        if (!world.getNearbyEntities(box(bounds)).isEmpty()) throw new Skip("范围内存在实体，无法确认未被玩家改动");
     }
     private static org.bukkit.util.BoundingBox box(BoundingBox b) {
         return new org.bukkit.util.BoundingBox(b.minX(), b.minY(), b.minZ(), b.maxX()+1d, b.maxY()+1d, b.maxZ()+1d);

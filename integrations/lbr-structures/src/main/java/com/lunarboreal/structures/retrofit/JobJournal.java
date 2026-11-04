@@ -24,7 +24,8 @@ public final class JobJournal {
     }
 
     public static JobJournal prepare(Path root, UUID world, String worldKey, long revision, RetrofitCandidate candidate,
-            BoundingBox bounds, Set<String> structureIds, List<ChunkImage> before, List<ChunkImage> after, List<CompoundTag> entities) throws IOException {
+            BoundingBox bounds, Set<String> structureIds, List<ChunkImage> before, List<ChunkImage> after, List<CompoundTag> entities,
+            List<CompoundTag> displaced) throws IOException {
         String id = UUID.randomUUID().toString();
         Path directory = root.resolve(id);
         Files.createDirectories(directory);
@@ -38,6 +39,10 @@ public final class JobJournal {
         var list = new ListTag(); entities.forEach(t -> list.add(t.copy()));
         entityData.put("entities", list);
         writeSnapshot(directory, "entities.nbt", entityData, hashes);
+        var displacedData = new CompoundTag();
+        var displacedList = new ListTag(); displaced.forEach(t -> displacedList.add(t.copy()));
+        displacedData.put("entities", displacedList);
+        writeSnapshot(directory, "displaced.nbt", displacedData, hashes);
         var record = new LinkedHashMap<String, Object>();
         record.put("schema", 1); record.put("id", id); record.put("world", world.toString()); record.put("worldKey", worldKey);
         record.put("revision", revision); record.put("candidate", candidate.id()); record.put("status", "PREPARED");
@@ -91,16 +96,30 @@ public final class JobJournal {
         ConfigStore.atomicWrite(directory.resolve("journal.json"), (GSON.toJson(record) + "\n").getBytes(StandardCharsets.UTF_8));
     }
 
+    private CompoundTag snapshot(Map<String, Object> hashes, String name) throws IOException {
+        Path path = directory.resolve(name);
+        if (Files.isSymbolicLink(path) || Files.size(path) > 64L * 1024 * 1024) throw new IOException("Invalid backup image");
+        byte[] bytes = Files.readAllBytes(path);
+        if (!sha256(bytes).equals(hashes.get(name))) throw new IOException("Backup checksum failed: " + name);
+        try (var input = new ByteArrayInputStream(bytes)) { return NbtIo.readCompressed(input, NbtAccounter.create(128L * 1024 * 1024)); }
+    }
+
+    /** Entities the operation removed from the world. Journals written before this existed hold none. */
+    public List<CompoundTag> displacedEntities() throws IOException {
+        var hashes = com.lunarboreal.structures.config.StructuresConfig.object(record.get("hashes"));
+        if (!hashes.containsKey("displaced.nbt")) return List.of();
+        var result = new ArrayList<CompoundTag>();
+        for (var entry : snapshot(hashes, "displaced.nbt").getListOrEmpty("entities"))
+            if (entry instanceof CompoundTag tag) result.add(tag);
+        return result;
+    }
+
     public List<CompoundTag> beforeImages() throws IOException {
         var hashes = com.lunarboreal.structures.config.StructuresConfig.object(record.get("hashes"));
         var result = new ArrayList<CompoundTag>();
         for (String name : hashes.keySet().stream().filter(n -> n.startsWith("before_")).sorted().toList()) {
             if (!name.matches("before_-?\\d+_-?\\d+\\.nbt")) throw new IOException("Invalid backup filename");
-            Path path = directory.resolve(name);
-            if (Files.isSymbolicLink(path) || Files.size(path) > 64L * 1024 * 1024) throw new IOException("Invalid backup image");
-            byte[] bytes = Files.readAllBytes(path);
-            if (!sha256(bytes).equals(hashes.get(name))) throw new IOException("Backup checksum failed: " + name);
-            try (var input = new ByteArrayInputStream(bytes)) { result.add(NbtIo.readCompressed(input, NbtAccounter.create(128L * 1024 * 1024))); }
+            result.add(snapshot(hashes, name));
         }
         if (result.isEmpty()) throw new IOException("Missing rollback images");
         return result;

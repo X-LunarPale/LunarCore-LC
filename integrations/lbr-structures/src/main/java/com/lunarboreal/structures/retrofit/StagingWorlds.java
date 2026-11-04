@@ -47,13 +47,21 @@ public final class StagingWorlds {
             replacement = createOne(new Spec(source, candidate, true, features));
             var generator = ((CraftWorld) replacement).getHandle().getChunkSource().getGenerator();
             if (!(generator instanceof StageGenerator stage) || stage.start == null || !stage.start.isValid())
-                throw new IllegalStateException("YUNG structure cannot be generated at the original location");
+                throw new IllegalStateException("原位置没有可用的 YUNG 布局");
             return new Pair(baseline, replacement, stage.start, baseline.getWorldFolder().toPath(), replacement.getWorldFolder().toPath());
         } catch (Exception e) {
-            Bukkit.unloadWorld(baseline, false);
-            if (replacement != null) Bukkit.unloadWorld(replacement, false);
+            for (World staging : Arrays.asList(baseline, replacement)) {
+                if (staging == null) continue;
+                try { discard(staging); }
+                catch (java.io.IOException cleanup) { e.addSuppressed(cleanup); }
+            }
             throw e;
         }
+    }
+
+    private static void discard(World staging) throws java.io.IOException {
+        Path folder = staging.getWorldFolder().toPath();
+        if (Bukkit.unloadWorld(staging, false)) deleteFolder(folder);
     }
 
     private static World createOne(Spec spec) throws Exception {
@@ -94,8 +102,6 @@ public final class StagingWorlds {
         var state = level.getChunkSource().getGeneratorState();
         var sets = state.possibleStructureSets().stream().filter(h -> h.value().structures().stream().allMatch(e ->
                 e.structure().unwrapKey().orElseThrow().identifier().getNamespace().equals("minecraft"))).toList();
-        if (spec.replace) sets = sets.stream().filter(h -> h.value().structures().stream().noneMatch(e ->
-                spec.candidate.family().vanillaStructures.contains(e.structure().unwrapKey().orElseThrow().identifier().toString()))).toList();
         var constructor = ChunkGeneratorStructureState.class.getDeclaredConstructor(RandomState.class, BiomeSource.class, long.class,
                 ChunkPos.class, long.class, List.class, org.spigotmc.SpigotWorldConfig.class);
         constructor.setAccessible(true);
@@ -117,22 +123,25 @@ public final class StagingWorlds {
 
     /** Only these freshly allocated dimensions may be removed, after both have unloaded. */
     public static void delete(Pair pair) throws java.io.IOException {
-        for (Path path : List.of(pair.baselinePath, pair.replacementPath)) {
-            Path normalized = path.toAbsolutePath().normalize();
-            if (!normalized.getParent().getFileName().toString().equals(NAMESPACE)
-                    || !normalized.getFileName().toString().matches("job_[a-f0-9]{32}") || Files.isSymbolicLink(normalized))
-                throw new java.io.IOException("Refusing to delete an unowned staging path");
-            if (!Files.exists(normalized)) continue;
-            Files.walkFileTree(normalized, new SimpleFileVisitor<>() {
-                @Override public FileVisitResult visitFile(Path file, java.nio.file.attribute.BasicFileAttributes attrs) throws java.io.IOException {
-                    Files.delete(file); return FileVisitResult.CONTINUE;
-                }
-                @Override public FileVisitResult postVisitDirectory(Path directory, java.io.IOException error) throws java.io.IOException {
-                    if (error != null) throw error;
-                    Files.delete(directory); return FileVisitResult.CONTINUE;
-                }
-            });
-        }
+        deleteFolder(pair.baselinePath);
+        deleteFolder(pair.replacementPath);
+    }
+
+    private static void deleteFolder(Path path) throws java.io.IOException {
+        Path normalized = path.toAbsolutePath().normalize();
+        if (!normalized.getParent().getFileName().toString().equals(NAMESPACE)
+                || !normalized.getFileName().toString().matches("job_[a-f0-9]{32}") || Files.isSymbolicLink(normalized))
+            throw new java.io.IOException("Refusing to delete an unowned staging path");
+        if (!Files.exists(normalized)) return;
+        Files.walkFileTree(normalized, new SimpleFileVisitor<>() {
+            @Override public FileVisitResult visitFile(Path file, java.nio.file.attribute.BasicFileAttributes attrs) throws java.io.IOException {
+                Files.delete(file); return FileVisitResult.CONTINUE;
+            }
+            @Override public FileVisitResult postVisitDirectory(Path directory, java.io.IOException error) throws java.io.IOException {
+                if (error != null) throw error;
+                Files.delete(directory); return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     private static final class StageGenerator extends StructureChunkGenerator {
@@ -146,7 +155,13 @@ public final class StagingWorlds {
         @Override public void createStructures(RegistryAccess registries, ChunkGeneratorStructureState state, StructureManager manager,
                 ChunkAccess chunk, StructureTemplateManager templates, ResourceKey<Level> dimension) {
             super.createStructures(registries, state, manager, chunk, templates, dimension);
-            if (start != null && chunk.getPos().equals(spec.candidate.start())) chunk.setStartForStructure(start.getStructure(), start);
+            if (start == null || !chunk.getPos().equals(spec.candidate.start())) return;
+            // Only this start is swapped: neighbours sharing its structure set, such as bastions, must replay unchanged.
+            var lookup = registries.lookupOrThrow(Registries.STRUCTURE);
+            var starts = new HashMap<>(chunk.getAllStarts());
+            starts.keySet().removeIf(structure -> spec.candidate.vanillaId().equals(String.valueOf(lookup.getKey(structure))));
+            chunk.setAllStarts(starts);
+            chunk.setStartForStructure(start.getStructure(), start);
         }
     }
 
@@ -155,6 +170,7 @@ public final class StagingWorlds {
         var random = level.getChunkSource().randomState();
         var candidates = registry.listElements().filter(h -> h.key().identifier().getNamespace().equals(candidate.family().namespace))
                 .filter(h -> candidate.dungeonOrigin() == null || h.key().identifier().getPath().equals("small_dungeon"))
+                .filter(h -> !h.key().identifier().toString().equals("betterwitchhuts:witch_circle")) // A separate structure, not the hut's upgrade.
                 .sorted(Comparator.comparing(h -> h.key().identifier().toString())).toList();
         for (var holder : candidates) {
             var structure = holder.value();
@@ -170,6 +186,6 @@ public final class StagingWorlds {
             }
             return start;
         }
-        throw new IllegalStateException("No compatible YUNG layout at the original structure");
+        return null;
     }
 }

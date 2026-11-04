@@ -20,7 +20,8 @@ const message = value => structureMessage(value, t)
 const dirty = computed(() => draft.value && !sameRules(draft.value, baseline.value))
 const inherited = computed(() => !!scope.value && !Object.keys(draft.value?.worlds[scope.value] || {}).length)
 const selected = computed(() => draft.value ? effective(draft.value, scope.value) : {})
-const active = computed(() => status.value ? effective(status.value.active, scope.value) : {})
+const unsupported = computed(() => (status.value?.worlds || []).filter(world => world.supported === false))
+const active = computed(() => !status.value || unsupported.value.some(world => world.key === scope.value) ? {} : effective(status.value.active, scope.value))
 const scopeWorlds = computed(() => {
   const worlds = new Map((status.value?.worlds || []).map(world => [world.key, world.name]))
   Object.keys(draft.value?.worlds || {}).forEach(key => { if (!worlds.has(key)) worlds.set(key, key) })
@@ -111,9 +112,10 @@ onUnmounted(() => { disposed = true; clearInterval(timer) })
         <el-switch :model-value="selected.overwriteExisting" :disabled="saving || inherited || !!error || absent"
           :active-text="t('覆盖原有结构')" :aria-label="t('覆盖原有结构')"
           @change="value => setFlag(draft, scope, 'overwriteExisting', value)" />
-        <p>{{ t('只覆盖已开启美化且能确认未改动的原版结构；玩家改动、领地冲突或无法判断的区域会跳过。处理前自动备份，期间目标世界暂不可进入。') }}</p>
+        <p>{{ t('只覆盖已开启美化且能确认未改动的原版结构，结构内的野生生物和原版生成的实体会一并替换；玩家改动、玩家实体、领地冲突或无法判断的区域会跳过。处理前自动备份，期间全服暂停新玩家登录。') }}</p>
       </div>
       <el-alert v-for="world in status.worlds.filter(w => w.error)" :key="world.key" :closable="false" type="error" :title="`${world.name}: ${world.error}`" />
+      <el-alert v-for="world in unsupported" :key="world.key" :closable="false" type="warning" :title="t('{world} 不是原生噪声世界，结构设置不生效，继续使用原有生成方式。', { world: world.name })" />
       <div class="structure-actions">
         <span class="muted">{{ dirty ? t('有未保存的结构设置') : t('已生成的建筑保留，关闭开关仅改变后续生成。') }}</span>
         <el-button :disabled="saving" @click="load(true)">{{ t('重新读取') }}</el-button>

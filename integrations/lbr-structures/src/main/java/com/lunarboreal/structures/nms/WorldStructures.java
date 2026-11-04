@@ -15,7 +15,13 @@ public final class WorldStructures {
     private WorldStructures() {}
     private static final org.bukkit.NamespacedKey HISTORY = new org.bukkit.NamespacedKey("lunarcorestructures", "custom_structure_history");
 
-    public static void install(World world, GenerationPolicy policy) {
+    /** Flat and plugin-generated worlds have nothing to overlay and stay on their own generator. */
+    public static boolean supported(World world) {
+        return com.lunarboreal.api.service.NativeGeneratorDelegate.unwrap(((CraftWorld) world).getHandle().getChunkSource().getGenerator())
+                instanceof net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
+    }
+
+    public static void install(World world, GenerationPolicy requested) {
         ServerLevel level = ((CraftWorld) world).getHandle();
         var staging = com.lunarboreal.structures.retrofit.StagingWorlds.pending(world.getKey().toString());
         if (staging != null) {
@@ -26,6 +32,8 @@ public final class WorldStructures {
         if (com.lunarboreal.structures.retrofit.StagingWorlds.internal(world.getKey().toString()))
             throw new IllegalStateException("Refusing to load an unowned staging dimension");
         com.lunarboreal.structures.retrofit.StagingWorlds.remember(world, level.getChunkSource().getGenerator());
+        boolean supported = supported(world);
+        var policy = supported ? requested : GenerationPolicy.vanilla();
         boolean endActive = com.lunarboreal.structures.end.EndIslandController.install(level, policy.enabled(StructureFamily.END_ISLAND));
         var state = level.getChunkSource().getGeneratorState();
         List<Holder<StructureSet>> selected = select(state.possibleStructureSets(), policy);
@@ -42,10 +50,9 @@ public final class WorldStructures {
             replacement.ensureStructuresGenerated();
             PaperAccess.write(level.getChunkSource().chunkMap, "chunkGeneratorState", replacement);
             if (policy.anyEnabled()) world.getPersistentDataContainer().set(HISTORY, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
-            if (policy.anyEnabled() || world.getPersistentDataContainer().has(HISTORY)) {
+            if (supported && (policy.anyEnabled() || world.getPersistentDataContainer().has(HISTORY))) {
                 var context = level.getChunkSource().chunkMap.worldGenContext;
-                if (!(context.generator() instanceof net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator noise))
-                    throw new IllegalStateException("This world does not use a supported native noise generator");
+                var noise = (net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator) context.generator();
                 prepareFeatures(noise, policy, endActive);
                 var overlay = new StructureChunkGenerator(noise, policy);
                 PaperAccess.write(level.getChunkSource().chunkMap, "worldGenContext", new net.minecraft.world.level.chunk.status.WorldGenContext(

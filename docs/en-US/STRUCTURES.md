@@ -16,9 +16,13 @@ The scope is the nine Better structure projects. Bridges, Extras, cave overhauls
 
 ## Existing structures
 
-Replacement defaults to off. Startup maintenance scans saved regions and replays vanilla and replacement generation in isolated temporary dimensions. The comparison includes the expanded footprint and containers.
+Replacement defaults to off. Startup maintenance scans saved regions and replays vanilla and replacement generation in isolated temporary dimensions. Only blocks the new structure actually changes, and their neighbours, are compared and written; everything else in the area stays as it is.
 
-Player edits, unmatched terrain or inventories, uncertain entities, claims, unavailable protection data, missing chunks and operations exceeding the safety limit are skipped with a reason. Only cactus and sugar-cane growth timers are normalized; added, missing or different blocks remain conflicts. Each operation is limited to 256 chunks.
+Player edits, unmatched blocks or inventories at those positions, claims, unavailable protection data, missing chunks and operations exceeding the safety limit are skipped with a reason. Writes trigger no block updates, so traps are not primed, sand does not fall and old chests do not spill. Each operation is limited to 256 chunks.
+
+Plants, fluids, snow, moss variants, fence connections and ore-to-rock boundaries count as natural drift. Logs, missing blocks and other block types remain conflicts, so densely wooded areas are often skipped.
+
+Wild mobs and vanilla-generated entities (witches, elder guardians, chest minecarts) inside the changed area are replaced and their originals backed up. Tamed, named, leashed, saddled, bucketed or player-bred mobs, villagers, golems, entities with command tags or plugin data, and entities the vanilla replay does not contain (player armor stands and minecarts, opened chest minecarts) cause that structure to be skipped. Items, experience orbs and arrows do not affect the decision.
 
 Old monster rooms require compatible spawner, room and replay evidence. Existing End islands are preserved when their complete fight history cannot be verified. This is not a forced End-reset tool.
 
@@ -36,4 +40,4 @@ Disabling generation preserves existing buildings. Keep the plugin installed for
 
 Reading, saving and cancellation use `core.server.manage`. Saves are audited and stale revisions rejected.
 
-The adapter targets Paper 26.3 native noise worlds, including LunarCore Tectonic worlds. Unknown generators or generation histories are conservatively skipped. Folia, Fabric and NeoForge are not runtime targets. See the validation record for tested builds and verification limits.
+The adapter targets Paper 26.3 native noise worlds, including LunarCore Tectonic worlds. Flat and plugin-generated worlds ignore structure settings and keep their existing generation, with a notice on the page. Unknown generation histories are conservatively skipped. Folia, Fabric and NeoForge are not runtime targets. See the validation record for tested builds and verification limits.
