@@ -3,6 +3,7 @@ package com.lunarboreal.terrain.nms;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.lunarboreal.terrain.TectonicModel;
+import com.lunarboreal.terrain.TerrainHeight;
 import com.lunarboreal.terrain.TerrainOptions;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.Lifecycle;
@@ -32,7 +33,6 @@ import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
@@ -41,7 +41,6 @@ import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 
@@ -53,6 +52,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +65,6 @@ import java.util.Set;
  */
 public final class NativeTectonicBridge implements Listener {
     private static final String NAMESPACE = "lbr_terrain";
-    private static final int[] HEIGHTS = {384, 512, 640, 704, 832, 1024};
     private static final RegistrationInfo OWN_REGISTRATION =
             new RegistrationInfo(Optional.empty(), Lifecycle.stable());
 
@@ -74,15 +73,19 @@ public final class NativeTectonicBridge implements Listener {
     private boolean initialized;
     private final Map<TerrainOptions, ExpectedSettings> configurations = new LinkedHashMap<>();
     private final Map<String, NativeTectonicFeatures.Prepared> pending = new LinkedHashMap<>();
+    private final Map<String, TerrainOptions> pendingOptions = new LinkedHashMap<>();
     private final Map<String, Throwable> setupErrors = new LinkedHashMap<>();
     private final Set<String> configured = new HashSet<>();
-    private final Map<String, Integer> snowOffsets = new LinkedHashMap<>();
-    private final List<Integer> registeredHeights = new ArrayList<>();
+    private final List<TerrainHeight> registeredHeights = new ArrayList<>();
 
     private record ExpectedSettings(NoiseGeneratorSettings settings, JsonElement canonical) {}
 
     /** Called on the main thread before players can receive their registry snapshot. */
     public void initialize() throws Exception {
+        initialize(TerrainHeight.DEFAULTS);
+    }
+
+    public void initialize(Collection<TerrainHeight> heights) throws Exception {
         requireMainThread();
         var build = ServerBuildInfo.buildInfo();
         if (!build.minecraftVersionId().equals("26.3")
@@ -90,13 +93,14 @@ public final class NativeTectonicBridge implements Listener {
             throw new IllegalStateException("Native Tectonic requires Paper 26.3");
         }
         requireNativeLayout();
+        TerrainBlendingHooks.install();
         server = ((CraftServer) Bukkit.getServer()).getServer();
         registries = server.registryAccess();
         NativeTectonicFunctions.registerTypes();
         Registry<DimensionType> dimensions = registries.lookupOrThrow(Registries.DIMENSION_TYPE);
         DimensionType overworld = dimensions.getValueOrThrow(BuiltinDimensionTypes.OVERWORLD);
         Map<ResourceKey<DimensionType>, DimensionType> dimensionEntries = new LinkedHashMap<>();
-        for (int height : HEIGHTS) {
+        for (TerrainHeight height : new java.util.LinkedHashSet<>(heights)) {
             if (Bukkit.getWorlds().isEmpty() || dimensions.containsKey(dimensionTypeKey(height))) {
                 dimensionEntries.put(dimensionTypeKey(height), withHeight(overworld, height));
                 registeredHeights.add(height);
@@ -123,7 +127,30 @@ public final class NativeTectonicBridge implements Listener {
         }
         appendEntries(noises, noiseEntries);
         appendEntries(dimensions, dimensionEntries);
+        NativeTectonicClimate.initialize(registries.lookupOrThrow(Registries.BIOME));
         initialized = true;
+    }
+
+    public void close() throws Exception {
+        initialized = false;
+        Exception failure = null;
+        try {
+            NativeTectonicClimate.close();
+        } catch (Exception cleanup) {
+            failure = cleanup;
+        }
+        try {
+            TerrainBlendingHooks.uninstall();
+        } catch (Exception cleanup) {
+            if (failure == null) failure = cleanup;
+            else failure.addSuppressed(cleanup);
+        }
+        pending.clear();
+        pendingOptions.clear();
+        configured.clear();
+        setupErrors.clear();
+        configurations.clear();
+        if (failure != null) throw failure;
     }
 
     static void requireNativeLayout() {
@@ -131,6 +158,7 @@ public final class NativeTectonicBridge implements Listener {
             MappedRegistry.class.getDeclaredField("frozen");
             Field allTags = MappedRegistry.class.getDeclaredField("allTags");
             allTags.getType().getDeclaredMethod("unbound");
+            MappedRegistry.class.getDeclaredMethod("refreshTagsInHolders");
             ChunkGenerator.class.getDeclaredField("generationSettingsGetter");
             ChunkGenerator.class.getDeclaredField("featuresPerStep");
         } catch (ReflectiveOperationException e) {
@@ -139,7 +167,15 @@ public final class NativeTectonicBridge implements Listener {
     }
 
     public List<Integer> heights() {
-        return List.copyOf(registeredHeights);
+        return registeredHeights.stream().filter(range -> range.minY() == -64).map(TerrainHeight::height).toList();
+    }
+
+    public List<Map<String, Object>> heightRanges() {
+        return registeredHeights.stream().map(TerrainHeight::map).toList();
+    }
+
+    public boolean supports(TerrainOptions options) {
+        return registeredHeights.contains(options.heightRange());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -153,6 +189,7 @@ public final class NativeTectonicBridge implements Listener {
                 throw new IOException("Terrain decoration requires the native noise generator");
             }
             NativeTectonicFeatures.install(generator, prepared);
+            NativeTectonicClimate.attach(level, pendingOptions.get(key.getKey()));
             configured.add(key.getKey());
         } catch (Exception | LinkageError failure) {
             setupErrors.put(key.getKey(), failure);
@@ -166,29 +203,13 @@ public final class NativeTectonicBridge implements Listener {
         }
         NativeTectonicFeatures.install(generator, NativeTectonicFeatures.prepare(
                 generator, level.getChunkSource().randomState(), registries, options));
-        snowOffsets.put(world.getKey().getKey(), (int) options.number("general.snow_start_offset"));
+        NativeTectonicClimate.attach(level, options);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockForm(BlockFormEvent event) {
-        World world = event.getBlock().getWorld();
-        if (!world.getKey().getNamespace().equals(NAMESPACE)) return;
-        int offset = snowOffsets.getOrDefault(world.getKey().getKey(), 0);
-        if (offset == 0) return;
-        Material formed = event.getNewState().getType();
-        if (formed != Material.SNOW && formed != Material.ICE) return;
-        var level = ((CraftWorld) world).getHandle();
-        var block = event.getBlock();
-        var pos = new net.minecraft.core.BlockPos(block.getX(), block.getY(), block.getZ());
-        if (!SnowlineFeature.coldAtSnowline(level.getBiome(pos).value(), pos, level.getSeaLevel(), offset)) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onWorldUnload(WorldUnloadEvent event) {
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onWorldUnload(WorldUnloadEvent event) throws Exception {
         if (event.getWorld().getKey().getNamespace().equals(NAMESPACE)) {
-            snowOffsets.remove(event.getWorld().getKey().getKey());
+            NativeTectonicClimate.detach(((CraftWorld) event.getWorld()).getHandle());
         }
     }
 
@@ -199,7 +220,7 @@ public final class NativeTectonicBridge implements Listener {
     public World create(String name, long seed, TerrainOptions options, boolean existing) throws Exception {
         requireMainThread();
         if (!initialized) throw new IllegalStateException("Native Tectonic is not initialized");
-        if (!registeredHeights.contains(options.height())) {
+        if (!supports(options)) {
             throw new IllegalArgumentException("This world height requires a full server restart with the updated terrain module");
         }
         if (!name.matches("[a-z][a-z0-9_-]{0,31}")) throw new IllegalArgumentException("Invalid terrain world name");
@@ -217,9 +238,8 @@ public final class NativeTectonicBridge implements Listener {
         boolean folderExists = Files.exists(folder, LinkOption.NOFOLLOW_LINKS);
         if (folderExists != existing) throw new IOException("Terrain world directory changed; reload and retry");
         NoiseGeneratorSettings nativeSettings = expectedSettings(options).settings();
-        var prototype = new NoiseBasedChunkGenerator(MultiNoiseBiomeSource.createFromPreset(
-                registries.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
-                        .getOrThrow(MultiNoiseBiomeSourceParameterLists.OVERWORLD)), Holder.direct(nativeSettings));
+        var prototype = new NoiseBasedChunkGenerator(NativeTectonicClimate.biomeSource(registries, options),
+                Holder.direct(nativeSettings));
         NativeTectonicFeatures.Prepared prepared = NativeTectonicFeatures.prepare(prototype,
                 RandomState.create(registries.lookupOrThrow(Registries.NOISE), seed, nativeSettings),
                 registries, options);
@@ -228,7 +248,7 @@ public final class NativeTectonicBridge implements Listener {
             verifySettings(readSettings(key), seed, options);
         } else {
             Holder<DimensionType> dimension = registries.lookupOrThrow(Registries.DIMENSION_TYPE)
-                    .getOrThrow(dimensionTypeKey(options.height()));
+                    .getOrThrow(dimensionTypeKey(options.heightRange()));
             var worldSettings = new WorldGenSettings(
                     new net.minecraft.world.level.levelgen.WorldOptions(seed, true, false),
                     new WorldDimensions(Map.of(LevelStem.OVERWORLD, new LevelStem(dimension, prototype))));
@@ -238,6 +258,7 @@ public final class NativeTectonicBridge implements Listener {
         }
 
         pending.put(name, prepared);
+        pendingOptions.put(name, options);
         configured.remove(name);
         setupErrors.remove(name);
         World world;
@@ -249,13 +270,13 @@ public final class NativeTectonicBridge implements Listener {
                     .createWorld();
         } finally {
             pending.remove(name);
+            pendingOptions.remove(name);
         }
         if (world == null) throw new IOException("Paper did not finish creating the terrain world");
         Throwable failure = setupErrors.remove(name);
         if (failure != null) throw new IOException("Native terrain decoration setup failed", failure);
         if (!configured.remove(name)) throw new IOException("Paper did not initialize the terrain decoration hooks");
         verifyLoaded(world, seed, options);
-        snowOffsets.put(name, (int) options.number("general.snow_start_offset"));
         return world;
     }
 
@@ -269,21 +290,21 @@ public final class NativeTectonicBridge implements Listener {
         LevelStem stem = settings.dimensions().get(LevelStem.OVERWORLD)
                 .orElseThrow(() -> new IOException("Terrain overworld settings are missing"));
         if (settings.options().seed() != seed
-                || !stem.type().is(dimensionTypeKey(options.height()))
-                || stem.type().value().minY() != -64
+                || !stem.type().is(dimensionTypeKey(options.heightRange()))
+                || stem.type().value().minY() != options.minY()
                 || stem.type().value().height() != options.height()
                 || !(stem.generator() instanceof NoiseBasedChunkGenerator noise)
                 || noise.generatorSettings().value().noiseSettings().height() != options.height()
-                || noise.generatorSettings().value().noiseSettings().minY() != -64) {
+                || noise.generatorSettings().value().noiseSettings().minY() != options.minY()) {
             throw new IOException("Saved terrain world generation does not match its registration");
         }
         verifyNoise(((NoiseBasedChunkGenerator) stem.generator()).generatorSettings().value(), options);
     }
 
     private void verifyLoaded(World world, long seed, TerrainOptions options) throws IOException {
-        if (world.getSeed() != seed || world.getMinHeight() != -64
-                || world.getMaxHeight() != options.height() - 64
-                || !((CraftWorld) world).getHandle().dimensionTypeRegistration().is(dimensionTypeKey(options.height()))
+        if (world.getSeed() != seed || world.getMinHeight() != options.minY()
+                || world.getMaxHeight() != options.maxY()
+                || !((CraftWorld) world).getHandle().dimensionTypeRegistration().is(dimensionTypeKey(options.heightRange()))
                 || !(((CraftWorld) world).getHandle().getChunkSource().getGenerator()
                 instanceof NoiseBasedChunkGenerator noise)) {
             throw new IOException("Paper loaded unexpected terrain generation; the world has not been marked ready");
@@ -297,7 +318,7 @@ public final class NativeTectonicBridge implements Listener {
         var ops = registries.createSerializationContext(JsonOps.INSTANCE);
         NoiseGeneratorSettings settings = NoiseGeneratorSettings.DIRECT_CODEC.parse(
                 ops, TectonicModel.noiseSettings(options)).getOrThrow();
-        if (settings.noiseSettings().minY() != -64 || settings.noiseSettings().height() != options.height()) {
+        if (settings.noiseSettings().minY() != options.minY() || settings.noiseSettings().height() != options.height()) {
             throw new IOException("Tectonic noise settings returned an unexpected height");
         }
         var expected = new ExpectedSettings(settings,
@@ -330,19 +351,16 @@ public final class NativeTectonicBridge implements Listener {
         return target;
     }
 
-    private static DimensionType withHeight(DimensionType original, int height) {
+    private static DimensionType withHeight(DimensionType original, TerrainHeight height) {
         return new DimensionType(original.hasFixedTime(), original.hasSkyLight(), original.hasCeiling(),
-                original.hasEnderDragonFight(), original.coordinateScale(), -64, height, height,
+                original.hasEnderDragonFight(), original.coordinateScale(), height.minY(), height.height(), height.height(),
                 original.infiniburn(), original.ambientLight(), original.monsterSettings(), original.skybox(),
                 original.cardinalLightType(), original.attributes(), original.timelines(), original.defaultClock());
     }
 
-    private static ResourceKey<DimensionType> dimensionTypeKey(int height) {
-        for (int allowed : HEIGHTS) if (allowed == height) {
-            return ResourceKey.create(Registries.DIMENSION_TYPE,
-                    Identifier.fromNamespaceAndPath(NAMESPACE, "overworld_" + height));
-        }
-        throw new IllegalArgumentException("Unsupported terrain height");
+    private static ResourceKey<DimensionType> dimensionTypeKey(TerrainHeight height) {
+        return ResourceKey.create(Registries.DIMENSION_TYPE,
+                Identifier.fromNamespaceAndPath(NAMESPACE, height.dimensionName()));
     }
 
     private static <T> void validateEntries(Registry<T> registry, Map<ResourceKey<T>, T> entries) {
@@ -381,16 +399,24 @@ public final class NativeTectonicBridge implements Listener {
                         .bindComponents(DataComponentMap.EMPTY);
             }
         } finally {
-            // freeze() rebuilds tag sets from the untouched frozenTags map.
+            // Reloaded tags may be absent from frozenTags; retain their current named sets.
             allTags.set(mapped, unbound.invoke(null));
             try {
                 mapped.freeze();
+                allTags.set(mapped, existingTags);
+                refreshTags(mapped);
             } catch (Exception | Error failure) {
                 allTags.set(mapped, existingTags);
                 frozen.setBoolean(mapped, true);
                 throw failure;
             }
         }
+    }
+
+    static void refreshTags(Registry<?> registry) throws ReflectiveOperationException {
+        Method refresh = MappedRegistry.class.getDeclaredMethod("refreshTagsInHolders");
+        refresh.setAccessible(true);
+        refresh.invoke(registry);
     }
 
     private static void requireMainThread() {

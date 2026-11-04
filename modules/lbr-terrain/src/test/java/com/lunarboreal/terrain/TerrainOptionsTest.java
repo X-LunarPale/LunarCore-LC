@@ -24,7 +24,7 @@ class TerrainOptionsTest {
         values.remove("height");
         assertThrows(IllegalArgumentException.class, () -> TerrainOptions.parse(values));
         assertThrows(IllegalArgumentException.class, () -> TerrainOptions.parse(null));
-        for (Object invalid : new Object[]{"640", true, 640.5, Double.NaN, Double.POSITIVE_INFINITY, 320, 768}) {
+        for (Object invalid : new Object[]{"640", true, 640.5, Double.NaN, Double.POSITIVE_INFINITY, 255, 769, 4096}) {
             Map<String, Object> config = new HashMap<>(TerrainOptions.defaults().map());
             config.put("height", invalid);
             assertThrows(IllegalArgumentException.class, () -> TerrainOptions.parse(config), invalid.toString());
@@ -55,7 +55,7 @@ class TerrainOptionsTest {
     }
 
     @Test void acceptsOfficialPresetHeightsAndExtendedElevation() {
-        for (int height : new int[]{384, 512, 640, 704, 832, 1024}) {
+        for (int height : new int[]{320, 384, 512, 640, 704, 768, 832, 1024}) {
             TerrainOptions options = new TerrainOptions(height, 2.5, 1, false, false, false, false,
                     Map.of("global_terrain.elevation_boost", 1.6));
             assertEquals(options, TerrainOptions.parse(options.map()));
@@ -67,7 +67,7 @@ class TerrainOptionsTest {
         legacy.remove("advanced");
         TerrainOptions options = TerrainOptions.parse(legacy);
         assertEquals(TerrainOptions.defaults(), options);
-        assertEquals(31, options.advanced().size());
+        assertEquals(TerrainOptions.schema().size(), options.advanced().size());
         assertEquals(0, options.number("general.snow_start_offset"));
         assertEquals(0, options.number("global_terrain.elevation_boost"));
         assertTrue(options.flag("continents.river_lanterns"));
@@ -115,7 +115,7 @@ class TerrainOptionsTest {
     @Test void schemaDefaultsMatchValidatedValuesAndCannotBeMutated() {
         var schema = TerrainOptions.schema();
         TerrainOptions options = TerrainOptions.defaults();
-        assertEquals(31, schema.size());
+        assertTrue(schema.stream().anyMatch(field -> "global_terrain.min_y".equals(field.get("key"))));
         assertEquals(schema.size(), schema.stream().map(field -> field.get("key")).distinct().count());
         for (var field : schema) {
             String key = (String) field.get("key");

@@ -33,6 +33,7 @@ public final class TerrainModule extends LbrModule {
     private final ArrayDeque<LoadRequest> queue = new ArrayDeque<>();
     private final Set<String> established = new HashSet<>();
     private NativeTectonicBridge bridge;
+    private TerrainCommands commands;
     private Path registrations;
     private boolean storageReady;
     private boolean supported;
@@ -53,17 +54,23 @@ public final class TerrainModule extends LbrModule {
         if (api().isPaper() && Bukkit.getMinecraftVersion().equals("26.3")) {
             try {
                 bridge = new NativeTectonicBridge();
-                bridge.initialize();
+                var heights = new java.util.LinkedHashSet<>(TerrainHeight.DEFAULTS);
+                worlds.values().forEach(spec -> heights.add(spec.options().heightRange()));
+                config().getMapList("height-ranges").forEach(row -> heights.add(TerrainHeight.fromConfig(row)));
+                bridge.initialize(heights);
                 registerListener(bridge);
                 supported = true;
             } catch (Throwable e) {
                 initializationError = "原生地形生成器初始化失败：" + message(e);
                 logger().log(Level.SEVERE, initializationError, e);
+                closeBridge();
             }
         } else {
             initializationError = "原生地形生成器需要 Paper 26.3";
         }
         new TerrainWeb(this).register();
+        commands = new TerrainCommands(this);
+        registerCommand(commands);
         placeholder((player, key) -> switch (key) {
             case "worlds" -> Integer.toString(worlds.size());
             case "ready" -> Boolean.toString(supported && storageReady);
@@ -89,8 +96,16 @@ public final class TerrainModule extends LbrModule {
         });
     }
 
+    TerrainOptions optionsFor(World world) {
+        if (world == null || !world.getKey().getNamespace().equals("lbr_terrain")) return null;
+        TerrainWorldSpec spec = worlds.get(world.getKey().getKey());
+        return spec == null ? null : spec.options();
+    }
+
     @Override public void onDisable() {
+        if (commands != null) commands.close();
         queue.clear();
+        closeBridge();
         if (storageReady) {
             try {
                 persist();
@@ -98,6 +113,16 @@ public final class TerrainModule extends LbrModule {
                 logger().log(Level.SEVERE, "无法保存地形世界登记", e);
             }
         }
+    }
+
+    private void closeBridge() {
+        if (bridge == null) return;
+        try {
+            bridge.close();
+        } catch (Exception | LinkageError e) {
+            logger().log(Level.WARNING, "无法卸载原生地形运行设置", e);
+        }
+        supported = false;
     }
 
     @Override public void onReload() {
@@ -181,8 +206,8 @@ public final class TerrainModule extends LbrModule {
             row.put("key", spec.key());
             row.put("loaded", world != null);
             row.put("players", world == null ? 0 : world.getPlayers().size());
-            row.put("minY", world == null ? -64 : world.getMinHeight());
-            row.put("maxY", world == null ? spec.options().height() - 64 : world.getMaxHeight());
+            row.put("minY", world == null ? spec.options().minY() : world.getMinHeight());
+            row.put("maxY", world == null ? spec.options().maxY() : world.getMaxHeight());
             if (world != null) {
                 var spawn = world.getSpawnLocation();
                 row.put("spawn", Map.of("x", spawn.getBlockX(), "y", spawn.getBlockY(), "z", spawn.getBlockZ()));
@@ -198,11 +223,24 @@ public final class TerrainModule extends LbrModule {
         result.put("defaults", TerrainOptions.defaults().map());
         result.put("schema", TerrainOptions.schema());
         result.put("heights", supported ? bridge.heights() : List.of());
+        result.put("heightRanges", supported ? bridge.heightRanges() : List.of());
         result.put("presets", TerrainPresets.all());
         result.put("worlds", rows);
         result.put("busy", working || !queue.isEmpty());
         result.put("error", initializationError);
         return result;
+    }
+
+    void addHeightRange(Map<String, Object> body, String actor) throws IOException {
+        requireWritable();
+        TerrainHeight height = TerrainHeight.fromConfig(body);
+        List<Map<?, ?>> ranges = new ArrayList<>(config().getMapList("height-ranges"));
+        if (ranges.stream().map(TerrainHeight::fromConfig).noneMatch(height::equals)) {
+            ranges.add(Map.of("min-y", height.minY(), "max-y", height.maxY()));
+            config().set("height-ranges", ranges);
+            config().save(dataFolder().toPath().resolve("config.yml").toFile());
+            audit(actor, "terrain.height", height.minY() + ".." + height.maxY());
+        }
     }
 
     void create(Map<String, Object> body, String actor) throws Exception {
@@ -221,7 +259,7 @@ public final class TerrainModule extends LbrModule {
             values.put(key, v);
         });
         TerrainOptions options = TerrainOptions.parse(values);
-        if (!bridge.heights().contains(options.height())) {
+        if (!bridge.supports(options)) {
             throw new IllegalArgumentException("此世界高度需要使用更新后的地形模块完整重启服务器");
         }
         long seed = TerrainWorldSpec.parseSeed(body.getOrDefault("seed", ""));
@@ -294,7 +332,8 @@ public final class TerrainModule extends LbrModule {
                 throw e;
             }
             World world = bridge.create(name, spec.seed(), spec.options(), exists);
-            if (world == null || world.getMinHeight() != -64 || world.getMaxHeight() != spec.options().height() - 64) {
+            if (world == null || world.getMinHeight() != spec.options().minY()
+                    || world.getMaxHeight() != spec.options().maxY()) {
                 throw new IOException("原生世界实际高度不符，已停止后续操作");
             }
             states.put(name, "ready");

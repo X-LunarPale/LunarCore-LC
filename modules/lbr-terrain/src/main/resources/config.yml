@@ -1,3 +1,9 @@
 # 原生生成器仅面向兼容的 Paper 26.3；所有参数随创建的世界固定。
 # 已登记世界在主世界初始化完成后加载，不会接管已有的普通世界。
 auto-load: true
+
+# Additional bounds become available after restarting the server.
+# height-ranges:
+#   - min-y: -128
+#     max-y: 896
+height-ranges: []

@@ -71,6 +71,7 @@ def main():
         return target
 
     core_asset = copy(core)
+    terrain_agent = copy(ROOT / "tools/terrain-agent/build/libs/LC-Terrain-Agent.jar")
     modules = []
     ids = set()
     for entry in catalog["modules"]:
@@ -107,6 +108,9 @@ def main():
             legacy.add_file(archive, path, path.name)
         legacy.add_file(archive, ROOT / "docs/zh-CN/MODULES.md", "MODULES.zh-CN.md")
         legacy.add_file(archive, ROOT / "docs/en-US/MODULES.md", "MODULES.en-US.md")
+        legacy.add_file(archive, terrain_agent, "terrain-setup/" + terrain_agent.name)
+        legacy.add_file(archive, ROOT / "modules/lbr-terrain/README.md", "terrain-setup/README.zh-CN.md")
+        legacy.add_file(archive, ROOT / "modules/lbr-terrain/README.en.md", "terrain-setup/README.en.md")
     assets.append(modules_zip)
     source = output / f"LunarCore-{version}-source.zip"
     with zipfile.ZipFile(source, "w") as archive:
@@ -117,12 +121,14 @@ def main():
     assets.append(source)
     bundle = output / f"LunarCore-{version}.zip"
     with zipfile.ZipFile(bundle, "w") as archive:
-        for path in (core_asset, source, modules_zip, catalog_asset, *bridges):
+        for path in (core_asset, source, modules_zip, catalog_asset, terrain_agent, *bridges):
             legacy.add_file(archive, path, path.name)
         for path in modules:
             legacy.add_file(archive, path, "modules/" + path.name)
         for name in ("LICENSE", "THIRD-PARTY-NOTICES.md", "README.md", "README.en.md"):
             legacy.add_file(archive, ROOT / name, name)
+        legacy.add_file(archive, ROOT / "modules/lbr-terrain/README.md", "terrain-setup/README.zh-CN.md")
+        legacy.add_file(archive, ROOT / "modules/lbr-terrain/README.en.md", "terrain-setup/README.en.md")
         for language in ("zh-CN", "en-US"):
             for path in sorted((ROOT / "docs" / language).glob("*.md")):
                 legacy.add_file(archive, path, f"docs/{language}/{path.name}")
@@ -130,8 +136,10 @@ def main():
             "LunarCore 琉月 v0.0.6 测试预览版 / Test Preview\n"
             "Java 25 / Paper 26.3 build 202\n"
             "核心 JAR 放入 plugins/。附加模块按需放入 plugins/LunarCore/modules/。\n"
+            "地形模块另需启动参数 -javaagent:LC-Terrain-Agent.jar，见 terrain-setup/。\n"
             "停服后安装或更新，保留数据目录。详见 docs/zh-CN/INSTALL.md。\n"
             "Core JAR: plugins/. Optional modules: plugins/LunarCore/modules/.\n"
+            "Terrain also requires -javaagent:LC-Terrain-Agent.jar; see terrain-setup/.\n"
             "Stop before installing or updating. Keep the data folder. See docs/en-US/INSTALL.md.\n"
         ).encode("utf-8"))
     assets.append(bundle)
