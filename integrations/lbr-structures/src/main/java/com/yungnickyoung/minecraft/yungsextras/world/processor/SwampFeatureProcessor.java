@@ -26,7 +26,7 @@ public class SwampFeatureProcessor implements INbtFeatureProcessor {
             // Replace any air or water under this position with stone brick until we hit a solid block
             BlockPos.MutableBlockPos mutable = blockInfo.pos().mutable().move(Direction.DOWN);
             BlockState blockState = level.getBlockState(mutable);
-            while (blockState.isAir() || blockState.liquid() || blockState.canBeReplaced()) {
+            while (mutable.getY() > level.getMinY() && (blockState.isAir() || blockState.liquid() || blockState.canBeReplaced())) {
                 level.setBlock(mutable, STONE_BRICK_SELECTOR.get(randomSource), 2);
                 mutable.move(Direction.DOWN);
                 blockState = level.getBlockState(mutable);

@@ -56,8 +56,7 @@ public final class WorldStructures {
             if (supported && (policy.anyEnabled() || world.getPersistentDataContainer().has(HISTORY))) {
                 var context = level.getChunkSource().chunkMap.worldGenContext;
                 var noise = (net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator) context.generator();
-                prepareFeatures(noise, policy, endActive, decorations(level, policy));
-                var overlay = new StructureChunkGenerator(noise, policy);
+                var overlay = new StructureChunkGenerator(noise, policy, prepareFeatures(noise, policy, endActive, decorations(level, policy)));
                 PaperAccess.write(level.getChunkSource().chunkMap, "worldGenContext", new net.minecraft.world.level.chunk.status.WorldGenContext(
                         context.level(), overlay, context.structureManager(), context.lightEngine(), context.mainThreadExecutor(), context.unsavedListener()));
             }
@@ -79,7 +78,9 @@ public final class WorldStructures {
         return List.copyOf(result);
     }
 
-    public static void prepareFeatures(net.minecraft.world.level.chunk.ChunkGenerator generator, GenerationPolicy policy, boolean endActive, List<Decoration> decorations) {
+    /** Worlds created from one preset share a generator, so the result must stay with this world's overlay. */
+    public static java.util.function.Function<Holder<Biome>, net.minecraft.world.level.biome.BiomeGenerationSettings> prepareFeatures(
+            net.minecraft.world.level.chunk.ChunkGenerator generator, GenerationPolicy policy, boolean endActive, List<Decoration> decorations) {
         var originalGetter = generator.generationSettingsGetter;
         var values = new java.util.HashMap<Holder<net.minecraft.world.level.biome.Biome>, net.minecraft.world.level.biome.BiomeGenerationSettings>();
         var replacements = new java.util.IdentityHashMap<net.minecraft.world.level.levelgen.placement.PlacedFeature, Holder<net.minecraft.world.level.levelgen.placement.PlacedFeature>>();
@@ -112,12 +113,7 @@ public final class WorldStructures {
                 if (biome.is(decoration.biomes())) builder.addFeature(GenerationStep.Decoration.SURFACE_STRUCTURES.ordinal(), decoration.feature());
             values.put(biome, builder.build());
         }
-        java.util.function.Function<Holder<net.minecraft.world.level.biome.Biome>, net.minecraft.world.level.biome.BiomeGenerationSettings> getter =
-                biome -> values.getOrDefault(biome, originalGetter.apply(biome));
-        PaperAccess.write(generator, "generationSettingsGetter", getter);
-        PaperAccess.write(generator, "featuresPerStep", com.google.common.base.Suppliers.memoize(() ->
-                net.minecraft.world.level.biome.FeatureSorter.buildFeaturesPerStep(List.copyOf(generator.getBiomeSource().possibleBiomes()),
-                        biome -> getter.apply(biome).features(), true)));
+        return biome -> values.getOrDefault(biome, originalGetter.apply(biome));
     }
 
     public static List<Holder<StructureSet>> select(List<Holder<StructureSet>> original, GenerationPolicy policy) {

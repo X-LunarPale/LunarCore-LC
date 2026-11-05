@@ -21,8 +21,9 @@ import java.util.concurrent.CompletableFuture;
 public class StructureChunkGenerator extends ChunkGenerator implements NativeGeneratorDelegate {
     private final NoiseBasedChunkGenerator delegate;
     private final GenerationPolicy policy;
-    public StructureChunkGenerator(NoiseBasedChunkGenerator delegate, GenerationPolicy policy) {
-        super(delegate.getBiomeSource(), delegate.generationSettingsGetter);
+    public StructureChunkGenerator(NoiseBasedChunkGenerator delegate, GenerationPolicy policy,
+            java.util.function.Function<Holder<Biome>, BiomeGenerationSettings> settings) {
+        super(delegate.getBiomeSource(), settings);
         this.delegate = delegate;
         this.policy = policy;
     }

@@ -36,7 +36,9 @@ The actual End fight controller completed both initial summoning and four-crysta
 - Tested in new chunks of an existing overworld. With the switches on, a wishing well with `yungsextras:desert/extra_archeology`, swamp stone brick builds and river bridges generated. After switching off and restarting, a new swamp area had none of those stone brick builds.
 - A bridge at the write limit triggered `unsafe terrain read`. After the fix, the same region was deleted and regenerated from the same seed: the bridge still generated, with no `unsafe terrain read` or `far chunk` errors.
 - Console dialog after saving: the X and Cancel leave the server running; Confirm restart restarts through `start.sh` and the new settings apply.
-- Not separately tested: these features in Tectonic worlds and custom dimensions, and the Confirm stop path without a `restart-script`.
+- Each of the 84 features was placed with `/place feature`. All placed successfully, with no leftover marker blocks in the placement area and no exceptions in the log.
+- Worlds created from one preset share a generator. Creating several normal worlds in a row no longer fails with `Feature order cycle`. In two new worlds with the same seed, one on and one off, the same area had bridges only in the world with the switch on.
+- Not separately tested: these features in Tectonic worlds, removal of the vanilla desert well, and the Confirm stop path without a `restart-script`.
 
 ## Vanilla comparison boundary
 

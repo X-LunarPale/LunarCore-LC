@@ -45,4 +45,20 @@ class NativeRegistrationTest {
         var decoded = net.minecraft.world.level.levelgen.placement.PlacementModifier.CODEC.parse(JsonOps.INSTANCE, modifier).getOrThrow();
         assertEquals(modifier, net.minecraft.world.level.levelgen.placement.PlacementModifier.CODEC.encodeStart(JsonOps.INSTANCE, decoded).getOrThrow());
     }
+
+    @Test void preparingFeaturesLeavesTheSharedGeneratorUntouched() {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+        var biome = net.minecraft.core.Holder.direct(new net.minecraft.world.level.biome.Biome.BiomeBuilder()
+                .temperature(0.5f).downfall(0.5f)
+                .specialEffects(new net.minecraft.world.level.biome.BiomeSpecialEffects.Builder().waterColor(0).build())
+                .mobSpawnSettings(net.minecraft.world.level.biome.MobSpawnSettings.EMPTY)
+                .generationSettings(net.minecraft.world.level.biome.BiomeGenerationSettings.EMPTY).build());
+        var generator = new net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(new net.minecraft.world.level.biome.FixedBiomeSource(biome),
+                net.minecraft.core.Holder.direct((net.minecraft.world.level.levelgen.NoiseGeneratorSettings) null));
+        var shared = generator.generationSettingsGetter;
+        var prepared = WorldStructures.prepareFeatures(generator, com.lunarboreal.structures.config.GenerationPolicy.vanilla(), false, java.util.List.of());
+        assertSame(shared, generator.generationSettingsGetter);
+        assertNotSame(shared, prepared);
+    }
 }
