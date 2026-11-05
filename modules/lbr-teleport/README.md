@@ -42,6 +42,7 @@
 | `/warps list`、`/warp list` | 可点击文本列表 | lbr.teleport.warps / lbr.teleport.warp | 所有人 |
 | `/setspawn` | 设置出生点（保存到 spawn.yml） | lbr.teleport.setspawn | OP |
 | `/spawn [玩家]` | 回出生点 | lbr.teleport.spawn，他人 lbr.teleport.spawn.others | 所有人 |
+| `/spawn ondeath [on\|off]` | 查看、开启或关闭自己的死亡回主城 | lbr.teleport.spawn | 所有人 |
 | `/back`（return） | 返回上一个位置/死亡点 | lbr.teleport.back；死亡点记录 lbr.teleport.back.ondeath | 所有人 |
 | `/rtp [世界] [玩家]`（tpr、wild、randomtp） | 随机传送 | lbr.teleport.rtp，指定世界 lbr.teleport.rtp.world，他人 lbr.teleport.rtp.others | 所有人 |
 
@@ -64,13 +65,16 @@
 - `tpa.timeout`：请求超时秒数。
 - `homes.default-limit / groups / bed-home / respawn-at-home`。
 - `warps.per-warp-permission`；`warps.gui.enabled / rows / default-icon / filler`（地标 GUI）。
-- `spawn.on-first-join / on-respawn / respawn-ignore-bed`。
+- `spawn.on-first-join / on-daily-first-join`：新玩家首次加入、每天首次上线到已设置的主城。同日再次上线保留退出位置。
+- `spawn.daily-join-timezone`：每日刷新时区，留空使用服务器本地时区。
+- `spawn.on-respawn / respawn-default-enabled / respawn-ignore-bed`：死亡回主城总开关、尚未选择的玩家默认设置、是否忽略床或重生锚。玩家可用 `/spawn ondeath off` 单独关闭，选择保存在玩家存档中。
 - `back.on-death`；`back.persist`（/back 位置持久化到数据库，默认开启）。
 - `rtp.max-attempts / avoid-biomes / avoid-lands / default-world / worlds.<世界>.{center-x,center-z,min-radius,max-radius}`（世界白名单）。
 
 ## 存储
 - `lbr_teleport_homes`（uuid+name 主键）、`lbr_teleport_warps`（name 主键，含 icon/description 列，旧表自动补列）、`lbr_teleport_toggles`（关闭 tpa 的玩家）、`lbr_teleport_back`（/back 位置，`back.persist: true` 时使用）。
 - 出生点保存在模块数据目录的 `spawn.yml`。
+- 每日首次上线使用核心玩家档案中持久化的上次上线时间判断；在入服选择出生位置时应用主城位置，可与 QQAuth 登录限制同时使用。
 - 冷却保存在内存（重启清空）。
 
 ## Web 面板（传送系统）

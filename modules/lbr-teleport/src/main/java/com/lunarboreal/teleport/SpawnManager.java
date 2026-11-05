@@ -13,6 +13,7 @@ public final class SpawnManager {
 
     private final TeleportModule m;
     private volatile StoredLoc spawn;
+    private volatile Location configuredSpawn;
 
     public SpawnManager(TeleportModule m) {
         this.m = m;
@@ -25,10 +26,27 @@ public final class SpawnManager {
     public void load() {
         File f = file();
         spawn = f.exists() ? StoredLoc.read(YamlConfiguration.loadConfiguration(f).getConfigurationSection("spawn")) : null;
+        refresh();
     }
 
     public StoredLoc stored() {
         return spawn;
+    }
+
+    /** Configured hub snapshot, also safe to read during asynchronous player configuration. */
+    public Location configured() {
+        Location current = configuredSpawn;
+        return current == null ? null : current.clone();
+    }
+
+    void refresh() {
+        StoredLoc current = spawn;
+        configuredSpawn = current == null ? null : current.toLocation();
+    }
+
+    void unloaded(World world) {
+        Location current = configuredSpawn;
+        if (current != null && current.getWorld() == world) configuredSpawn = null;
     }
 
     /** 当前出生点（主线程）。 */
@@ -45,6 +63,7 @@ public final class SpawnManager {
     public void set(Location loc) {
         StoredLoc s = StoredLoc.of(loc);
         spawn = s;
+        configuredSpawn = loc.clone();
         YamlConfiguration y = new YamlConfiguration();
         s.write(y.createSection("spawn"));
         String data = y.saveToString();

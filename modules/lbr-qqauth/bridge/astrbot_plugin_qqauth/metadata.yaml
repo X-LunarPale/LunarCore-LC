@@ -1,6 +1,10 @@
 name: astrbot_plugin_qqauth
-display_name: LunarCore QQAuth Bridge
-desc: Forward QQ Official group authentication commands to LunarCore QQAuth.
-version: v2.0.0
+display_name: QQAuth 群验证桥接
+desc: 通过 QQ 官方或 OneBot/NapCat 群消息验证、解绑或恢复游戏账号。
+version: 2.1.1
 author: QQAuth contributors / LunarBoreal
-repo: ""
+repo: https://github.com/X-LunarPale/astrbot_plugin_qqauth
+support_platforms:
+  - aiocqhttp
+  - qq_official
+  - qq_official_webhook

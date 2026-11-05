@@ -25,7 +25,8 @@ usage:
   warp: "<prefix><gray>Usage: <gold>/warp (name) [player] | /warp list | /warp seticon (name) [item] | /warp setdesc (name) [text]"
   warp-seticon: "<prefix><gray>Usage: <gold>/warp seticon (name) [item]</gold> (held item if omitted)"
   warp-setdesc: "<prefix><gray>Usage: <gold>/warp setdesc (name) [text]</gold> (| for new line, empty clears)"
-  spawn: "<prefix><gray>Usage: <gold>/spawn (player)"
+  spawn: "<prefix><gray>Usage: <gold>/spawn [player]</gold> or <gold>/spawn ondeath [on|off]"
+  spawn-ondeath: "<prefix><gray>Usage: <gold>/spawn ondeath [on|off]"
   rtp: "<prefix><gray>Usage: <gold>/rtp (world) (player)"
 
 teleport:
@@ -140,6 +141,9 @@ spawn:
   unset: "<prefix><red>Spawn is not available."
   teleported: "<prefix><green>Teleported to spawn."
   sent-other: "<prefix><green>Sent <yellow>{player}</yellow> to spawn."
+  death-hint: "<prefix><gray>You returned to the hub after death. <click:run_command:'/spawn ondeath off'><yellow>[Disable]</yellow></click><gray> or use <gold>/spawn ondeath off</gold>."
+  death-enabled: "<prefix><green>Return to hub after death is enabled. <gray>Use <gold>/spawn ondeath off</gold> to disable it."
+  death-disabled: "<prefix><green>Return to hub after death is disabled. <gray>Use <gold>/spawn ondeath on</gold> to enable it."
 
 back:
   none: "<prefix><red>No previous location."

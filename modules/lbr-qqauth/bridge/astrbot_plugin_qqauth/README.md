@@ -1,38 +1,43 @@
-# LunarCore QQAuth AstrBot bridge
+# QQAuth for AstrBot
 
-This AstrBot plugin forwards QQ Official group verification, unbinding and password-reset commands to LunarCore QQAuth. It requires an explicit group openid and a shared token configured on both sides. The token holder can assert group and sender identities: keep the endpoint on a trusted network or behind authenticated HTTPS.
+[简体中文说明](README.zh-CN.md)
 
-## Install
+This plugin connects QQ Official and OneBot/NapCat group messages in AstrBot to the QQAuth module on your Minecraft server. It handles `/验证`, `/解绑`, and `/改密`. It does not use AstrBot's AI model for verification codes.
 
-Copy this entire `astrbot_plugin_qqauth` directory into AstrBot's `data/plugins` directory and restart AstrBot. For a ZIP upload, use forward-slash ZIP entry names and keep `astrbot_plugin_qqauth/` as the top-level directory.
+## Set up
 
-Configure these fields in AstrBot's plugin settings:
+1. On the Minecraft server, enable QQAuth with `integration.mode: astrbot`. Set `integration.group-id` to the group number for OneBot/NapCat or `group_openid` for QQ Official. The module generates `integration.astrbot.token` on first startup; keep it private. Reload the module after editing its config.
+2. Install this public repository from AstrBot's plugin page using its [GitHub URL](https://github.com/X-LunarPale/astrbot_plugin_qqauth), or place this repository at `data/plugins/astrbot_plugin_qqauth/` and restart AstrBot. For a ZIP upload, keep `astrbot_plugin_qqauth/` as the top-level directory.
+3. In AstrBot's plugin settings, set `group_id` to the same group ID and `qqauth_token` to the module's token. The token field is hidden in AstrBot settings.
+4. If both programs run directly on the same machine, leave `qqauth_url` at `http://127.0.0.1:12312/qqauth/group`. If AstrBot runs in Docker or on another host, `127.0.0.1` points to AstrBot itself: use the game server's reachable address and configure QQAuth's `integration.astrbot.bind-address` accordingly. Keep the endpoint on a trusted network or use HTTPS.
+5. Send `/验证 000000` in the configured QQ group. The server should respond that the code is invalid. Then test a real code displayed when joining Minecraft. Other groups and ordinary chat are ignored.
 
-| Field | Value |
+The bridge port defaults to `12312` and is separate from the Web panel, game and RCON ports. Forward or open that port when connecting from another host. A URL pointing to the Web or RCON port cannot reach this bridge.
+
+Keep QQAuth in `astrbot` mode when AstrBot uses OneBot/NapCat. QQAuth's `onebot` mode connects directly to OneBot without this plugin. QQ Official group and user openids are different from group and QQ numbers; changing adapters does not convert existing bindings.
+
+## Settings
+
+| Setting | Meaning |
 |---|---|
-| `qqauth_url` | Reachable LunarCore HTTP URL ending in `/qqauth/group` |
-| `qqauth_token` | The generated token from the LunarCore QQAuth configuration |
-| `group_id` | Exact QQ Official `group_openid`; empty and `*` disable forwarding |
-| `bind_prefix` | Default `/验证`; match the LunarCore command prefix |
-| `unbind_prefix` | Default `/解绑`; match the LunarCore command prefix |
-| `password_reset_prefix` | Default `/改密`; match the LunarCore command prefix |
-| `timeout_seconds` | Positive timeout up to 60 seconds; default 5 |
-| `error_reply` | Optional failure response; empty means silent |
+| `qqauth_url` | QQAuth HTTP address; default port is `12312`. A missing path becomes `/qqauth/group` |
+| `qqauth_token` | Token from `integration.astrbot.token` on the Minecraft server |
+| `group_id` | Exact group number or QQ Official `group_openid` also set on the server |
+| `bind_prefix`, `unbind_prefix`, `password_reset_prefix` | Optional group command names; aliases are translated to QQAuth's `/验证`, `/解绑`, `/改密` |
+| `timeout_seconds` | Request timeout; default 5 seconds |
+| `tls_ca_file` | Optional CA file for a trusted HTTPS certificate |
+| `error_reply` | Group reply when the server cannot be reached; set to empty to stay silent |
 
-The Java group allowlist must independently match the group ID. QQ Official sender openids are opaque strings, not traditional QQ numbers. Identity comes only from AstrBot event accessors. AstrBot may remove `/` before plugin dispatch; this bridge restores the configured prefix and requires a command boundary.
+AstrBot's logs give short connection hints without printing tokens or verification codes: HTTP 401 means mismatched token; 404 usually means a wrong path or port; refused connections usually mean QQAuth is not running or the host/port is wrong; timeouts suggest port forwarding, firewall or network issues. The game server logs its actual listening address. On a request failure, players only receive the configured `error_reply`.
 
-## Verify
+## Test
 
-Send ordinary chat: the bridge should stay silent. Send `/验证 000000` in the configured group: LunarCore should return its invalid-code response. Test a real binding, unbinding and password reset using codes issued by the server. Messages in other groups must be ignored.
+From the repository root, run:
 
-The bridge sends UTF-8 JSON and `X-QQAuth-Token`. A 401 response means tokens differ; a 400 response means the request envelope is invalid. A 413 response means it exceeds the configured body limit. A 500 response means processing failed. Redirects are rejected, and HTTPS always validates certificates. Four concurrent requests and 64 KiB request/response limits prevent unlimited work allocation. Matching commands stop AstrBot's LLM pipeline even under overload.
+```sh
+python -B -m unittest discover -s tests -p test_bridge.py -v
+```
 
-## Run local tests
+These tests use a local HTTP server, not a real QQ group. Real QQ messages and the Minecraft join flow still need a live check.
 
-From the module directory, run `python -B -m unittest discover -s bridge -p test_bridge.py -v` for the AstrBot behavior tests without installing AstrBot or contacting a server.
-
-From the LunarCore Gradle root, run `./gradlew :lbr-qqauth:test --tests 'com.lunarboreal.qqauth.bridge.*'`. During development of unrelated module sources, add `-I modules/lbr-qqauth/bridge/bridge-tests.init.gradle` to compile only bridge sources into a separate build directory. The Java tests use loopback HTTP and a local WebSocket peer; no external QQ service is contacted.
-
-## Attribution
-
-QQAuth is jointly developed by LunarCore's author and the [qqauth-private](https://github.com/crx97220130101-dotcom/qqauth-private) collaborators. This bridge retains the existing QQAuth contributor credits and MIT notice; see [LICENSE](LICENSE). Its LC integration adds password reset, command handling, group checks and forwarding.
+Copyright (c) 2026 QQAuth contributors. See [LICENSE](LICENSE).
