@@ -13,7 +13,9 @@ public enum StructureFamily {
     WITCH_HUTS("witch_huts", "betterwitchhuts", "女巫小屋", Set.of("minecraft:swamp_hut")),
     OCEAN_MONUMENTS("ocean_monuments", "betteroceanmonuments", "海底神殿", Set.of("minecraft:monument")),
     NETHER_FORTRESSES("nether_fortresses", "betterfortresses", "下界要塞", Set.of("minecraft:fortress")),
-    END_ISLAND("end_island", "betterendisland", "末地岛", Set.of());
+    END_ISLAND("end_island", "betterendisland", "末地岛", Set.of()),
+    EXTRAS("extras", "yungsextras", "沙漠与沼泽点缀", Set.of()),
+    BRIDGES("bridges", "yungsbridges", "河流桥梁", Set.of());
 
     public final String id, namespace, label;
     public final Set<String> vanillaStructures;

@@ -50,3 +50,6 @@ resource-packs/lunar-island/*.zip
 resource-packs/lunar-island/*.sha256
 resource-packs/lunar-island/pack-preview.png
 resource-packs/lunar-island/build-manifest.json
+
+# macOS
+.DS_Store

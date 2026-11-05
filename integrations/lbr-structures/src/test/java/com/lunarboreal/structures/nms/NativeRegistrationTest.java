@@ -26,4 +26,23 @@ class NativeRegistrationTest {
             assertEquals(input, StructureProcessorType.SINGLE_CODEC.encodeStart(JsonOps.INSTANCE, decoded).getOrThrow());
         }
     }
+
+    @Test void registersFeatureProjectsAndRoundTripsTheirCodecs() {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+        NativeRegistries.register();
+        for (String json : new String[]{
+                "{\"type\":\"yungsextras:desert_well\",\"location\":\"yungsextras:desert/wells/well_sm\",\"radius\":1}",
+                "{\"type\":\"yungsextras:swamp_arch\",\"location\":\"yungsextras:swamp/arch/swamp_arch_0\"}",
+                "{\"type\":\"yungsextras:desert_giant_torch\"}",
+                "{\"type\":\"yungsbridges:bridge\",\"location\":\"yungsbridges:bridge/stone/15_1\",\"is_z_axis\":false}"}) {
+            var input = com.google.gson.JsonParser.parseString(json);
+            var decoded = net.minecraft.world.level.levelgen.feature.Feature.DIRECT_CODEC.parse(JsonOps.INSTANCE, input).getOrThrow();
+            assertEquals(input, net.minecraft.world.level.levelgen.feature.Feature.DIRECT_CODEC.encodeStart(JsonOps.INSTANCE, decoded).getOrThrow());
+        }
+        var modifier = com.google.gson.JsonParser.parseString("{\"type\":\"yungsbridges:bridge\",\"length\":15,\"width\":5,\"min_water_z\":2,"
+                + "\"max_water_z\":14,\"width_offset\":1,\"num_solid_blocks_needed\":2,\"is_z_axis\":false}");
+        var decoded = net.minecraft.world.level.levelgen.placement.PlacementModifier.CODEC.parse(JsonOps.INSTANCE, modifier).getOrThrow();
+        assertEquals(modifier, net.minecraft.world.level.levelgen.placement.PlacementModifier.CODEC.encodeStart(JsonOps.INSTANCE, decoded).getOrThrow());
+    }
 }

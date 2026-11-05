@@ -19,7 +19,7 @@ test('world overrides preserve explicit false and can restore inheritance', () =
   assert.equal(effective(config, 'minecraft:overworld').witch_huts, true)
 })
 
-test('all nine switches are independent', () => {
+test('all switches are independent', () => {
   for (const field of families.map(f => f.id)) {
     const config = fixture()
     setFlag(config, '', field, true)

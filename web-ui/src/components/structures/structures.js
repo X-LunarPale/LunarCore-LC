@@ -1,7 +1,8 @@
 export const families = [
   ['mineshafts', '矿井'], ['dungeons', '地牢'], ['strongholds', '要塞'],
   ['desert_temples', '沙漠神庙'], ['jungle_temples', '丛林神庙'], ['witch_huts', '女巫小屋'],
-  ['ocean_monuments', '海底神殿'], ['nether_fortresses', '下界要塞'], ['end_island', '末地岛']
+  ['ocean_monuments', '海底神殿'], ['nether_fortresses', '下界要塞'], ['end_island', '末地岛'],
+  ['extras', '沙漠与沼泽点缀'], ['bridges', '河流桥梁']
 ].map(([id, label]) => ({ id, label }))
 const ids = families.map(f => f.id)
 const object = v => v && typeof v === 'object' && !Array.isArray(v)

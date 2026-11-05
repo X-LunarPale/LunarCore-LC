@@ -14,4 +14,7 @@ Original, unmodified sources, licenses and commit manifests: `third-party/yungs/
 - Omit optional integrations requiring other mods. Existing End islands and generated terrain are preserved.
 - Bound mineshaft decoration/spawner access to the current chunk. Resolve the 49-block entrance search once against the native base-terrain height sampler instead of reading neighbouring mutable feature chunks outside Paper's ownership radius.
 
+- Port YUNG's Extras and Bridges to the 26.3 `Feature` interface and `worldgen/feature` data. Biome modifiers become per-world additions in `WorldStructures.prepareFeatures`, sorted so `FeatureSorter` sees one order. Extras also removes the vanilla desert well where upstream does.
+- Skip bridge candidates that extend past the feature write range; upstream silences the far-chunk error and leaves a cut-off bridge. Read a far bank just outside that range from the noise sampler, not from a chunk that may still be generating. Place bridges with known shapes and no waterlogging pass, because both also read past the template; the templates sit above the water. The `SuppressLogMixin` is not needed.
+
 Validation results and material limits: `docs/en-US/STRUCTURES-VALIDATION.md` and `docs/zh-CN/STRUCTURES-VALIDATION.md`.

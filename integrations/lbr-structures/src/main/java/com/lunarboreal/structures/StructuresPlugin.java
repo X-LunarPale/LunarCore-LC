@@ -44,6 +44,13 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
                         LC.get().audit().log("structures", "web:" + c.user().username(), "configure", "revision=" + saved.revision());
                         c.json(Map.of("ok", true, "saved", saved.map(), "restartRequired", !saved.sameRules(active)));
                     } catch (IllegalArgumentException e) { throw HttpException.badRequest(e.getMessage()); }
+                })
+                .post("/restart", "core.server.manage", c -> {
+                    if (store.saved().sameRules(active)) throw HttpException.badRequest("没有等待生效的结构设置");
+                    LC.get().audit().log("structures", "web:" + c.user().username(), "restart", "revision=" + store.saved().revision());
+                    // Delayed so the response reaches the browser before the web server stops.
+                    Bukkit.getScheduler().runTaskLater(this, () -> Bukkit.spigot().restart(), 40);
+                    c.json(Map.of("ok", true, "canRestart", canRestart()));
                 }));
     }
 
@@ -60,6 +67,9 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
         }
     }
 
+    /** Without spigot.yml's restart-script, Paper's restart only stops the server. */
+    private static boolean canRestart() { return new java.io.File(org.spigotmc.SpigotConfig.restartScript).isFile(); }
+
     private Map<String, Object> status() {
         var worlds = new ArrayList<Map<String, Object>>();
         Bukkit.getWorlds().forEach(world -> {
@@ -72,7 +82,7 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
         var families = Arrays.stream(StructureFamily.values()).map(f -> Map.of("id", f.id, "label", f.label)).toList();
         var saved = store.saved();
         return Map.of("active", active.map(), "saved", saved.map(), "restartRequired", !saved.sameRules(active),
-                "worlds", worlds, "families", families);
+                "canRestart", canRestart(), "worlds", worlds, "families", families);
     }
 
     @Override public void onDisable() {

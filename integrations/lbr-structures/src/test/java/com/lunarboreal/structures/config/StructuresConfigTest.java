@@ -78,4 +78,18 @@ class StructuresConfigTest {
         assertTrue(saved.forWorld("minecraft:overworld").enabled(StructureFamily.DUNGEONS));
         assertEquals(java.util.Set.of("minecraft:overworld"), saved.worlds().keySet());
     }
+
+    @Test void settingsSavedBeforeLaterFamiliesExistedStillLoadWithThemOff(@TempDir Path dir) throws Exception {
+        Path file = dir.resolve("structures.json");
+        var flags = new java.util.LinkedHashMap<String, Boolean>();
+        for (var family : StructureFamily.values())
+            if (family != StructureFamily.EXTRAS && family != StructureFamily.BRIDGES) flags.put(family.id, family == StructureFamily.DUNGEONS);
+        Files.writeString(file, new com.google.gson.Gson().toJson(Map.of("schema", 1, "revision", 3,
+                "defaults", Map.of("structures", flags), "worlds", Map.of())));
+        var loaded = new ConfigStore(file).saved();
+        assertEquals(3, loaded.revision());
+        assertTrue(loaded.defaults().enabled(StructureFamily.DUNGEONS));
+        assertFalse(loaded.defaults().enabled(StructureFamily.EXTRAS));
+        assertFalse(loaded.defaults().enabled(StructureFamily.BRIDGES));
+    }
 }

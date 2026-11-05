@@ -89,7 +89,8 @@ def main():
             relative = file.relative_to(data)
             # Only namespaces relevant to vanilla clients are included.
             namespaces = {'yungsapi', 'bettermineshafts', 'betterdungeons', 'betterstrongholds', 'betterdeserttemples',
-                          'betterjungletemples', 'betterwitchhuts', 'betteroceanmonuments', 'betterfortresses', 'betterendisland', 'minecraft', 'c'}
+                          'betterjungletemples', 'betterwitchhuts', 'betteroceanmonuments', 'betterfortresses', 'betterendisland',
+                          'yungsextras', 'yungsbridges', 'minecraft', 'c'}
             if relative.parts[0] not in namespaces:
                 continue
             output = DEST / 'resources/yungs/data' / relative

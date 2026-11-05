@@ -59,7 +59,24 @@ def data_migration(value):
     return {key: data_migration(item) for key, item in value.items()}
 
 
+def flatten_configured_features(namespace):
+    # 26.3 dropped ConfiguredFeature: entries moved to worldgen/feature with the config inlined.
+    base = ROOT / 'resources/yungs/data' / namespace / 'worldgen'
+    for path in sorted((base / 'configured_feature').rglob('*.json')):
+        data = json.loads(path.read_text())
+        output = base / 'feature' / path.relative_to(base / 'configured_feature')
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps({'type': data['type'], **data.get('config', {})}, indent=2) + '\n')
+        path.unlink()
+    for path in sorted((base / 'configured_feature').rglob('*'), reverse=True):
+        path.rmdir()
+    (base / 'configured_feature').rmdir()
+
+
 if __name__ == '__main__':
+    for namespace in ('yungsextras', 'yungsbridges'):
+        if (ROOT / 'resources/yungs/data' / namespace / 'worldgen/configured_feature').is_dir():
+            flatten_configured_features(namespace)
     for path in (ROOT / 'java/com/yungnickyoung').rglob('*.java'):
         before = path.read_text()
         after = migrate(before)

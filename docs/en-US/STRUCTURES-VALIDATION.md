@@ -31,6 +31,13 @@ On Paper 202 a witch hut survived saving, disabling its generation switch and re
 
 The actual End fight controller completed both initial summoning and four-crystal resummoning in 605 accelerated stage updates, with exactly one dragon and ten vulnerable spike crystals without lingering beams. Restart preserved the dragon and kill counter. Gateway exit, return linkage and landing positions were checked. Accelerated stage execution is not a recording of a complete human-played fight.
 
+### Extras and Bridges (Paper 26.3 build 238)
+
+- Tested in new chunks of an existing overworld. With the switches on, a wishing well with `yungsextras:desert/extra_archeology`, swamp stone brick builds and river bridges generated. After switching off and restarting, a new swamp area had none of those stone brick builds.
+- A bridge at the write limit triggered `unsafe terrain read`. After the fix, the same region was deleted and regenerated from the same seed: the bridge still generated, with no `unsafe terrain read` or `far chunk` errors.
+- Console dialog after saving: the X and Cancel leave the server running; Confirm restart restarts through `start.sh` and the new settings apply.
+- Not separately tested: these features in Tectonic worlds and custom dimensions, and the Confirm stop path without a `restart-script`.
+
 ## Vanilla comparison boundary
 
 A same-seed Paper server without the structure plugin was compared with the plugin installed and every switch disabled. Desert, Nether and End 3×3 chunk samples contain **2,064,384** blocks: block hashes, biome hashes and structure starts matched exactly. The central witch-hut chunk also matched.

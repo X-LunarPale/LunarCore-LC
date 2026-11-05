@@ -34,6 +34,10 @@ public final class NativeRegistries {
         registerModule("com.yungnickyoung.minecraft.betterendisland.module.StructureProcessorTypeModule", BuiltInRegistries.STRUCTURE_PROCESSOR);
         for (String family : new String[]{"betterstrongholds", "betterdeserttemples", "betterjungletemples"})
             registerModule("com.yungnickyoung.minecraft." + family + ".module.StructurePlacementTypeModule", BuiltInRegistries.STRUCTURE_PLACEMENT);
+        for (String family : new String[]{"yungsextras", "yungsbridges"}) {
+            registerModule("com.yungnickyoung.minecraft." + family + ".module.FeatureModule", BuiltInRegistries.FEATURE_TYPE);
+            registerModule("com.yungnickyoung.minecraft." + family + ".module.PlacementModifierTypeModule", BuiltInRegistries.PLACEMENT_MODIFIER_TYPE);
+        }
         append(BuiltInRegistries.STRUCTURE_POOL_ELEMENT,
                 Map.of(Identifier.parse("lunarcore:processed_single"), ProcessedSinglePoolElement.TYPE));
         append(BuiltInRegistries.FEATURE_TYPE, Map.of(Identifier.parse("lunarcore:end_spike"), com.lunarboreal.structures.end.EndSpikeGenerator.CODEC,

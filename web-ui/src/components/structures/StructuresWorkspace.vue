@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../../api.js'
 import { t } from '../../i18n.js'
 import { commonFlags, families, inheritWorlds, parseConfig, sameRules, setFlags } from './structures.js'
@@ -61,6 +61,7 @@ async function load(reset = false) {
 
 async function save() {
   if (!dirty.value || saving.value || error.value) return
+  let pending = false
   saving.value = true
   try {
     const result = await api.post('/api/ext/structures/config', parseConfig(draft.value))
@@ -70,9 +71,26 @@ async function save() {
     baseline.value = structuredClone(saved)
     status.value.saved = saved
     status.value.restartRequired = result.restartRequired
-    ElMessage.success(t('结构设置已保存，完整重启后生效'))
+    pending = result.restartRequired
+    if (!pending) ElMessage.success(t('结构设置已保存'))
   } catch (e) { ElMessage.error(t(e.message)) }
   finally { saving.value = false }
+  if (pending) await offerRestart()
+}
+
+async function offerRestart() {
+  const canRestart = status.value.canRestart
+  const confirmed = await ElMessageBox.confirm(
+    canRestart ? t('结构设置已保存，需要完整重启服务器才能生效。重启期间在线玩家会断开连接。')
+      : t('结构设置已保存，需要完整重启服务器才能生效。服务器没有配置 restart-script，确认后只会停止，需要手动启动。'),
+    t('需要重启'),
+    { type: 'warning', confirmButtonText: canRestart ? t('确认重启') : t('确认停止'), cancelButtonText: t('取消'), confirmButtonType: 'danger', closeOnClickModal: false }
+  ).then(() => true).catch(() => false)
+  if (!confirmed) return
+  try {
+    await api.post('/api/ext/structures/restart')
+    ElMessage.warning(canRestart ? t('服务器正在重启') : t('服务器正在停止'))
+  } catch (e) { ElMessage.error(t(e.message)) }
 }
 
 onMounted(() => { load(); timer = setInterval(() => load(), 10000) })

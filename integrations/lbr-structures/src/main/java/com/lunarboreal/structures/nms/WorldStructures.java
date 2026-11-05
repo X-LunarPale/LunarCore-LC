@@ -3,7 +3,11 @@ package com.lunarboreal.structures.nms;
 import com.lunarboreal.structures.config.GenerationPolicy;
 import com.lunarboreal.structures.config.StructureFamily;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
@@ -14,6 +18,14 @@ import java.util.List;
 public final class WorldStructures {
     private WorldStructures() {}
     private static final org.bukkit.NamespacedKey HISTORY = new org.bukkit.NamespacedKey("lunarcorestructures", "custom_structure_history");
+    private static final TagKey<Biome> DESERT_DECORATIONS = biomes("yungsextras:has_structure/desert_decorations");
+    private static final TagKey<Biome> SWAMP_STRUCTURES = biomes("yungsextras:has_structure/swamp_structures");
+    private static final TagKey<Biome> VANILLA_DESERT_WELL = biomes("yungsextras:has_structure/vanilla_desert_well");
+    private static final TagKey<Biome> BRIDGE_BIOMES = biomes("yungsbridges:has_structure/bridge");
+    private static TagKey<Biome> biomes(String id) { return TagKey.create(Registries.BIOME, net.minecraft.resources.Identifier.parse(id)); }
+
+    /** Feature-only YUNG projects: placed per biome and, unlike structures, saved in no chunk record. */
+    public record Decoration(Holder<net.minecraft.world.level.levelgen.placement.PlacedFeature> feature, TagKey<Biome> biomes) {}
 
     /** Flat and plugin-generated worlds have nothing to overlay and stay on their own generator. */
     public static boolean supported(World world) {
@@ -44,7 +56,7 @@ public final class WorldStructures {
             if (supported && (policy.anyEnabled() || world.getPersistentDataContainer().has(HISTORY))) {
                 var context = level.getChunkSource().chunkMap.worldGenContext;
                 var noise = (net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator) context.generator();
-                prepareFeatures(noise, policy, endActive);
+                prepareFeatures(noise, policy, endActive, decorations(level, policy));
                 var overlay = new StructureChunkGenerator(noise, policy);
                 PaperAccess.write(level.getChunkSource().chunkMap, "worldGenContext", new net.minecraft.world.level.chunk.status.WorldGenContext(
                         context.level(), overlay, context.structureManager(), context.lightEngine(), context.mainThreadExecutor(), context.unsavedListener()));
@@ -52,7 +64,22 @@ public final class WorldStructures {
         } catch (ReflectiveOperationException error) { throw new IllegalStateException("Incompatible structure-state constructor", error); }
     }
 
-    public static void prepareFeatures(net.minecraft.world.level.chunk.ChunkGenerator generator, GenerationPolicy policy, boolean endActive) {
+    /** Sorted so every biome appends in one order; FeatureSorter rejects conflicting orders. */
+    private static List<Decoration> decorations(ServerLevel level, GenerationPolicy policy) {
+        var result = new ArrayList<Decoration>();
+        level.registryAccess().lookupOrThrow(Registries.PLACED_FEATURE).listElements()
+                .sorted(java.util.Comparator.comparing(feature -> feature.key().identifier().toString()))
+                .forEach(feature -> {
+                    var id = feature.key().identifier();
+                    if (policy.enabled(StructureFamily.EXTRAS) && id.getNamespace().equals(StructureFamily.EXTRAS.namespace))
+                        result.add(new Decoration(feature, id.getPath().startsWith("desert/") ? DESERT_DECORATIONS : SWAMP_STRUCTURES));
+                    else if (policy.enabled(StructureFamily.BRIDGES) && id.toString().equals("yungsbridges:bridge_list"))
+                        result.add(new Decoration(feature, BRIDGE_BIOMES));
+                });
+        return List.copyOf(result);
+    }
+
+    public static void prepareFeatures(net.minecraft.world.level.chunk.ChunkGenerator generator, GenerationPolicy policy, boolean endActive, List<Decoration> decorations) {
         var originalGetter = generator.generationSettingsGetter;
         var values = new java.util.HashMap<Holder<net.minecraft.world.level.biome.Biome>, net.minecraft.world.level.biome.BiomeGenerationSettings>();
         var replacements = new java.util.IdentityHashMap<net.minecraft.world.level.levelgen.placement.PlacedFeature, Holder<net.minecraft.world.level.levelgen.placement.PlacedFeature>>();
@@ -64,6 +91,7 @@ public final class WorldStructures {
                 for (var feature : old.features().get(step)) {
                     String id = feature.unwrapKey().map(k -> k.identifier().toString()).orElse("");
                     if (policy.enabled(StructureFamily.DUNGEONS) && (id.equals("minecraft:monster_room") || id.equals("minecraft:monster_room_deep"))) continue;
+                    if (policy.enabled(StructureFamily.EXTRAS) && id.equals("minecraft:desert_well") && biome.is(VANILLA_DESERT_WELL)) continue;
                     var original = feature.value().feature().value();
                     net.minecraft.world.level.levelgen.feature.Feature replacement = original;
                     if (endActive && policy.enabled(StructureFamily.END_ISLAND)) {
@@ -80,6 +108,8 @@ public final class WorldStructures {
                                 new net.minecraft.world.level.levelgen.placement.PlacedFeature(Holder.direct(prepared), f.placement()))));
                     }
                 }
+            for (var decoration : decorations)
+                if (biome.is(decoration.biomes())) builder.addFeature(GenerationStep.Decoration.SURFACE_STRUCTURES.ordinal(), decoration.feature());
             values.put(biome, builder.build());
         }
         java.util.function.Function<Holder<net.minecraft.world.level.biome.Biome>, net.minecraft.world.level.biome.BiomeGenerationSettings> getter =
