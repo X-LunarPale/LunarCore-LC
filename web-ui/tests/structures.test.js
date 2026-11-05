@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { reactive } from 'vue'
-import { effective, families, inheritWorld, parseConfig, sameRules, setFlag } from '../src/components/structures/structures.js'
+import { commonFlags, effective, families, inheritWorld, inheritWorlds, parseConfig, sameRules, setFlag, setFlags } from '../src/components/structures/structures.js'
 
-const fixture = () => ({ schema: 1, revision: 0, defaults: { structures: Object.fromEntries(families.map(f => [f.id, false])), overwriteExisting: false }, worlds: {} })
+const fixture = () => ({ schema: 1, revision: 0, defaults: { structures: Object.fromEntries(families.map(f => [f.id, false])) }, worlds: {} })
 
 test('world overrides preserve explicit false and can restore inheritance', () => {
   const config = fixture()
@@ -19,8 +19,8 @@ test('world overrides preserve explicit false and can restore inheritance', () =
   assert.equal(effective(config, 'minecraft:overworld').witch_huts, true)
 })
 
-test('all nine switches and the overwrite switch are independent', () => {
-  for (const field of [...families.map(f => f.id), 'overwriteExisting']) {
+test('all nine switches are independent', () => {
+  for (const field of families.map(f => f.id)) {
     const config = fixture()
     setFlag(config, '', field, true)
     assert.deepEqual(Object.entries(effective(config)).filter(([, v]) => v).map(([k]) => k), [field])
@@ -34,6 +34,13 @@ test('configuration parsing supports Vue reactive drafts without mutating or ali
   assert.deepEqual(parsed, config)
   parsed.worlds['minecraft:overworld'].dungeons = false
   assert.equal(config.worlds['minecraft:overworld'].dungeons, true)
+})
+
+test('the removed overwrite switch is not accepted back', () => {
+  const config = fixture()
+  config.defaults.overwriteExisting = true
+  assert.throws(() => parseConfig(config))
+  assert.throws(() => setFlag(fixture(), '', 'overwriteExisting', true))
 })
 
 test('malformed and incomplete settings cannot be silently interpreted as vanilla', () => {
@@ -62,4 +69,41 @@ test('dirty state ignores revisions and field ordering but detects changed inher
   assert.equal(sameRules(a, b), false)
   inheritWorld(b, 'minecraft:overworld', true)
   assert.equal(sameRules(a, b), true)
+})
+
+test('a change applies to every selected world and leaves the others alone', () => {
+  const config = fixture()
+  setFlag(config, '', 'dungeons', true)
+  setFlags(config, ['minecraft:a', 'minecraft:b'], 'witch_huts', true)
+  for (const world of ['minecraft:a', 'minecraft:b']) assert.equal(effective(config, world).witch_huts, true)
+  assert.equal(effective(config, 'minecraft:c').witch_huts, false)
+  assert.equal(config.defaults.structures.witch_huts, false)
+  setFlag(config, '', 'dungeons', false)
+  assert.equal(effective(config, 'minecraft:a').dungeons, true, 'selected worlds stop following the defaults')
+})
+
+test('no selected worlds edits the server defaults', () => {
+  const config = fixture()
+  setFlags(config, [], 'strongholds', true)
+  assert.equal(config.defaults.structures.strongholds, true)
+  assert.deepEqual(config.worlds, {})
+})
+
+test('selected worlds report a shared value or null when they differ', () => {
+  const config = fixture()
+  setFlags(config, ['minecraft:a'], 'mineshafts', true)
+  assert.equal(commonFlags(config, ['minecraft:a', 'minecraft:b']).mineshafts, null)
+  assert.equal(commonFlags(config, ['minecraft:a', 'minecraft:b']).dungeons, false)
+  assert.equal(commonFlags(config, ['minecraft:a']).mineshafts, true)
+  assert.equal(commonFlags(config, []).mineshafts, false)
+  setFlags(config, ['minecraft:a', 'minecraft:b'], 'mineshafts', false)
+  assert.equal(commonFlags(config, ['minecraft:a', 'minecraft:b']).mineshafts, false)
+})
+
+test('inheritance changes every selected world together', () => {
+  const config = fixture()
+  inheritWorlds(config, ['minecraft:a', 'minecraft:b'], false)
+  assert.deepEqual(Object.keys(config.worlds), ['minecraft:a', 'minecraft:b'])
+  inheritWorlds(config, ['minecraft:a', 'minecraft:b'], true)
+  assert.deepEqual(config.worlds, {})
 })

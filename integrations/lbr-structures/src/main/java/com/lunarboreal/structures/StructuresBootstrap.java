@@ -19,11 +19,10 @@ public final class StructuresBootstrap implements PluginBootstrap {
             throw new IllegalStateException("LunarCoreStructures requires Paper 26.3 / Java 25");
         try {
             store = new ConfigStore(context.getDataDirectory().resolve("structures.json"));
-            com.lunarboreal.structures.retrofit.JobJournal.load(context.getDataDirectory().resolve("structure-backups"));
         }
         catch (Exception e) { configurationFailure = e; }
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY, event -> {
-            if (configurationFailure != null) throw new IllegalStateException("Cannot read structure settings or recovery journal", configurationFailure);
+            if (configurationFailure != null) throw new IllegalStateException("Cannot read structure settings", configurationFailure);
             NativeRegistries.register();
             try { event.registrar().discoverPack(getClass().getResource("/yungs").toURI(), "yungs"); }
             catch (Exception e) { throw new IllegalStateException("Cannot discover YUNG structure resources", e); }

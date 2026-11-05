@@ -35,7 +35,7 @@ You can select modules from `LunarCore-modules-0.0.6-preview.zip`. Installing mo
 
 ## Structure Plugin
 
-Place `LunarCoreStructures.jar` from the same build in `plugins/`, alongside the core. All nine families and existing-structure replacement start disabled. Save global or world settings under Server → Server Operations → Structure upgrades, then fully restart. See [Structure upgrades](STRUCTURES.md) for installation and recovery, and [validation](STRUCTURES-VALIDATION.md) for the tested scope.
+Place `LunarCoreStructures.jar` from the same build in `plugins/`, alongside the core. All nine families start disabled and affect only new chunks and new worlds. Save global or world settings under Server → Server Operations → Structure upgrades, then fully restart. See [Structure upgrades](STRUCTURES.md) for installation, and [validation](STRUCTURES-VALIDATION.md) for the tested scope.
 
 ## Remote Panel Access
 

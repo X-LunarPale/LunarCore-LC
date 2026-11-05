@@ -44,7 +44,6 @@ public final class PharaohRuntime implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void discarded(EntityRemoveEvent event) {
-        if (event.getEntity().getPersistentDataContainer().has(new NamespacedKey("lunarcorestructures", "rollback_removal"))) return;
         if (event.getCause() == EntityRemoveEvent.Cause.UNLOAD || event.getCause() == EntityRemoveEvent.Cause.DEATH
                 || event.getCause() == EntityRemoveEvent.Cause.TRANSFORMATION || event.getCause() == EntityRemoveEvent.Cause.PLAYER_QUIT) return;
         var entity = ((CraftEntity) event.getEntity()).getHandle();

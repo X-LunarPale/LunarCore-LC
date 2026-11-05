@@ -1,14 +1,14 @@
 # Structure port validation
 
-[Usage and recovery](STRUCTURES.md) | [中文](../zh-CN/STRUCTURES-VALIDATION.md)
+[Usage](STRUCTURES.md) | [中文](../zh-CN/STRUCTURES-VALIDATION.md)
 
 Validated on 2026-11-04 against Java 25.0.3 and Paper 26.3 builds 202 and 238. Repository base: `a79ce3f8477db8e3ee25db563a611523218b78d3`. All runtime checks used isolated test worlds.
 
 ## Build and management
 
-The repository Gradle suite and plugin builds pass: 458 recorded tests, 457 passed and one existing conditional skip, with no failures. All 92 frontend tests, Vite build and localization checks pass. All 2,148 files from the ten pinned upstream repositories match their source manifests.
+The repository Gradle suite and plugin builds pass: 454 recorded tests, 453 passed and one existing conditional skip, with no failures. All 98 frontend tests, Vite build and localization checks pass. All 2,148 files from the ten pinned upstream repositories match their source manifests.
 
-Additional checks cover revisions, inheritance, failed atomic saves, preserved vanilla registry IDs, the actual 26.3 decorated-pot codec, template attributes, intersecting claims, corrupt backup checksums and failed journal writes. A read-only Web account received 403 for configuration/status endpoints; stale revisions were rejected. Browser checks exercised global and world saves, restored inheritance, restart status, Chinese/English and a 390px viewport.
+Additional checks cover revisions, inheritance, failed atomic saves, preserved vanilla registry IDs, the actual 26.3 decorated-pot codec, template attributes and legacy setting fields. A read-only Web account received 403 for configuration/status endpoints; stale revisions were rejected. Browser checks exercised global and world saves, restored inheritance, restart status, Chinese/English and a 390px viewport.
 
 ## Live generation
 
@@ -37,19 +37,7 @@ A same-seed Paper server without the structure plugin was compared with the plug
 
 The surrounding swamp sample had small ore/stone overlap differences. Repeated unmodified Paper runs also reproduced that class of difference, including attempts with fixed requests and a single worker. [Paper #14125](https://github.com/PaperMC/Paper/issues/14125) documents generation-order-dependent decoration. The local result is consistent with that report, without claiming a proof for every differing block.
 
-The original acceptance condition of universal, block-for-block identity for arbitrary fixed seeds is therefore **not marked fully passed**. This port does not alter Paper's decoration scheduler to impose a new generation order. With all switches off it retains the native noise generator and disables the nine custom structure families. Retrofits compare only blocks they change and their neighbours, tolerate natural drift such as plants, fluids and ore boundaries, and still reject other differences.
-
-## Retrofit and recovery
-
-On Paper 202, a vanilla desert pyramid at start chunk `[-154,402]` was replaced with a 477-piece temple. Its original index was removed and the custom index/references were installed. The backup contained 36 before-chunks, 36 after-chunks and entity data for bounds `[-2505,45,6391]` through `[-2423,114,6473]`.
-
-This early record required removing natural entities first; see the pre-plugin world retest below for current behaviour. A simulated interruption after world save but before the commit checkpoint was recovered on restart with replacement disabled. The operation became `ROLLED_BACK`; **482,230** block states and block-entity data matched the original backup, the original start was restored and the custom start was absent.
-
-A pre-plugin world retest on 2026-11-05 (Paper 238, seed `1234`) generated the world without the structures plugin, then enabled replacement from the Web console with no manual entity cleanup. A desert temple was replaced (96,760 blocks written, husk, 4 armor stands, 5 item frames and 6 slimes added, 8 rabbits displaced) and 2 witch huts became `witch_hut` with their witch and cat. One build earlier, 40 of 81 candidates were replaced, 38 of them dungeons. Jungle temples were skipped because tree positions differ from the replay, ocean monuments and strongholds because their blocks differ from the replay, attributed to the seed offset in pre-plugin worlds, and every mineshaft in the sample was skipped. After force-loading the chunks only one block differed from the snapshot (a brewing stand filled by a hopper), no TNT was primed, and item and falling-block counts matched the vanilla world. Setting two committed journals back to `APPLYING` and restarting restored 482,230 and 3,933 blocks identically, removed new entities and restored displaced ones. With server defaults enabled, creating a flat world from world management no longer stops the server or queues a retrofit; the page shows a notice and restarts succeed.
-
-Fault injection rejects corrupt checksums and prevents a failed journal write from publishing `COMMITTED`. Claim queries distinguish a verified empty area from unavailable protection. Blocks, used containers and expanded footprints are compared against replay; uncertain entities are preserved. Mandatory recovery cannot be cancelled. Completed revision receipts prevent rescanning on every restart.
-
-An existing End island without reliable complete fight history remains unchanged. That is a deliberate conservative limitation. These checks are samples and failure injections, not an exhaustive test of all seeds, template variants, third-party generators or prolonged multiplayer load.
+The original acceptance condition of universal, block-for-block identity for arbitrary fixed seeds is therefore **not marked fully passed**. This port does not alter Paper's decoration scheduler to impose a new generation order. With all switches off it retains the native noise generator and disables the nine custom structure families.
 
 ## Reproduction
 

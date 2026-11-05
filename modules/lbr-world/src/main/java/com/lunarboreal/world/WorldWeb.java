@@ -52,7 +52,6 @@ final class WorldWeb {
         List<Map<String,Object>> out=new ArrayList<>();String q=c.query("q","").toLowerCase(Locale.ROOT);
         m.worlds.forEach((n,o)->{if(!n.toLowerCase(Locale.ROOT).contains(q))return;Map<String,Object>x=o.map();x.put("loaded",Bukkit.getWorld(n)!=null);x.put("managed",true);x.put("status",m.states.getOrDefault(n,"registered"));x.put("operationError",m.errors.getOrDefault(n,""));out.add(x);});
         for(World world:Bukkit.getWorlds()) {
-            if (world.getKey().getNamespace().equals("lunarcore_structure_stage")) continue;
             String n=world.getName();
             if(m.worlds.containsKey(n)||!n.toLowerCase(Locale.ROOT).contains(q))continue;
             Map<String,Object>x=m.snapshot(world).map();x.put("loaded",true);x.put("managed",false);x.put("status","unmanaged");x.put("operationError","");out.add(x);

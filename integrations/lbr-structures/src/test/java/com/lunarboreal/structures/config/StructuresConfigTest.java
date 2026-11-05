@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class StructuresConfigTest {
     @Test void defaultsAreVanillaAndWorldsPreserveExplicitFalse() {
-        var base = new GenerationPolicy(Map.of(StructureFamily.WITCH_HUTS, true), false);
+        var base = new GenerationPolicy(Map.of(StructureFamily.WITCH_HUTS, true));
         var config = new StructuresConfig(0, base, Map.of("minecraft:overworld", Map.of("witch_huts", false, "dungeons", true)));
         assertFalse(StructuresConfig.initial().defaults().anyEnabled());
         assertFalse(config.forWorld("minecraft:overworld").enabled(StructureFamily.WITCH_HUTS));
@@ -22,7 +22,7 @@ class StructuresConfigTest {
     @Test void saveDoesNotChangeActiveSnapshotAndRejectsStaleRevisions(@TempDir Path dir) throws Exception {
         var store = new ConfigStore(dir.resolve("structures.json"));
         var active = store.saved();
-        var request = new StructuresConfig(0, new GenerationPolicy(Map.of(StructureFamily.MINESHAFTS, true), false), Map.of());
+        var request = new StructuresConfig(0, new GenerationPolicy(Map.of(StructureFamily.MINESHAFTS, true)), Map.of());
         assertEquals(1, store.save(request).revision());
         assertFalse(active.defaults().enabled(StructureFamily.MINESHAFTS));
         assertTrue(store.saved().defaults().enabled(StructureFamily.MINESHAFTS));
@@ -35,7 +35,7 @@ class StructuresConfigTest {
         Path file = dir.resolve("structures.json");
         var store = new ConfigStore(file);
         Files.createDirectory(file); // Force the atomic replacement to fail.
-        var request = new StructuresConfig(0, new GenerationPolicy(Map.of(StructureFamily.STRONGHOLDS, true), false), Map.of());
+        var request = new StructuresConfig(0, new GenerationPolicy(Map.of(StructureFamily.STRONGHOLDS, true)), Map.of());
         assertThrows(java.io.IOException.class, () -> store.save(request));
         assertEquals(StructuresConfig.initial(), store.saved());
         assertTrue(Files.isDirectory(file));
@@ -58,9 +58,24 @@ class StructuresConfigTest {
     @Test void inputMapsCannotMutateSnapshots() {
         var input = new HashMap<StructureFamily, Boolean>();
         input.put(StructureFamily.DUNGEONS, true);
-        var policy = new GenerationPolicy(input, false);
+        var policy = new GenerationPolicy(input);
         input.clear();
         assertTrue(policy.enabled(StructureFamily.DUNGEONS));
         assertThrows(UnsupportedOperationException.class, () -> policy.structures().clear());
+    }
+
+    @Test void settingsSavedWithTheRemovedOverwriteSwitchStillLoad(@TempDir Path directory) throws Exception {
+        var file = directory.resolve("structures.json");
+        var structures = new HashMap<String, Boolean>();
+        for (var family : StructureFamily.values()) structures.put(family.id, family == StructureFamily.WITCH_HUTS);
+        var gson = new com.google.gson.Gson();
+        Files.writeString(file, gson.toJson(Map.of("schema", 1, "revision", 4,
+                "defaults", Map.of("structures", structures, "overwriteExisting", true),
+                "worlds", Map.of("minecraft:overworld", Map.of("dungeons", true, "overwriteExisting", true), "minecraft:the_end", Map.of("overwriteExisting", false)))));
+        var saved = new ConfigStore(file).saved();
+        assertEquals(4, saved.revision());
+        assertTrue(saved.defaults().enabled(StructureFamily.WITCH_HUTS));
+        assertTrue(saved.forWorld("minecraft:overworld").enabled(StructureFamily.DUNGEONS));
+        assertEquals(java.util.Set.of("minecraft:overworld"), saved.worlds().keySet());
     }
 }

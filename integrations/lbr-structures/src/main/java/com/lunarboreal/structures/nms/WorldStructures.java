@@ -23,15 +23,6 @@ public final class WorldStructures {
 
     public static void install(World world, GenerationPolicy requested) {
         ServerLevel level = ((CraftWorld) world).getHandle();
-        var staging = com.lunarboreal.structures.retrofit.StagingWorlds.pending(world.getKey().toString());
-        if (staging != null) {
-            try { com.lunarboreal.structures.retrofit.StagingWorlds.initialize(world, staging); }
-            catch (Exception e) { throw new IllegalStateException("Cannot initialize isolated generation", e); }
-            return;
-        }
-        if (com.lunarboreal.structures.retrofit.StagingWorlds.internal(world.getKey().toString()))
-            throw new IllegalStateException("Refusing to load an unowned staging dimension");
-        com.lunarboreal.structures.retrofit.StagingWorlds.remember(world, level.getChunkSource().getGenerator());
         boolean supported = supported(world);
         var policy = supported ? requested : GenerationPolicy.vanilla();
         boolean endActive = com.lunarboreal.structures.end.EndIslandController.install(level, policy.enabled(StructureFamily.END_ISLAND));

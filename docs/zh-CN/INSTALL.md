@@ -35,7 +35,7 @@
 
 ## 结构美化插件
 
-将同次构建的 `LunarCoreStructures.jar` 放入 `plugins/`，与核心一同启动。九类结构和覆盖旧结构默认关闭；在“服务器 → 服务器操作 → 结构美化”保存设置后完整重启。支持全服默认及按世界覆盖。安装、保守覆盖和恢复说明见[结构美化](STRUCTURES.md)，实测范围见[验证记录](STRUCTURES-VALIDATION.md)。
+将同次构建的 `LunarCoreStructures.jar` 放入 `plugins/`，与核心一同启动。九类结构默认关闭；在“服务器 → 服务器操作 → 结构美化”保存设置后完整重启。支持全服默认及按世界设置，只影响新区块和新世界。安装说明见[结构美化](STRUCTURES.md)，实测范围见[验证记录](STRUCTURES-VALIDATION.md)。
 
 ## 远程访问面板
 

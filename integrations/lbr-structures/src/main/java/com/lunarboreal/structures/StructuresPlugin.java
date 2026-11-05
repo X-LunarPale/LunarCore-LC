@@ -16,7 +16,6 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
     private final ConfigStore store;
     private final StructuresConfig active;
     private final Map<String, String> worldErrors = new LinkedHashMap<>();
-    private com.lunarboreal.structures.retrofit.RetrofitManager retrofits;
 
     public StructuresPlugin(ConfigStore store) {
         this.store = Objects.requireNonNull(store, "Bootstrap configuration missing");
@@ -24,9 +23,6 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
     }
 
     @Override public void onEnable() {
-        try { retrofits = new com.lunarboreal.structures.retrofit.RetrofitManager(this, active); }
-        catch (java.io.IOException e) { throw new IllegalStateException("Cannot read structure recovery journals", e); }
-        Bukkit.getPluginManager().registerEvents(retrofits, this);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(new com.lunarboreal.structures.end.EndIslandController(), this);
         var pharaohs = new com.lunarboreal.structures.nms.PharaohRuntime();
@@ -41,15 +37,6 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
         web.routes("structures", this, routes -> routes
                 .get("/status", "core.server.manage", c -> c.json(c.sync(this::status)))
                 .get("/config", "core.server.manage", c -> c.json(store.saved().map()))
-                .get("/jobs", "core.server.manage", c -> c.json(Map.of("items", retrofits.status())))
-                .post("/jobs/{id}/cancel", "core.server.manage", c -> {
-                    try {
-                        retrofits.cancel(c.pathParam("id"));
-                        LC.get().audit().log("structures", "web:" + c.user().username(), "cancel", "job=" + c.pathParam("id"));
-                        c.ok("将在当前结构处理完成或回滚后取消");
-                    }
-                    catch (IllegalArgumentException e) { throw HttpException.badRequest(e.getMessage()); }
-                })
                 .post("/config", "core.server.manage", c -> {
                     try {
                         var replacement = StructuresConfig.parse(c.bodyMap());
@@ -68,15 +55,14 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
             worldErrors.put(world.getKey().toString(), error.getMessage());
             getLogger().severe("Cannot initialize structure generation for " + world.getKey() + ": " + error);
             // A failed adapter must not silently generate the wrong terrain.
-            if (!com.lunarboreal.structures.retrofit.StagingWorlds.internal(world.getKey().toString())) Bukkit.shutdown();
+            Bukkit.shutdown();
             throw error;
         }
     }
 
     private Map<String, Object> status() {
         var worlds = new ArrayList<Map<String, Object>>();
-        Bukkit.getWorlds().stream().filter(world -> !com.lunarboreal.structures.retrofit.StagingWorlds.internal(world.getKey().toString()))
-                .forEach(world -> {
+        Bukkit.getWorlds().forEach(world -> {
                     boolean supported = WorldStructures.supported(world);
                     worlds.add(Map.of("key", world.getKey().toString(), "name", world.getName(),
                             "environment", world.getEnvironment().name(), "supported", supported,
@@ -86,11 +72,10 @@ public final class StructuresPlugin extends JavaPlugin implements Listener {
         var families = Arrays.stream(StructureFamily.values()).map(f -> Map.of("id", f.id, "label", f.label)).toList();
         var saved = store.saved();
         return Map.of("active", active.map(), "saved", saved.map(), "restartRequired", !saved.sameRules(active),
-                "worlds", worlds, "families", families, "jobs", retrofits.status());
+                "worlds", worlds, "families", families);
     }
 
     @Override public void onDisable() {
-        if (retrofits != null) retrofits.close();
         com.lunarboreal.structures.nms.PharaohRuntime.clear();
         if (LC.isLoaded()) LC.get().web().unregisterAll(this);
     }

@@ -16,7 +16,7 @@ public record StructuresConfig(long revision, GenerationPolicy defaults, Map<Str
             if (!key.matches("[a-z0-9_.-]+:[a-z0-9_./-]+") || key.length() > 256 || key.contains(".."))
                 throw new IllegalArgumentException("无效世界标识：" + key);
             value.forEach((field, enabled) -> {
-                if (!field.equals("overwriteExisting")) StructureFamily.require(field);
+                StructureFamily.require(field);
                 if (enabled == null) throw new IllegalArgumentException("开关必须是布尔值");
             });
             if (!value.isEmpty()) copy.put(key, Map.copyOf(value));
@@ -30,7 +30,7 @@ public record StructuresConfig(long revision, GenerationPolicy defaults, Map<Str
         var override = worlds.getOrDefault(key, Map.of());
         var flags = new java.util.EnumMap<StructureFamily, Boolean>(StructureFamily.class);
         for (var f : StructureFamily.values()) flags.put(f, override.getOrDefault(f.id, defaults.enabled(f)));
-        return new GenerationPolicy(flags, override.getOrDefault("overwriteExisting", defaults.overwriteExisting()));
+        return new GenerationPolicy(flags);
     }
 
     public Map<String, Object> map() {

@@ -28,9 +28,17 @@ public final class ConfigStore {
                 throw new IOException("结构配置文件无效或过大");
             try {
                 var json = JsonParser.parseString(Files.readString(path));
-                saved = StructuresConfig.parse(StructuresConfig.object(GSON.fromJson(json, Object.class)));
+                saved = StructuresConfig.parse(withoutOverwrite(StructuresConfig.object(GSON.fromJson(json, Object.class))));
             } catch (RuntimeException e) { throw new IOException("结构配置损坏，拒绝覆盖已有设置", e); }
         }
+    }
+
+    /** Earlier builds stored a replace-existing switch; settings saved by them must still load. */
+    static java.util.Map<String, Object> withoutOverwrite(java.util.Map<String, Object> body) {
+        if (body.get("defaults") instanceof java.util.Map<?, ?> defaults) defaults.remove("overwriteExisting");
+        if (body.get("worlds") instanceof java.util.Map<?, ?> worlds)
+            worlds.values().forEach(world -> { if (world instanceof java.util.Map<?, ?> flags) flags.remove("overwriteExisting"); });
+        return body;
     }
 
     public synchronized StructuresConfig saved() { return saved; }
