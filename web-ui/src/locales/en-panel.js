@@ -1,4 +1,10 @@
 export default {
+  '每日首次上线回主城': 'Return to the hub on the first daily login',
+  '每日回主城时区': 'Daily hub timezone',
+  '留空使用服务器时区，例如 Asia/Shanghai': 'Leave blank for the server timezone, e.g. Asia/Shanghai',
+  '启用死亡回主城': 'Enable returning to the hub after death',
+  '玩家默认开启死亡回主城': 'Return to the hub after death by default',
+  '玩家可用 /spawn ondeath on 或 off 调整': 'Players can choose with /spawn ondeath on or off',
   '操作未成功': 'Operation did not succeed',
   '禁止请求外部接口地址': 'External API addresses are not allowed',
   '请求超时，操作结果可能尚未确认，请刷新核对后再重试': 'Request timed out. The result may be uncertain; refresh and check before retrying.',

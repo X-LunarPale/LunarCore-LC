@@ -1,6 +1,7 @@
 package com.lunarboreal.teleport.command;
 
 import com.lunarboreal.teleport.TeleportModule;
+import com.lunarboreal.teleport.SpawnPreferences;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -25,6 +26,17 @@ public final class SpawnCommands {
         }).noTab().playerOnly(true).description("设置服务器出生点"));
 
         m.registerCommand(new SimpleCommand("spawn", "lbr.teleport.spawn", (s, l, a) -> {
+            if (a.length > 0 && a[0].equalsIgnoreCase("ondeath")) {
+                if (!(s instanceof Player p)) { m.msg(s, "common.player-only"); return; }
+                if (a.length > 2 || a.length == 2 && !a[1].equalsIgnoreCase("on") && !a[1].equalsIgnoreCase("off")) {
+                    m.msg(s, "usage.spawn-ondeath");
+                    return;
+                }
+                if (a.length == 2) SpawnPreferences.setReturnsOnDeath(p, a[1].equalsIgnoreCase("on"));
+                boolean enabled = SpawnPreferences.returnsOnDeath(p, m.config().getBoolean("spawn.respawn-default-enabled", true));
+                m.msg(p, enabled ? "spawn.death-enabled" : "spawn.death-disabled");
+                return;
+            }
             Location spawn = m.spawns().get();
             if (spawn == null) { m.msg(s, "spawn.unset"); return; }
             if (a.length > 0) {
@@ -38,8 +50,16 @@ public final class SpawnCommands {
             }
             if (!(s instanceof Player p)) { m.msg(s, "usage.spawn"); return; }
             m.teleports().submit(m.teleports().request(p, "spawn").to(spawn).success("spawn.teleported"));
-        }).tab((s, a) -> a.length == 1 && s.hasPermission("lbr.teleport.spawn.others")
-                ? SimpleCommand.players(a[0]) : Collections.emptyList()).description("回到出生点"));
+        }).tab((s, a) -> {
+            if (a.length == 2 && a[0].equalsIgnoreCase("ondeath"))
+                return SimpleCommand.filterList(List.of("on", "off"), a[1]);
+            if (a.length == 1) {
+                var options = new java.util.ArrayList<>(List.of("ondeath"));
+                if (s.hasPermission("lbr.teleport.spawn.others")) options.addAll(SimpleCommand.players(a[0]));
+                return SimpleCommand.filterList(options, a[0]);
+            }
+            return Collections.emptyList();
+        }).description("回到出生点或设置死亡回城"));
 
         m.registerCommand(new SimpleCommand("back", "lbr.teleport.back", (s, l, a) -> {
             Player p = (Player) s;

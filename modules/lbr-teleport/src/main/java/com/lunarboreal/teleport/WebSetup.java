@@ -38,7 +38,10 @@ final class WebSetup {
         opts.add(new Opt("home_default_limit", "homes.default-limit", "int", "默认家数量上限", null));
         opts.add(new Opt("bed_home", "homes.bed-home", "bool", "床作为 bed 家", null));
         opts.add(new Opt("spawn_on_first_join", "spawn.on-first-join", "bool", "首次加入到出生点", null));
-        opts.add(new Opt("spawn_on_respawn", "spawn.on-respawn", "bool", "死亡重生到出生点", null));
+        opts.add(new Opt("spawn_on_daily_first_join", "spawn.on-daily-first-join", "bool", "每日首次上线回主城", null));
+        opts.add(new Opt("spawn_daily_join_timezone", "spawn.daily-join-timezone", "text", "每日回主城时区", "留空使用服务器时区，例如 Asia/Shanghai"));
+        opts.add(new Opt("spawn_on_respawn", "spawn.on-respawn", "bool", "启用死亡回主城", null));
+        opts.add(new Opt("spawn_respawn_default_enabled", "spawn.respawn-default-enabled", "bool", "玩家默认开启死亡回主城", "玩家可用 /spawn ondeath on 或 off 调整"));
         opts.add(new Opt("back_on_death", "back.on-death", "bool", "记录死亡点", null));
         opts.add(new Opt("back_persist", "back.persist", "bool", "/back 位置持久化", "重启后仍可 /back"));
         opts.add(new Opt("warp_gui", "warps.gui.enabled", "bool", "地标 GUI", "关闭则 /warps 显示文本列表"));
@@ -281,6 +284,14 @@ final class WebSetup {
 
     private void saveConfig(WebContext ctx) throws Exception {
         Map<String, Object> body = ctx.bodyMap();
+        Object timezone = body.get("spawn_daily_join_timezone");
+        if (timezone != null && !String.valueOf(timezone).isBlank()) {
+            try {
+                java.time.ZoneId.of(String.valueOf(timezone).trim());
+            } catch (java.time.DateTimeException e) {
+                throw HttpException.badRequest("时区无效，例如 Asia/Shanghai");
+            }
+        }
         ctx.sync(() -> {
             for (Opt o : opts) {
                 if (!body.containsKey(o.key())) continue;

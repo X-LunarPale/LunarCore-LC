@@ -1,5 +1,6 @@
 package com.lunarboreal.teleport;
 
+import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,8 +12,10 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 
-/** 预热取消、死亡点记录、首次加入/重生到出生点、缓存加载与释放。 */
+/** 预热、死亡点、主城出生与玩家缓存。 */
 public final class TeleportListener implements Listener {
 
     private final TeleportModule m;
@@ -58,10 +61,28 @@ public final class TeleportListener implements Listener {
                 }
             }
         }
-        if (m.config().getBoolean("spawn.on-respawn", true)) {
-            Location spawn = m.spawns().get();
-            if (spawn != null) e.setRespawnLocation(spawn);
+        if (m.config().getBoolean("spawn.on-respawn", true)
+                && SpawnPreferences.returnsOnDeath(p, m.config().getBoolean("spawn.respawn-default-enabled", true))) {
+            Location spawn = m.spawns().configured();
+            if (spawn != null) {
+                e.setRespawnLocation(spawn);
+                m.runTaskLater(() -> {
+                    if (p.isOnline() && e.getRespawnLocation().equals(spawn)) m.msg(p, "spawn.death-hint");
+                }, 1L);
+            }
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInitialSpawn(AsyncPlayerSpawnLocationEvent e) {
+        Location spawn = m.spawns().configured();
+        if (spawn == null) return;
+        var record = m.api().players().get(e.getConnection().getProfile().getId());
+        boolean firstJoin = e.isNewPlayer() && m.config().getBoolean("spawn.on-first-join", true);
+        long lastJoin = record.map(com.lunarboreal.api.player.PlayerCache.PlayerRecord::lastJoin).orElse(0L);
+        boolean daily = m.config().getBoolean("spawn.on-daily-first-join", true)
+                && SpawnPreferences.firstJoinToday(lastJoin, System.currentTimeMillis(), m.spawnZone());
+        if (firstJoin || daily) e.setSpawnLocation(spawn);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -69,16 +90,16 @@ public final class TeleportListener implements Listener {
         Player p = e.getPlayer();
         m.homes().load(p.getUniqueId());
         m.teleports().loadBack(p.getUniqueId());
-        if (!p.hasPlayedBefore() && m.config().getBoolean("spawn.on-first-join", true)) {
-            m.runTaskLater(() -> {
-                if (!p.isOnline()) return;
-                Location spawn = m.spawns().get();
-                if (spawn != null) {
-                    m.teleports().submit(m.teleports().request(p, "spawn").admin().safe(true).recordBack(false)
-                            .to(spawn).success(null));
-                }
-            }, 2L);
-        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onWorldLoad(WorldLoadEvent e) {
+        m.spawns().refresh();
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onWorldUnload(WorldUnloadEvent e) {
+        m.spawns().unloaded(e.getWorld());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
