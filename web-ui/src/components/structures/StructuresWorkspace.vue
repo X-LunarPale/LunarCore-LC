@@ -153,5 +153,22 @@ onUnmounted(() => { disposed = true; clearInterval(timer) })
 </style>
 
 <style scoped>
-.scope-toggle{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:6px 8px 6px 0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}.scope-toggle strong{font-weight:500;color:var(--lbr-text-soft);overflow-wrap:anywhere}.scope-toggle:focus-visible{outline:2px solid var(--el-color-primary);outline-offset:2px;border-radius:4px}.scope-caret{flex:none;width:10px;height:10px;fill:currentColor;transition:transform .15s}.scope-caret.open{transform:rotate(90deg)}.scope-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px 16px;margin:-6px 0 18px;padding:8px 14px;border:1px solid var(--lbr-border);border-radius:8px}.scope-list small{margin-left:8px;color:var(--lbr-text-soft)}.scope-item{display:flex;align-items:center;gap:6px;min-width:0}.scope-item .el-checkbox{margin-right:0}.scope-info{padding:0;border:0;background:none;color:var(--lbr-text-soft);font:inherit;line-height:1;cursor:help}.scope-info:focus-visible{outline:2px solid var(--el-color-primary);outline-offset:2px;border-radius:50%}
+.scope-toggle{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:6px 8px 6px 0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}.scope-toggle strong{font-weight:500;color:var(--lbr-text-soft);overflow-wrap:anywhere}.scope-toggle:focus-visible{outline:2px solid var(--el-color-primary);outline-offset:2px;border-radius:4px}.scope-caret{flex:none;width:10px;height:10px;fill:currentColor;transition:transform .15s}.scope-caret.open{transform:rotate(90deg)}.scope-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%, 200px), 1fr));gap:2px 16px;margin:-6px 0 18px;padding:8px 14px;border:1px solid var(--lbr-border);border-radius:8px}.scope-list small{margin-left:8px;color:var(--lbr-text-soft)}.scope-item{display:flex;align-items:center;gap:6px;min-width:0}.scope-info{padding:0;border:0;background:none;color:var(--lbr-text-soft);font:inherit;line-height:1;cursor:help}.scope-info:focus-visible{outline:2px solid var(--el-color-primary);outline-offset:2px;border-radius:50%}
+
+.scope-list :deep(.el-checkbox) {
+  min-width: 0;
+  height: auto;
+  min-height: var(--el-checkbox-height, 32px);
+  margin-right: 0;
+}
+.scope-list :deep(.el-checkbox__input),
+.scope-info {
+  flex: none;
+}
+.scope-list :deep(.el-checkbox__label) {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
 </style>
