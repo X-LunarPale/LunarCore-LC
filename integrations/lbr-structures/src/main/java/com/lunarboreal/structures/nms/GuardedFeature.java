@@ -8,9 +8,11 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.feature.*;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import java.lang.reflect.InvocationTargetException;
@@ -25,6 +27,7 @@ public record GuardedFeature(Feature delegate, String kind) implements Feature {
     public GuardedFeature {
         if (!java.util.Set.of("basalt", "delta", "magma", "vines").contains(kind)) throw new IllegalArgumentException("Unknown feature exclusion");
     }
+    private static final int WRITE_RADIUS = 1;
     private static final TagKey<Structure> NO_BASALT = tag("yungsapi:remove_basalt_columns_feature_in");
     private static final TagKey<Structure> NO_DELTA = tag("yungsapi:remove_delta_feature_in");
     private static final TagKey<Structure> NO_MAGMA = tag("yungsapi:remove_magma_feature_in");
@@ -40,8 +43,28 @@ public record GuardedFeature(Feature delegate, String kind) implements Feature {
         if (feature instanceof VinesFeature) return new GuardedFeature(feature, "vines");
         return feature;
     }
+    /**
+     * The feature step holds references only within its write radius and starts only within the
+     * region, so a neighbouring chunk can reference a start the region cannot read, and asking for
+     * it crashes the chunk system. Such a reference alone counts as protected: it depends only on
+     * saved data, unlike any answer that waits on chunks outside the region.
+     * Protection covers the whole start box, as upstream does: delta and magma features write
+     * several blocks from their origin, so a piece test lets them eat decks from the gaps between pieces.
+     */
     private static boolean protectedAt(WorldGenRegion region, BlockPos pos, TagKey<Structure> tag) {
-        return region.getLevel().structureManager().forWorldGenRegion(region).getStructureWithPieceAt(pos, tag).isValid();
+        if (region.getCenter().getChessboardDistance(pos.getX() >> 4, pos.getZ() >> 4) > WRITE_RADIUS) return false;
+        var manager = region.getLevel().structureManager().forWorldGenRegion(region);
+        var structures = region.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+        for (var entry : manager.getAllStructuresAt(pos).entrySet()) {
+            if (!structures.wrapAsHolder(entry.getKey()).is(tag)) continue;
+            for (long packed : entry.getValue()) {
+                var start = ChunkPos.unpack(packed);
+                if (!region.hasChunk(start.x(), start.z())) return true;
+                var found = manager.getStartForStructure(entry.getKey(), region.getChunk(start.x(), start.z(), ChunkStatus.STRUCTURE_STARTS));
+                if (found != null && found.isValid() && found.getBoundingBox().isInside(pos)) return true;
+            }
+        }
+        return false;
     }
     @Override public boolean place(WorldGenLevel level, ChunkGenerator generator, RandomSource random, BlockPos origin) {
         if (!(level instanceof WorldGenRegion region)) return delegate.place(level, generator, random, origin);

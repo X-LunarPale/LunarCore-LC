@@ -22,7 +22,7 @@ Worlds from world management and native terrain worlds are supported, and new wo
 
 Better End Island applies only while the main island has not been generated; otherwise the End stays vanilla.
 
-Desert and swamp decorations and river bridges are features, not structures: `/locate` cannot find them and the world keeps no structure record for them. With decorations on, new chunks replace the vanilla desert well with YUNG’s wells. River bridges appear only in river biomes with solid land on both banks. Positions beyond the write range are skipped, so bridges are never cut off.
+Desert and swamp decorations and river bridges are features, not structures: `/locate` cannot find them and the world keeps no structure record for them. With decorations on, new chunks replace the vanilla desert well with YUNG’s wells. River bridges appear only in river biomes with solid land on both banks. Positions beyond the write range are skipped, so bridges are never cut off. Tectonic worlds have fewer gentle banks, so bridges are clearly rarer there.
 
 ## Data and removal
 
