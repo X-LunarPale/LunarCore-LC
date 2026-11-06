@@ -47,7 +47,7 @@ Replace older files instead of keeping duplicate JARs. Removal can keep settings
 | Module | Purpose | Download |
 |---|---|---|
 | Worlds | Create, load, unload and configure worlds | [lbr-world.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-world.jar) |
-| Terrain | Mountains and underground rivers in separate new worlds | [lbr-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-terrain.jar) |
+| Terrain | Separate worlds, climate and terrain search; requires the [startup agent](../modules/lbr-terrain/README.en.md) | [lbr-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-terrain.jar) |
 | Performance | Metrics, cleanup and optional optimizations, initially disabled | [lbr-performance.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-performance.jar) |
 | Server list | Description text, colors and variables | [lbr-motd.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-motd.jar) |
 

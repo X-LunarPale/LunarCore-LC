@@ -1,3 +1,16 @@
 world:
   ready: "<prefix><green>Terrain world {name} is ready."
   failed: "<prefix><red>Could not load terrain world {name}: {error}"
+command:
+  usage: "<yellow>/tectonic debug [world] | /tectonic locate <terrain> [world]"
+  world-required: "<red>Enter a terrain world or add a loaded terrain world name to the command."
+  not-terrain: "<red>This world is not using LunarCore's Tectonic generator."
+  unknown-target: "<red>Available terrain targets: {targets}"
+  disabled-target: "<red>{target} is disabled in this world."
+  busy: "<yellow>A terrain query is already running."
+  searching: "<gray>Searching for {target}..."
+  not-found: "<yellow>No {target} found within 25600 blocks."
+  found: "<green>{target}: {world}, approximately {distance} blocks away."
+  coordinates-hover: "Click to suggest a teleport command. Check the destination before teleporting."
+  debug: "<gray>{world} | Region {region} | Erosion {erosion} | Region selector {selector} | Cave depth cutoff {cutoff}"
+  failed: "<red>Terrain query failed: {error}"

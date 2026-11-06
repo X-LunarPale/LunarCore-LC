@@ -6,7 +6,7 @@ import { api } from '../../api'
 import { useAuth } from '../../stores/auth'
 import { requireSuccess } from '../../utils/panel'
 import { t } from '../../i18n'
-import { baseConfigKeys, defaultConfig, parseConfig, parseStatus, sameConfig, sameSpawn, validName, validSeed, validSpawn, worldStates } from './terrain'
+import { baseConfigKeys, configMinY, defaultConfig, parseConfig, parseStatus, sameConfig, sameSpawn, validName, validSeed, validSpawn, validTerrainHeight, worldStates } from './terrain'
 
 const auth = useAuth()
 const snapshot = ref(null)
@@ -22,12 +22,26 @@ const spawnDraft = reactive({ x: '', y: '', z: '' })
 const chosenPresetId = ref('')
 const copyConfig = config => ({ ...Object.fromEntries(baseConfigKeys.map(key => [key, config[key]])), advanced: { ...config.advanced } })
 const draft = reactive({ name: '', seed: '', ...copyConfig(defaultConfig) })
+const customHeight = reactive({ minY: -64, maxY: 640 })
 let baseline = copyConfig(defaultConfig)
 let initialized = false
 let disposed = false
 let timer
 const worlds = computed(() => snapshot.value?.worlds || [])
 const heights = computed(() => snapshot.value?.heights || [])
+const heightRanges = computed(() => snapshot.value?.heightRanges
+  || heights.value.map(height => ({ minY: -64, maxY: height - 64, height })))
+const rangeKey = config => `${configMinY(config)}:${config.height}`
+const rangeAvailable = config => heightRanges.value.some(range => `${range.minY}:${range.height}` === rangeKey(config))
+const selectedHeightRange = computed({
+  get: () => rangeKey(draft),
+  set: key => {
+    const range = heightRanges.value.find(range => `${range.minY}:${range.height}` === key)
+    if (!range) return
+    draft.height = range.height
+    if (Object.hasOwn(draft.advanced, 'global_terrain.min_y')) draft.advanced['global_terrain.min_y'] = range.minY
+  }
+})
 const selected = computed(() => worlds.value.find(world => world.name === selectedName.value))
 const canManage = computed(() => auth.can('terrain.manage'))
 const canTeleport = computed(() => auth.can('terrain.teleport'))
@@ -53,6 +67,7 @@ const preset = computed(() => activePreset.value?.id || '')
 const advancedGroups = computed(() => {
   const groups = new Map()
   for (const field of snapshot.value?.schema || []) {
+    if (field.key === 'global_terrain.min_y') continue
     if (!groups.has(field.group)) groups.set(field.group, [])
     groups.get(field.group).push(field)
   }
@@ -61,7 +76,7 @@ const advancedGroups = computed(() => {
 const validation = computed(() => !validName(draft.name.trim()) ? '名称须以小写字母开头，仅含小写字母、数字、下划线或短横线，最长 32 位。'
   : worlds.value.some(world => world.name === draft.name.trim()) ? '同名地形世界已登记，请使用新名称。'
   : !validSeed(draft.seed.trim()) ? '种子须为 64 位整数，或留空随机生成。'
-  : !heights.value.includes(draft.height) ? '此高度尚未在当前运行的服务器注册，重启服务器后可用。' : '')
+  : !rangeAvailable(draft) ? '此高度尚未在当前运行的服务器注册，重启服务器后可用。' : '')
 const toggles = [
   { key: 'rollingHills', label: '连绵丘陵' }, { key: 'undergroundRivers', label: '地下河流' },
   { key: 'lavaTunnels', label: '熔岩隧道' }, { key: 'junglePillars', label: '丛林石柱' }
@@ -101,9 +116,24 @@ async function refresh() {
 
 function choosePreset(id) {
   const match = snapshot.value?.presets.find(item => item.id === id)
-  if (match && heights.value.includes(match.config.height)) {
+  if (match && rangeAvailable(match.config)) {
     chosenPresetId.value = id
     Object.assign(draft, copyConfig(match.config))
+  }
+}
+
+async function saveHeightRange() {
+  if (blocked.value || !canManage.value || !validTerrainHeight(customHeight.maxY - customHeight.minY, customHeight.minY)) return
+  pending.value = 'height-range'
+  error.value = ''
+  try {
+    const result = requireSuccess(await api.post('/api/ext/terrain/height-ranges',
+      { 'min-y': customHeight.minY, 'max-y': customHeight.maxY }))
+    notice.value = t(result?.message || '高度范围已保存，完整重启服务器后可用')
+  } catch (cause) {
+    if (!disposed) error.value = t(cause.message || '操作失败，请稍后重试。')
+  } finally {
+    if (!disposed) { pending.value = ''; schedulePoll() }
   }
 }
 
@@ -145,7 +175,7 @@ async function submit(operation, world) {
   } else {
     if (!world || ['queued', 'running'].includes(world.status)) return
     if (operation === 'unload' && (!world.loaded || world.players > 0)) return
-    if (operation === 'load' && (world.loaded || !heights.value.includes(world.config.height))) return
+    if (operation === 'load' && (world.loaded || !rangeAvailable(world.config))) return
     if (operation === 'teleport' && (!world.loaded || world.status !== 'ready' || !/^[A-Za-z0-9_]{1,16}$/.test(player.value.trim()))) return
     if (operation === 'spawn') {
       if (!world.loaded || world.status !== 'ready' || !spawnDirty.value) return
@@ -213,21 +243,31 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
     <p v-if="notice" class="feedback success" role="status">{{ notice }}</p>
     <p v-if="snapshot?.error" class="feedback failure" role="alert">{{ snapshot.error }}</p>
     <p v-if="uncertain" class="feedback warning" role="alert">{{ t('请求结果尚未核对，请刷新世界列表后再执行操作。') }}</p>
-    <p v-if="snapshot && !snapshot.supported" class="feedback warning">{{ t('当前服务器版本不支持原生地形生成，请检查服务端版本与启动日志。') }}</p>
+    <p v-if="snapshot && !snapshot.supported" class="feedback warning">{{ t('地形生成器不可用，请检查启动参数与启动日志。') }}</p>
     <div class="terrain-layout">
       <section class="creation-section" aria-labelledby="terrain-create">
         <h2 id="terrain-create">{{ t('创建地形世界') }}</h2>
+        <p class="creation-scope">{{ t('Tectonic 参数只作用于新建专属地形世界的新区块，不会改变原主世界或已生成区块。') }}</p>
         <form novalidate @submit.prevent="submit('create')">
           <fieldset :disabled="blocked || !canManage">
             <div class="field"><label for="terrain-name">{{ t('世界名称') }}</label><el-input id="terrain-name" v-model="draft.name" maxlength="32" :disabled="blocked || !canManage" placeholder="alpine" /><small>{{ t('小写字母开头，最长 32 位；现有同名存档会被拒绝。') }}</small></div>
             <div class="field"><label for="terrain-seed">{{ t('世界种子') }}</label><el-input id="terrain-seed" v-model="draft.seed" maxlength="21" :disabled="blocked || !canManage" :placeholder="t('留空随机生成')" /><small>{{ t('支持完整 64 位整数，创建后固定。') }}</small></div>
-            <div class="field"><label for="terrain-preset">{{ t('地形预设') }}</label><el-select id="terrain-preset" :model-value="preset" :disabled="blocked || !canManage" :placeholder="t('自定义参数')" @change="choosePreset"><el-option v-for="item in snapshot?.presets || []" :key="item.id" :value="item.id" :disabled="!heights.includes(item.config.height)" :label="heights.includes(item.config.height) ? t(item.name) : t('{name}（需重启）', { name: t(item.name) })" /></el-select></div>
+            <div class="field"><label for="terrain-preset">{{ t('地形预设') }}</label><el-select id="terrain-preset" :model-value="preset" :disabled="blocked || !canManage" :placeholder="t('自定义参数')" @change="choosePreset"><el-option v-for="item in snapshot?.presets || []" :key="item.id" :value="item.id" :disabled="!rangeAvailable(item.config)" :label="rangeAvailable(item.config) ? t(item.name) : t('{name}（需重启）', { name: t(item.name) })" /></el-select></div>
             <div v-if="activePreset?.unsupported?.length" class="preset-adaptation" role="note">
               <strong>{{ t('官方预设适配差异') }}</strong>
               <p>{{ t('以下官方设置尚未移植，当前使用 Paper 的对应行为。') }}</p>
               <dl><div v-for="field in activePreset.unsupported" :key="field.key"><dt>{{ t(field.label) }}</dt><dd>{{ typeof field.value === 'boolean' ? t(field.value ? '开启' : '关闭') : field.value }}</dd></div></dl>
             </div>
-            <div class="field"><label for="terrain-height">{{ t('世界总高度') }}</label><el-select id="terrain-height" v-model="draft.height" :disabled="blocked || !canManage"><el-option v-if="!heights.includes(draft.height)" :value="draft.height" :label="t('{height} 格（需重启）', { height: draft.height })" disabled /><el-option v-for="height in heights" :key="height" :value="height" :label="t('{height} 格', { height })" /></el-select><small>{{ t('可用 Y 范围：{min} 至 {max}', { min: -64, max: draft.height - 65 }) }}</small><small v-if="snapshot && !heights.includes(draft.height)" class="height-unavailable">{{ t('此高度尚未在当前运行的服务器注册，重启服务器后可用。') }}</small></div>
+            <div class="field"><label for="terrain-height">{{ t('高度范围') }}</label><el-select id="terrain-height" v-model="selectedHeightRange" :disabled="blocked || !canManage"><el-option v-if="!rangeAvailable(draft)" :value="rangeKey(draft)" :label="t('{height} 格（需重启）', { height: draft.height })" disabled /><el-option v-for="range in heightRanges" :key="`${range.minY}:${range.height}`" :value="`${range.minY}:${range.height}`" :label="`${range.minY} ~ ${range.maxY - 1} (${range.height})`" /></el-select><small>{{ t('可用 Y 范围：{min} 至 {max}', { min: configMinY(draft), max: configMinY(draft) + draft.height - 1 }) }}</small><small v-if="snapshot && !rangeAvailable(draft)" class="height-unavailable">{{ t('此高度尚未在当前运行的服务器注册，重启服务器后可用。') }}</small></div>
+            <details v-if="canManage" class="advanced-group custom-height">
+              <summary><span>{{ t('自定义高度范围') }}</span><Icon name="chevron-down" :size="15" /></summary>
+              <div class="scale-fields">
+                <div class="field"><label for="terrain-min-y">{{ t('最低高度') }}</label><el-input-number id="terrain-min-y" v-model="customHeight.minY" :min="-2032" :max="0" :step="16" step-strictly controls-position="right" :disabled="blocked" /></div>
+                <div class="field"><label for="terrain-max-y">{{ t('高度上界') }}</label><el-input-number id="terrain-max-y" v-model="customHeight.maxY" :min="256" :max="2032" :step="16" step-strictly controls-position="right" :disabled="blocked" /></div>
+              </div>
+              <el-button :loading="pending === 'height-range'" :disabled="blocked || !validTerrainHeight(customHeight.maxY - customHeight.minY, customHeight.minY)" @click="saveHeightRange"><Icon name="save" :size="14" />{{ t('保存高度范围') }}</el-button>
+              <p class="muted">{{ t('新增高度范围在完整重启后可选。高度上界不含在可用方块范围内。') }}</p>
+            </details>
             <!-- InputNumber initializes aria-disabled once, so remount when editability changes. -->
             <div class="scale-fields">
               <div class="field"><label for="terrain-vertical">{{ t('山体高度倍率') }}</label><el-input-number :key="blocked || !canManage ? 'disabled' : 'enabled'" id="terrain-vertical" v-model="draft.verticalScale" :min=".1" :max="15" :step=".125" controls-position="right" :disabled="blocked || !canManage" /></div>
@@ -267,7 +307,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
           <dl class="world-details"><div><dt>{{ t('世界种子') }}</dt><dd><code>{{ selected.seed }}</code></dd></div><div><dt>{{ t('世界总高度') }}</dt><dd>{{ selected.config.height }}</dd></div><div><dt>{{ t('山体高度倍率') }}</dt><dd>{{ selected.config.verticalScale }}</dd></div><div><dt>{{ t('地形水平倍率') }}</dt><dd>{{ selected.config.horizontalScale }}</dd></div><div><dt>{{ t('服务器启动时自动加载') }}</dt><dd>{{ t(selected.autoLoad ? '开启' : '关闭') }}</dd></div><div v-for="item in toggles" :key="item.key"><dt>{{ t(item.label) }}</dt><dd>{{ t(selected.config[item.key] ? '开启' : '关闭') }}</dd></div></dl>
           <details v-if="advancedGroups.length" class="saved-advanced"><summary>{{ t('完整生成参数') }}</summary><section v-for="group in advancedGroups" :key="group.name"><h4>{{ t(group.name) }}</h4><dl class="world-details"><div v-for="field in group.fields" :key="field.key"><dt>{{ t(field.label) }}</dt><dd>{{ field.type === 'boolean' ? t(selected.config.advanced[field.key] ? '开启' : '关闭') : selected.config.advanced[field.key] }}</dd></div></dl></section></details>
           <p v-if="selected.error" class="feedback failure" role="alert">{{ selected.error }}</p>
-          <div class="world-actions"><el-button :loading="pending === (selected.loaded ? 'unload' : 'load')" :disabled="!canManage || blocked || ['queued', 'running'].includes(selected.status) || selected.loaded && selected.players > 0 || !selected.loaded && !heights.includes(selected.config.height)" @click="submit(selected.loaded ? 'unload' : 'load', selected)"><Icon :name="selected.loaded ? 'folder-down' : 'folder-up'" :size="14" />{{ t(selected.loaded ? '保存并卸载' : '加载') }}</el-button><span v-if="selected.loaded && selected.players">{{ t('有在线玩家时无法卸载。') }}</span><span v-else-if="!selected.loaded && !heights.includes(selected.config.height)">{{ t('此高度尚未在当前运行的服务器注册，重启服务器后可用。') }}</span></div>
+          <div class="world-actions"><el-button :loading="pending === (selected.loaded ? 'unload' : 'load')" :disabled="!canManage || blocked || ['queued', 'running'].includes(selected.status) || selected.loaded && selected.players > 0 || !selected.loaded && !rangeAvailable(selected.config)" @click="submit(selected.loaded ? 'unload' : 'load', selected)"><Icon :name="selected.loaded ? 'folder-down' : 'folder-up'" :size="14" />{{ t(selected.loaded ? '保存并卸载' : '加载') }}</el-button><span v-if="selected.loaded && selected.players">{{ t('有在线玩家时无法卸载。') }}</span><span v-else-if="!selected.loaded && !rangeAvailable(selected.config)">{{ t('此高度尚未在当前运行的服务器注册，重启服务器后可用。') }}</span></div>
           <div class="spawn-section">
             <div class="spawn-summary"><strong>{{ t('安全出生点') }}</strong><code v-if="selected.spawn">{{ selected.spawn.x }}, {{ selected.spawn.y }}, {{ selected.spawn.z }}</code><span v-else>{{ t('尚未读取出生点') }}</span></div>
             <form v-if="canManage" novalidate @submit.prevent="submit('spawn', selected)">
@@ -304,8 +344,11 @@ h3 { font-size:15px; margin:0; overflow-wrap:anywhere; }
 .success { color:var(--el-color-success); }
 .warning { color:var(--el-color-warning); }
 .terrain-layout { display:grid; grid-template-columns:minmax(300px,.85fr) minmax(0,1.25fr); gap:32px; }
+.custom-height { margin-bottom:18px; }
+.custom-height > .scale-fields { margin-top:12px; }
 .creation-section,.worlds-section { min-width:0; }
 .creation-section { padding-right:30px; border-right:1px solid var(--el-border-color-light); }
+.creation-scope { margin:4px 0 18px; color:var(--lbr-text-soft); font-size:11px; line-height:1.65; }
 fieldset { padding:0; margin:0; border:0; min-width:0; }
 .field { margin-bottom:17px; min-width:0; }
 .field > label,.teleport-form > label { display:block; margin-bottom:6px; font-size:12px; font-weight:600; }

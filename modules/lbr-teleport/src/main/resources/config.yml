@@ -85,10 +85,16 @@ warps:
     filler: GRAY_STAINED_GLASS_PANE
 
 spawn:
-  # 新玩家首次加入时传送到 spawn
+  # 新玩家首次加入到已设置的主城
   on-first-join: true
-  # 死亡重生时重生到 spawn
+  # 每天首次上线到已设置的主城，同一天重连保留退出位置
+  on-daily-first-join: true
+  # 留空使用服务器本地时区，也可填写 Asia/Shanghai 等时区
+  daily-join-timezone: ""
+  # 允许死亡重生到主城；玩家可用 /spawn ondeath off 单独关闭
   on-respawn: true
+  # 尚未选择的玩家默认开启死亡回主城
+  respawn-default-enabled: true
   # true：即使有床/重生锚也重生到 spawn；false：有床时尊重床
   respawn-ignore-bed: false
 

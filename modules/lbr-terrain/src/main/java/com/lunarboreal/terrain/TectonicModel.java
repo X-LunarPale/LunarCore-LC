@@ -41,6 +41,7 @@ public final class TectonicModel {
         JsonObject source = MODEL.getAsJsonObject("noiseSettings");
         JsonObject result = source.deepCopy();
         result.getAsJsonObject("noise").addProperty("height", options.height());
+        result.getAsJsonObject("noise").addProperty("min_y", options.minY());
         result.add("aquifers", resolver.expandDensity(source.get("aquifers")));
         // Debug overlays duplicate several megabytes of the generation tree.
         result.add("debug_functions", new JsonArray());
@@ -237,8 +238,8 @@ public final class TectonicModel {
             double number = switch (key) {
                 case "vertical_scale" -> options.verticalScale();
                 case "elevation_boost" -> options.number("global_terrain.elevation_boost");
-                case "min_y" -> -64;
-                case "max_y" -> options.height() - 64;
+                case "min_y" -> options.minY();
+                case "max_y" -> options.maxY();
                 case "lava_tunnels" -> options.lavaTunnels() ? 1 : 0;
                 case "underground_rivers" -> options.undergroundRivers() ? -1 : 0;
                 case "rolling_hills" -> options.rollingHills() ? 1 : 0;

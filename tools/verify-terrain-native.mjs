@@ -36,6 +36,45 @@ if (mode === 'stop') {
   const name = process.argv[3] || 'monumental'
   await call('/api/console/exec', { command: `terrainprobe ${name}` })
   console.log(`Native terrain sampling started: ${name}`)
+} else if (mode === 'full-port') {
+  let status = await call('/api/ext/terrain/status')
+  assert.equal(status.supported, true, `native bridge initialized: ${status.error}`)
+  assert.ok(status.heightRanges.some(range => range.minY === -128 && range.maxY === 896),
+    'custom bounds registered at startup')
+  const config = {
+    ...status.defaults, height: 1024,
+    advanced: {
+      ...status.defaults.advanced,
+      'global_terrain.min_y': -128,
+      'general.snow_start_offset': 512,
+      'oceans.monument_offset': -30,
+      'oceans.remove_frozen_ocean_ice': true
+    }
+  }
+  const name = 'full_port'
+  if (!status.worlds.some(world => world.name === name)) {
+    await call('/api/ext/terrain/worlds', { name, seed: '123456789', config }, 202)
+  }
+  let world
+  for (let attempt = 0; attempt < 120; attempt++) {
+    status = await call('/api/ext/terrain/status').catch(error => {
+      if (error.actual === 504) return null
+      throw error
+    })
+    world = status?.worlds.find(row => row.name === name)
+    if (world?.status === 'failed') throw new Error(world.error)
+    if (world?.status === 'ready') break
+    await delay(1000)
+  }
+  assert.equal(world?.status, 'ready', 'custom-height terrain world is ready')
+  assert.equal(world.minY, -128)
+  assert.equal(world.maxY, 896)
+  assert.equal(world.config.advanced['general.snow_start_offset'], 512)
+  await call('/api/ext/terrain/height-ranges', { 'min-y': -256, 'max-y': 1024 })
+  await call('/api/console/exec', { command: `tectonic debug lbr_terrain:${name}` })
+  await call('/api/console/exec', { command: `tectonic locate mountain_range lbr_terrain:${name}` })
+  await call('/api/console/exec', { command: `terrainprobe ${name} hooks` })
+  console.log('Native custom world created; climate, chunk and reload fixture started')
 } else if (mode === 'browser') {
   const { chromium } = process.env.PLAYWRIGHT_MODULE
     ? await import(pathToFileURL(process.env.PLAYWRIGHT_MODULE).href)

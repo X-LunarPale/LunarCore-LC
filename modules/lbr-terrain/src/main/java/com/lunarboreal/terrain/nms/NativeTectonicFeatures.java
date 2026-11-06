@@ -106,8 +106,11 @@ public final class NativeTectonicFeatures {
             settings.put(biome, builder.build());
         }
         Map<Holder<Biome>, BiomeGenerationSettings> immutable = Map.copyOf(settings);
+        Map<ResourceKey<Biome>, BiomeGenerationSettings> keyed = new HashMap<>();
+        settings.forEach((biome, value) -> biome.unwrapKey().ifPresent(key -> keyed.put(key, value)));
         Function<Holder<Biome>, BiomeGenerationSettings> getter =
-                biome -> immutable.getOrDefault(biome, biome.value().getGenerationSettings());
+                biome -> biome.unwrapKey().map(keyed::get)
+                        .orElseGet(() -> immutable.getOrDefault(biome, biome.value().getGenerationSettings()));
         Supplier<List<FeatureSorter.StepFeatureData>> order = Suppliers.memoize(() ->
                 FeatureSorter.buildFeaturesPerStep(List.copyOf(generator.getBiomeSource().possibleBiomes()),
                         biome -> getter.apply(biome).features(), true));
@@ -122,6 +125,7 @@ public final class NativeTectonicFeatures {
         featureOrder.setAccessible(true);
         getter.set(generator, prepared.settings());
         featureOrder.set(generator, prepared.featuresPerStep());
+        TerrainFluidPicker.install(generator);
         generator.validate();
     }
 

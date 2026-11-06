@@ -65,11 +65,11 @@ messages:
 2. 将模块 JAR 放到 `plugins/LunarCore/modules/`，启动；也可使用内置 QQAuth 的整包，但不要重复放模块。
 3. 首次生成模块目录 `plugins/LunarCore/modules/qqauth/` 和 config.yml，其中 bridge token 自动生成，不打印 token。
 4. 设置 `integration.group-id` 为真实群号或官方机器人 group_openid；默认占位值拒绝群请求。QQ 官方 sender openid 是不透明身份，不是真实 QQ 号码。
-5. 同机 AstrBot 默认连接 `http://127.0.0.1:12312/qqauth/group`。跨机器先配置可信网络或 HTTPS 反代；确需外部监听时明确改 bind-address。不要把持有 token 的接口交给不可信调用者：token 持有者可声明群和发消息者身份。
-6. 把 [AstrBot 插件目录](<bridge/astrbot_plugin_qqauth/README.md>)整体安装到 AstrBot 的 `data/plugins/`。配置 URL、相同 token、明确 group_id；前缀默认 `/验证`、`/解绑`、`/改密`。桥接 schema 已包含 password_reset_prefix。
+5. AstrBot 和游戏服直接运行在同一台机器时，默认地址 `http://127.0.0.1:12312/qqauth/group` 可用。Docker 或异机中的 `127.0.0.1` 指向 AstrBot 自己；需改为游戏服可达地址，并调整 `integration.astrbot.bind-address`、开放或映射桥接端口。`12312` 与 Web、游戏和 RCON 端口独立；实际监听地址见游戏服启动日志。
+6. 把 [AstrBot 插件目录](<bridge/astrbot_plugin_qqauth/README.zh-CN.md>)整体安装到 AstrBot 的 `data/plugins/`。支持 QQ 官方机器人和 OneBot/NapCat，配置 URL、相同 token、明确 group_id；默认命令 `/验证`、`/解绑`、`/改密`，自定义别名会转换为服务端命令。地址省略路径时自动补齐 `/qqauth/group`。
 7. 从服务器控制台执行 `qqauth reload`，或在面板点击“应用配置”。在线玩家会断开连接，需重新进入服务器并登录。
 
-Java 端允许 `group-id: "*"`，表示信任认证桥接的群声明；建议明确群 ID。新的 AstrBot 桥接要求明确群 ID，不接受空或星号转发。
+Java 端允许 `group-id: "*"`，表示信任认证桥接的群声明；建议明确群 ID。AstrBot 插件要求明确群 ID，不接受空或星号转发。OneBot/NapCat 填群号，QQ 官方机器人填 `group_openid`；两种身份不会自动转换。AstrBot 使用 OneBot/NapCat 时，QQAuth 仍选择 `astrbot` 模式。
 
 OneBot 模式将 `integration.mode` 设为 `onebot`，配置正向 WebSocket endpoint、token、重连间隔；JDK WebSocket 实现自动重连并在模块关闭时取消连接。`disabled` 仅停止 QQ 传输，不关闭绑定门禁，未绑定玩家仍不能进入。
 

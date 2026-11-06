@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { defaultConfig, parseConfig, parseSchema, parseStatus, sameConfig, sameSpawn, terrainHeights, validName, validSeed, validSpawn } from '../src/components/terrain/terrain.js'
+import { defaultConfig, parseConfig, parseSchema, parseStatus, sameConfig, sameSpawn, terrainHeights, validName, validSeed, validSpawn, validTerrainHeight } from '../src/components/terrain/terrain.js'
 
 function fixture() {
   return {
@@ -34,7 +34,7 @@ test('seed validation matches signed long string input and preserves every digit
 test('terrain settings accept explicit false and reject malformed scale or height', () => {
   const options = { ...defaultConfig, rollingHills: false, lavaTunnels: false }
   assert.deepEqual(parseConfig(options), options)
-  for (const patch of [{ height: 576 }, { height: '640' }, { verticalScale: NaN }, { verticalScale: .09 }, { verticalScale: 15.01 }, { horizontalScale: .49 }, { horizontalScale: 3.01 }, { undergroundRivers: 'false' }, { junglePillars: null }]) {
+  for (const patch of [{ height: 577 }, { height: '640' }, { verticalScale: NaN }, { verticalScale: .09 }, { verticalScale: 15.01 }, { horizontalScale: .49 }, { horizontalScale: 3.01 }, { undergroundRivers: 'false' }, { junglePillars: null }]) {
     assert.throws(() => parseConfig({ ...defaultConfig, ...patch }))
   }
   assert.throws(() => parseConfig([]))
@@ -83,7 +83,7 @@ test('status rejects incomplete metadata and duplicate or malformed presets', ()
   duplicate.presets.push({ ...duplicate.presets[0] })
   assert.throws(() => parseStatus(duplicate))
   const malformed = fixture()
-  malformed.presets[0].config.height = 576
+  malformed.presets[0].config.height = 577
   assert.throws(() => parseStatus(malformed))
 })
 
@@ -146,26 +146,49 @@ test('status distinguishes registered heights from valid preset heights without 
   assert.notEqual(parsed.heights, source.heights)
   delete source.heights
   assert.deepEqual(parseStatus(source).heights, [384, 640, 1024])
-  for (const heights of [null, '384', [384, '640'], [384, 384], [768]]) {
+  for (const heights of [null, '384', [384, '640'], [384, 384], [769]]) {
     assert.throws(() => parseStatus({ ...source, heights }))
   }
   assert.deepEqual(parseStatus({ ...source, supported: false, heights: [] }).heights, [])
 })
 
+test('custom bounds are validated and match the world and registered dimension', () => {
+  const source = fixture()
+  source.schema = [{ key: 'global_terrain.min_y', group: '整体地形', label: '最低高度',
+    type: 'number', defaultValue: -64, min: -2032, max: 0, step: 16 }]
+  source.heightRanges = [{ minY: -128, maxY: 896, height: 1024 }]
+  source.worlds[0].config = { ...defaultConfig, height: 1024, advanced: { 'global_terrain.min_y': -128 } }
+  source.worlds[0].minY = -128
+  source.worlds[0].maxY = 896
+  const parsed = parseStatus(source)
+  assert.deepEqual(parsed.heightRanges, source.heightRanges)
+  assert.notEqual(parsed.heightRanges[0], source.heightRanges[0])
+  assert.equal(parsed.worlds[0].config.advanced['global_terrain.min_y'], -128)
+  for (const [height, minY] of [[1024, -129], [1025, -128], [4096, -64], [256, -64], [640, 16]]) {
+    assert.equal(validTerrainHeight(height, minY), false)
+  }
+  source.worlds[0].minY = -64
+  assert.throws(() => parseStatus(source))
+  assert.throws(() => parseStatus({ ...fixture(), heightRanges: [{ minY: -128, maxY: 897, height: 1024 }] }))
+  assert.throws(() => parseStatus({ ...fixture(), heightRanges: [source.heightRanges[0], source.heightRanges[0]] }))
+})
+
 test('official preset differences are validated and copied independently of editable settings', () => {
   const source = fixture()
+  source.schema = [{ key: 'general.snow_start_offset', group: '整体地形', label: '积雪起点偏移', type: 'number', defaultValue: 0, min: 0, max: 1024, step: 16 }]
+  source.presets[0].config.advanced = { 'general.snow_start_offset': 512 }
   source.presets[0].unsupported = [
-    { key: 'general.snow_start_offset', label: '积雪起点偏移', value: 512 },
     { key: 'oceans.monument_offset', label: '海底神殿高度偏移', value: -30 }
   ]
   const parsed = parseStatus(source)
   assert.deepEqual(parsed.presets[0].unsupported, source.presets[0].unsupported)
   assert.notEqual(parsed.presets[0].unsupported, source.presets[0].unsupported)
   assert.notEqual(parsed.presets[0].unsupported[0], source.presets[0].unsupported[0])
-  assert.equal(parsed.presets[0].config.advanced['general.snow_start_offset'], undefined)
+  assert.equal(parsed.presets[0].config.advanced['general.snow_start_offset'], 512)
+  assert.throws(() => parseConfig({ ...defaultConfig, advanced: { 'general.snow_start_offset': 512.5 } }, source.schema))
   for (const unsupported of [null, {}, [null], [{ key: 'invalid', label: '设置', value: 1 }],
-    [{ key: 'general.snow_start_offset', label: '', value: 512 }],
-    [{ key: 'general.snow_start_offset', label: '积雪起点偏移', value: Infinity }],
+    [{ key: 'oceans.monument_offset', label: '', value: -30 }],
+    [{ key: 'oceans.monument_offset', label: '海底神殿高度偏移', value: Infinity }],
     [source.presets[0].unsupported[0], source.presets[0].unsupported[0]]]) {
     const malformed = fixture()
     malformed.presets[0].unsupported = unsupported

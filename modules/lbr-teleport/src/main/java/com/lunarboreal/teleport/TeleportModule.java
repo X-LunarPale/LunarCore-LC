@@ -14,6 +14,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.util.Optional;
 
 /** 传送模块入口。 */
@@ -26,10 +28,12 @@ public final class TeleportModule extends LbrModule {
     private SpawnManager spawns;
     private RtpManager rtp;
     private volatile boolean shutdown;
+    private volatile ZoneId spawnZone;
 
     @Override
     public void onEnable() {
         reloadConfig();
+        loadSpawnZone();
         teleports = new TeleportManager(this);
         tpa = new TpaManager(this);
         homes = new HomeManager(this);
@@ -111,8 +115,19 @@ public final class TeleportModule extends LbrModule {
     @Override
     public void onReload() {
         reloadConfig();
+        loadSpawnZone();
         spawns.load();
         warps.loadAll();
+    }
+
+    private void loadSpawnZone() {
+        String configured = config().getString("spawn.daily-join-timezone", "").trim();
+        try {
+            spawnZone = configured.isEmpty() ? ZoneId.systemDefault() : ZoneId.of(configured);
+        } catch (DateTimeException e) {
+            spawnZone = ZoneId.systemDefault();
+            logger().warning("每日回主城时区无效，使用服务器时区：" + spawnZone.getId());
+        }
     }
 
     // ---------------- 访问器 ----------------
@@ -132,6 +147,8 @@ public final class TeleportModule extends LbrModule {
     public SpawnManager spawns() { return spawns; }
 
     public RtpManager rtp() { return rtp; }
+
+    public ZoneId spawnZone() { return spawnZone; }
 
     public Optional<EconomyService> economy() {
         try {

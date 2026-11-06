@@ -14,12 +14,10 @@ public record TerrainOptions(int height, double verticalScale, double horizontal
             "rollingHills", "undergroundRivers", "lavaTunnels", "junglePillars");
 
     public TerrainOptions {
-        if (!HEIGHTS.contains(height)) {
-            throw new IllegalArgumentException("Height must be one of " + HEIGHTS);
-        }
         requireScale("verticalScale", verticalScale, 0.1, 15);
         requireScale("horizontalScale", horizontalScale, 0.5, 3);
         advanced = TerrainAdvancedOptions.normalize(advanced);
+        new TerrainHeight(((Number) advanced.get("global_terrain.min_y")).intValue(), height);
     }
 
     public TerrainOptions(int height, double verticalScale, double horizontalScale,
@@ -82,6 +80,18 @@ public record TerrainOptions(int height, double verticalScale, double horizontal
         Object value = advanced.get(key);
         if (!(value instanceof Boolean flag)) throw new IllegalArgumentException("Unknown boolean advanced key: " + key);
         return flag;
+    }
+
+    public int minY() {
+        return (int) number("global_terrain.min_y");
+    }
+
+    public int maxY() {
+        return minY() + height;
+    }
+
+    public TerrainHeight heightRange() {
+        return new TerrainHeight(minY(), height);
     }
 
     public static List<Map<String, Object>> schema() {

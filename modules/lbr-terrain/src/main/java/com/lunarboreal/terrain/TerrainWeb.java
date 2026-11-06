@@ -20,6 +20,11 @@ final class TerrainWeb {
         module.webPermission("terrain.teleport", "传送在线玩家到地形世界");
         module.webRoutes(r -> r
                 .get("/status", "terrain.view", c -> c.json(sync(c, module::status)))
+                .post("/height-ranges", "terrain.manage", c -> {
+                    Map<String, Object> body = c.bodyMap();
+                    sync(c, () -> { module.addHeightRange(body, actor(c)); return null; });
+                    c.ok("高度范围已保存，完整重启服务器后可用");
+                })
                 .post("/worlds", "terrain.manage", c -> {
                     Map<String, Object> body = c.bodyMap();
                     sync(c, () -> { module.create(body, actor(c)); return null; });

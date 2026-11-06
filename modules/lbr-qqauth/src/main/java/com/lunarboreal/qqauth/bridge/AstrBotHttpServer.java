@@ -34,6 +34,9 @@ public final class AstrBotHttpServer implements AutoCloseable {
         try {
             created.createContext("/qqauth/group", this::handle);
             created.setExecutor(pool); created.start(); server = created; executor = pool;
+            log.info("QQAuth AstrBot HTTP 已监听 " + created.getAddress() + "，接口 /qqauth/group（独立于 Web/RCON 端口）");
+            if (created.getAddress().getAddress().isLoopbackAddress())
+                log.info("当前仅本机可访问；Docker/异机 AstrBot 需修改 integration.astrbot.bind-address 并使用可达地址。");
         } catch (RuntimeException e) { created.stop(0); pool.shutdownNow(); throw e; }
     }
     public synchronized int port() { return server == null ? -1 : server.getAddress().getPort(); }

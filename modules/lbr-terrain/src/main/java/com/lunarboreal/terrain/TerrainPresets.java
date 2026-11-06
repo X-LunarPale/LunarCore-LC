@@ -64,9 +64,12 @@ public final class TerrainPresets {
     }
 
     private static Map<String, Object> official(String id, String name, TerrainOptions options, int snowOffset) {
-        return Map.of("id", id, "name", name, "config", Map.copyOf(options.map()),
-                "unsupported", List.of(
-                        Map.of("key", "general.snow_start_offset", "label", "积雪起点偏移", "value", snowOffset),
-                        Map.of("key", "oceans.monument_offset", "label", "海底神殿高度偏移", "value", -30)));
+        Map<String, Object> advanced = new java.util.LinkedHashMap<>(options.advanced());
+        advanced.put("general.snow_start_offset", snowOffset);
+        advanced.put("oceans.monument_offset", -30);
+        TerrainOptions effective = new TerrainOptions(options.height(), options.verticalScale(),
+                options.horizontalScale(), options.rollingHills(), options.undergroundRivers(),
+                options.lavaTunnels(), options.junglePillars(), advanced);
+        return Map.of("id", id, "name", name, "config", Map.copyOf(effective.map()));
     }
 }

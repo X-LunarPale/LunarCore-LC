@@ -15,6 +15,13 @@ if (localPaper == null) {
     }
 }
 
+tasks.test {
+    val terrainAgent = project(":terrain-agent").tasks.named<Jar>("jar")
+    dependsOn(terrainAgent)
+    inputs.file(terrainAgent.flatMap { it.archiveFile })
+    jvmArgs("-javaagent:${terrainAgent.get().archiveFile.get().asFile.absolutePath}")
+}
+
 tasks.jar {
     manifest.attributes["paperweight-mappings-namespace"] = "mojang"
 }

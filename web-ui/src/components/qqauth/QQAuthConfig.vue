@@ -32,8 +32,8 @@ const bounds = {
   'integration.astrbot.port': [1, 65535]
 }
 const labels = {
-  'integration.mode': '桥接模式', 'integration.group-id': '验证 QQ 群号',
-  'integration.astrbot.bind-address': 'AstrBot 监听地址', 'integration.astrbot.port': 'AstrBot 监听端口',
+  'integration.mode': '桥接模式', 'integration.group-id': '验证群 ID（群号或 group_openid）',
+  'integration.astrbot.bind-address': 'QQAuth 监听地址', 'integration.astrbot.port': 'QQAuth 桥接端口',
   'integration.astrbot.token': 'AstrBot 桥接密钥', 'integration.onebot.endpoint': 'OneBot WebSocket 地址',
   'integration.onebot.token': 'OneBot 访问密钥', 'integration.onebot.reconnect-seconds': 'OneBot 重连间隔（秒）',
   'binding.code-length': '验证码长度', 'binding.bind-ttl-seconds': '绑定码有效期（秒）',
@@ -134,6 +134,10 @@ onBeforeRouteUpdate(confirmDiscard)
     <template v-if="loaded">
       <section v-for="group in groups" :key="group.prefix" class="config-section">
         <h3>{{ t(group.title) }}</h3>
+        <el-alert v-if="group.prefix === 'integration.' && values['integration.mode'] === 'astrbot'"
+          :title="t('QQAuth 桥接端口独立于 Web 和 RCON 端口。')"
+          :description="t('AstrBot 在 Docker 或其他机器运行时，127.0.0.1 指向机器人自身。QQAuth 监听地址可设为 0.0.0.0，机器人须填写游戏服可达的地址，并放行桥接端口。')"
+          type="info" :closable="false" class="bridge-note" />
         <el-form label-position="top" class="field-grid">
           <el-form-item v-for="key in Object.keys(values).filter(key => key.startsWith(group.prefix) && labels[key])" :key="key" :for="`qq-${key}`" :label="t(labels[key])">
             <el-select v-if="key === 'integration.mode'" :id="`qq-${key}`" v-model="values[key]"><el-option v-for="mode in ['astrbot', 'onebot', 'disabled']" :key="mode" :label="mode" :value="mode" /></el-select>
@@ -180,6 +184,7 @@ onBeforeRouteUpdate(confirmDiscard)
 .qq-config{margin-top:28px;border-top:1px solid var(--el-border-color);padding-top:20px;min-height:100px;min-width:0}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px}h2{font-size:17px;margin:0}h3{font-size:14px;margin:0 0 16px}
 .config-section{padding:22px 0;border-bottom:1px solid var(--el-border-color-light)}
+.bridge-note{margin:0 0 18px}
 .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px}.field-grid :deep(.el-select),.field-grid :deep(.el-input-number){width:100%}
 .quota-row{display:flex;gap:10px;max-width:580px;margin-bottom:10px}.quota-row>.el-input{min-width:0}
 .message-editor{display:grid;grid-template-columns:minmax(180px,300px) minmax(0,1fr);gap:20px}.message-editor aside{display:flex;flex-direction:column;gap:10px}

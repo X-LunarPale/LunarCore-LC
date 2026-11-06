@@ -4,6 +4,7 @@ export default {
   '生成器状态待核对': 'Generator status needs verification',
   '正在生成世界': 'Generating a world',
   '创建地形世界': 'Create terrain world',
+  'Tectonic 参数只作用于新建专属地形世界的新区块，不会改变原主世界或已生成区块。': 'Tectonic settings apply only to new chunks in a dedicated terrain world. They do not change the original main world or chunks already generated.',
   '世界名称': 'World name',
   '世界种子': 'World seed',
   '小写字母开头，最长 32 位；现有同名存档会被拒绝。': 'Start with a lowercase letter, up to 32 characters. Existing saves with the same name are rejected.',
@@ -70,6 +71,7 @@ export default {
   '海洋': 'Oceans',
   '海洋深度': 'Ocean depth',
   '深海深度': 'Deep ocean depth',
+  '移除冰冻海洋结冰': 'Remove frozen ocean surface ice',
   '生物群系': 'Biomes',
   '温度噪声尺度': 'Temperature noise scale',
   '温度噪声倍率': 'Temperature noise multiplier',
@@ -110,6 +112,7 @@ export default {
   '地形操作结果与回读状态不一致，请刷新核对。': 'The terrain operation does not match the server response. Refresh to verify the result.',
   '同名地形世界已登记，请使用新名称。': 'A terrain world with this name is already registered. Choose a new name.',
   '当前服务器版本不支持原生地形生成，请检查服务端版本与启动日志。': 'This server version does not support native terrain generation. Check the server version and startup logs.',
+  '地形生成器不可用，请检查启动参数与启动日志。': 'Terrain generation is unavailable. Check the launch arguments and startup logs.',
   '创建「{name}」并固定当前生成参数？新世界不会覆盖现有存档。': 'Create "{name}" with the current generation settings fixed? Existing saves will be preserved.',
   '保存并卸载「{name}」，保留世界存档？': 'Save and unload "{name}", keeping its world save?',
   '加载「{name}」，沿用创建时的地形参数？': 'Load "{name}" using its original terrain settings?',
@@ -118,5 +121,12 @@ export default {
   '新世界创建参数尚未提交。离开后将丢失，是否继续？': 'The new world settings have not been submitted. Leave and discard them?',
   '经典山脉': 'Classic ranges',
   '宏伟山脉': 'Alpine ranges',
-  '极高山脉': 'Monumental ranges'
+  '极高山脉': 'Monumental ranges',
+  '高度范围': 'Height range',
+  '自定义高度范围': 'Custom height range',
+  '最低高度': 'Minimum height',
+  '高度上界': 'Upper height limit',
+  '保存高度范围': 'Save height range',
+  '新增高度范围在完整重启后可选。高度上界不含在可用方块范围内。': 'New ranges are available after a full restart. The upper limit is exclusive.',
+  '高度范围已保存，完整重启服务器后可用': 'Height range saved. Available after a full server restart.'
 }

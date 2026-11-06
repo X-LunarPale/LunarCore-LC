@@ -2,6 +2,8 @@ rootProject.name = "LunarCore"
 
 include("lbr-api")
 include("lbr-core")
+include("terrain-agent")
+project(":terrain-agent").projectDir = file("tools/terrain-agent")
 
 val modules = listOf(
     "lbr-economy",

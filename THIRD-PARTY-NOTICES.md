@@ -56,7 +56,7 @@ LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声
 ## Tectonic
 
 `modules/lbr-terrain` adapts Apollo's MIT-licensed Tectonic 3.0.29 mod model for
-Minecraft 26.3 to Paper 26.3 build 202. The pinned official Fabric artifact,
+Minecraft 26.3 to Paper 26.3. The pinned official Fabric artifact,
 SHA-512, MIT text, author attribution and reproducible asset extraction are
 recorded in `modules/lbr-terrain/src/main/resources/upstream/TECTONIC-NOTICE.txt`
 and the adjacent `extract-model.ps1` and `extract-features.ps1` scripts. The
@@ -64,9 +64,9 @@ module JAR includes that notice, the mod's terrain model and selected feature
 and overlay resources; Minecraft's base resources are read from the server at
 runtime and are not redistributed in those assets.
 
-The adaptation provides thirty effective advanced options and five official
+The adaptation provides thirty-four advanced options and five official
 parameter presets, resolves configuration functions to native per-world density
-graphs, registers six fixed height variants and uses Paper's native noise
+graphs, registers default or custom height ranges and uses Paper's native noise
 generator. Native codecs preserve the pinned configuration-noise arithmetic,
 experimental sampling behavior and parameter-noise seed aliases. The port also
 adapts the ultrasmooth overlay, island predicate, underground-river lichen,
@@ -80,13 +80,18 @@ adapted from Apollo's Lithostitched 26.3 reference at commit
 declare MIT; attribution is included in the bundled Tectonic notice. No
 Lithostitched runtime, mod loader or data pack is installed or distributed.
 
-Snow-start temperature adjustments, ocean monument offsets, frozen-ocean ice
-removal, old-chunk blending/compatibility metadata and `/tectonic debug` or
-`locate` commands remain outside this port. The pinned artifact's ineffective
+The startup agent in `tools/terrain-agent` adapts per-world temperatures,
+client snowlines, ocean monument offsets, old-chunk blending and height
+compatibility. The module adds frozen-ocean climate replacement, custom
+minimum and maximum bounds, a minY-relative lava floor and `/tectonic debug`
+and the eight terrain locators. The pinned artifact's ineffective
 spaghetti and alternate-continent switches are not presented as working
 controls. This is not an official Tectonic release or an endorsement by its
 author, and it does not promise block-for-block identity. The module README
 records the supported parameters, functional boundaries and verification scope.
+
+The startup agent bundles ASM and ASM Commons 9.9.1 from the OW2 ASM project.
+Their BSD license is included in the agent JAR at `META-INF/ASM-LICENSE.txt`.
 
 ## WebUI QR codes
 

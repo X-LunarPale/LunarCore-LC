@@ -27,7 +27,8 @@ usage:
   warp: "<prefix><gray>用法：<gold>/warp (名称) [玩家] | /warp list | /warp seticon (名称) [物品] | /warp setdesc (名称) [描述]"
   warp-seticon: "<prefix><gray>用法：<gold>/warp seticon (名称) [物品ID]</gold>（不填物品则使用手持物品）"
   warp-setdesc: "<prefix><gray>用法：<gold>/warp setdesc (名称) [描述]</gold>（用 | 换行，不填则清除）"
-  spawn: "<prefix><gray>用法：<gold>/spawn (玩家)"
+  spawn: "<prefix><gray>用法：<gold>/spawn [玩家]</gold> 或 <gold>/spawn ondeath [on|off]"
+  spawn-ondeath: "<prefix><gray>用法：<gold>/spawn ondeath [on|off]"
   rtp: "<prefix><gray>用法：<gold>/rtp (世界) (玩家)"
 
 teleport:
@@ -142,6 +143,9 @@ spawn:
   unset: "<prefix><red>出生点不可用。"
   teleported: "<prefix><green>已传送到出生点。"
   sent-other: "<prefix><green>已将 <yellow>{player}</yellow> 传送到出生点。"
+  death-hint: "<prefix><gray>死亡后已返回主城。<click:run_command:'/spawn ondeath off'><yellow>[关闭死亡回主城]</yellow></click><gray>，也可输入 <gold>/spawn ondeath off</gold>。"
+  death-enabled: "<prefix><green>已开启死亡回主城。<gray>输入 <gold>/spawn ondeath off</gold> 可关闭。"
+  death-disabled: "<prefix><green>已关闭死亡回主城。<gray>输入 <gold>/spawn ondeath on</gold> 可开启。"
 
 back:
   none: "<prefix><red>没有可以返回的位置。"

@@ -13,7 +13,7 @@ cd web-ui
 npm ci
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures:jar
+./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures:jar
 python package-release.py
 ```
 
