@@ -49,7 +49,7 @@
 | 模块 | 用途 | 下载 |
 |---|---|---|
 | 世界管理 | 创建、加载、卸载与配置世界 | [lbr-world.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-world.jar) |
-| 宏伟地形 | 独立新世界的高山与地下河 | [lbr-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-terrain.jar) |
+| 宏伟地形 | 独立世界、气候与地形查找；需[启动补丁](../modules/lbr-terrain/README.md) | [lbr-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-terrain.jar) |
 | 性能 | 指标、清理和可选优化，优化默认关闭 | [lbr-performance.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-performance.jar) |
 | 服务器列表 | 列表介绍文字、颜色与变量 | [lbr-motd.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-motd.jar) |
 

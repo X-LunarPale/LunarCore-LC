@@ -26,8 +26,9 @@ public final class TerrainAdvancedOptions {
             } else {
                 if (!(value instanceof Number number) || !Double.isFinite(number.doubleValue())
                         || number.doubleValue() < field.min() || number.doubleValue() > field.max()
-                        || field.key().equals("general.snow_start_offset")
-                                && number.doubleValue() != Math.rint(number.doubleValue())) {
+                        || (field.key().equals("general.snow_start_offset") || field.key().equals("oceans.monument_offset"))
+                                && number.doubleValue() != Math.rint(number.doubleValue())
+                        || field.key().equals("global_terrain.min_y") && number.doubleValue() % 16 != 0) {
                     throw new IllegalArgumentException(field.key() + " is outside its allowed range");
                 }
                 value = ((Number) value).doubleValue();
@@ -67,6 +68,7 @@ public final class TerrainAdvancedOptions {
     private static List<Field> fields() {
         return List.of(
                 number("general.snow_start_offset", "整体地形", "积雪起点偏移", 0, 0, 1024, 16),
+                number("global_terrain.min_y", "整体地形", "最低高度", -64, -2032, 0, 16),
                 number("global_terrain.elevation_boost", "整体地形", "地形抬升", 0, 0, 2, 0.01),
                 flag("global_terrain.ultrasmooth", "整体地形", "超平滑地形", false),
                 number("continents.ocean_offset", "大陆与河流", "海洋偏移", -0.8, -2, 0, 0.05),
@@ -82,6 +84,8 @@ public final class TerrainAdvancedOptions {
                 number("islands.noise_offset", "岛屿", "岛屿噪声偏移", 0, -1, 1, 0.05),
                 number("oceans.ocean_depth", "海洋", "海洋深度", -0.22, -10, -0.05, 0.01),
                 number("oceans.deep_ocean_depth", "海洋", "深海深度", -0.45, -10, -0.05, 0.01),
+                flag("oceans.remove_frozen_ocean_ice", "海洋", "移除冰冻海洋结冰", false),
+                number("oceans.monument_offset", "海洋", "海底神殿高度偏移", 0, -1024, 1024, 1),
                 number("biomes.temperature_scale", "生物群系", "温度噪声尺度", 0.25, 0, 1, 0.01),
                 number("biomes.temperature_multiplier", "生物群系", "温度噪声倍率", 1, 0, 5, 0.1),
                 number("biomes.temperature_offset", "生物群系", "温度噪声偏移", 0, -1, 1, 0.05),

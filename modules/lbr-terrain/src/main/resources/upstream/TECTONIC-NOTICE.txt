@@ -23,7 +23,7 @@ mod classes, a loader, datapack metadata, a data pack ZIP and a Lithostitched
 runtime are not included or installed.
 
 LunarCore adapts Tectonic's ConfigConstant, ConfigNoise and ConfigClamp
-operations into native 26.3 density functions. Thirty effective advanced
+operations into native 26.3 density functions. Thirty-four advanced
 options, base height and scale options, and the five official parameter
 presets are resolved independently for each new world. ConfigNoise retains
 the pinned artifact's float point arithmetic and normal/alternate volume
@@ -45,13 +45,14 @@ alternate_continents_scaling flag is not exposed; the effective
 alternate_erosion_scaling flag affects both continent and erosion noise as
 it does in the artifact.
 
-The snow-start temperature adjustments (128 by default, 512 in Overkill),
-ocean monument offset (-30 in the official presets), frozen-ocean ice
-removal, old-chunk blending/compatibility metadata and /tectonic debug or
-locate commands are not implemented. The Paper port does not replace
-client configuration screens or support arbitrary minimum/maximum height
-changes. It is not a complete mod port and does not promise block-for-block
-identity with the original mod.
+The native startup agent adapts per-world temperature queries, client
+snowlines, ocean monument offsets during generation and reload, and
+old-chunk blending and height compatibility. The module also implements
+the frozen-ocean climate replacement, configurable minimum/maximum world
+bounds, the minY-relative lava floor, /tectonic debug and the eight
+terrain locators. WebUI supplies configuration in place of the mod's
+client screens. The port does not promise block-for-block identity with
+the original mod.
 
 Lithostitched attribution
 

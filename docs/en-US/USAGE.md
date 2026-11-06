@@ -48,3 +48,5 @@ Reload QQ authentication or fully restart to apply saved changes. Reloading revo
 The anti-cheat module provides translated GrimAC setting names. Explicitly reload GrimAC after saving; unsupported fields remain read-only.
 
 Optimizations start disabled. Review them before enabling; operation counts do not prove improved performance. Terrain creates separate new worlds without converting existing ones. Fully restart after installation or supported height changes. Unloading worlds saves them without deleting their folders.
+
+Terrain also needs `-javaagent:LC-Terrain-Agent.jar` in the launch command for climate, monument placement and old-chunk blending. See the [terrain guide](../../modules/lbr-terrain/README.en.md) for installation, settings and `/tectonic` commands.

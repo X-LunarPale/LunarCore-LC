@@ -53,15 +53,13 @@ class TerrainPresetsTest {
         assertTrue(overkill.flag("experimental.alternate_erosion_scaling"));
     }
 
-    @Test void officialPresetsDiscloseTheMonumentBehaviorNotYetPorted() {
+    @Test void officialPresetsApplyTheirNativeMonumentOffset() {
         for (var preset : TerrainPresets.all()) {
-            options(preset);
+            assertFalse(preset.containsKey("unsupported"));
             if (List.of("classic", "alpine", "monumental").contains(preset.get("id"))) {
-                assertFalse(preset.containsKey("unsupported"));
+                assertEquals(0, options(preset).number("oceans.monument_offset"));
             } else {
-                assertEquals(List.of(
-                        Map.of("key", "oceans.monument_offset", "label", "海底神殿高度偏移", "value", -30)),
-                        preset.get("unsupported"));
+                assertEquals(-30, options(preset).number("oceans.monument_offset"));
             }
         }
     }

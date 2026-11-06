@@ -3,6 +3,7 @@ package com.lunarboreal.terrain.nms;
 import com.google.gson.JsonParser;
 import com.lunarboreal.terrain.TectonicModel;
 import com.lunarboreal.terrain.TerrainOptions;
+import com.lunarboreal.terrain.TerrainTargets;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.SharedConstants;
@@ -94,11 +95,13 @@ class OfflineNativeTectonicTest {
                 noises.getId(noises.getValue(Identifier.parse("minecraft:continentalness"))));
 
         DimensionType original = dimensions.getValueOrThrow(BuiltinDimensionTypes.OVERWORLD);
-        Method withHeight = NativeTectonicBridge.class.getDeclaredMethod("withHeight", DimensionType.class, int.class);
+        Method withHeight = NativeTectonicBridge.class.getDeclaredMethod("withHeight", DimensionType.class,
+                com.lunarboreal.terrain.TerrainHeight.class);
         withHeight.setAccessible(true);
         Map<ResourceKey<DimensionType>, DimensionType> addedDimensions = new LinkedHashMap<>();
         for (int height : TerrainOptions.HEIGHTS) {
-            addedDimensions.put(dimensionKey(height), (DimensionType) withHeight.invoke(null, original, height));
+            addedDimensions.put(dimensionKey(height), (DimensionType) withHeight.invoke(null, original,
+                    new com.lunarboreal.terrain.TerrainHeight(-64, height)));
         }
         appendEntries(dimensions, addedDimensions);
         lookup = HolderLookup.Provider.create(Stream.concat(
@@ -173,6 +176,43 @@ class OfflineNativeTectonicTest {
                 "The sampled peak must contain the native terrain block, not fluid");
         assertEquals(highest, generator.getBaseHeight(
                 highestX, highestZ, Heightmap.Types.WORLD_SURFACE_WG, height, RandomState.create(noises, 123456789L, settings)));
+    }
+
+    @Test void customBoundsSurviveNativeCodecsAndMoveTheLavaFloor() throws Exception {
+        var ops = lookup.createSerializationContext(JsonOps.INSTANCE);
+        var original = dimensions.getValueOrThrow(BuiltinDimensionTypes.OVERWORLD);
+        Method withHeight = NativeTectonicBridge.class.getDeclaredMethod("withHeight", DimensionType.class,
+                com.lunarboreal.terrain.TerrainHeight.class);
+        withHeight.setAccessible(true);
+        for (var range : List.of(new com.lunarboreal.terrain.TerrainHeight(-128, 1024),
+                new com.lunarboreal.terrain.TerrainHeight(-2032, 4064),
+                new com.lunarboreal.terrain.TerrainHeight(0, 256))) {
+            var options = new TerrainOptions(range.height(), 1.8, 1.2, true, true, true, true,
+                    Map.of("global_terrain.min_y", range.minY()));
+            var settings = NoiseGeneratorSettings.DIRECT_CODEC.parse(
+                    ops, TectonicModel.noiseSettings(options)).getOrThrow();
+            var dimension = (DimensionType) withHeight.invoke(null, original, range);
+            var reloaded = DimensionType.DIRECT_CODEC.parse(ops,
+                    DimensionType.DIRECT_CODEC.encodeStart(ops, dimension).getOrThrow()).getOrThrow();
+            assertEquals(range.minY(), reloaded.minY());
+            assertEquals(range.height(), reloaded.height());
+            assertEquals(range.minY(), settings.noiseSettings().minY());
+            assertEquals(range.height(), settings.noiseSettings().height());
+
+            var picker = TerrainFluidPicker.create(settings);
+            int lavaLevel = range.minY() + 10;
+            assertTrue(picker.computeFluid(0, lavaLevel - 1, 0).at(lavaLevel - 1)
+                    .is(net.minecraft.world.level.block.Blocks.LAVA));
+            assertEquals(settings.defaultFluid(), picker.computeFluid(0, lavaLevel, 0).at(lavaLevel));
+            var selected = generator(settings);
+            TerrainFluidPicker.install(selected);
+            var field = NoiseBasedChunkGenerator.class.getDeclaredField("globalFluidPicker");
+            field.setAccessible(true);
+            var installed = ((java.util.function.Supplier<?>) field.get(selected)).get();
+            assertTrue(installed instanceof net.minecraft.world.level.levelgen.Aquifer.FluidPicker);
+            assertEquals(lavaLevel, ((net.minecraft.world.level.levelgen.Aquifer.FluidPicker) installed)
+                    .computeFluid(0, lavaLevel - 1, 0).fluidLevel());
+        }
     }
 
     @Test void nativeContinentalLayoutDiffersFromVanillaAtTheSameSeed() {
@@ -327,6 +367,54 @@ class OfflineNativeTectonicTest {
         }
         // Matching a terrain region does not prove that any decoration or complete chunk was generated.
         assertEquals(6, representatives.size());
+    }
+
+    @Test void commandQueriesFindTheEightOfficialTerrainRegionsWithoutLoadingChunks() {
+        TerrainOptions options = new TerrainOptions(1024, 2.8, 1.5, true, true, true, true);
+        var ops = lookup.createSerializationContext(JsonOps.INSTANCE);
+        var settings = NoiseGeneratorSettings.DIRECT_CODEC.parse(
+                ops, TectonicModel.noiseSettings(options)).getOrThrow();
+        // The default fixture has neither badlands target in its search square.
+        TerrainOptions hotContinents = new TerrainOptions(1024, 2.8, 1.5, true, true, true, true,
+                Map.of("biomes.temperature_multiplier", 0, "biomes.temperature_offset", 1,
+                        "continents.ocean_offset", 0));
+        var hotSettings = NoiseGeneratorSettings.DIRECT_CODEC.parse(
+                ops, TectonicModel.noiseSettings(hotContinents)).getOrThrow();
+        for (String id : TerrainTargets.names()) {
+            boolean badlands = id.startsWith("badlands_");
+            var fixtureOptions = badlands ? hotContinents : options;
+            var fixtureSettings = badlands ? hotSettings : settings;
+            var random = RandomState.create(noises, 123456789L, fixtureSettings);
+            var target = TerrainTargets.find(id);
+            var query = TerrainQuery.locator(lookup, random, fixtureOptions, target);
+            var found = query.locate(target, 0, 0, () -> false);
+            var position = found.orElseThrow(() -> new AssertionError("Missing fixed terrain fixture: " + id));
+            assertTrue(Math.abs(position.x()) <= 25_600, id);
+            assertTrue(Math.abs(position.z()) <= 25_600, id);
+            assertEquals(0, position.x() % 64, id);
+            assertEquals(0, position.z() % 64, id);
+            var reference = RandomState.create(noises, 123456789L, fixtureSettings);
+            var context = SamplerContext.builder().enableCaches().build();
+            for (var bound : target.conditions()) {
+                var function = DensityFunction.CODEC.parse(ops,
+                        TectonicModel.densityFunction("tectonic:" + bound.key(), fixtureOptions)).getOrThrow();
+                double raw = reference.getSampler(function).sampleValue(context, position.x(), 0, position.z());
+                double rounded = Math.round(raw * 1000) / 1000d;
+                assertTrue(Double.isFinite(raw) && rounded >= bound.minimum() && rounded <= bound.maximum(),
+                        id + " returned a coordinate outside " + bound.key());
+            }
+            assertTrue(query.locate(target, 0, 0, () -> true).isEmpty(), id + " must honor cancellation");
+        }
+        for (String id : List.of("badlands_canyon", "badlands_plateaus")) {
+            var target = TerrainTargets.find(id);
+            var random = RandomState.create(noises, 123456789L, settings);
+            assertTrue(TerrainQuery.locator(lookup, random, options, target)
+                    .locate(target, 0, 0, () -> false).isEmpty(), id + " is absent from the default fixture");
+        }
+        var random = RandomState.create(noises, 123456789L, settings);
+        var debug = TerrainQuery.debugger(lookup, random, options).debug(1408, 94, -2688);
+        assertTrue(List.of("Club", "Heart", "Spade", "Diamond").contains(debug.region()));
+        assertTrue(Double.isFinite(debug.depthCutoff()));
     }
 
     private static void bindFixtureBiomeTags() throws Exception {

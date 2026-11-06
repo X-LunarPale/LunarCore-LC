@@ -92,14 +92,6 @@ public final class NativeTectonicFeatures {
             for (int step = 0; step < original.features().size(); step++) {
                 for (Holder<PlacedFeature> feature : original.features().get(step)) {
                     Holder<PlacedFeature> replacement = feature.unwrapKey().map(ores::get).orElse(null);
-                    if (replacement == null && options.number("general.snow_start_offset") > 0
-                            && feature.unwrapKey().map(key -> key.identifier().toString())
-                                    .filter("minecraft:freeze_top_layer"::equals).isPresent()) {
-                        PlacedFeature vanilla = feature.value();
-                        replacement = Holder.direct(new PlacedFeature(
-                                Holder.direct(new SnowlineFeature((int) options.number("general.snow_start_offset"))),
-                                vanilla.placement()));
-                    }
                     builder.addFeature(step, replacement == null ? feature : replacement);
                 }
             }
@@ -114,8 +106,11 @@ public final class NativeTectonicFeatures {
             settings.put(biome, builder.build());
         }
         Map<Holder<Biome>, BiomeGenerationSettings> immutable = Map.copyOf(settings);
+        Map<ResourceKey<Biome>, BiomeGenerationSettings> keyed = new HashMap<>();
+        settings.forEach((biome, value) -> biome.unwrapKey().ifPresent(key -> keyed.put(key, value)));
         Function<Holder<Biome>, BiomeGenerationSettings> getter =
-                biome -> immutable.getOrDefault(biome, biome.value().getGenerationSettings());
+                biome -> biome.unwrapKey().map(keyed::get)
+                        .orElseGet(() -> immutable.getOrDefault(biome, biome.value().getGenerationSettings()));
         Supplier<List<FeatureSorter.StepFeatureData>> order = Suppliers.memoize(() ->
                 FeatureSorter.buildFeaturesPerStep(List.copyOf(generator.getBiomeSource().possibleBiomes()),
                         biome -> getter.apply(biome).features(), true));
@@ -130,6 +125,7 @@ public final class NativeTectonicFeatures {
         featureOrder.setAccessible(true);
         getter.set(generator, prepared.settings());
         featureOrder.set(generator, prepared.featuresPerStep());
+        TerrainFluidPicker.install(generator);
         generator.validate();
     }
 

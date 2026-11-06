@@ -12,7 +12,7 @@
   {"id":"scoreboard","name":"计分板","nameEn":"Scoreboard","description":"设置侧栏与顶部信息。","descriptionEn":"Sidebar and top information display.","category":"players","icon":"list","depends":[]},
   {"id":"permissions","name":"游戏权限","nameEn":"Game permissions","description":"管理玩家权限、用户组与临时授权。","descriptionEn":"Player permissions, groups and temporary access.","category":"security","icon":"key-round","depends":[]},
   {"id":"world","name":"世界管理","nameEn":"World management","description":"创建、加载与卸载世界。","descriptionEn":"Create, load and unload worlds.","category":"server","icon":"globe","depends":[]},
-  {"id":"terrain","name":"宏伟地形","nameEn":"Mountain terrain","description":"创建使用 Tectonic 地形的新世界。需重启。","descriptionEn":"Create new worlds with Tectonic terrain. Restart required.","category":"server","icon":"mountain","depends":[]},
+  {"id":"terrain","name":"宏伟地形","nameEn":"Tectonic terrain","description":"Tectonic 独立世界、气候与地形查找。需安装启动补丁并重启。","descriptionEn":"Tectonic worlds, climate and terrain search. Requires the startup agent and a restart.","category":"server","icon":"mountain","depends":[]},
   {"id":"performance","name":"性能","nameEn":"Performance","description":"查看服务器负载，按需启用优化。","descriptionEn":"Monitor server load and enable selected optimizations.","category":"server","icon":"activity","depends":[]},
   {"id":"vote","name":"玩法投票","nameEn":"Gameplay votes","description":"由玩家投票决定限时玩法。","descriptionEn":"Player votes for temporary gameplay effects.","category":"survival","icon":"vote","depends":[]},
   {"id":"journal","name":"探索手册","nameEn":"Exploration journal","description":"记录生物群系、进度与钓获收藏。","descriptionEn":"Record discovered biomes, advancements and catches.","category":"survival","icon":"book-open","depends":[]},

@@ -6,7 +6,7 @@ depend: [LunarCore]
 commands:
   terrainprobe:
     permission: terrainprobe.run
-    usage: /terrainprobe <world>
+    usage: /terrainprobe <world> [hooks]
 permissions:
   terrainprobe.run:
     default: op

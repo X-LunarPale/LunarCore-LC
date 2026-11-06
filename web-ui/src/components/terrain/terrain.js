@@ -8,6 +8,13 @@ const spawnKeys = ['x', 'y', 'z']
 const spawnCoordinates = value => record(value) && Object.keys(value).length === 3 &&
   spawnKeys.every(key => Object.hasOwn(value, key) && Number.isSafeInteger(value[key]))
 
+export const configMinY = config => config.advanced?.['global_terrain.min_y'] ?? -64
+export function validTerrainHeight(height, minY = -64) {
+  return Number.isInteger(height) && height >= 256 && height <= 4064 && height % 16 === 0 &&
+    Number.isInteger(minY) && minY >= -2032 && minY <= 0 && minY % 16 === 0 &&
+    minY + height >= 256 && minY + height <= 2032
+}
+
 export function sameSpawn(first, second) {
   return !!first && !!second && spawnKeys.every(key => first[key] === second[key])
 }
@@ -19,7 +26,7 @@ export function validSpawn(value, minY, maxY) {
 }
 
 export function parseConfig(value, schema = []) {
-  if (!record(value) || !terrainHeights.includes(value.height) ||
+  if (!record(value) || !Number.isInteger(value.height) ||
       !Number.isFinite(value.verticalScale) || value.verticalScale < .1 || value.verticalScale > 15 ||
       !Number.isFinite(value.horizontalScale) || value.horizontalScale < .5 || value.horizontalScale > 3 ||
       !baseConfigKeys.slice(3).every(key => typeof value[key] === 'boolean')) throw new Error('地形参数接口返回格式错误')
@@ -32,9 +39,11 @@ export function parseConfig(value, schema = []) {
     const setting = Object.hasOwn(supplied, field.key) ? supplied[field.key] : field.defaultValue
     if (field.type === 'boolean' ? typeof setting !== 'boolean'
       : !Number.isFinite(setting) || setting < field.min || setting > field.max ||
-        field.key === 'general.snow_start_offset' && !Number.isInteger(setting)) throw new Error('地形高级参数接口返回格式错误')
+        ['general.snow_start_offset', 'oceans.monument_offset'].includes(field.key) && !Number.isInteger(setting) ||
+        field.key === 'global_terrain.min_y' && setting % 16 !== 0) throw new Error('地形高级参数接口返回格式错误')
     advanced[field.key] = setting
   }
+  if (!validTerrainHeight(value.height, advanced['global_terrain.min_y'] ?? -64)) throw new Error('地形参数接口返回格式错误')
   return { ...Object.fromEntries(baseConfigKeys.map(key => [key, value[key]])), advanced }
 }
 
@@ -82,8 +91,21 @@ export function parseStatus(value) {
     throw new Error(typeof value?.error === 'string' && value.error ? value.error : '地形状态接口返回格式错误')
   }
   const heights = value.heights === undefined ? [384, 640, 1024] : value.heights
-  if (!Array.isArray(heights) || heights.some(height => !terrainHeights.includes(height)) || new Set(heights).size !== heights.length) {
+  if (!Array.isArray(heights) || heights.some(height => !validTerrainHeight(height)) || new Set(heights).size !== heights.length) {
     throw new Error('地形可用高度接口返回格式错误')
+  }
+  let heightRanges
+  if (value.heightRanges !== undefined) {
+    const seen = new Set()
+    if (!Array.isArray(value.heightRanges)) throw new Error('地形可用高度接口返回格式错误')
+    heightRanges = value.heightRanges.map(range => {
+      if (!record(range) || !validTerrainHeight(range.height, range.minY) ||
+          range.maxY !== range.minY + range.height || seen.has(`${range.minY}:${range.height}`)) {
+        throw new Error('地形可用高度接口返回格式错误')
+      }
+      seen.add(`${range.minY}:${range.height}`)
+      return { ...range }
+    })
   }
   const schema = parseSchema(value.schema)
   const defaults = parseConfig(value.defaults, schema)
@@ -112,10 +134,10 @@ export function parseStatus(value) {
         !Number.isSafeInteger(world.players) || world.players < 0 || !world.loaded && world.players !== 0 ||
         typeof world.error !== 'string') throw new Error('地形世界接口返回格式错误')
     const config = parseConfig(world.config, schema)
-    if (world.minY !== -64 || world.maxY !== config.height - 64) throw new Error('地形世界接口返回格式错误')
+    if (world.minY !== configMinY(config) || world.maxY !== config.height + configMinY(config)) throw new Error('地形世界接口返回格式错误')
     if (world.spawn !== undefined && !spawnCoordinates(world.spawn)) throw new Error('地形出生点接口返回格式错误')
     worldNames.add(world.name)
     return { ...world, config, ...(world.spawn === undefined ? {} : { spawn: { ...world.spawn } }) }
   })
-  return { ...value, heights: [...heights], schema, defaults, presets, worlds }
+  return { ...value, heights: [...heights], ...(heightRanges === undefined ? {} : { heightRanges }), schema, defaults, presets, worlds }
 }
