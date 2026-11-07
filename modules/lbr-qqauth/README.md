@@ -1,6 +1,8 @@
 # QQAuth 模块：QQ 群验证与游戏账号认证
 
-基于 LunarCore alpha1 的独立 LC 模块，安装到 `plugins/LunarCore/modules/lbr-qqauth.jar`，不放在 `plugins/` 根目录。需要 Java 25、Paper 26.3 build 202 与 LunarCore alpha1。账号、密码哈希和绑定使用 LunarCore 数据库。
+[English](README.en.md)
+
+独立 LC 模块，安装到 `plugins/LunarCore/modules/lbr-qqauth.jar`，不放在 `plugins/` 根目录。需要 Java 25、Paper 26.3 与同版本 LunarCore。账号、密码哈希和绑定使用 LunarCore 数据库。
 
 **不迁移任何密码库。不要与 AuthMe 或原独立 QQAuth 插件同时启用。** 玩家首次使用新账号库时重新注册；已有 QQ 绑定可单独导入。此实现覆盖下表中的认证流程，不宣称与 AuthMe 全功能等价。
 
@@ -42,11 +44,13 @@ messages:
 
 | 功能 | 行为 |
 |---|---|
-| QQ 绑定 | 未绑定玩家在预登录阶段拒绝，显示验证码；指定 QQ 群发送 `/验证 <码>` 后重新连接 |
+| 强制 QQ 验证 | 默认开启。未绑定玩家无法进入，显示验证码；指定 QQ 群发送 `/验证 <码>` 后重新连接 |
+| 可选 QQ 验证 | 关闭 `binding.required` 后，未绑定玩家可注册、登录并正常游戏；登录后用 `/qqauth bind` 申请绑定码 |
+| 每日提醒 | 可选模式下，未绑定玩家登录后每天提醒一次；持续在线跨天也会提醒。重连、重载和重启不重复提醒；绑定后停止 |
 | 内置注册/登录 | `/register <密码> <重复密码>`、`/login <密码>`，别名 `/reg`、`/l`；注册后直接认证 |
 | 未登录限制 | 冻结行走/飞行能力并取消位移、跳跃、飞行/冲刺/滑翔启动及外加速度，保留转头；认证/离线/禁用恢复本模块仍持有的原速度与飞行设置；禁止聊天、普通命令、交互、放置破坏、伤害、物品拾取丢弃、库存操作、桶、书/告示牌编辑和载具进入；OP 也不绕过。Bukkit无法保证客户端零移动预测/零回弹 |
 | 登录超时 | 未认证玩家约 120 秒后踢出；每 5 秒显示操作提示 |
-| 改密/注销 | `/changepassword <旧密码> <新密码>`、`/unregister <密码>`；须已登录，成功后踢出重新认证；注销不删除 QQ 绑定 |
+| 改密/注销 | `/changepassword <旧密码> <新密码>`、`/unregister <密码>`；须已登录并完成 QQ 验证，成功后踢出重新认证；注销不删除 QQ 绑定 |
 | 退出登录 | `/logout`，留在游戏内并恢复未登录限制 |
 | QQ 恢复密码 | 未登录时 `/qqauthreset password <新密码>`，绑定 QQ 在群里发送 `/改密 <码>`；成功后旧认证失效 |
 | QQ 解绑 | 登录后 `/unbind` 拿码，绑定 QQ 在同一群发送 `/解绑 <码>`；成功后踢出 |
@@ -56,6 +60,18 @@ messages:
 | 名称身份 | 名字 3–16 位字母数字下划线；大小写无关唯一；已注册 UUID 唯一；稳定 UUID 改名更新账号并撤销旧版本；离线 UUID 因改大小写变化时拒绝冒认 |
 
 密码默认 10–64 字符，UTF-8 最多 72 字节，BCrypt cost 12。仅保存哈希；QQ 待改密码也只保留已哈希值和账号版本。改密、锁定、删除与重建通过版本轮换撤销旧认证与旧恢复请求。认证及哈希使用 2 个工作线程和 128 项队列，超载拒绝。
+
+可选验证设置：
+
+```yaml
+binding:
+  required: false
+  reminder:
+    enabled: true
+    timezone: "" # 留空使用服务器时区，也可填 Asia/Shanghai 等时区
+```
+
+未绑定玩家不能自助改密、恢复密码、注销或解绑；管理员的账号救援操作保留。提醒文字在 `messages` 中自定义，面板可预览。
 
 带密码命令在最早事件阶段取消并改为脱敏文本再自行处理，以减少服务端常规命令日志记录。不要装不可信的命令监听/抓包插件；模块无法保证排在更早的第三方监听器不读取原始包。控制台不提供带明文密码的管理员命令，改用受权限保护的 Web 重置操作。
 
@@ -71,7 +87,7 @@ messages:
 
 Java 端允许 `group-id: "*"`，表示信任认证桥接的群声明；建议明确群 ID。AstrBot 插件要求明确群 ID，不接受空或星号转发。OneBot/NapCat 填群号，QQ 官方机器人填 `group_openid`；两种身份不会自动转换。AstrBot 使用 OneBot/NapCat 时，QQAuth 仍选择 `astrbot` 模式。
 
-OneBot 模式将 `integration.mode` 设为 `onebot`，配置正向 WebSocket endpoint、token、重连间隔；JDK WebSocket 实现自动重连并在模块关闭时取消连接。`disabled` 仅停止 QQ 传输，不关闭绑定门禁，未绑定玩家仍不能进入。
+OneBot 模式将 `integration.mode` 设为 `onebot`，配置正向 WebSocket endpoint、token、重连间隔；JDK WebSocket 实现自动重连并在模块关闭时取消连接。`disabled` 仅停止 QQ 传输；是否允许未绑定玩家进入由 `binding.required` 决定。
 
 QQ 验证码按用途隔离，默认 6 位，TTL 绑定/解绑 600 秒、恢复 300 秒；绑定码同一 UUID 重连复用并刷新 TTL。默认每 QQ 一账号，可用 `binding.per-qq-limits` 覆盖。错误群/错误 QQ 不消费解绑与改密码；成功解绑清除所有待操作，重启/重载清除内存验证码。群发送者默认每 5 分钟最多 10 次验证请求。
 

@@ -27,7 +27,8 @@ final class AuthListener implements Listener {
             if (existingName.isPresent() && !existingName.get().uuid().equals(e.getUniqueId())) {
                 e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.identity-mismatch")); return;
             }
-            if (module.bindings.find(e.getUniqueId()).isEmpty()) {
+            boolean bound = module.bindings.find(e.getUniqueId()).isPresent();
+            if (!bound && module.bindingRequired()) {
                 var issued = module.bindings.issueBind(e.getUniqueId(), e.getName());
                 e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.bind-required", "code", issued.code(), "player", e.getName(), "group", module.config().getString("integration.group-id", ""), "ttl", module.bindingSettings().bindTtl().toSeconds()));
             } else {
@@ -37,7 +38,7 @@ final class AuthListener implements Listener {
                         e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.rename-conflict")); return;
                     }
                 }
-                module.bindings.updateName(e.getUniqueId(), e.getName());
+                if (bound) module.bindings.updateName(e.getUniqueId(), e.getName());
             }
         } catch (Exception ex) {
             module.logger().log(java.util.logging.Level.WARNING, "预登录身份检查失败", ex);
@@ -47,7 +48,7 @@ final class AuthListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void login(PlayerLoginEvent e) {
         if (e.getResult() != PlayerLoginEvent.Result.ALLOWED) return;
-        if (!module.ready || !module.bound.contains(e.getPlayer().getUniqueId()))
+        if (!module.ready || !module.bindingAllowed(e.getPlayer().getUniqueId()))
             e.disallow(PlayerLoginEvent.Result.KICK_OTHER, module.msg("login.changed"));
         else {
             var account = module.auth.account(e.getPlayer().getName());
@@ -64,13 +65,16 @@ final class AuthListener implements Listener {
         if (module.ready && !module.busy.contains(p.getUniqueId()) && module.auth.resumeSession(p.getUniqueId(), p.getName(), module.ip(p)) == com.lunarboreal.qqauth.auth.AuthService.Result.SUCCESS)
             module.granted.put(p.getUniqueId(), p);
         module.movement.update(p, !module.authenticated(p));
-        p.sendMessage(module.componentMsg(module.authenticated(p) ? "join.session-restored" : "join.instructions", "player", p.getName()));
+        p.sendMessage(module.componentMsg(module.authenticated(p) ? "join.session-restored"
+                : module.bound.contains(p.getUniqueId()) ? "join.instructions" : "join.optional-instructions", "player", p.getName()));
+        module.remindBinding(p);
     }
     @EventHandler public void quit(PlayerQuitEvent e) {
         module.movement.release(e.getPlayer());
         if (module.connections.remove(e.getPlayer().getUniqueId(), e.getPlayer())) {
             module.joined.remove(e.getPlayer().getUniqueId());
             module.granted.remove(e.getPlayer().getUniqueId(), e.getPlayer());
+            module.reminderDays.remove(e.getPlayer().getUniqueId());
             if (module.auth != null) module.auth.disconnect(e.getPlayer().getUniqueId());
         }
     }

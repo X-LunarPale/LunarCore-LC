@@ -21,7 +21,7 @@ help:
   - "<gradient:#7ec8ff:#b98cff><bold>LunarCore 琉月</bold></gradient> <dark_gray>— Help"
   - "<yellow>/{label} info</yellow> <dark_gray>- <gray>Version, platform, database and modules"
   - "<yellow>/{label} reload</yellow> <dark_gray>- <gray>Reload core config, languages and module configs"
-  - "<yellow>/{label} module list</yellow> <dark_gray>- <gray>List modules"
+  - "<yellow>/{label} m list</yellow> <dark_gray>- <gray>Show all module statuses"
   - "<yellow>/{label} module enable|disable|reload|info <module></yellow> <dark_gray>- <gray>Manage modules"
   - "<yellow>/{label} web</yellow> <dark_gray>- <gray>Web panel commands"
   - "<yellow>/{label} debug</yellow> <dark_gray>- <gray>Toggle debug output"

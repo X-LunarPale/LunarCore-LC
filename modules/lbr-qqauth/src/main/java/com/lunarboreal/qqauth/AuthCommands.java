@@ -22,13 +22,20 @@ final class AuthCommands {
         });
     }
     static void execute(QQAuthModule m, CommandSender sender, String label, String[] args) {
-        if (label.equals("qqauth")) { admin(m,sender,args); return; }
+        if (label.equals("qqauth")) {
+            if (args.length == 1 && args[0].equalsIgnoreCase("bind")) bind(m, sender);
+            else admin(m,sender,args);
+            return;
+        }
         if (!m.ready) { sender.sendMessage(m.componentMsg("command.not-ready")); return; }
         if (!(sender instanceof Player p)) { sender.sendMessage(m.componentMsg("command.player-only")); return; }
         UUID id=p.getUniqueId(); String name=p.getName(),ip=m.ip(p);
         boolean logged=m.authenticated(p);
         if (Set.of("changepassword","changepass","unregister","logout","unbind").contains(label) && !logged) {
             p.sendMessage(m.componentMsg("command.login-required")); return;
+        }
+        if (Set.of("changepassword", "changepass", "qqauthreset", "unregister", "unbind").contains(label) && !m.bound.contains(id)) {
+            p.sendMessage(m.componentMsg("command.binding-required")); return;
         }
         if (label.equals("logout")) { m.auth.logout(id); m.granted.remove(id, p); m.movement.update(p, true); m.joined.put(id,System.currentTimeMillis()); p.sendMessage(m.componentMsg("command.logged-out")); return; }
         String usage = m.msg(switch(label) {
@@ -75,9 +82,10 @@ final class AuthCommands {
                 if(result==AuthService.Result.SUCCESS) {
                     if (Set.of("login","l","register","reg").contains(label)) {
                         m.sync(() -> {
-                            if (Bukkit.getPlayer(id) == p && p.isOnline() && m.bound.contains(id)) {
+                            if (Bukkit.getPlayer(id) == p && p.isOnline() && m.bindingAllowed(id)) {
                                  m.granted.put(id, p);
                                  m.movement.update(p, !m.authenticated(p));
+                                 m.remindBinding(p);
                              }
                             else if (!m.connections.containsKey(id)) m.auth.logout(id);
                         });
@@ -95,6 +103,28 @@ final class AuthCommands {
     }
     private static void respond(QQAuthModule m,UUID id,String text) {
         m.sync(() -> { Player p=Bukkit.getPlayer(id); if(p!=null) p.sendMessage(Messages.render(text)); });
+    }
+    private static void bind(QQAuthModule m, CommandSender sender) {
+        if (!m.ready) { sender.sendMessage(m.componentMsg("command.not-ready")); return; }
+        if (!(sender instanceof Player player)) { sender.sendMessage(m.componentMsg("command.player-only")); return; }
+        if (!m.authenticated(player)) { player.sendMessage(m.componentMsg("command.login-required")); return; }
+        UUID uuid = player.getUniqueId();
+        if (m.bound.contains(uuid)) { player.sendMessage(m.componentMsg("command.already-bound")); return; }
+        if (!m.busy.add(uuid)) { player.sendMessage(m.componentMsg("command.busy")); return; }
+        String name = player.getName();
+        if (!m.submit(() -> {
+            try {
+                var code = m.bindings.issueBind(uuid, name);
+                m.sync(() -> {
+                    if (m.connections.get(uuid) == player && player.isOnline() && m.authenticated(player) && !m.bound.contains(uuid))
+                        player.sendMessage(m.componentMsg("command.bind-code", "player", name, "code", code.code(),
+                                "group", m.config().getString("integration.group-id", ""),
+                                "ttl", m.bindingSettings().bindTtl().toSeconds()));
+                });
+            } catch (Exception ex) {
+                respond(m, uuid, m.msg("command.operation-error"));
+            } finally { m.busy.remove(uuid); }
+        })) { m.busy.remove(uuid); player.sendMessage(m.componentMsg("command.queue-full")); }
     }
     private static void admin(QQAuthModule m,CommandSender sender,String[] args) {
         if(args.length==0) { sender.sendMessage(m.componentMsg("usage.admin-help")); return; }

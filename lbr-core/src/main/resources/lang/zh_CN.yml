@@ -21,7 +21,7 @@ help:
   - "<gradient:#7ec8ff:#b98cff><bold>LunarCore 琉月</bold></gradient> <dark_gray>— 命令帮助"
   - "<yellow>/{label} info</yellow> <dark_gray>- <gray>查看版本、平台、数据库与模块信息"
   - "<yellow>/{label} reload</yellow> <dark_gray>- <gray>重载核心配置、语言与所有模块配置"
-  - "<yellow>/{label} module list</yellow> <dark_gray>- <gray>列出全部模块"
+  - "<yellow>/{label} m list</yellow> <dark_gray>- <gray>查看全部模块状态"
   - "<yellow>/{label} module enable|disable|reload|info <模块></yellow> <dark_gray>- <gray>管理模块"
   - "<yellow>/{label} web</yellow> <dark_gray>- <gray>Web 管理面板相关命令"
   - "<yellow>/{label} debug</yellow> <dark_gray>- <gray>切换调试输出"

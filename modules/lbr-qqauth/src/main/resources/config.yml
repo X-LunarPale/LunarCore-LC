@@ -11,6 +11,10 @@ integration:
     token: ""
     reconnect-seconds: 5
 binding:
+  required: true
+  reminder:
+    enabled: true
+    timezone: "" # Empty uses the server timezone.
   code-length: 6
   bind-ttl-seconds: 600
   unbind-ttl-seconds: 600
@@ -47,13 +51,17 @@ messages:
     account-not-registered: "账号尚未注册"
     admin-error: "操作未完成：{error}"
     admin-queue-full: "认证队列已满，请稍后。"
-    admin-reload: "请从控制台执行 lbr module reload qqauth；重新加载会撤销当前认证。"
+    admin-reload: "请从控制台执行 lc m reload qqauth；重新加载会撤销当前认证。"
     admin-reloaded: "QQAuth 已重载，请重新连接服务器。"
     admin-reload-failed: "QQAuth 重载失败，请查看控制台日志。"
     admin-reset: "为避免密码进入控制台/审计日志，请使用受权限保护的 Web 账号重置操作，或玩家 QQ 验证恢复。"
     admin-status: "QQAuth ready={ready}，账号数={count}"
     admin-success: "操作完成。"
     already-logged-in: "你已经登录。"
+    already-bound: "你已经完成 QQ 验证。"
+    bind-code: "请在群 {group} 发送 /验证 {code} 完成 QQ 验证，有效期 {ttl} 秒。验证码请勿转发。"
+    bind-completed: "QQ 验证已完成，可以使用改密、注销和解绑功能。"
+    binding-required: "请先完成 QQ 验证，再使用改密、注销或解绑功能。登录后输入 /qqauth bind 获取验证码。"
     busy: "上一次认证仍在处理，请稍后。"
     failed: "操作未完成：{status}"
     import-console-only: "仅控制台：qqauth importbindings confirm。先将旧 bindings.yml 复制到模块目录 import-bindings.yml。"
@@ -70,6 +78,7 @@ messages:
     success: "操作成功。"
     unbind-code: "请使用绑定的 QQ 在群里发送 /解绑 {code}。验证后会踢出游戏，验证码请勿转发。"
   group:
+    bind-success: "{player} 验证成功，可继续游戏。"
     failed: "验证未完成：{status}。请检查有效期、绑定 QQ 和配额。"
     not-ready: "QQAuth 正在加载，请稍后重试。"
     rate-limited: "验证请求过多，请在五分钟后重试。"
@@ -78,6 +87,7 @@ messages:
     usage: "格式：/{command} <验证码>"
   join:
     instructions: "QQ 身份已绑定，请使用 /login <密码>；首次使用 /register <密码> <重复密码>。"
+    optional-instructions: "请使用 /login <密码> 登录；首次使用 /register <密码> <重复密码>，QQ 验证可稍后完成。"
     session-restored: "QQAuth 会话已恢复。"
   kick:
     account-updated: "账号已更新，请重新连接验证。"
@@ -105,6 +115,7 @@ messages:
   permission:
     admin: "管理 QQ 绑定与账号认证"
   reminder:
+    binding: "你尚未完成 QQ 验证，无法改密、注销或解绑。请在群 {group} 发送 /验证 {code}，有效期 {ttl} 秒；也可随时用 /qqauth bind 重新获取验证码。"
     login: "请使用 /login <密码> 登录；忘记密码：/qqauthreset password <新密码>"
     register: "请使用 /register <密码> <重复密码> 注册"
   status:
@@ -131,7 +142,7 @@ messages:
       SUCCESS: "成功"
   usage:
     admin-actions: "/qqauth forceunbind|lock|unlock|delete <玩家>；/qqauth importbindings confirm"
-    admin-help: "QQAuth：/login /register /changepassword /logout /unbind /qqauthreset；管理员 /qqauth status|reload|forceunbind|lock|unlock|delete|reset|importbindings"
+    admin-help: "QQAuth：/login /register /qqauth bind /changepassword /logout /unbind /qqauthreset；管理员 /qqauth status|reload|forceunbind|lock|unlock|delete|reset|importbindings"
     change-password: "/changepassword <旧密码> <新密码>"
     login: "/login <密码>"
     register: "/register <密码> <重复密码>"

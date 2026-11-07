@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import { parse, compileScript } from '@vue/compiler-sfc'
 import * as vue from 'vue'
 import { requireSuccess } from '../src/utils/panel.js'
-import { t } from '../src/i18n.js'
+import { setLocale, t } from '../src/i18n.js'
 
 const source = await readFile(new URL('../src/components/qqauth/QQAuthConfig.vue', import.meta.url), 'utf8')
 const { descriptor } = parse(source)
@@ -25,7 +25,11 @@ const renderer = vue.createRenderer({
 })
 function snapshot(overrides = {}) {
   return {
-    values: { 'integration.group-id': '12345678', 'binding.per-qq-limits': {} },
+    values: {
+      'integration.mode': 'astrbot', 'integration.group-id': '12345678', 'binding.per-qq-limits': {},
+      'binding.required': true, 'binding.reminder.enabled': true, 'binding.reminder.timezone': '',
+      'auth.min-password-length': 10, 'auth.max-password-length': 64
+    },
     messages: { 'login.bind-required': 'Original {code}' },
     revision: 'initial',
     configuredSecrets: {},
@@ -170,4 +174,151 @@ test('rereading protects unsaved drafts and keeps pending reload state from the 
   assert.equal(env.state.pendingReload, true)
   assert.equal(env.state.saved, false)
   assert.equal(await env.guards.leave(), true)
+})
+
+test('optional QQ verification and daily reminder settings save without changing password limits', async context => {
+  const env = await environment(context)
+  env.state.values['binding.required'] = false
+  env.state.values['binding.reminder.enabled'] = false
+  env.state.values['binding.reminder.timezone'] = 'Asia/Shanghai'
+  env.api.post = async (path, data) => {
+    env.calls.push(['post', path, data])
+    return snapshot({ values: data.values, requiresReload: true, revision: 'optional' })
+  }
+  await env.state.save()
+  const submitted = env.calls.find(call => call[0] === 'post')[2].values
+  assert.equal(submitted['binding.required'], false)
+  assert.equal(submitted['binding.reminder.enabled'], false)
+  assert.equal(submitted['binding.reminder.timezone'], 'Asia/Shanghai')
+  assert.equal(submitted['auth.min-password-length'], 10)
+  assert.equal(submitted['auth.max-password-length'], 64)
+  assert.equal(env.state.pendingReload, true)
+  assert.equal(env.state.dirty, false)
+  assert.equal(env.state.labels['binding.required'], '强制 QQ 验证')
+  assert.equal(env.state.labels['binding.reminder.enabled'], '未绑定每日提醒')
+  assert.equal(env.state.labels['binding.reminder.timezone'], '每日提醒时区')
+})
+
+test('password limit inputs follow the paired limit without changing either setting', async context => {
+  const env = await environment(context)
+  env.state.values['auth.min-password-length'] = 8
+  env.state.values['auth.max-password-length'] = 20
+  assert.deepEqual(env.state.numericBounds('auth.min-password-length'), [1, 20])
+  assert.deepEqual(env.state.numericBounds('auth.max-password-length'), [8, 64])
+  env.state.values['auth.min-password-length'] = 21
+  assert.equal(env.state.values['auth.max-password-length'], 20)
+  assert.equal(env.state.validationError, '最短密码长度不能大于最长密码长度')
+  await env.state.save()
+  assert.equal(env.calls.filter(call => call[0] === 'post').length, 0)
+  assert.equal(env.state.values['auth.min-password-length'], 21)
+  assert.equal(env.state.values['auth.max-password-length'], 20)
+  assert.equal(env.state.dirty, true)
+  assert.deepEqual(env.notices, [['error', '最短密码长度不能大于最长密码长度']])
+  env.state.values['auth.max-password-length'] = 24
+  assert.equal(env.state.validationError, '')
+})
+
+test('empty, fractional and out-of-range numeric fields are rejected without submitting drafts', async context => {
+  const env = await environment(context)
+  for (const value of [undefined, null, '12', 1.5, 0, 65]) {
+    env.state.values['auth.min-password-length'] = value
+    await env.state.save()
+    assert.equal(env.calls.filter(call => call[0] === 'post').length, 0)
+    assert.deepEqual(env.notices.at(-1), ['error', '最短密码长度须为 1 至 64 的整数'])
+    assert.equal(env.state.values['auth.min-password-length'], value)
+  }
+  env.state.values['auth.min-password-length'] = 10
+  env.state.values['auth.max-attempt-entries'] = 1
+  await env.state.save()
+  assert.deepEqual(env.notices.at(-1), ['error', '限流记录上限须为 2 至 1000000 的整数'])
+  env.state.values['auth.max-attempt-entries'] = 2
+  env.state.values['integration.mode'] = 'onebot'
+  env.state.values['integration.onebot.reconnect-seconds'] = 86401
+  await env.state.save()
+  assert.deepEqual(env.notices.at(-1), ['error', 'OneBot 重连间隔（秒）须为 1 至 86400 的整数'])
+  env.state.values['integration.onebot.reconnect-seconds'] = 86400
+  assert.equal(env.state.validationError, '')
+  assert.equal(env.state.busy, false)
+})
+
+test('inactive bridge numeric settings do not block unrelated configuration changes', async context => {
+  for (const mode of ['astrbot', 'onebot', 'disabled']) {
+    await context.test(mode, async nested => {
+      const env = await environment(nested)
+      env.state.values['integration.mode'] = mode
+      env.state.values['integration.astrbot.port'] = mode === 'astrbot' ? 12312 : 70000
+      env.state.values['integration.onebot.reconnect-seconds'] = mode === 'onebot' ? 5 : 100000
+      env.state.values['auth.min-password-length'] = 12
+      env.api.post = async (path, data) => {
+        env.calls.push(['post', path, data])
+        return snapshot({ values: data.values, requiresReload: true })
+      }
+      assert.equal(env.state.validationError, '')
+      const visible = env.state.visibleFields('integration.')
+      assert.equal(visible.includes('integration.astrbot.port'), mode === 'astrbot')
+      assert.equal(visible.includes('integration.onebot.reconnect-seconds'), mode === 'onebot')
+      await env.state.save()
+      const posts = env.calls.filter(call => call[0] === 'post')
+      assert.equal(posts.length, 1)
+      assert.equal(posts[0][2].values['auth.min-password-length'], 12)
+      assert.equal(posts[0][2].values['integration.astrbot.port'], mode === 'astrbot' ? 12312 : 70000)
+      assert.equal(posts[0][2].values['integration.onebot.reconnect-seconds'], mode === 'onebot' ? 5 : 100000)
+      assert.equal(env.state.dirty, false)
+    })
+  }
+})
+
+test('switching to a bridge validates its saved numeric connection settings', async context => {
+  const env = await environment(context)
+  env.state.values['integration.onebot.reconnect-seconds'] = 100000
+  assert.equal(env.state.validationError, '')
+  env.state.values['integration.mode'] = 'onebot'
+  assert.equal(env.state.validationError, 'OneBot 重连间隔（秒）须为 1 至 86400 的整数')
+  await env.state.save()
+  assert.equal(env.calls.filter(call => call[0] === 'post').length, 0)
+  env.state.values['integration.mode'] = 'disabled'
+  env.state.values['integration.astrbot.port'] = 70000
+  assert.equal(env.state.validationError, '')
+  env.state.values['integration.mode'] = 'astrbot'
+  assert.equal(env.state.validationError, 'QQAuth 桥接端口须为 1 至 65535 的整数')
+  assert.equal(env.state.values['integration.onebot.reconnect-seconds'], 100000)
+})
+
+test('a rejected save retains edited settings, messages and the current revision', async context => {
+  const env = await environment(context)
+  env.state.values['auth.min-password-length'] = 12
+  env.state.messages['login.bind-required'] = 'Draft verification message'
+  env.api.post = async (path, data) => {
+    env.calls.push(['post', path, data])
+    return { ok: false, error: '配置已变化，请重新加载后再保存' }
+  }
+  await env.state.save()
+  assert.equal(env.state.values['auth.min-password-length'], 12)
+  assert.equal(env.state.messages['login.bind-required'], 'Draft verification message')
+  assert.equal(env.state.revision, 'initial')
+  assert.equal(env.state.dirty, true)
+  assert.equal(env.state.saved, false)
+  assert.equal(env.state.busy, false)
+  assert.deepEqual(env.notices, [['error', '配置已变化，请重新加载后再保存']])
+})
+
+test('an empty custom QQ quota is not sent as a null limit', async context => {
+  const env = await environment(context)
+  env.state.quotas.push({ qq: '12345678', limit: null })
+  await env.state.save()
+  assert.equal(env.calls.filter(call => call[0] === 'post').length, 0)
+  assert.deepEqual(env.notices, [['error', '绑定上限须为 1 至 10000 的整数']])
+  assert.deepEqual(env.state.quotas, [{ qq: '12345678', limit: null }])
+})
+
+test('new QQ verification labels and numeric validation are translated', () => {
+  setLocale('en_US')
+  try {
+    assert.equal(t('强制 QQ 验证'), 'Require QQ verification')
+    assert.equal(t('未绑定每日提醒'), 'Daily reminder for unverified players')
+    assert.equal(t('每日提醒时区'), 'Daily reminder timezone')
+    assert.equal(t('最短密码长度不能大于最长密码长度'), 'Minimum password length cannot exceed maximum password length.')
+    assert.equal(t('{field}须为 {min} 至 {max} 的整数', { field: t('最短密码长度'), min: 1, max: 64 }),
+      'Minimum password length must be an integer from 1 to 64.')
+  } finally { setLocale('zh_CN') }
 })

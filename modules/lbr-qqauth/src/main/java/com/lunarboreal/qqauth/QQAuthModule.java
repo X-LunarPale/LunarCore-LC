@@ -10,6 +10,8 @@ import org.bukkit.permissions.PermissionDefault;
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -27,6 +29,7 @@ public final class QQAuthModule extends LbrModule {
     net.kyori.adventure.text.Component bindingStatusComponent(BindingService.Status status) { return componentMsg("status.binding." + status.name()); }
     volatile AuthService auth;
     volatile BindingService bindings;
+    private volatile DailyBindingReminders reminders;
     volatile boolean ready;
     volatile boolean active;
     private ThreadPoolExecutor workers;
@@ -48,6 +51,8 @@ public final class QQAuthModule extends LbrModule {
     final Map<UUID, Player> granted = new ConcurrentHashMap<>();
     final Map<UUID, Player> connections = new ConcurrentHashMap<>();
     final Set<UUID> bound = ConcurrentHashMap.newKeySet();
+    final Map<UUID, LocalDate> reminderDays = new ConcurrentHashMap<>();
+    private final Set<UUID> pendingReminders = ConcurrentHashMap.newKeySet();
     final MovementFreeze movement = new MovementFreeze();
 
     @Override public void onEnable() {
@@ -78,16 +83,19 @@ public final class QQAuthModule extends LbrModule {
                 BindingRepository repo = new BindingRepository(api().database());
                 repo.initialize();
                 repo.all().forEach(binding -> bound.add(binding.uuid()));
+                DailyBindingReminders nextReminders = new DailyBindingReminders(api().database());
+                nextReminders.initialize();
                 BindingService nextBindings = new BindingService(repo, this::bindingSettings,
                         (name, generation, prepared) -> nextAuth.setPassword(name, generation, prepared) == AuthService.Result.SUCCESS);
                 synchronized (this) {
                     if (!active || current != epoch) return;
                     auth = nextAuth;
                     bindings = nextBindings;
+                    reminders = nextReminders;
                     startTransport();
                     ready = true;
                 }
-                logger().info("QQAuth 数据加载完成；账号与 QQ 绑定使用 LunarCore 数据库。未绑定玩家将在预登录阶段拦截。");
+                logger().info("QQAuth 数据加载完成；QQ 验证" + (bindingRequired() ? "为必选。" : "为可选。"));
             } catch (Exception ex) {
                 logger().log(java.util.logging.Level.SEVERE, "QQAuth 加载失败，保持拒绝登录，请检查配置/数据库后重新加载模块。", ex);
             }
@@ -105,7 +113,7 @@ public final class QQAuthModule extends LbrModule {
                     long start = joined.computeIfAbsent(id, k -> now);
                     if (now - start > 120_000) { p.kick(componentMsg("kick.timeout")); continue; }
                     p.sendActionBar(componentMsg(auth.account(p.getName()).isPresent() ? "reminder.login" : "reminder.register", "player", p.getName()));
-                }
+                } else remindBinding(p);
             }
         }, 100, 100);
         runAsyncTimer(() -> { if (ready) bindings.sweepExpired(); }, 1200, 1200);
@@ -113,6 +121,7 @@ public final class QQAuthModule extends LbrModule {
 
     private void validateConfig() {
         policy(); bindingSettings();
+        reminderZone();
         String mode = config().getString("integration.mode", "astrbot");
         if (!Set.of("astrbot", "onebot", "disabled").contains(mode)) throw new IllegalArgumentException("integration.mode 无效");
         if (mode.equals("astrbot")) {
@@ -123,6 +132,44 @@ public final class QQAuthModule extends LbrModule {
                 logger().info("已生成 QQAuth 桥接 token，请从模块 config.yml 配置到 AstrBot；不要公开该文件。");
             }
         }
+    }
+
+    boolean bindingRequired() { return config().getBoolean("binding.required", true); }
+
+    boolean bindingAllowed(UUID uuid) { return !bindingRequired() || bound.contains(uuid); }
+
+    ZoneId reminderZone() {
+        String timezone = config().getString("binding.reminder.timezone", "").trim();
+        return timezone.isEmpty() ? ZoneId.systemDefault() : ZoneId.of(timezone);
+    }
+
+    boolean needsBindingReminder(Player player) {
+        return !bindingRequired() && config().getBoolean("binding.reminder.enabled", true)
+                && authenticated(player) && !bound.contains(player.getUniqueId());
+    }
+
+    void remindBinding(Player player) {
+        if (!needsBindingReminder(player) || reminders == null) return;
+        UUID uuid = player.getUniqueId();
+        LocalDate today = LocalDate.now(reminderZone());
+        if (today.equals(reminderDays.get(uuid)) || !pendingReminders.add(uuid)) return;
+        String name = player.getName();
+        if (!submit(() -> {
+            try {
+                if (!ready || bound.contains(uuid)) return;
+                var code = bindings.issueBind(uuid, name);
+                boolean due = reminders.claim(uuid, today);
+                reminderDays.put(uuid, today);
+                if (due) sync(() -> {
+                    if (connections.get(uuid) == player && player.isOnline() && needsBindingReminder(player))
+                        player.sendMessage(componentMsg("reminder.binding", "player", name, "code", code.code(),
+                                "group", config().getString("integration.group-id", ""),
+                                "ttl", bindingSettings().bindTtl().toSeconds()));
+                });
+            } catch (Exception ex) {
+                logger().warning("QQ 绑定提醒未完成：" + ex.getClass().getSimpleName());
+            } finally { pendingReminders.remove(uuid); }
+        })) pendingReminders.remove(uuid);
     }
 
     AuthPolicy policy() {
@@ -176,11 +223,18 @@ public final class QQAuthModule extends LbrModule {
                 default -> bindings.redeemReset(args[1], group, sender);
             };
             if (result.status() == BindingService.Status.SUCCESS) {
-                if (command.equals("验证")) bound.add(result.binding().uuid());
+                if (command.equals("验证")) {
+                    bound.add(result.binding().uuid());
+                    sync(() -> {
+                        Player player = Bukkit.getPlayer(result.binding().uuid());
+                        if (player != null) player.sendMessage(componentMsg("command.bind-completed"));
+                    });
+                }
                 if (command.equals("解绑")) bound.remove(result.binding().uuid());
                 if (!command.equals("验证")) kick(result.binding().uuid(), msg("kick.qq-completed"));
                 audit("QQ:" + sender, "qq-" + command, result.binding().playerName());
-                return GroupResult.reply(msg("group.success", "command", command, "player", result.binding().playerName()));
+                return GroupResult.reply(msg(command.equals("验证") && !bindingRequired()
+                        ? "group.bind-success" : "group.success", "command", command, "player", result.binding().playerName()));
             }
             return GroupResult.reply(msg("group.failed", "status", bindingStatus(result.status())));
         } catch (Exception ex) {
@@ -203,7 +257,7 @@ public final class QQAuthModule extends LbrModule {
         try { workers.execute(task); return true; }
         catch (RejectedExecutionException ex) { return false; }
     }
-    boolean authenticated(Player p) { return ready && bound.contains(p.getUniqueId()) && granted.get(p.getUniqueId()) == p && auth.isAuthenticated(p.getUniqueId()); }
+    boolean authenticated(Player p) { return ready && bindingAllowed(p.getUniqueId()) && granted.get(p.getUniqueId()) == p && auth.isAuthenticated(p.getUniqueId()); }
     String ip(Player p) { return p.getAddress() == null ? "unknown" : p.getAddress().getAddress().getHostAddress(); }
     void sync(Runnable task) { if (active) runTask(() -> { if (active) task.run(); }); }
     void kick(UUID uuid, String reason) {
@@ -222,6 +276,7 @@ public final class QQAuthModule extends LbrModule {
         }
         if (bindings != null) bindings.clear();
         busy.clear(); joined.clear(); granted.clear(); connections.clear(); bound.clear();
+        reminderDays.clear(); pendingReminders.clear(); reminders = null;
         synchronized (this) { groupAttempts.clear(); }
         for (Player p : Bukkit.getOnlinePlayers()) p.kick(componentMsg("kick.disabled"));
     }

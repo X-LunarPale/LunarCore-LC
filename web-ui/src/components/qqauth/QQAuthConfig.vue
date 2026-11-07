@@ -27,9 +27,15 @@ const baseline = ref('')
 const snapshot = () => JSON.stringify([values.value, messages.value, quotas.value, clearSecrets.value])
 const dirty = computed(() => loaded.value && snapshot() !== baseline.value)
 const bounds = {
+  'integration.astrbot.port': [1, 65535], 'integration.onebot.reconnect-seconds': [1, 86400],
   'binding.code-length': [6, 8], 'auth.bcrypt-cost': [4, 16],
   'auth.min-password-length': [1, 64], 'auth.max-password-length': [1, 64],
-  'integration.astrbot.port': [1, 65535]
+  'binding.bind-ttl-seconds': [1, 1000000], 'binding.unbind-ttl-seconds': [1, 1000000],
+  'binding.reset-ttl-seconds': [1, 1000000], 'binding.max-pending-codes': [1, 1000000],
+  'binding.max-per-qq': [1, 1000000], 'auth.max-attempts': [1, 1000000],
+  'auth.attempt-window-seconds': [1, 1000000], 'auth.max-attempt-entries': [2, 1000000],
+  'auth.max-accounts-per-ip': [1, 1000000], 'auth.sessions.ttl-seconds': [1, 1000000],
+  'auth.sessions.max-sessions': [1, 1000000]
 }
 const labels = {
   'integration.mode': '桥接模式', 'integration.group-id': '验证群 ID（群号或 group_openid）',
@@ -39,6 +45,8 @@ const labels = {
   'binding.code-length': '验证码长度', 'binding.bind-ttl-seconds': '绑定码有效期（秒）',
   'binding.unbind-ttl-seconds': '解绑码有效期（秒）', 'binding.reset-ttl-seconds': '改密码有效期（秒）',
   'binding.max-pending-codes': '待处理验证码上限', 'binding.max-per-qq': '每 QQ 默认绑定上限',
+  'binding.required': '强制 QQ 验证', 'binding.reminder.enabled': '未绑定每日提醒',
+  'binding.reminder.timezone': '每日提醒时区',
   'auth.min-password-length': '最短密码长度', 'auth.max-password-length': '最长密码长度',
   'auth.bcrypt-cost': '密码哈希强度', 'auth.max-attempts': '登录尝试上限',
   'auth.attempt-window-seconds': '登录限流窗口（秒）', 'auth.max-attempt-entries': '限流记录上限',
@@ -52,6 +60,35 @@ const groups = [
 ]
 const previewVariables = { player: 'Steve', code: '123456', group: '示例群', ttl: '600', command: '验证', status: '成功', count: '3', ready: 'true', error: '示例错误' }
 const messageKeys = computed(() => Object.keys(messages.value).filter(key => !filter.value || `${key} ${messages.value[key]}`.includes(filter.value)))
+function activeField(key) {
+  if (key.startsWith('integration.astrbot.')) return values.value['integration.mode'] === 'astrbot'
+  if (key.startsWith('integration.onebot.')) return values.value['integration.mode'] === 'onebot'
+  return true
+}
+function visibleFields(prefix) {
+  return Object.keys(values.value).filter(key => key.startsWith(prefix) && labels[key] && activeField(key))
+}
+const validationError = computed(() => {
+  for (const [key, [min, max]] of Object.entries(bounds)) {
+    if (!activeField(key) || !Object.hasOwn(values.value, key)) continue
+    const value = values.value[key]
+    if (!Number.isInteger(value) || value < min || value > max)
+      return t('{field}须为 {min} 至 {max} 的整数', { field: t(labels[key]), min, max })
+  }
+  if (values.value['auth.min-password-length'] > values.value['auth.max-password-length'])
+    return t('最短密码长度不能大于最长密码长度')
+  return ''
+})
+function numericBounds(key) {
+  const [min, max] = bounds[key]
+  const minimum = values.value['auth.min-password-length']
+  const maximum = values.value['auth.max-password-length']
+  if (key === 'auth.min-password-length' && Number.isInteger(maximum))
+    return [min, Math.max(min, Math.min(max, maximum))]
+  if (key === 'auth.max-password-length' && Number.isInteger(minimum))
+    return [Math.max(min, Math.min(max, minimum)), max]
+  return [min, max]
+}
 function accept(result) {
   values.value = result.values
   messages.value = result.messages
@@ -83,11 +120,16 @@ async function load(force = false) {
   finally { busy.value = false }
 }
 async function save() {
+  if (busy.value || !loaded.value) return
   busy.value = true
+  saved.value = false
   try {
+    if (validationError.value) throw new Error(validationError.value)
     const limits = {}
     for (const row of quotas.value) {
       if (!/^[0-9]{5,20}$/.test(row.qq) || Object.hasOwn(limits, row.qq)) throw new Error(t('QQ 号码无效或重复'))
+      if (!Number.isInteger(row.limit) || row.limit < 1 || row.limit > 10000)
+        throw new Error(t('{field}须为 {min} 至 {max} 的整数', { field: t('绑定上限'), min: 1, max: 10000 }))
       limits[row.qq] = row.limit
     }
     accept(requireSuccess(await api.post('/api/ext/qqauth/config', { revision: revision.value, values: { ...values.value, 'binding.per-qq-limits': limits }, messages: messages.value, clearSecrets: clearSecrets.value })))
@@ -129,7 +171,7 @@ onBeforeRouteUpdate(confirmDiscard)
 <template>
   <section class="qq-config" v-loading="busy">
     <header><h2>{{ t('QQauth 配置') }} <small v-if="dirty">{{ t('尚未保存') }}</small></h2><el-button :disabled="busy" @click="load()"><Icon name="refresh-cw" :size="15" />{{ t('重新读取') }}</el-button></header>
-    <el-alert v-if="error" :title="error" type="error" :closable="false" />
+    <el-alert v-if="error || validationError" :title="error || validationError" type="error" :closable="false" />
     <el-alert v-if="saved || pendingReload" :title="t(pendingReload ? '已保存，重载模块后生效' : '提示消息已生效')" :description="pendingReload ? t('重载 QQauth 会撤销在线玩家认证并断开连接。') : undefined" :type="pendingReload ? 'warning' : 'success'" :closable="false" />
     <template v-if="loaded">
       <section v-for="group in groups" :key="group.prefix" class="config-section">
@@ -139,16 +181,16 @@ onBeforeRouteUpdate(confirmDiscard)
           :description="t('AstrBot 在 Docker 或其他机器运行时，127.0.0.1 指向机器人自身。QQAuth 监听地址可设为 0.0.0.0，机器人须填写游戏服可达的地址，并放行桥接端口。')"
           type="info" :closable="false" class="bridge-note" />
         <el-form label-position="top" class="field-grid">
-          <el-form-item v-for="key in Object.keys(values).filter(key => key.startsWith(group.prefix) && labels[key])" :key="key" :for="`qq-${key}`" :label="t(labels[key])">
+          <el-form-item v-for="key in visibleFields(group.prefix)" :key="key" :for="`qq-${key}`" :label="t(labels[key])">
             <el-select v-if="key === 'integration.mode'" :id="`qq-${key}`" v-model="values[key]"><el-option v-for="mode in ['astrbot', 'onebot', 'disabled']" :key="mode" :label="mode" :value="mode" /></el-select>
             <el-switch v-else-if="typeof values[key] === 'boolean'" :id="`qq-${key}`" v-model="values[key]" />
-            <el-input-number v-else-if="typeof values[key] === 'number'" :id="`qq-${key}`" v-model="values[key]" :min="bounds[key]?.[0] || 1" :max="bounds[key]?.[1] || 1000000" controls-position="right" />
+            <el-input-number v-else-if="Object.hasOwn(bounds, key)" :id="`qq-${key}`" v-model="values[key]" :min="numericBounds(key)[0]" :max="numericBounds(key)[1]" :precision="0" controls-position="right" />
             <el-select v-else-if="Array.isArray(values[key])" :id="`qq-${key}`" v-model="values[key]" multiple filterable allow-create default-first-option />
             <template v-else-if="key.endsWith('.token')">
               <el-input :id="`qq-${key}`" v-model="values[key]" type="password" show-password autocomplete="new-password" :placeholder="t(secrets[key] ? '已设置，留空保留' : '尚未设置')" />
               <el-checkbox-group v-model="clearSecrets"><el-checkbox :value="key">{{ t('清除密钥') }}</el-checkbox></el-checkbox-group>
             </template>
-            <el-input v-else :id="`qq-${key}`" v-model="values[key]" maxlength="2048" />
+            <el-input v-else :id="`qq-${key}`" v-model="values[key]" maxlength="2048" :placeholder="key === 'binding.reminder.timezone' ? t('留空使用服务器时区，例如 Asia/Shanghai') : undefined" />
           </el-form-item>
         </el-form>
       </section>
@@ -173,7 +215,7 @@ onBeforeRouteUpdate(confirmDiscard)
         </div>
       </section>
       <footer>
-        <el-button type="primary" :disabled="busy || !dirty" @click="save"><Icon name="save" :size="15" />{{ t('保存设置') }}</el-button>
+        <el-button type="primary" :disabled="busy || !dirty || !!validationError" @click="save"><Icon name="save" :size="15" />{{ t('保存设置') }}</el-button>
         <el-button v-if="auth.can('core.modules.manage')" :disabled="busy || dirty || !pendingReload" @click="applyConfig"><Icon name="refresh-cw" :size="15" />{{ t('应用配置') }}</el-button>
       </footer>
     </template>
