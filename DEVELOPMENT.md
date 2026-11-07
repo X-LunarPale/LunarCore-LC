@@ -13,13 +13,15 @@ cd web-ui
 npm ci
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar
+./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures-web:jar
 python package-release.py
 ```
 
 Windows 使用 `gradlew.bat`。产物位于 `dist/0.0.6-preview/`。核心只内置基础命令，其余模块单独构建。
 
 若 Paper 本地工具处理失败，可用 `-Plbr.paperServerHome=服务端目录` 指向匹配版本的完整 Paper 安装。普通构建无需该参数。
+
+本地原生构建按服务端 JAR 的 SHA-256 匹配该目录中的 Paper 启动包，并读取包内依赖清单；请保留启动包。不会混用 `libraries/` 中其他构建遗留的库。结构美化移植及恢复验证见 [STRUCTURES-VALIDATION](docs/zh-CN/STRUCTURES-VALIDATION.md)。
 
 ## 测试
 
@@ -51,3 +53,9 @@ npm run test:i18n
 普通 Bukkit 插件与内部模块分开安装。二进制发布附对应源码、构建文件、GPL v3 与第三方许可。
 
 公开发布仓库为 `X-LunarPale/LunarCore-LC`。市场直接下载公开 Release 文件，不需要访问令牌。`python tools/validate-module-market.py` 检查社区目录，`python tools/test-module-market-validator.py` 检查投稿校验逻辑。公开快照与源码包只包含当前文档，不包含旧交接记录或运行数据。
+
+结构生成工程已独立发布到 https://github.com/rtiags/LunarCoreStructures 。本仓库仅构建 `:lbr-structures-web` 管理模块；其 npm 前端由 Gradle 自动打包。生成插件另行编译并依赖本仓库发布的 `lbr-api`，见独立仓库 README。
+
+## 空缓存验证
+
+两个工程已在全新 Linux runner 上完成空缓存构建。CI 链接、隔离方式和可复制的复现命令见[空缓存构建验证](docs/zh-CN/CLEAN-BUILD.md)。

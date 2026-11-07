@@ -33,6 +33,10 @@ Download JARs matching the core version. Stop and place them in `plugins/LunarCo
 
 You can select modules from `LunarCore-modules-0.0.6-preview.zip`. Installing more modules uses more resources.
 
+## Structure Plugin
+
+Download `LunarCoreStructures.jar` separately into `plugins/`, and install `lbr-structures-web.jar` in `plugins/LunarCore/modules/`. See [bridge compatibility requirements](../../modules/lbr-structures-web/README.en.md). All nine families start disabled and affect only new chunks and new worlds. Save global or world settings under Server → Structure upgrades, then fully restart. See [Structure upgrades](STRUCTURES.md) for installation, and [validation](STRUCTURES-VALIDATION.md) for the tested scope.
+
 ## Remote Panel Access
 
 The panel accepts local connections by default. Edit its address in `plugins/LunarCore/config.yml` for remote access. For public use, place an HTTPS reverse proxy such as Nginx or Caddy in front of the local panel. It must support WebSocket for live logs.

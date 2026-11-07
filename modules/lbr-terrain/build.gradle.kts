@@ -9,15 +9,9 @@ if (localPaper == null) {
         "paperweightDevelopmentBundle"("io.papermc.paper:dev-bundle:26.3.build.202-stable@zip")
     }
 } else {
-    val serverHome = file(localPaper)
-    val serverJar = serverHome.resolve("versions/26.3/paper-26.3.jar")
-    require(serverJar.isFile) { "Expected bootstrapped Paper 26.3 at $serverJar" }
     dependencies {
-        compileOnly(files(serverJar))
-        compileOnly(fileTree(serverHome.resolve("libraries")) { include("**/*.jar") })
-        testImplementation(fileTree(serverHome.resolve("libraries")) { include("**/gson-*.jar") })
-        testImplementation(files(serverJar))
-        testImplementation(fileTree(serverHome.resolve("libraries")) { include("**/*.jar") })
+        compileOnly(rootProject.extra["lbrLocalNativeClasspath"] as FileCollection)
+        testImplementation(rootProject.extra["lbrLocalNativeClasspath"] as FileCollection)
     }
 }
 

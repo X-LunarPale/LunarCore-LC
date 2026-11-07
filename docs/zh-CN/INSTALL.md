@@ -33,6 +33,10 @@
 
 全部附加模块也可从 `LunarCore-modules-0.0.6-preview.zip` 按需解压。安装更多模块会增加资源占用。
 
+## 结构美化插件
+
+从独立插件仓库下载 `LunarCoreStructures.jar` 放入 `plugins/`，另将 `lbr-structures-web.jar` 放入 `plugins/LunarCore/modules/`。核心和生成插件须满足[桥接兼容要求](../../modules/lbr-structures-web/README.md)。九类结构默认关闭；在“服务器 → 结构美化”保存设置后完整重启。支持全服默认及按世界设置，只影响新区块和新世界。安装说明见[结构美化](STRUCTURES.md)，实测范围见[验证记录](STRUCTURES-VALIDATION.md)。
+
 ## 远程访问面板
 
 默认仅允许本机访问。需要远程访问时，在 `plugins/LunarCore/config.yml` 调整地址。公网使用 HTTPS 反向代理，即由 Nginx 或 Caddy 等入口转发至本机面板；入口需支持 WebSocket，才能显示实时日志。

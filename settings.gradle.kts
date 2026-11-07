@@ -26,6 +26,7 @@ val modules = listOf(
     "lbr-journal",
     "lbr-landmarks",
     "lbr-qqauth",
+    "lbr-structures-web",
 )
 modules.forEach {
     include(it)

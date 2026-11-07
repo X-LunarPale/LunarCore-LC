@@ -185,7 +185,7 @@ public final class NativeTectonicBridge implements Listener {
         if (!key.getNamespace().equals(NAMESPACE) || prepared == null) return;
         try {
             var level = ((CraftWorld) event.getWorld()).getHandle();
-            if (!(level.getChunkSource().getGenerator() instanceof NoiseBasedChunkGenerator generator)) {
+            if (!(com.lunarboreal.api.service.NativeGeneratorDelegate.unwrap(level.getChunkSource().getGenerator()) instanceof NoiseBasedChunkGenerator generator)) {
                 throw new IOException("Terrain decoration requires the native noise generator");
             }
             NativeTectonicFeatures.install(generator, prepared);
@@ -198,7 +198,7 @@ public final class NativeTectonicBridge implements Listener {
 
     private void configureWorld(World world, TerrainOptions options) throws Exception {
         var level = ((CraftWorld) world).getHandle();
-        if (!(level.getChunkSource().getGenerator() instanceof NoiseBasedChunkGenerator generator)) {
+        if (!(com.lunarboreal.api.service.NativeGeneratorDelegate.unwrap(level.getChunkSource().getGenerator()) instanceof NoiseBasedChunkGenerator generator)) {
             throw new IOException("Terrain decoration requires the native noise generator");
         }
         NativeTectonicFeatures.install(generator, NativeTectonicFeatures.prepare(
@@ -305,7 +305,7 @@ public final class NativeTectonicBridge implements Listener {
         if (world.getSeed() != seed || world.getMinHeight() != options.minY()
                 || world.getMaxHeight() != options.maxY()
                 || !((CraftWorld) world).getHandle().dimensionTypeRegistration().is(dimensionTypeKey(options.heightRange()))
-                || !(((CraftWorld) world).getHandle().getChunkSource().getGenerator()
+                || !(com.lunarboreal.api.service.NativeGeneratorDelegate.unwrap(((CraftWorld) world).getHandle().getChunkSource().getGenerator())
                 instanceof NoiseBasedChunkGenerator noise)) {
             throw new IOException("Paper loaded unexpected terrain generation; the world has not been marked ready");
         }

@@ -13,13 +13,15 @@ cd web-ui
 npm ci
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar
+./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures-web:jar
 python package-release.py
 ```
 
 Use `gradlew.bat` on Windows. Outputs are in `dist/0.0.6-preview/`. Only basic commands are embedded in the core.
 
 If local Paper tooling fails, use `-Plbr.paperServerHome=server-directory` with a matching complete Paper installation. Normal builds do not require it.
+
+Local native builds match the patched server SHA-256 to a Paper bundle in that directory and use its dependency manifest. Keep the bundle JAR; stale libraries from other builds are not mixed in. See [structure validation](docs/en-US/STRUCTURES-VALIDATION.md) for generation and recovery checks.
 
 ## Test
 
@@ -51,3 +53,9 @@ Use LC as the short name, `/lc` as the main command, `%lc_module_key%` for place
 Keep ordinary Bukkit plugins separate from internal modules. Binary releases include corresponding source, build files, GPL v3 and third-party licenses.
 
 Public releases use `X-LunarPale/LunarCore-LC`. The market downloads public Release files directly without an access token. Run `python tools/validate-module-market.py` to check entries and `python tools/test-module-market-validator.py` to test validation behavior. Public snapshots and source archives include current guides, without earlier handoffs or runtime data.
+
+The generation engine is now a separate project: https://github.com/rtiags/LunarCoreStructures . This repository builds only the `:lbr-structures-web` management module, including its npm frontend. Build the generator separately against this branch's published `lbr-api`; see that repository's README.
+
+## Clean build verification
+
+Both projects passed on fresh Linux runners without restored dependency caches. See [verification and reproduction](docs/en-US/CLEAN-BUILD.md) for CI links, isolation and commands.

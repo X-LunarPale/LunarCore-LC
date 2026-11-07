@@ -155,7 +155,8 @@ def add_file(archive: zipfile.ZipFile, path: Path, name: str) -> None:
 
 def validate_plugin(path: Path, release: str, plugin_name: str) -> None:
     with zipfile.ZipFile(path) as archive:
-        plugin = archive.read("plugin.yml").decode("utf-8")
+        descriptor = "paper-plugin.yml" if "paper-plugin.yml" in archive.namelist() else "plugin.yml"
+        plugin = archive.read(descriptor).decode("utf-8")
         if not re.search(r"^name:\s*['\"]?" + re.escape(plugin_name) + r"['\"]?\s*$", plugin, re.MULTILINE):
             raise ValueError(f"Unexpected plugin name in {path.relative_to(ROOT)}")
         if not re.search(r"^version:\s*['\"]?" + re.escape(release) + r"['\"]?\s*$", plugin, re.MULTILINE):

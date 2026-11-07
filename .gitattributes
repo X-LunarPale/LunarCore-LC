@@ -1,2 +1,4 @@
 * text=auto eol=lf
 *.bat text eol=crlf
+# Preserve the byte-for-byte upstream snapshots and their original whitespace.
+third-party/yungs/** -text -eol -whitespace

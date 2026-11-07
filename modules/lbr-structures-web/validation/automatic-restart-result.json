@@ -1,0 +1,11 @@
+{
+  "oldPid": 15150,
+  "newPid": 15356,
+  "oldServerStartedAt": 1794029093590,
+  "newServerStartedAt": 1794029167123,
+  "appliedRevision": 6,
+  "restartRequired": false,
+  "worlds": 4,
+  "automaticScriptLaunch": true,
+  "observedOffline": true
+}

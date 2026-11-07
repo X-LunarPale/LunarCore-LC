@@ -1,0 +1,74 @@
+name: Clean build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-and-bridge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare empty dependency caches
+        run: |
+          test ! -e "$RUNNER_TEMP/lunar-gradle"
+          test ! -e "$RUNNER_TEMP/lunar-npm"
+          mkdir -p "$RUNNER_TEMP/lunar-gradle" "$RUNNER_TEMP/lunar-npm" "$RUNNER_TEMP/lunar-maven" "$RUNNER_TEMP/lunar-home"
+          touch "$RUNNER_TEMP/lunar-npm-user.conf"
+          echo "GRADLE_USER_HOME=$RUNNER_TEMP/lunar-gradle" >> "$GITHUB_ENV"
+          echo "NPM_CONFIG_CACHE=$RUNNER_TEMP/lunar-npm" >> "$GITHUB_ENV"
+          echo "NPM_CONFIG_USERCONFIG=$RUNNER_TEMP/lunar-npm-user.conf" >> "$GITHUB_ENV"
+          git rev-parse HEAD
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Record tool versions
+        run: |
+          java -version
+          node --version
+          npm --version
+      - name: Install, test and build core frontend
+        working-directory: web-ui
+        run: |
+          npm ci --no-audit --no-fund
+          node --test tests/*.test.js tests/*.test.mjs
+          npm run build
+      - name: Build and test from public Maven and Paper development bundles
+        run: |
+          ./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures-web:jar :lbr-api:publishMavenPublicationToDistRepository \
+            --no-daemon --no-build-cache --no-configuration-cache --max-workers=2 \
+            -Duser.home="$RUNNER_TEMP/lunar-home" -Dmaven.repo.local="$RUNNER_TEMP/lunar-maven"
+      - name: Test bridge frontend and package release
+        run: |
+          npm test --prefix modules/lbr-structures-web/web
+          python3 tools/validate-module-market.py
+          python3 tools/test-module-market-validator.py
+          python3 package-release.py
+      - name: Upload reports and build outputs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: clean-core-${{ github.sha }}
+          retention-days: 14
+          path: |
+            **/build/reports/
+            **/build/test-results/
+            dist/0.0.6-preview/
+            lbr-api/build/repo/
+            build/repo/
