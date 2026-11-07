@@ -5,7 +5,7 @@
   "description": "替换为模块用途。",
   "descriptionEn": "Replace with the module purpose.",
   "version": "1.0.0",
-  "coreVersions": ["0.0.6-preview"],
+  "coreVersions": ["0.0.7"],
   "author": "your-name",
   "source": "https://github.com/your-name/your-module",
   "download": "https://github.com/your-name/your-module/releases/download/v1.0.0/example-addon.jar",

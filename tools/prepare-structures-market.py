@@ -16,7 +16,9 @@ def main():
     parser.add_argument("--jar", type=Path, default=ROOT / "modules/lbr-structures-web/build/libs/lbr-structures-web.jar")
     parser.add_argument("--download", required=True)
     parser.add_argument("--source", required=True)
-    parser.add_argument("--core-version", default="0.0.6-preview")
+    core_version = re.search(r"^lbrVersion=(\S+)$",
+                             (ROOT / "gradle.properties").read_text(encoding="utf-8"), re.MULTILINE).group(1)
+    parser.add_argument("--core-version", default=core_version)
     parser.add_argument("--output", type=Path, default=ROOT / "module-market/community/structures.json")
     args = parser.parse_args()
     spec = importlib.util.spec_from_file_location("market", ROOT / "tools/validate-module-market.py")

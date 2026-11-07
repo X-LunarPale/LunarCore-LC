@@ -34,7 +34,7 @@ body:
     id: version
     attributes:
       label: 模块版本与核心版本 / Module and core versions
-      placeholder: "1.0.0 / LC 0.0.6-preview"
+      placeholder: "1.0.0 / LC 0.0.7"
     validations:
       required: true
   - type: input

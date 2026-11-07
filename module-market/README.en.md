@@ -1,10 +1,10 @@
 # LunarCore 琉月 Module Market
 
-[简体中文](README.md) | [Installation](../docs/en-US/MODULES.md) | [All downloads](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview)
+[简体中文](README.md) | [Installation](../docs/en-US/MODULES.md) | [All downloads](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.7)
 
 Public downloads require no login or token. [Community modules](community/) · [Submit a module](../CONTRIBUTING.en.md) · [Submission form](https://github.com/X-LunarPale/LunarCore-LC/issues/new?template=module-submission.yml)
 
-For **v0.0.6 Test Preview**, Java 25 and Paper 26.3 build 202. The core includes basic commands; select optional modules below.
+For **v0.0.7**, Java 25 and Paper 26.3. The core includes basic commands; select optional modules below.
 
 ## Install
 
@@ -16,47 +16,47 @@ Replace older files instead of keeping duplicate JARs. Removal can keep settings
 
 | Module | Purpose | Download |
 |---|---|---|
-| Economy | Balances, transfers, rankings and optional Vault support | [lbr-economy.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-economy.jar) |
-| Daily rewards | Check-in rewards; money rewards need economy | [lbr-signin.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-signin.jar) |
-| Land claims | Claims, members and protection; paid purchases need economy | [lbr-land.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-land.jar) |
-| Gameplay votes | Vote on gameplay changes | [lbr-vote.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-vote.jar) |
-| Exploration journal | Record biomes, advancements and fishing | [lbr-journal.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-journal.jar) |
-| Building landmarks | Submit and review builds; requires land | [lbr-landmarks.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-landmarks.jar) |
+| Economy | Balances, transfers, rankings and optional Vault support | [lbr-economy.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-economy.jar) |
+| Daily rewards | Check-in rewards; money rewards need economy | [lbr-signin.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-signin.jar) |
+| Land claims | Claims, members and protection; paid purchases need economy | [lbr-land.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-land.jar) |
+| Gameplay votes | Vote on gameplay changes | [lbr-vote.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-vote.jar) |
+| Exploration journal | Record biomes, advancements and fishing | [lbr-journal.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-journal.jar) |
+| Building landmarks | Submit and review builds; requires land | [lbr-landmarks.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-landmarks.jar) |
 
 ## Players
 
 | Module | Purpose | Download |
 |---|---|---|
-| Teleportation | Homes, requests, warps and spawn | [lbr-teleport.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-teleport.jar) |
-| Chat and AI | Messages, mail, chat formats, multiple AI characters and memory | [lbr-chat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-chat.jar) |
-| Titles | Create, grant, revoke and equip titles | [lbr-titles.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-titles.jar) |
-| Scoreboard | Sidebar and top information bar | [lbr-scoreboard.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-scoreboard.jar) |
+| Teleportation | Homes, requests, warps and spawn | [lbr-teleport.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-teleport.jar) |
+| Chat and AI | Messages, mail, chat formats, multiple AI characters and memory | [lbr-chat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-chat.jar) |
+| Titles | Create, grant, revoke and equip titles | [lbr-titles.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-titles.jar) |
+| Scoreboard | Sidebar and top information bar | [lbr-scoreboard.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-scoreboard.jar) |
 
 ## Protection
 
 | Module | Purpose | Download |
 |---|---|---|
-| Punishments | Bans, mutes, warnings and history | [lbr-ban.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-ban.jar) |
-| Anti-xray | Paper settings and mining alerts | [lbr-antixray.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-antixray.jar) |
-| Anti-cheat | GrimAC status and settings; install GrimAC separately | [lbr-anticheat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-anticheat.jar) |
-| Game permissions | Groups, temporary permissions and checks | [lbr-permissions.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-permissions.jar) |
-| QQ authentication | Group and account authentication; starts disabled | [lbr-qqauth.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-qqauth.jar) |
+| Punishments | Bans, mutes, warnings and history | [lbr-ban.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-ban.jar) |
+| Anti-xray | Paper settings and mining alerts | [lbr-antixray.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-antixray.jar) |
+| Anti-cheat | GrimAC status and settings; install GrimAC separately | [lbr-anticheat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-anticheat.jar) |
+| Game permissions | Groups, temporary permissions and checks | [lbr-permissions.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-permissions.jar) |
+| QQ authentication | Group and account authentication; starts disabled | [lbr-qqauth.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-qqauth.jar) |
 
 ## Server
 
 | Module | Purpose | Download |
 |---|---|---|
-| Worlds | Create, load, unload and configure worlds | [lbr-world.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-world.jar) |
-| Terrain | Separate worlds, climate and terrain search; requires the [startup agent](../modules/lbr-terrain/README.en.md) | [lbr-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-terrain.jar) |
-| Performance | Metrics, cleanup and optional optimizations, initially disabled | [lbr-performance.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-performance.jar) |
-| Server list | Description text, colors and variables | [lbr-motd.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/lbr-motd.jar) |
+| Worlds | Create, load, unload and configure worlds | [lbr-world.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-world.jar) |
+| Terrain | Separate worlds, climate and terrain search; requires the [startup agent](../modules/lbr-terrain/README.en.md) | [lbr-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-terrain.jar) |
+| Performance | Metrics, cleanup and optional optimizations, initially disabled | [lbr-performance.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-performance.jar) |
+| Server list | Description text, colors and variables | [lbr-motd.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-motd.jar) |
 
 ## Other Downloads
 
-- [Core](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/LunarCore-0.0.6-preview.jar)
-- [All optional modules](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/LunarCore-modules-0.0.6-preview.zip)
-- [Corresponding source](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/LunarCore-0.0.6-preview-source.zip)
-- [Checksums](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.6-preview/SHA256SUMS.txt)
+- [Core](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/LunarCore-0.0.7.jar)
+- [All optional modules](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/LunarCore-modules-0.0.7.zip)
+- [Corresponding source](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/LunarCore-0.0.7-source.zip)
+- [Checksums](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/SHA256SUMS.txt)
 
 Multiverse and PlayerTitle management integrations are standalone plugins for `plugins/` and need their respective third-party plugins. See [Modules](../docs/en-US/MODULES.md).
 

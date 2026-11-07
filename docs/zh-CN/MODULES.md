@@ -19,7 +19,7 @@
 
 ## 公开下载与投稿
 
-v0.0.6 的源码、模块市场与发布附件位于公开仓库 [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC)。网页下载和面板安装无需登录 GitHub，也不需要令牌。
+v0.0.7 的源码、模块市场与发布附件位于公开仓库 [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC)。网页下载和面板安装无需登录 GitHub，也不需要令牌。
 
 所有人都可以通过 PR 或 Issues [投稿模块](../../CONTRIBUTING.md)。社区作者在自己的公开 Release 上传文件，市场目录提供下载链接。社区模块目前需手动安装；面板一键安装提供与核心一起发布的官方模块。
 
@@ -31,6 +31,8 @@ v0.0.6 的源码、模块市场与发布附件位于公开仓库 [LunarCore-LC](
 - AI 需要模型服务地址、模型名与密钥。
 - 性能优化默认关闭。
 - QQ 认证需要群号与机器人连接，安装后不会自动启用。
+- 地形模块需要 `LC-Terrain-Agent.jar` 和启动参数，见[安装说明](INSTALL.md)。
+- 结构美化管理模块需要另装 `LunarCoreStructures.jar`，生成插件不包含在核心中，见[结构美化](STRUCTURES.md)。
 
 QQ 认证配置完成后，停服把 `modules.qqauth-autostart` 设为 `true`，并仅从 `modules.disabled` 中移除 `qqauth`，保留其他禁用项。启用或重载可能断开玩家连接。
 

@@ -23,7 +23,7 @@ Authors publish and update files in their own Releases without a token for this 
 | `name`, `nameEn` | Chinese and English names |
 | `description`, `descriptionEn` | Chinese and English descriptions |
 | `version` | Module version |
-| `coreVersions` | Tested core versions, such as `["0.0.6-preview"]` |
+| `coreVersions` | Tested core versions, such as `["0.0.7"]` |
 | `author` | Author name |
 | `source` | Public source repository HTTPS URL |
 | `download` | Public JAR HTTPS download URL |

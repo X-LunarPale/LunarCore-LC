@@ -4,7 +4,7 @@ main: com.lunarboreal.core.LunarCorePlugin
 api-version: '26.3'
 prefix: LunarCore
 authors: [琉月]
-description: LunarCore 琉月 · v0.0.6 测试预览版 · 模块化服务器管理 · GPL-3.0-only
+description: LunarCore 琉月 · v${version} · 模块化服务器管理 · GPL-3.0-only
 website: https://github.com/X-LunarPale/LunarCore-LC
 load: STARTUP
 softdepend: [Vault, PlaceholderAPI, LuckPerms, LagFixer, GrimAC]
