@@ -20,7 +20,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * /lc 主命令：help、version|info、reload、module list|enable|disable|reload|info、web ...、debug。
+ * /lc 主命令：help、version|info、reload、module|m list|enable|disable|reload|info、web ...、debug。
  */
 public final class LbrMainCommand implements TabExecutor {
 
@@ -190,7 +190,7 @@ public final class LbrMainCommand implements TabExecutor {
 
     // ------------------------------------------------------------------ Tab
 
-    private static final List<String> SUBS = List.of("help", "info", "version", "reload", "module", "web", "debug");
+    private static final List<String> SUBS = List.of("help", "info", "version", "reload", "module", "m", "web", "debug");
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -206,8 +206,8 @@ public final class LbrMainCommand implements TabExecutor {
                 return r == null ? Collections.emptyList() : r;
             }
             if ((sub.equals("module") || sub.equals("modules") || sub.equals("mod") || sub.equals("m")) && sender.hasPermission(PERM_MODULE)) {
-                LbrModuleManager mm = plugin.moduleManager();
                 if (args.length == 2) return LbrCommand.filter(List.of("list", "enable", "disable", "reload", "info"), args[1]);
+                LbrModuleManager mm = plugin.moduleManager();
                 if (args.length == 3) {
                     String action = args[1].toLowerCase(Locale.ROOT);
                     List<String> ids = new ArrayList<>();
@@ -238,7 +238,7 @@ public final class LbrMainCommand implements TabExecutor {
         return switch (sub) {
             case "info", "version" -> sender.hasPermission(PERM_INFO);
             case "reload" -> sender.hasPermission(PERM_RELOAD);
-            case "module" -> sender.hasPermission(PERM_MODULE);
+            case "module", "m" -> sender.hasPermission(PERM_MODULE);
             case "debug" -> sender.hasPermission(PERM_DEBUG);
             default -> true;
         };

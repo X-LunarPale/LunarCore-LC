@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/USAGE.md) | [Home](../../README.en.md)
 
-LC is short for LunarCore. Use `/lc help` in game to see management commands; basic commands still work directly. Use `%lc_module_key%` in custom text, such as `%lc_core_online%`.
+LC is short for LunarCore. Use `/lc help` for management commands and `/lc m list` to check module statuses as an administrator. The `/lbr` command has been removed. Basic commands still work directly. Use `%lc_module_key%` in custom text, such as `%lc_core_online%`.
 
 ## Accounts
 
@@ -41,7 +41,11 @@ Choose a custom error reply or silence. External AI calls may cost money and sen
 
 Edit group, connection, binding limits and messages. Previews use examples without sending messages to QQ or players.
 
-Reload QQ authentication or fully restart to apply saved changes. Reloading revokes online authentication and disconnects players. See [Modules](MODULES.md) for activation.
+QQ verification is required by default. Turn off **Require QQ verification** to let unbound players register and sign in to the game. They receive one reminder per calendar day after signing in. Use `/qqauth bind` to get a code, then send `/验证 code` in the configured QQ group.
+
+Unverified players cannot change or recover their password, delete their account, or remove a binding themselves. Daily reminders can be disabled. Dates use the configured time zone, or the server time zone when blank; reconnecting or reloading does not repeat the reminder.
+
+Message edits apply immediately. Apply other settings with **Apply settings**, `qqauth reload`, or a full restart. Reloading revokes online authentication and disconnects players. See [Modules](MODULES.md) for activation.
 
 ## GrimAC, Performance and Worlds
 

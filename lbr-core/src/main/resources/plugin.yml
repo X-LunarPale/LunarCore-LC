@@ -20,7 +20,7 @@ libraries:
 commands:
   lc:
     description: LunarCore 琉月管理命令
-    aliases: [lbr, lunarcore, lunarboreal, lunar]
+    aliases: [lunarcore, lunarboreal, lunar]
     usage: /lc help
 permissions:
   lbr.admin:
