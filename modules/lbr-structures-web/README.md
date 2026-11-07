@@ -12,7 +12,7 @@
 
 要求 Java 25 / Paper 26.3，LunarCore 含 `NativeGeneratorDelegate` API，生成插件提供管理 API v1。旧版合体插件没有此接口，页面会提示升级。兼容核心必须来自本桥接 PR；不能仅凭相同的 `0.0.6-preview` 版本文字判断兼容。
 
-升级保留 `plugins/LunarCoreStructures/structures.json`，替换原生成 JAR，不能同时保留两份。配置只由原插件写入；保存不会改变已运行的生成器，完整重启后作用于新区块。未配置有效重启脚本时，确认重启只能停止服务器。
+升级保留 `plugins/LunarCoreStructures/structures.json`，替换原生成 JAR，不能同时保留两份。配置只由原插件写入；保存不会改变已运行的生成器，完整重启后作用于新区块。自动重启要求服务端配置可读的 restart-script；脚本缺失时只提示手动重启，服务器继续运行。保存后可立即确认，也可稍后点击“立即重启生效”。页面通过 JVM 启动时间确认服务已重新启动；请求超时不会重复发起重启。配置示例见 [自动重启](RESTART.md)。
 
 ## 生命周期与协议
 

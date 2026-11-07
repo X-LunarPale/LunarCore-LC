@@ -1,3 +1,5 @@
+version = "0.0.6-preview.1"
+
 val webDir = layout.projectDirectory.dir("web")
 val installWeb by tasks.registering(Exec::class) {
     workingDir(webDir)

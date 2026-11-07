@@ -10,7 +10,7 @@ Stop the server. Install the compatible LunarCore core and the separate [rtiags/
 
 Requires Java 25 / Paper 26.3, a core exposing `NativeGeneratorDelegate`, and generation management API v1. The older combined plugin lacks that API. Use the core from the bridge PR; the `0.0.6-preview` label alone does not establish compatibility.
 
-Keep the existing `plugins/LunarCoreStructures/structures.json` when replacing the generation JAR. Do not keep duplicate plugins. Global defaults, world overrides and inheritance retain their meaning. Saving affects new chunks only after a full restart. Without a valid restart script, the restart action only stops the server.
+Keep the existing `plugins/LunarCoreStructures/structures.json` when replacing the generation JAR. Do not keep duplicate plugins. Global defaults, world overrides and inheritance retain their meaning. Saving affects new chunks only after a full restart. Automatic restart requires a readable configured restart-script. Without it, the page only explains how to restart manually and the server keeps running. Confirm immediately after saving or use Restart to apply later. The page confirms recovery using the JVM start time and never repeats a timed-out restart request. See [restart setup](RESTART.md).
 
 ## Lifecycle and API
 

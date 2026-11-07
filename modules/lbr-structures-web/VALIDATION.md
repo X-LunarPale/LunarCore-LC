@@ -3,6 +3,8 @@
 2026-11-07，macOS ARM64，Java 25.0.3，Paper 26.3 build 202。
 生成插件 `0.1.0-preview.1`，LC/桥接 `0.0.6-preview`（本 PR 分支，含 NativeGeneratorDelegate）。仅在新建的隔离测试服验证，没有部署到用户运行服。
 
+> 自动重启更新：桥接版本 0.0.6-preview.1 的额外验收见 [自动重启验收](RESTART-VALIDATION.md)。下面保留首次拆分时的历史记录；其中“无脚本可确认停止”已被新版本移除。
+
 ## 自动检查
 
 - 生成插件 14 项、桥接 Java 4 项、地形 64 项测试通过。
