@@ -1,30 +1,31 @@
-# v0.0.6 Test Preview
+# v0.0.7
 
 [简体中文](../zh-CN/RELEASE.md) | [Home](../../README.en.md)
 
 ## Changes
 
-- Uses LunarCore 琉月, LC for short, and `/lc` as the main command, preserving legacy entry points and data.
-- Kept basic commands in the core and distributed 19 optional modules separately.
-- Added a GitHub catalog and individual downloads; the panel supports installation, updates, removal, cancellation and dependencies.
-- Added a separate public repository for source and downloads without tokens, with open community submissions through PRs or Issues.
-- Applies changes after a full restart and keeps data on removal.
-- Simplified user text and provided Chinese and English guides.
-- Uses GPL v3, preserving third-party notices and corresponding source.
+- Completes Tectonic server terrain features: per-world climate, snowlines, monument height, old-chunk blending, custom height, terrain information and eight locate targets. Install the startup agent and fully restart.
+- Players can disable returning to the hub after death with `/spawn ondeath off` and restore it with `/spawn ondeath on`. A clickable hint appears after returning, and the choice is saved.
+- The first login each day uses the configured hub. Later logins that day keep the logout position. The day boundary uses a configurable timezone.
+- Fixes the QQAuth AstrBot plugin's default port, adds OneBot/NapCat group messages and explains connection errors.
+- Adds global and per-world structure management. Install the generation plugin `LunarCoreStructures.jar` separately; it is not included in the core.
+- The core still includes only basic commands, with 19 official optional modules. Existing settings, databases and worlds are kept.
 
 ## Attachments
 
 | File | Purpose |
 |---|---|
-| `LunarCore-0.0.6-preview.jar` | Core for `plugins/` |
+| `LunarCore-0.0.7.jar` | Core for `plugins/` |
 | `lbr-*.jar` | Optional modules for `plugins/LunarCore/modules/` |
-| `LunarCore-modules-0.0.6-preview.zip` | All optional modules |
-| `LunarCore-0.0.6-preview-source.zip` | Source and build files |
-| `LunarCore-0.0.6-preview.zip` | Core, modules, source and installation guide |
+| `LunarCore-modules-0.0.7.zip` | Official optional modules and the structure management module |
+| `LunarCore-0.0.7-source.zip` | Source and build files |
+| `LunarCore-0.0.7.zip` | Core, modules, source and installation guide |
+| `LC-Terrain-Agent.jar` | Terrain startup agent, placed in the server directory with a startup argument |
+| `lbr-structures-web.jar` | Structure management; download the generation plugin separately |
 | `LbrMultiverseWeb.jar`, `LbrPlayerTitleWeb.jar` | Optional standalone plugins |
 | `module-market.json` | Versions, dependencies and file checksums |
 | `SHA256SUMS.txt` | Download checksums |
 
-`0.0.6-preview` in filenames means **v0.0.6 Test Preview**. The public repository starts with this version.
+Add `-javaagent:LC-Terrain-Agent.jar` before `-jar` in the Java command. Fully restart after updating the agent.
 
-Stop and back up before upgrading; see [Installation](INSTALL.md). See [Validation](VALIDATION.md) for checks and remaining gameplay acceptance.
+See [Installation](INSTALL.md) for upgrading, [Validation](VALIDATION.md) for test records and [Structure upgrades](STRUCTURES.md) for the generation scope.

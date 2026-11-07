@@ -4,7 +4,7 @@
 
 ## 需要准备
 
-使用 Java 25、Paper 26.3 build 202，以及 `LunarCore-0.0.6-preview.jar`。首次启动需访问 Maven Central 下载运行依赖。
+使用 Java 25、Paper 26.3，以及 `LunarCore-0.0.7.jar`。首次启动需访问 Maven Central 下载运行依赖。
 
 ## 首次安装
 
@@ -31,7 +31,9 @@
 
 下载与核心同版本的模块 JAR，停服后放入 `plugins/LunarCore/modules/`。更新时替换原文件，不保留重复副本。建筑地标还需要领地模块。
 
-全部附加模块也可从 `LunarCore-modules-0.0.6-preview.zip` 按需解压。安装更多模块会增加资源占用。
+全部附加模块也可从 `LunarCore-modules-0.0.7.zip` 按需解压。安装更多模块会增加资源占用。
+
+地形模块还需将 `LC-Terrain-Agent.jar` 放到服务端目录，在 Java 启动命令的 `-jar` 前添加 `-javaagent:LC-Terrain-Agent.jar`，然后完整重启。详见[地形模块说明](../../modules/lbr-terrain/README.md)。
 
 ## 结构美化插件
 

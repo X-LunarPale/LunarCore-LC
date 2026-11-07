@@ -19,7 +19,7 @@ Removal deletes only the JAR, keeping settings, databases and worlds. Remove dep
 
 ## Public Downloads and Submissions
 
-The v0.0.6 source, module market and release assets are public in [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC). Browser downloads and panel installation require neither a GitHub login nor a token.
+The v0.0.7 source, module market and release assets are public in [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC). Browser downloads and panel installation require neither a GitHub login nor a token.
 
 Everyone can [submit modules](../../CONTRIBUTING.en.md) through a PR or Issues. Authors upload files to their own public Releases; the catalog links to those files. Community modules currently use manual installation. The panel installer offers official modules released with the core.
 
@@ -31,6 +31,8 @@ Everyone can [submit modules](../../CONTRIBUTING.en.md) through a PR or Issues. 
 - AI needs a model service address, model name and key.
 - Performance optimizations start disabled.
 - QQ authentication needs a group and bot connection and does not start automatically.
+- Terrain needs `LC-Terrain-Agent.jar` and a startup argument; see [Installation](INSTALL.md).
+- The structure management module needs `LunarCoreStructures.jar` installed separately. The generation plugin is not included in the core; see [Structure upgrades](STRUCTURES.md).
 
 After configuring QQ authentication, stop the server, set `modules.qqauth-autostart` to `true` and remove only `qqauth` from `modules.disabled`. Keep other disabled entries. Enabling or reloading may disconnect players.
 

@@ -30,10 +30,10 @@ def main():
     parser.add_argument("--check-source", action="store_true")
     parser.add_argument("--list-source", action="store_true")
     args = parser.parse_args()
-    match = re.findall(r"^lbrVersion=(\d+\.\d+\.\d+-preview)\s*$",
+    match = re.findall(r"^lbrVersion=(\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?)\s*$",
                        (ROOT / "gradle.properties").read_text(encoding="utf-8"), re.MULTILINE)
     if len(match) != 1:
-        raise ValueError("Expected one preview version in gradle.properties")
+        raise ValueError("Expected one release version in gradle.properties")
     version = match[0]
     paths = release_source_files()
     for language in ("zh-CN", "en-US"):
@@ -141,8 +141,8 @@ def main():
             for path in sorted((ROOT / "docs" / language).glob("*.md")):
                 legacy.add_file(archive, path, f"docs/{language}/{path.name}")
         legacy.add_bytes(archive, "INSTALL.txt", (
-            "LunarCore 琉月 v0.0.6 测试预览版 / Test Preview\n"
-            "Java 25 / Paper 26.3 build 202\n"
+            f"LunarCore 琉月 v{version}\n"
+            "Java 25 / Paper 26.3\n"
             "核心 JAR 放入 plugins/。附加模块按需放入 plugins/LunarCore/modules/。\n"
             "结构美化：另行下载 LunarCoreStructures.jar 放入 plugins/；lbr-structures-web.jar 放入 LunarCore/modules/。\n"
             "地形模块另需启动参数 -javaagent:LC-Terrain-Agent.jar，见 terrain-setup/。\n"

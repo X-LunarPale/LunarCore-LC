@@ -23,7 +23,7 @@
 | `name`、`nameEn` | 中英文名称 |
 | `description`、`descriptionEn` | 中英文用途说明 |
 | `version` | 模块自己的版本 |
-| `coreVersions` | 已测试的核心版本，如 `["0.0.6-preview"]` |
+| `coreVersions` | 已测试的核心版本，如 `["0.0.7"]` |
 | `author` | 作者名称 |
 | `source` | 公开源码仓库的 HTTPS 地址 |
 | `download` | 公开 JAR 的 HTTPS 下载地址 |

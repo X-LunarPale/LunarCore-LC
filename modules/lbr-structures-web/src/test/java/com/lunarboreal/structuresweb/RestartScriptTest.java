@@ -19,15 +19,20 @@ class RestartScriptTest {
     }
 
     @Test void followsPapersScriptAndArgumentsParsingAndRechecksRemoval() throws Exception {
-        Path script = directory.resolve("start.sh");
-        Files.writeString(script, "#!/bin/sh\nexit 0\n");
-        assertTrue(RestartScript.available(script.toString()));
-        assertTrue(RestartScript.available(script + " --example"));
-        assertFalse(RestartScript.available(" " + script));
-        Path spaced = directory.resolve("start server.sh");
-        Files.copy(script, spaced);
-        assertFalse(RestartScript.available(spaced.toString()));
-        Files.delete(script);
-        assertFalse(RestartScript.available(script.toString()));
+        Path script = Files.createTempFile(Path.of(""), "restart-", ".sh");
+        Path spaced = script.resolveSibling("restart script-" + script.getFileName());
+        try {
+            Files.writeString(script, "#!/bin/sh\nexit 0\n");
+            assertTrue(RestartScript.available(script.toString()));
+            assertTrue(RestartScript.available(script + " --example"));
+            assertFalse(RestartScript.available(" " + script));
+            Files.copy(script, spaced);
+            assertFalse(RestartScript.available(spaced.toString()));
+            Files.delete(script);
+            assertFalse(RestartScript.available(script.toString()));
+        } finally {
+            Files.deleteIfExists(script);
+            Files.deleteIfExists(spaced);
+        }
     }
 }

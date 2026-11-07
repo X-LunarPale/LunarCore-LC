@@ -1,18 +1,18 @@
 <h1 style="text-align:center">LunarCore 琉月核心</h1>
 
-**预览测试版** Paper 26.3 · Java 25 · GPL v3
+**v0.0.7** · Paper 26.3 · Java 25 · GPL v3
 
 **注意：本项目绝大多数由GPT-6.1-Sol、GPT-6-Astra、Claude-Opus-5.5、Deepseek-V4.1-Flash等AI及其Agent创作！绝大多数已通过人工测试！**
 
 若出现问题，请**提交issue**！
 
-[English](README.en.md) | [下载最新测试预览包](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.6-preview-20261103) | [安装与升级](docs/zh-CN/INSTALL.md) | [GitHub 模块市场](module-market/README.md) | [参与开发](CONTRIBUTING.md)
+[English](README.en.md) | [下载 v0.0.7](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.0.7) | [安装与升级](docs/zh-CN/INSTALL.md) | [GitHub 模块市场](module-market/README.md) | [参与开发](CONTRIBUTING.md)
 
 LunarCore 琉月 为 Minecraft 生存服务器提供基础命令和网页管理面板。经济、领地、聊天与 AI 等功能可以单独安装。
 
 ## 安装
 
-1. 下载 `LunarCore.jar`，放入服务端的 `plugins/`。
+1. 下载核心 `LunarCore-0.0.7.jar`（可改名为 `LunarCore.jar`），放入服务端的 `plugins/`。
 2. 启动服务器，等待依赖下载完成。
 3. 在服务器所在电脑打开 `http://127.0.0.1:8765`，按控制台提示登录并修改密码。
 4. 在“模块管理 → 模块市场”安装需要的功能，下载完成后完整重启。
@@ -46,7 +46,7 @@ LunarCore 琉月 为 Minecraft 生存服务器提供基础命令和网页管理�
 - [开发与构建](DEVELOPMENT.md)
 - [文档目录](docs/README.md)
 
-**请注意**：测试预览版。与第三方插件的桥接、地形显示和多人游戏体验仍需多次测试；突然崩溃时经济与领地记录可能需要人工核账，详见常见问题。
+与第三方插件的兼容、地形显示和多人游戏体验仍需在目标服务器确认；突然崩溃时经济与领地记录可能需要人工核账，详见常见问题。
 
 ## 许可
 
