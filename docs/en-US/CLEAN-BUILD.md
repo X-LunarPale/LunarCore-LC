@@ -7,6 +7,8 @@ Verified on fresh Ubuntu 24.04 GitHub Actions runners on 2026-11-07 using Temuri
 - [Core and bridge](https://github.com/rtiags/LunarCore-LC/actions/runs/42347733174), commit `4414ad8ae02e47fd234cbf3818d5e08c408b112e`: 88 core frontend tests, 14 bridge frontend tests, all Gradle Java test tasks, release packaging and market validation passed. Gradle completed in approximately 2m 11s.
 - [Standalone generator](https://github.com/rtiags/LunarCoreStructures/actions/runs/42347757015), commit `e19868498fa721faab9ee53f3946c8ed855729e2`: the compatible LC API was first built from pinned commit `f943ea2d916ac74e858c9e07d5aab54e8bc836a7`; the generator then built using a separate empty Gradle cache and the freshly published local API repository. All 14 tests passed, none skipped. The API and generator phases took approximately 49s and 53s.
 
+Core JUnit reports contain 489 tests: 488 passed and one intentionally skipped. `ModuleMarketReleaseTest.downloadsPublishedModuleAndAppliesVerifiedJar()` is an opt-in check against actual published market assets, enabled only by `LUNARCORE_MARKET_RELEASE_TEST=true`; the default build CI leaves it disabled. The generator separately passed 14 tests with none skipped.
+
 Reports and binaries are attached as Actions artifacts. Neither log contains FROM-CACHE tasks. This proves a successful cold dependency build, not byte-for-byte reproducibility across toolchain/platform versions.
 
 ## Isolation and reproduction
@@ -20,5 +22,7 @@ For copyable local commands, see the [reproduction block](../zh-CN/CLEAN-BUILD.m
 ## Limits and initial failure
 
 The first workflow attempt failed at configuration parsing because runner was used in job-level env. Cache initialization was moved into a runner step; both workflows then passed. No business-code workaround was required for the default build path.
+
+A [subsequent core run](https://github.com/rtiags/LunarCore-LC/actions/runs/42348286771) hit OneBotLifecycleTest's 8-second reconnect deadline. The client allows 10 seconds per connect/send operation, so the fixture budget was shorter than the operation it observed. Fixture waits were changed to a bounded 30 seconds and the second socket received a read timeout. Fragmentation, reply, reconnect, invocation-count and close assertions remain; the test is neither skipped nor automatically retried. Check the branch's latest Clean build and PR checks for the final rerun.
 
 A separate macOS fresh clone/cold npm install passed the 88 frontend tests and build. Its slow initial Gradle distribution download was stopped after both Linux CI runs passed; that local Java attempt is not counted as successful. Windows cold builds are not additionally claimed.

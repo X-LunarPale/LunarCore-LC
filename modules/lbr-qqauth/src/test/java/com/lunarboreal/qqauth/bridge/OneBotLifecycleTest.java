@@ -13,9 +13,14 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OneBotLifecycleTest {
+    // The client permits 10 seconds for a connect/send operation. The old
+    // 8-second fixture deadline could expire before its reconnect path ran on
+    // a busy CI worker. Keep every wait bounded, with room for that timeout.
+    private static final int WAIT_SECONDS = 30;
+
     @Test void fragmentedEventRepliesThenReconnectsAndCloses() throws Exception {
         try (ServerSocket peer = new ServerSocket(0, 4, InetAddress.getLoopbackAddress())) {
-            peer.setSoTimeout(8000);
+            peer.setSoTimeout(WAIT_SECONDS * 1000);
             AtomicInteger calls = new AtomicInteger();
             CompletableFuture<String> reply = new CompletableFuture<>();
             CompletableFuture<Void> reconnected = new CompletableFuture<>();
@@ -23,15 +28,16 @@ class OneBotLifecycleTest {
             Thread server = new Thread(() -> {
                 try {
                     try (Socket first = peer.accept()) {
-                        first.setSoTimeout(5000); handshake(first);
+                        first.setSoTimeout(WAIT_SECONDS * 1000); handshake(first);
                         String event = "{\"post_type\":\"message\",\"message_type\":\"group\",\"group_id\":123,\"user_id\":456,\"message\":\"test\"}";
                         frame(first, 1, event.substring(0, 20));
                         frame(first, 128, event.substring(20));
                         reply.complete(readFrame(first));
                     }
                     try (Socket second = peer.accept()) {
+                        second.setSoTimeout(WAIT_SECONDS * 1000);
                         handshake(second); reconnected.complete(null);
-                        release.get(5, TimeUnit.SECONDS);
+                        release.get(WAIT_SECONDS, TimeUnit.SECONDS);
                     }
                 } catch (Exception e) { reply.completeExceptionally(e); reconnected.completeExceptionally(e); }
             }, "onebot-test-peer");
@@ -40,8 +46,8 @@ class OneBotLifecycleTest {
                     new OneBotSettings(URI.create("ws://127.0.0.1:" + peer.getLocalPort()), "local-test", Duration.ofMillis(20)),
                     (g,s,m) -> { assertEquals("123",g); assertEquals("456",s); assertEquals("test",m); calls.incrementAndGet(); return GroupResult.reply("local reply"); })) {
                 client.start();
-                assertTrue(reply.get(8, TimeUnit.SECONDS).contains("local reply"));
-                reconnected.get(8, TimeUnit.SECONDS);
+                assertTrue(reply.get(WAIT_SECONDS, TimeUnit.SECONDS).contains("local reply"));
+                reconnected.get(WAIT_SECONDS, TimeUnit.SECONDS);
                 assertEquals(1, calls.get()); client.close();
             } finally { release.complete(null); server.join(2000); }
         }

@@ -9,6 +9,8 @@
 - [核心与桥接 CI](https://github.com/rtiags/LunarCore-LC/actions/runs/42347733174)：验证提交 `4414ad8ae02e47fd234cbf3818d5e08c408b112e`。88 项核心前端测试、14 项桥接前端测试、全部 Gradle Java 测试任务、发行打包和市场目录校验通过。Gradle 构建耗时约 2 分 11 秒。
 - [独立生成插件 CI](https://github.com/rtiags/LunarCoreStructures/actions/runs/42347757015)：验证提交 `e19868498fa721faab9ee53f3946c8ed855729e2`。先从固定提交 `f943ea2d916ac74e858c9e07d5aab54e8bc836a7` 构建 LC API，再使用另一份空 Gradle 缓存构建生成插件。14 项 Java 测试全部通过，无跳过；两个 Gradle 阶段分别约 49 秒和 53 秒。
 
+核心 JUnit 报告共 489 项：488 通过、1 项按设计跳过。跳过的是 `ModuleMarketReleaseTest.downloadsPublishedModuleAndAppliesVerifiedJar()`，仅在显式设置 `LUNARCORE_MARKET_RELEASE_TEST=true` 时检查真实已发布市场附件；默认构建 CI 没有启用它。生成插件另有 14 项通过、0 跳过。
+
 测试报告和构建产物保存在对应运行的 Actions artifacts。日志中均没有 FROM-CACHE 任务。这里验证的是“从空依赖缓存成功构建”，不声称不同 JDK/平台产物逐字节相同。
 
 ## 隔离方式
@@ -48,5 +50,7 @@ GRADLE_USER_HOME="$LC_CLEAN_ROOT/gradle-generator" ./gradlew :plugin:test :plugi
 ## 边界与失败记录
 
 首轮新建 CI 因在 job env 使用了不允许的 runner 上下文而未进入编译，已改为在 runner 分配后的步骤初始化缓存目录，随后重跑通过。未发现必须修改业务代码才能完成默认构建的问题。
+
+随后[核心复跑](https://github.com/rtiags/LunarCore-LC/actions/runs/42348286771) 在 QQAuth 的 OneBotLifecycleTest 中遇到 8 秒重连等待超时。客户端单次连接/发送本身允许 10 秒，原测试预算不足以覆盖这条超时链；测试统一改为有界的 30 秒等待，并给第二个测试套接字补充读取超时。消息分片、回复内容、重连成功、调用次数及关闭断言均保留，不跳过或自动重试该测试。最终状态以本分支最新 Clean build 运行及 PR 检查为准。
 
 本机 macOS 上另外验证了新 clone、空 npm 缓存的前端安装、88 项测试和构建。其空 Gradle 缓存的 Java 构建因发行包下载较慢，在两条 Linux CI 成功后停止；不把该本机 Java 尝试记为通过。本报告不额外声称 Windows 空缓存构建已验证。
