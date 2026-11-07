@@ -35,7 +35,7 @@
 
 ## 结构美化插件
 
-将同次构建的 `LunarCoreStructures.jar` 放入 `plugins/`，与核心一同启动。九类结构默认关闭；在“服务器 → 服务器操作 → 结构美化”保存设置后完整重启。支持全服默认及按世界设置，只影响新区块和新世界。安装说明见[结构美化](STRUCTURES.md)，实测范围见[验证记录](STRUCTURES-VALIDATION.md)。
+从独立插件仓库下载 `LunarCoreStructures.jar` 放入 `plugins/`，另将 `lbr-structures-web.jar` 放入 `plugins/LunarCore/modules/`。核心和生成插件须满足[桥接兼容要求](../../modules/lbr-structures-web/README.md)。九类结构默认关闭；在“服务器 → 结构美化”保存设置后完整重启。支持全服默认及按世界设置，只影响新区块和新世界。安装说明见[结构美化](STRUCTURES.md)，实测范围见[验证记录](STRUCTURES-VALIDATION.md)。
 
 ## 远程访问面板
 

@@ -18,7 +18,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parent
 SOURCE_TREES = (
     "lbr-api", "lbr-core", "modules", "integrations", "examples", "web-ui", "docs",
-    "gradle", "third-party/lagfixer", "third-party/yungs", "tools", "resource-packs",
+    "gradle", "third-party/lagfixer", "tools", "resource-packs",
 )
 ROOT_FILES = (
     "settings.gradle.kts", "build.gradle.kts", "gradle.properties",
@@ -48,8 +48,6 @@ SOURCE_BINARIES = {
     "gradle/wrapper/gradle-wrapper.jar",
     "third-party/lagfixer/upstream/gradle/wrapper/gradle-wrapper.jar",
 }
-SOURCE_BINARIES.update(path.relative_to(ROOT).as_posix()
-                       for path in (ROOT / "third-party/yungs").glob("*/upstream/gradle/wrapper/gradle-wrapper.jar"))
 REQUIRED = (
     "gradlew", "gradlew.bat", "gradle/wrapper/gradle-wrapper.jar",
     "gradle/wrapper/gradle-wrapper.properties", "lbr-core/build.gradle.kts",
@@ -75,7 +73,6 @@ REQUIRED = (
 BRIDGES = (
     ("lbr-multiverse-web", "LbrMultiverseWeb"),
     ("lbr-playertitle-web", "LbrPlayerTitleWeb"),
-    ("lbr-structures", "LunarCoreStructures"),
 )
 
 

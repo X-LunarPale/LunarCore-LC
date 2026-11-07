@@ -1,0 +1,9 @@
+:root { font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif; color-scheme: light; --lbr-text: var(--el-text-color-primary); --lbr-text-soft: var(--el-text-color-secondary); --lbr-border: var(--el-border-color-light); }
+:root.dark { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 10px; color: var(--lbr-text); background: var(--el-bg-color); }
+.card { padding: 14px; border: 1px solid var(--lbr-border); border-radius: 10px; }
+.card-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; }
+.muted { color: var(--lbr-text-soft); font-size: 12px; }
+.el-overlay-message-box { padding: 12px; }
+.el-message-box { max-width: 100%; }

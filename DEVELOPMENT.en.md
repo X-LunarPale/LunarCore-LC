@@ -13,7 +13,7 @@ cd web-ui
 npm ci
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures:jar
+./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures-web:jar
 python package-release.py
 ```
 
@@ -53,3 +53,5 @@ Use LC as the short name, `/lc` as the main command, `%lc_module_key%` for place
 Keep ordinary Bukkit plugins separate from internal modules. Binary releases include corresponding source, build files, GPL v3 and third-party licenses.
 
 Public releases use `X-LunarPale/LunarCore-LC`. The market downloads public Release files directly without an access token. Run `python tools/validate-module-market.py` to check entries and `python tools/test-module-market-validator.py` to test validation behavior. Public snapshots and source archives include current guides, without earlier handoffs or runtime data.
+
+The generation engine is now a separate project: https://github.com/rtiags/LunarCoreStructures . This repository builds only the `:lbr-structures-web` management module, including its npm frontend. Build the generator separately against this branch's published `lbr-api`; see that repository's README.

@@ -1,9 +1,0 @@
-{
-  "blocks": 884736,
-  "build": "26.3-202-29aeb60 (MC: 26.3)",
-  "biomesSha256": "91cdd94a8a1c5ae45db51ea65cd083973357ab65bb4dd657c83b49dbc877bdd5",
-  "starts": {
-    "-154,402:minecraft:desert_pyramid": 1
-  },
-  "blocksSha256": "287727ef574424502c7aef5498b3cb376a3725893bfd78cea8deae405fc1e7f4"
-}

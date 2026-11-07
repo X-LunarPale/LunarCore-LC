@@ -2,11 +2,11 @@
 
 [中文](../zh-CN/STRUCTURES.md) | [Installation](INSTALL.md) | [Validation](STRUCTURES-VALIDATION.md)
 
-Use **Server → Server Operations → Structure upgrades** to select vanilla or YUNG’s generation for mineshafts, dungeons, strongholds, desert temples, jungle temples, witch huts, ocean monuments, Nether fortresses, the main End island, desert and swamp decorations (YUNG’s Extras) and river bridges (YUNG’s Bridges). Clients need no mods or additional resource pack.
+Use **Server → Structure upgrades** to select vanilla or YUNG’s generation for mineshafts, dungeons, strongholds, desert temples, jungle temples, witch huts, ocean monuments, Nether fortresses, the main End island, desert and swamp decorations (YUNG’s Extras) and river bridges (YUNG’s Bridges). Clients need no mods or additional resource pack.
 
 ## Installation and settings
 
-Stop the server and place matching `LunarCore-<version>.jar` and `LunarCoreStructures.jar` files in `plugins/`. The structures JAR is a standalone Paper plugin, not an internal module. Use Java 25 and Paper 26.3.
+Stop the server and place a compatible LunarCore build and `LunarCoreStructures.jar` from [rtiags/LunarCoreStructures](https://github.com/rtiags/LunarCoreStructures) in `plugins/`. Install `lbr-structures-web.jar` in `plugins/LunarCore/modules/`. The core must expose `NativeGeneratorDelegate`, and the generation plugin must provide management API v1. The structures JAR is a standalone Paper plugin, not an internal module. Use Java 25 and Paper 26.3.
 
 This local port build has not been published to the upstream module market. If using native terrain, also update its JAR from this bundle's `modules/` directory while stopped, so the interface implementations match this build.
 

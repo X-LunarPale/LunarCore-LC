@@ -1,0 +1,8 @@
+id: structures
+name: 结构美化管理
+version: '${version}'
+main: com.lunarboreal.structuresweb.StructuresWebModule
+description: LunarCoreStructures 的 Web 管理桥接；生成插件需另外安装到 plugins/
+authors: [RayT]
+depends: []
+softdepends: []

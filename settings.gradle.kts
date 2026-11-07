@@ -26,6 +26,7 @@ val modules = listOf(
     "lbr-journal",
     "lbr-landmarks",
     "lbr-qqauth",
+    "lbr-structures-web",
 )
 modules.forEach {
     include(it)
@@ -33,7 +34,7 @@ modules.forEach {
 }
 
 // 独立桥接插件；第三方原插件及其代码不打包到 LunarCore。
-listOf("lbr-playertitle-web", "lbr-multiverse-web", "lbr-structures").forEach {
+listOf("lbr-playertitle-web", "lbr-multiverse-web").forEach {
     include(it)
     project(":$it").projectDir = file("integrations/$it")
 }

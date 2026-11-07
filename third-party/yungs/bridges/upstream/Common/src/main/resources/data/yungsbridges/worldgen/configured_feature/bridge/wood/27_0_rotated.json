@@ -1,7 +1,0 @@
-{
-  "type": "yungsbridges:bridge",
-  "config": {
-    "location": "yungsbridges:bridge/wood/27_0",
-    "is_z_axis": false
-  }
-}

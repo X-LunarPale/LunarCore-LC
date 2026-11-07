@@ -79,7 +79,7 @@ subprojects {
     }
 
     dependencies {
-        if (localPaperHome == null || project.name !in setOf("lbr-terrain", "lbr-structures")) {
+        if (localPaperHome == null || project.name != "lbr-terrain") {
             "compileOnly"(rootProject.extra["paperApi"] as String)
             "testImplementation"(rootProject.extra["paperApi"] as String)
         }

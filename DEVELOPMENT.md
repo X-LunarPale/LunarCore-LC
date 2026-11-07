@@ -13,7 +13,7 @@ cd web-ui
 npm ci
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures:jar
+./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures-web:jar
 python package-release.py
 ```
 
@@ -53,3 +53,5 @@ npm run test:i18n
 普通 Bukkit 插件与内部模块分开安装。二进制发布附对应源码、构建文件、GPL v3 与第三方许可。
 
 公开发布仓库为 `X-LunarPale/LunarCore-LC`。市场直接下载公开 Release 文件，不需要访问令牌。`python tools/validate-module-market.py` 检查社区目录，`python tools/test-module-market-validator.py` 检查投稿校验逻辑。公开快照与源码包只包含当前文档，不包含旧交接记录或运行数据。
+
+结构生成工程已独立发布到 https://github.com/rtiags/LunarCoreStructures 。本仓库仅构建 `:lbr-structures-web` 管理模块；其 npm 前端由 Gradle 自动打包。生成插件另行编译并依赖本仓库发布的 `lbr-api`，见独立仓库 README。

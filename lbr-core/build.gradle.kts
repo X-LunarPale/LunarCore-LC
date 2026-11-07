@@ -3,6 +3,7 @@ import groovy.json.JsonSlurper
 import java.security.MessageDigest
 
 val moduleProjects = rootProject.subprojects.filter { it.projectDir.parentFile.name == "modules" }
+val officialModuleProjects = moduleProjects.filter { it.name != "lbr-structures-web" }
 val basicModules = setOf("lbr-essentials")
 
 repositories {
@@ -41,7 +42,7 @@ val generateMarketCatalog by tasks.registering {
     val catalog = rootProject.file("module-market/catalog.json")
     inputs.file(catalog)
     inputs.property("version", project.version.toString())
-    moduleProjects.forEach { dependsOn(it.tasks.named("jar")); inputs.file(it.tasks.named<Jar>("jar").flatMap { jar -> jar.archiveFile }) }
+    officialModuleProjects.forEach { dependsOn(it.tasks.named("jar")); inputs.file(it.tasks.named<Jar>("jar").flatMap { jar -> jar.archiveFile }) }
     outputs.dir(marketResources)
     doLast {
         @Suppress("UNCHECKED_CAST")

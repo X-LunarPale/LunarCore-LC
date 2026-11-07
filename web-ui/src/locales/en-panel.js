@@ -1,4 +1,5 @@
 export default {
+  '结构美化': 'Structure upgrades',
   '每日首次上线回主城': 'Return to the hub on the first daily login',
   '每日回主城时区': 'Daily hub timezone',
   '留空使用服务器时区，例如 Asia/Shanghai': 'Leave blank for the server timezone, e.g. Asia/Shanghai',

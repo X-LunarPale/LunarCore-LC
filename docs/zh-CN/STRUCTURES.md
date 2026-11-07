@@ -2,11 +2,11 @@
 
 [English](../en-US/STRUCTURES.md) | [安装](INSTALL.md) | [验证记录](STRUCTURES-VALIDATION.md)
 
-在 **服务器 → 服务器操作 → 结构美化** 中，分别选择原版或 YUNG’s：矿井、地牢、要塞、沙漠神庙、丛林神庙、女巫小屋、海底神殿、下界要塞、末地岛、沙漠与沼泽点缀（YUNG’s Extras）、河流桥梁（YUNG’s Bridges）。客户端不需要模组或额外资源包。
+在 **服务器 → 结构美化** 中，分别选择原版或 YUNG’s：矿井、地牢、要塞、沙漠神庙、丛林神庙、女巫小屋、海底神殿、下界要塞、末地岛、沙漠与沼泽点缀（YUNG’s Extras）、河流桥梁（YUNG’s Bridges）。客户端不需要模组或额外资源包。
 
 ## 安装与设置
 
-1. 停服，把同次构建的 `LunarCore-<版本>.jar` 和 `LunarCoreStructures.jar` 放入 `plugins/`。
+1. 停服，将兼容核心与独立仓库 [rtiags/LunarCoreStructures](https://github.com/rtiags/LunarCoreStructures) 发布的 `LunarCoreStructures.jar` 放入 `plugins/`，将 `lbr-structures-web.jar` 放入 `plugins/LunarCore/modules/`。核心须包含 `NativeGeneratorDelegate` API，生成插件须提供管理 API v1。
 2. 使用 Java 25、Paper 26.3 启动。结构插件是独立 Paper 插件，不要放进 `plugins/LunarCore/modules/`。
 3. 点击“设置范围”展开列表，勾选“全服默认”或一个、多个世界，勾选的世界一起修改。世界默认继承全服设置，关闭继承后可独立设置；重新开启继承会移除该世界的单独设置。
 4. 保存设置。设置有变化时会弹窗提示需要重启：点红色的“确认重启”立即重启，点取消或关闭弹窗则不重启，之后自行完整重启也会生效。页面分别显示当前方式和待生效方式。仅保存不会切换运行中的生成器。

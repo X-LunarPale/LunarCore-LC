@@ -1,0 +1,17 @@
+{
+  "id": "structures",
+  "name": "结构美化管理",
+  "nameEn": "Structure upgrades management",
+  "description": "LunarCoreStructures 的 Web 管理桥接。需另装管理 API v1 的生成插件到 plugins/，核心须含 NativeGeneratorDelegate API；本模块放入 LunarCore/modules/。",
+  "descriptionEn": "Web bridge for LunarCoreStructures. Install the API-v1 generation plugin separately in plugins/ and use a core exposing NativeGeneratorDelegate; install this module in LunarCore/modules/.",
+  "version": "0.0.6-preview",
+  "coreVersions": [
+    "0.0.6-preview"
+  ],
+  "author": "rtiags",
+  "source": "https://github.com/rtiags/LunarCore-LC/tree/codex/yungs-paper-structures/modules/lbr-structures-web",
+  "download": "https://github.com/rtiags/LunarCoreStructures/releases/download/v0.1.0-preview.1/lbr-structures-web.jar",
+  "license": "GPL-3.0-only",
+  "sha256": "48378639e1a41731436f3678906ea2b8564ab460f39cbe6fb8d13b2bcaa6d994",
+  "depends": []
+}

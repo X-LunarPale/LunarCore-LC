@@ -4,7 +4,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api'
 import PlayerCell from '../components/PlayerCell.vue'
 import MinecraftTextPreview from '../components/text-preview/MinecraftTextPreview.vue'
-import StructuresWorkspace from '../components/structures/StructuresWorkspace.vue'
 import { t } from '../i18n'
 
 const broadcastText = ref('')
@@ -104,7 +103,6 @@ onMounted(loadWl)
         <el-button type="primary" plain :loading="saving" @click="save"><Icon name="save" :size="14" />&nbsp;{{ t('保存所有世界') }}</el-button>
       </div>
     </div>
-    <StructuresWorkspace />
     <div class="card" style="margin-top: 16px" v-loading="wl.loading">
       <div class="card-title">
         <Icon name="list-checks" :size="16" />{{ t('白名单') }}
