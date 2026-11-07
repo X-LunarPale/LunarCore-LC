@@ -16,14 +16,20 @@ jobs:
   core-and-bridge:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    env:
-      GRADLE_USER_HOME: ${{ runner.temp }}/lunar-gradle
-      NPM_CONFIG_CACHE: ${{ runner.temp }}/lunar-npm
-      NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/lunar-npm-user.conf
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Prepare empty dependency caches
+        run: |
+          test ! -e "$RUNNER_TEMP/lunar-gradle"
+          test ! -e "$RUNNER_TEMP/lunar-npm"
+          mkdir -p "$RUNNER_TEMP/lunar-gradle" "$RUNNER_TEMP/lunar-npm" "$RUNNER_TEMP/lunar-maven" "$RUNNER_TEMP/lunar-home"
+          touch "$RUNNER_TEMP/lunar-npm-user.conf"
+          echo "GRADLE_USER_HOME=$RUNNER_TEMP/lunar-gradle" >> "$GITHUB_ENV"
+          echo "NPM_CONFIG_CACHE=$RUNNER_TEMP/lunar-npm" >> "$GITHUB_ENV"
+          echo "NPM_CONFIG_USERCONFIG=$RUNNER_TEMP/lunar-npm-user.conf" >> "$GITHUB_ENV"
+          git rev-parse HEAD
       - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
@@ -32,13 +38,8 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - name: Assert empty dependency caches
+      - name: Record tool versions
         run: |
-          test ! -e "$GRADLE_USER_HOME"
-          test ! -e "$NPM_CONFIG_CACHE"
-          mkdir -p "$GRADLE_USER_HOME" "$NPM_CONFIG_CACHE" "$RUNNER_TEMP/lunar-maven" "$RUNNER_TEMP/lunar-home"
-          touch "$NPM_CONFIG_USERCONFIG"
-          git rev-parse HEAD
           java -version
           node --version
           npm --version
