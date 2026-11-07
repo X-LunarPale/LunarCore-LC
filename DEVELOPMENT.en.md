@@ -55,3 +55,7 @@ Keep ordinary Bukkit plugins separate from internal modules. Binary releases inc
 Public releases use `X-LunarPale/LunarCore-LC`. The market downloads public Release files directly without an access token. Run `python tools/validate-module-market.py` to check entries and `python tools/test-module-market-validator.py` to test validation behavior. Public snapshots and source archives include current guides, without earlier handoffs or runtime data.
 
 The generation engine is now a separate project: https://github.com/rtiags/LunarCoreStructures . This repository builds only the `:lbr-structures-web` management module, including its npm frontend. Build the generator separately against this branch's published `lbr-api`; see that repository's README.
+
+## Clean build verification
+
+Both projects passed on fresh Linux runners without restored dependency caches. See [verification and reproduction](docs/en-US/CLEAN-BUILD.md) for CI links, isolation and commands.
