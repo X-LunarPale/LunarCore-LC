@@ -1,0 +1,73 @@
+# ==========================================================
+#   LunarCore 琉月
+# ==========================================================
+
+# 语言：zh_CN / en_US（对应 plugins/LunarCore/lang/<语言>/）
+language: zh_CN
+
+# 是否在控制台输出调试信息
+debug: false
+
+database:
+  # sqlite 或 mysql（mysql 同时兼容 MariaDB）
+  type: sqlite
+  # 表名前缀
+  table-prefix: lc_
+  sqlite:
+    file: data.db
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: lunarboreal
+    username: root
+    password: ''
+    parameters: useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+  # 连接池（SQLite 下最大连接数自动限制为 2~6；写操作在插件内串行化）
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout: 10000
+  # 异步数据库任务线程数（SQLite 建议 2，MySQL 建议 4）
+  async-threads: 2
+
+web:
+  # 是否启用 Web 管理面板
+  enabled: true
+  # 监听地址：0.0.0.0 对外开放；127.0.0.1 仅本机（配合 nginx 反代）
+  host: 127.0.0.1
+  # 面板端口（需在防火墙/面板服开放此端口）
+  port: 8765
+  # 通过反向代理部署在子路径时填写，如 /lc ；直接访问留空
+  base-path: ''
+  # 对外访问地址（仅用于游戏内 /lc web 显示），留空则自动拼接
+  public-url: ''
+  https:
+    enabled: false
+    # JKS / PKCS12 证书路径（相对插件目录）
+    keystore: web.p12
+    keystore-password: changeit
+  # JWT 密钥，留空首次启动自动生成
+  jwt-secret: ''
+  # 登录有效期（小时）
+  session-hours: 24
+  # 允许跨域的来源，前后端分离部署时填写；同源访问保持空
+  cors-origins: []
+  # 登录失败锁定：N 次失败后锁定 IP M 分钟
+  login-max-attempts: 5
+  login-lock-minutes: 10
+  # IP 白名单（为空不限制），支持 CIDR，如 192.168.1.0/24
+  ip-whitelist: []
+
+modules:
+  # 首次运行是否释放内置模块到 modules/ 目录
+  extract-builtin: true
+  # 内置模块有新版本时是否自动覆盖（会保留模块配置）
+  update-builtin: true
+  # QQAuth 升级旧服也默认不自动启动；配置群组/桥接后停服设置 true 并从 disabled 移除 qqauth
+  qqauth-autostart: false
+  # 禁用的模块 ID
+  disabled: [qqauth]
+
+commands:
+  # 禁用的命令（不会注册），如 [fly, god]
+  disabled: []

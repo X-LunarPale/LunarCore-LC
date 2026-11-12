@@ -1,0 +1,62 @@
+# Signin module language file (MiniMessage), key: signin.<path>
+usage: "<prefix><white>Usage: <yellow>/signin</yellow> open calendar, <yellow>/signin sign</yellow> sign in, <yellow>/signin top [streak|total] [page]</yellow> leaderboard"
+usage-admin: "<prefix><white>Usage: <yellow>/signin admin reset <player>"
+
+sign:
+  success: "<prefix><green>Signed in! Streak <gold>{streak}</gold> days, total <gold>{total}</gold> days. <white>Reward: </white>{reward}"
+  already: "<prefix><yellow>You have already signed in today (streak {streak}, total {total})."
+  streak-reward: "<prefix><light_purple>{days}-day streak bonus: </light_purple>{reward}"
+  milestone-reward: "<prefix><aqua>{days} total days milestone: </aqua>{reward}"
+  broadcast: "<prefix><white><white>{player}</white> signed in today, streak <gold>{streak}</gold>! Type <click:run_command:'/signin'><yellow><u>/signin</u></yellow></click> to join."
+
+makeup:
+  success: "<prefix><green>Made up <white>{date}</white> (cost <gold>{cost}</gold>). Streak <gold>{streak}</gold>, total <gold>{total}</gold>, {left} make-ups left this month."
+  disabled: "<prefix><red>Make-up sign-in is disabled or you lack permission."
+  invalid-date: "<prefix><red>You can only make up earlier days of this month."
+  already: "<prefix><yellow>That day is already signed."
+  limit: "<prefix><red>No make-ups left this month (limit {limit})."
+  no-economy: "<prefix><red>Economy module is not enabled."
+  no-money: "<prefix><red>Insufficient funds: need <gold>{cost}</gold>, you have <gold>{balance}</gold>."
+
+remind:
+  join: "<prefix><yellow>You haven't signed in today! <click:run_command:'/signin'><green><u>[Sign in]</u></green></click>"
+  new-day: "<prefix><yellow>A new day has begun, don't forget to sign in! <click:run_command:'/signin'><green><u>[Sign in]</u></green></click>"
+
+top:
+  header-streak: "<gold>===== Streak Leaderboard <white>(page {page})</white> ====="
+  header-total: "<gold>===== Total Leaderboard <white>(page {page})</white> ====="
+  entry: "<white>#{rank} <white>{player}</white> <aqua>-</aqua> streak <gold>{streak}</gold> / total <yellow>{total}</yellow>"
+  empty: "<white>No data yet."
+
+admin:
+  reset: "<prefix><green>Reset all sign-in data of <white>{player}</white>."
+
+error:
+  no-permission: "<prefix><red>You don't have permission."
+  player-not-found: "<prefix><red>Player <white>{player}</white> not found."
+  database: "<prefix><red>Database operation failed, try again later."
+  loading: "<prefix><yellow>Sign-in data is loading, please try again."
+
+gui:
+  title: "<dark_aqua>Daily Sign-in · {year}-{month}"
+  filler: "<white> "
+  close: "<red>Close"
+  info: "<gold>My Sign-in"
+  info-lore: "<white>Streak: <gold>{streak}</gold>\n<white>Total: <gold>{total}</gold>\n<white>This month: <gold>{month}</gold>\n<white>Make-ups left: <gold>{left}</gold>/{limit}\n<aqua>Each row starts on Monday"
+  sign-button: "<green><b>Click to sign in"
+  sign-done: "<green>Signed in today"
+  rewards: "<light_purple>Rewards"
+  rewards-streak-line: "<white>{days}-day streak: </white>{reward}"
+  rewards-milestone-line: "<white>{days} total days: </white>{reward}"
+  day:
+    signed: "<green>{date} signed"
+    signed-lore: "<white>✔ Done"
+    makeup-signed: "<yellow>{date} made up"
+    makeup-signed-lore: "<white>✔ Made up"
+    today: "<gold><b>{date} Today"
+    today-lore: "<yellow>Click to sign in\n<white>Reward: </white>{reward}"
+    missed: "<red>{date} missed"
+    missed-lore: "<yellow>Click to make up\n<white>Cost: <gold>{cost}</gold>\n<white>Make-ups left: <gold>{left}</gold>"
+    locked: "<dark_red>{date} missed"
+    locked-lore: "<white>No make-ups left or make-up disabled"
+    future: "<white>{date}"

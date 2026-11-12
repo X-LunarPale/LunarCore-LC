@@ -56,20 +56,20 @@ function numberInput(event) {
 .paper-field:last-child { border-bottom: 0; }
 .paper-field.changed { box-shadow: inset 3px 0 var(--el-color-warning); background: var(--el-color-warning-light-9); }
 .field-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 14px; }
-.field-help { margin: 8px 0 7px; color: var(--lbr-text-soft); font-size: 13px; line-height: 1.7; }
+.field-help { margin: 8px 0 7px; color: var(--lc-text-soft); font-size: 13px; line-height: 1.7; }
 code { font-size: 11px; color: var(--el-text-color-secondary); overflow-wrap: anywhere; }
-.field-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 11px; color: var(--lbr-text-soft); }
+.field-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 11px; color: var(--lc-text-soft); }
 .field-control { align-self: center; min-width: 0; }
 .numeric-control { display: flex; align-items: center; gap: 22px; }
 .numeric-control :deep(.el-slider) { flex: 1; min-width: 80px; margin-left: 8px; }
 .exact-input { width: 126px; max-width: 100%; box-sizing: border-box; border: 1px solid var(--el-border-color); background: var(--el-fill-color-blank); border-radius: 5px; color: var(--el-text-color-primary); padding: 8px 10px; font: inherit; font-size: 13px; }
 .exact-input:focus { outline: 2px solid var(--el-color-primary-light-5); outline-offset: 2px; }
 .exact-input:disabled { opacity: .65; cursor: not-allowed; }
-.range-help, .field-note { font-size: 11px; line-height: 1.7; color: var(--lbr-text-soft); margin: 8px 0 0; }
+.range-help, .field-note { font-size: 11px; line-height: 1.7; color: var(--lc-text-soft); margin: 8px 0 0; }
 .range-help span { display: block; }
 .sentinel-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .sentinel-options :deep(.el-button) { margin: 0; height: auto; white-space: normal; line-height: 1.6; }
 .field-error { color: var(--el-color-danger); font-size: 12px; margin: 8px 0 0; }
-.readonly-value { font-size: 13px; color: var(--lbr-text-soft); }
+.readonly-value { font-size: 13px; color: var(--lc-text-soft); }
 @media (max-width: 780px) { .paper-field { grid-template-columns: 1fr; gap: 16px; padding: 18px 16px; } }
 </style>

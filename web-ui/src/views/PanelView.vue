@@ -93,11 +93,11 @@ function iframeSrc(u) {
 </template>
 
 <style scoped>
-.page { color: var(--lbr-text); }
+.page { color: var(--lc-text); }
 .sub-divider { margin: 0 10px; color: var(--el-border-color); }
 .section-grid { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 24px; }
-.section-index { display: flex; gap: 6px; align-items: center; overflow-x: auto; position: sticky; top: 0; z-index: 8; padding: 8px 0 12px; margin: 0 0 20px; background: var(--lbr-bg); border-bottom: 1px solid var(--el-border-color-light); scrollbar-width: thin; }
-.index-label { flex: 0 0 auto; color: var(--lbr-text-soft); font-size: 11px; padding: 0 12px; border-right: 1px solid var(--el-border-color-light); margin-right: 4px; }
+.section-index { display: flex; gap: 6px; align-items: center; overflow-x: auto; position: sticky; top: 0; z-index: 8; padding: 8px 0 12px; margin: 0 0 20px; background: var(--lc-bg); border-bottom: 1px solid var(--el-border-color-light); scrollbar-width: thin; }
+.index-label { flex: 0 0 auto; color: var(--lc-text-soft); font-size: 11px; padding: 0 12px; border-right: 1px solid var(--el-border-color-light); margin-right: 4px; }
 .section-index button { border: 0; border-radius: 6px; background: transparent; color: var(--el-text-color-regular); white-space: nowrap; padding: 8px 12px; cursor: pointer; font-size: 12px; transition: color 180ms, background-color 180ms, transform 360ms var(--motion-spring, cubic-bezier(.2,1.3,.35,1)); }
 .section-index button:active { background: var(--el-color-primary-light-8); transform: scale(.95); }
 .section-index button:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 1px; }

@@ -22,13 +22,13 @@ $env:TEMP="D:\dsh work\_tools\tmp"; $env:TMP=$env:TEMP; npm run build
 
 ```bash
 npm run dev       # http://localhost:5173 ，/api 与 /ext 代理到 http://127.0.0.1:8765
-LBR_API=http://服务器:8765 npm run dev   # 代理到其它地址
+LC_API=http://服务器:8765 npm run dev   # 代理到其它地址
 ```
 
 ## 部署说明
 
 - `vite.config.js` 中 `base: './'`：后端在返回 `index.html` 时注入 `<base href="{base-path}/">` 和
-  `window.__LBR_BASE__`，因此同一份构建产物可部署在任意 `web.base-path`（如 nginx 反代到 `/lbr`）。
+  `window.__LC_BASE__`，因此同一份构建产物可部署在任意 `web.base-path`（如 nginx 反代到 `/lc`）。
 - 前端路由使用 HTML5 history，后端对未知路径回退到 `index.html`。
 
 ## 目录
@@ -41,7 +41,7 @@ LBR_API=http://服务器:8765 npm run dev   # 代理到其它地址
 | `src/views/PanelView.vue` | 通用 WebPanel 渲染器入口（`/panel/:namespace/:id`） |
 | `src/components/panel/` | Table / Form / Stats 区块、字段输入、行/工具栏操作执行器 |
 
-## WebPanel 渲染约定（与 `lbr-api` 中 `WebPanel` Javadoc 一致）
+## WebPanel 渲染约定（与 `lc-api` 中 `WebPanel` Javadoc 一致）
 
 - **Table**：`GET endpoint?page=&size=&q=&sort=&order=` → `{"total":N,"items":[...]}`（也接受直接返回数组）。
   列类型：`text number money datetime(毫秒) bool player(UUID 或名字，mc-heads.net 头像) tag(字符串或数组) duration(毫秒)`。

@@ -11,7 +11,7 @@
     <script>
       // 主题在 Vue 加载前生效，避免闪烁
       try {
-        var t = localStorage.getItem('lbr-theme')
+        var t = localStorage.getItem('lc-theme')
         if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark')
         }

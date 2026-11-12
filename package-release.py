@@ -30,7 +30,7 @@ def main():
     parser.add_argument("--check-source", action="store_true")
     parser.add_argument("--list-source", action="store_true")
     args = parser.parse_args()
-    match = re.findall(r"^lbrVersion=(\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?)\s*$",
+    match = re.findall(r"^lcVersion=(\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?)\s*$",
                        (ROOT / "gradle.properties").read_text(encoding="utf-8"), re.MULTILINE)
     if len(match) != 1:
         raise ValueError("Expected one release version in gradle.properties")
@@ -47,13 +47,13 @@ def main():
         print(json.dumps({"version": version, "source_files": len(paths)}))
         return
 
-    core = ROOT / f"lbr-core/build/libs/LunarCore-{version}.jar"
+    core = ROOT / f"lc-core/build/libs/LunarCore-{version}.jar"
     legacy.validate_plugin(core, version, "LunarCore")
     with zipfile.ZipFile(core) as archive:
         archive.getinfo("web/index.html")
         archive.getinfo("META-INF/LICENSE")
         embedded = [n for n in archive.namelist() if n.startswith("builtin-modules/") and n.endswith(".jar")]
-        if embedded != ["builtin-modules/lbr-essentials.jar"]:
+        if embedded != ["builtin-modules/lc-essentials.jar"]:
             raise ValueError(f"Core must contain only essentials: {embedded}")
         catalog_bytes = archive.read("module-market.json")
         catalog = json.loads(catalog_bytes)
@@ -78,7 +78,7 @@ def main():
         if entry["id"] in ids or entry["version"] != version:
             raise ValueError("Duplicate module or mismatched version")
         ids.add(entry["id"])
-        built = ROOT / f"modules/lbr-{entry['id']}/build/libs/{entry['asset']}"
+        built = ROOT / f"modules/lc-{entry['id']}/build/libs/{entry['asset']}"
         if built.stat().st_size != entry["size"] or legacy.digest(built) != entry["sha256"]:
             raise ValueError(f"Catalog checksum mismatch: {entry['id']}")
         with zipfile.ZipFile(built) as archive:
@@ -103,7 +103,7 @@ def main():
         bridges.append(copy(built, f"{name}.jar"))
 
     # Community bridge: shipped separately from the official 19-entry catalog.
-    structure_bridge = copy(ROOT / "modules/lbr-structures-web/build/libs/lbr-structures-web.jar")
+    structure_bridge = copy(ROOT / "modules/lc-structures-web/build/libs/lc-structures-web.jar")
     with zipfile.ZipFile(structure_bridge) as archive:
         archive.getinfo("module.yml")
         archive.getinfo("web/index.html")
@@ -117,8 +117,8 @@ def main():
         legacy.add_file(archive, ROOT / "docs/zh-CN/MODULES.md", "MODULES.zh-CN.md")
         legacy.add_file(archive, ROOT / "docs/en-US/MODULES.md", "MODULES.en-US.md")
         legacy.add_file(archive, terrain_agent, "terrain-setup/" + terrain_agent.name)
-        legacy.add_file(archive, ROOT / "modules/lbr-terrain/README.md", "terrain-setup/README.zh-CN.md")
-        legacy.add_file(archive, ROOT / "modules/lbr-terrain/README.en.md", "terrain-setup/README.en.md")
+        legacy.add_file(archive, ROOT / "modules/lc-terrain/README.md", "terrain-setup/README.zh-CN.md")
+        legacy.add_file(archive, ROOT / "modules/lc-terrain/README.en.md", "terrain-setup/README.en.md")
     assets.append(modules_zip)
     source = output / f"LunarCore-{version}-source.zip"
     with zipfile.ZipFile(source, "w") as archive:
@@ -135,8 +135,8 @@ def main():
             legacy.add_file(archive, path, "modules/" + path.name)
         for name in ("LICENSE", "THIRD-PARTY-NOTICES.md", "README.md", "README.en.md"):
             legacy.add_file(archive, ROOT / name, name)
-        legacy.add_file(archive, ROOT / "modules/lbr-terrain/README.md", "terrain-setup/README.zh-CN.md")
-        legacy.add_file(archive, ROOT / "modules/lbr-terrain/README.en.md", "terrain-setup/README.en.md")
+        legacy.add_file(archive, ROOT / "modules/lc-terrain/README.md", "terrain-setup/README.zh-CN.md")
+        legacy.add_file(archive, ROOT / "modules/lc-terrain/README.en.md", "terrain-setup/README.en.md")
         for language in ("zh-CN", "en-US"):
             for path in sorted((ROOT / "docs" / language).glob("*.md")):
                 legacy.add_file(archive, path, f"docs/{language}/{path.name}")
@@ -144,11 +144,11 @@ def main():
             f"LunarCore 琉月 v{version}\n"
             "Java 25 / Paper 26.3\n"
             "核心 JAR 放入 plugins/。附加模块按需放入 plugins/LunarCore/modules/。\n"
-            "结构美化：另行下载 LunarCoreStructures.jar 放入 plugins/；lbr-structures-web.jar 放入 LunarCore/modules/。\n"
+            "结构美化：另行下载 LunarCoreStructures.jar 放入 plugins/；lc-structures-web.jar 放入 LunarCore/modules/。\n"
             "地形模块另需启动参数 -javaagent:LC-Terrain-Agent.jar，见 terrain-setup/。\n"
             "停服后安装或更新，保留数据目录。详见 docs/zh-CN/INSTALL.md。\n"
             "Core JAR: plugins/. Optional modules: plugins/LunarCore/modules/.\n"
-            "Structures: download LunarCoreStructures.jar separately into plugins/; install lbr-structures-web.jar into LunarCore/modules/.\n"
+            "Structures: download LunarCoreStructures.jar separately into plugins/; install lc-structures-web.jar into LunarCore/modules/.\n"
             "Terrain also requires -javaagent:LC-Terrain-Agent.jar; see terrain-setup/.\n"
             "Stop before installing or updating. Keep the data folder. See docs/en-US/INSTALL.md.\n"
         ).encode("utf-8"))

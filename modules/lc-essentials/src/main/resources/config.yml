@@ -1,0 +1,154 @@
+# ============================================================
+#  LunarCore 基础命令模块（essentials）配置
+#  修改后执行 /lc module reload essentials 生效
+# ============================================================
+
+# 禁用的命令（填写命令主名，如 [suicide, sudo]），禁用后不会注册
+disabled-commands: []
+
+# 是否抢占原版同名命令（gamemode/give/kill/time/weather/list/enchant/clear/xp/item）
+override-vanilla: true
+# 在 override-vanilla 为 true 时，仍保留原版实现的命令（例如 [item] 以保留原版 /item replace）
+no-override: [item]
+
+# 普通玩家默认拥有的权限（OP 拥有全部 lc.*）。模块启用时以 PermissionDefault.TRUE 注册
+default-permissions:
+  - lc.essentials.afk
+  - lc.essentials.list
+  - lc.essentials.ping
+  - lc.essentials.seen
+  - lc.essentials.kit
+  - lc.essentials.getpos
+  - lc.essentials.compass
+  - lc.essentials.depth
+  - lc.essentials.suicide
+  - lc.essentials.disposal
+  - lc.essentials.worth
+  - lc.essentials.sell
+  - lc.essentials.near
+
+data:
+  # 脏数据定时保存间隔（秒）
+  save-interval-seconds: 120
+
+# 变量 %lc_essentials_afk% 等布尔值的显示文本
+placeholder:
+  'true': 'true'
+  'false': 'false'
+
+afk:
+  # 无操作多少秒后自动进入 AFK（0 关闭）
+  auto-afk-seconds: 300
+  # 无操作多少秒后踢出（0 关闭；权限 lc.essentials.afk.kickexempt 豁免）
+  kick-seconds: 0
+  # 是否全服广播 AFK 状态变化（隐身玩家不广播）
+  broadcast: true
+  # AFK 玩家不计入睡觉人数
+  ignore-sleep: true
+  # AFK 期间无敌
+  invulnerable: false
+  # 只有转动视角才算活动（防止水流挂机）
+  rotation-only: false
+
+vanish:
+  # 隐身玩家不显示进出服消息
+  hide-join-quit: true
+  # 隐身状态下允许拾取物品
+  allow-pickup: false
+  # 从服务器列表（人数/玩家样本）中隐藏
+  hide-from-server-list: true
+  # 切换隐身时向看不见你的玩家发送假的进出服消息
+  fake-join-quit: false
+
+god:
+  # 上帝模式是否也免疫虚空伤害
+  protect-void: false
+  # 上帝模式下怪物不会锁定你
+  no-mob-target: false
+
+gamemode:
+  # 是否需要 lc.essentials.gamemode.<survival|creative|adventure|spectator> 才能切换到对应模式
+  per-mode-permission: false
+
+speed:
+  # 最大速度（1-10）
+  max: 10
+
+give:
+  # 未指定数量时的默认数量（0 = 一组最大堆叠）
+  default-amount: 0
+  # 单次最多给予数量（lc.essentials.give.bypass 无视）
+  max-amount: 2304
+  # /more 在拥有 lc.essentials.more.oversized 时的堆叠数量（最大 99）
+  oversized-stack-size: 64
+  # 禁止给予的物品（lc.essentials.give.bypass 无视）
+  blacklist: [BEDROCK, BARRIER, COMMAND_BLOCK, CHAIN_COMMAND_BLOCK, REPEATING_COMMAND_BLOCK, COMMAND_BLOCK_MINECART, STRUCTURE_BLOCK, JIGSAW, DEBUG_STICK]
+
+# 物品别名：/i <别名> → 物品 ID
+item-aliases:
+  钻石: diamond
+  铁锭: iron_ingot
+  金锭: gold_ingot
+
+repair:
+  # 禁止修复的物品（lc.essentials.repair.bypass 无视）
+  blacklist: []
+  # 是否允许修复带附魔的物品（否则需要 lc.essentials.repair.enchanted）
+  allow-enchanted: true
+
+enchant:
+  # 是否允许超出上限/不适用的附魔（需要 lc.essentials.enchant.unsafe）
+  allow-unsafe: true
+  # 不安全附魔的最大等级
+  max-unsafe-level: 255
+
+spawnmob:
+  # 单次最多生成数量
+  max: 50
+  # 禁止生成的生物（lc.essentials.spawnmob.bypass 无视）
+  blacklist: [WITHER, ENDER_DRAGON]
+
+butcher:
+  # 默认半径（0 = 整个世界）
+  default-radius: 0
+
+near:
+  default-radius: 100
+  max-radius: 500
+
+jump:
+  max-distance: 200
+
+color:
+  # 告示牌 & 颜色代码（lc.essentials.signs.color / .format / .magic）
+  signs: true
+  # 铁砧重命名 & 颜色代码（lc.essentials.anvil.color / .format / .magic）
+  anvil: true
+
+powertool:
+  enabled: true
+
+kits:
+  enabled: true
+  # /kit 无参数时打开 GUI
+  gui: true
+  # 是否发放 first-join: true 的礼包
+  first-join-enabled: true
+
+worth:
+  # 启用 /worth /sell /setworth（需要 economy 模块）
+  enabled: true
+  # 是否允许出售带自定义名称/附魔/描述/损耗的物品
+  sell-modified-items: false
+  # 是否允许创造/旁观模式出售（防刷钱；lc.essentials.sell.creative 无视）
+  allow-creative-sell: false
+
+# /list 分组：按顺序匹配第一个拥有的权限，未匹配归入默认组
+list:
+  groups:
+    admin:
+      name: "<red>管理员</red>"
+      permission: lc.essentials.list.group.admin
+    vip:
+      name: "<gold>VIP</gold>"
+      permission: lc.essentials.list.group.vip

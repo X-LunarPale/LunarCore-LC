@@ -1,8 +1,0 @@
-# LbrExampleAddon 示例配置（可在 Web 面板「示例扩展」中修改）
-
-# 每次 /lcexample click 增加的点数
-points-per-click: 1
-# 点击冷却（秒）
-cooldown-seconds: 2
-# 达到该点数时全服广播
-announce-every: 100

@@ -232,16 +232,16 @@ onBeforeUnmount(() => { selection++ })
 </template>
 
 <style scoped>
-.branding-settings { padding: 20px 0; color: var(--lbr-text); }
+.branding-settings { padding: 20px 0; color: var(--lc-text); }
 .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
 .section-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
-.section-head p, .setting-block p { margin: 5px 0 0; color: var(--lbr-text-soft); font-size: 12px; line-height: 1.7; }
+.section-head p, .setting-block p { margin: 5px 0 0; color: var(--lc-text-soft); font-size: 12px; line-height: 1.7; }
 .brand-preview { display: flex; align-items: center; gap: 14px; min-height: 86px; padding: 14px 18px; border: 1px solid var(--el-border-color-light); border-radius: 8px; background: var(--el-fill-color-extra-light); }
-.brand-mark { width: 56px; height: 56px; flex: 0 0 56px; display: grid; place-items: center; border: 1px solid var(--el-border-color-light); border-radius: 8px; background: var(--lbr-surface); }
+.brand-mark { width: 56px; height: 56px; flex: 0 0 56px; display: grid; place-items: center; border: 1px solid var(--el-border-color-light); border-radius: 8px; background: var(--lc-surface); }
 .brand-mark img { max-width: 46px; max-height: 46px; object-fit: contain; }
 .brand-preview > div { display: grid; gap: 3px; min-width: 0; }
 .brand-preview strong { font-size: 17px; font-weight: 650; overflow-wrap: anywhere; }
-.brand-preview small { font-size: 11px; color: var(--lbr-text-soft); }
+.brand-preview small { font-size: 11px; color: var(--lc-text-soft); }
 .brand-preview .el-tag { margin-left: auto; flex-shrink: 0; }
 .setting-block { padding-top: 22px; }
 .setting-block + .setting-block { border-top: 1px solid var(--el-border-color-lighter); margin-top: 22px; }
@@ -250,7 +250,7 @@ onBeforeUnmount(() => { selection++ })
 .field-row :deep(.el-input) { max-width: 360px; min-width: 0; }
 .field-row .el-button { margin-left: 0; }
 .file-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.file-meta { min-width: 0; overflow-wrap: anywhere; color: var(--lbr-text-soft); font-size: 12px; }
+.file-meta { min-width: 0; overflow-wrap: anywhere; color: var(--lc-text-soft); font-size: 12px; }
 .field-error { color: var(--el-color-danger) !important; }
 .load-error { margin-bottom: 16px; }
 @media (max-width: 600px) {

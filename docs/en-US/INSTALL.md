@@ -33,11 +33,11 @@ Download JARs matching the core version. Stop and place them in `plugins/LunarCo
 
 You can select modules from `LunarCore-modules-0.0.7.zip`. Installing more modules uses more resources.
 
-The terrain module also needs `LC-Terrain-Agent.jar` in the server directory. Add `-javaagent:LC-Terrain-Agent.jar` before `-jar` in the Java command and fully restart. See the [terrain guide](../../modules/lbr-terrain/README.en.md).
+The terrain module also needs `LC-Terrain-Agent.jar` in the server directory. Add `-javaagent:LC-Terrain-Agent.jar` before `-jar` in the Java command and fully restart. See the [terrain guide](../../modules/lc-terrain/README.en.md).
 
 ## Structure Plugin
 
-Download `LunarCoreStructures.jar` separately into `plugins/`, and install `lbr-structures-web.jar` in `plugins/LunarCore/modules/`. See [bridge compatibility requirements](../../modules/lbr-structures-web/README.en.md). All nine families start disabled and affect only new chunks and new worlds. Save global or world settings under Server → Structure upgrades, then fully restart. See [Structure upgrades](STRUCTURES.md) for installation, and [validation](STRUCTURES-VALIDATION.md) for the tested scope.
+Download `LunarCoreStructures.jar` separately into `plugins/`, and install `lc-structures-web.jar` in `plugins/LunarCore/modules/`. See [bridge compatibility requirements](../../modules/lc-structures-web/README.en.md). All nine families start disabled and affect only new chunks and new worlds. Save global or world settings under Server → Structure upgrades, then fully restart. See [Structure upgrades](STRUCTURES.md) for installation, and [validation](STRUCTURES-VALIDATION.md) for the tested scope.
 
 ## Remote Panel Access
 

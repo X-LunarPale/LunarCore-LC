@@ -1,6 +1,6 @@
 // HTTP / WebSocket 客户端
 import { t } from './i18n.js'
-export const BASE = (window.__LBR_BASE__ || '').replace(/\/+$/, '')
+export const BASE = (window.__LC_BASE__ || '').replace(/\/+$/, '')
 
 let tokenGetter = () => null
 let unauthorizedHandler = () => {}

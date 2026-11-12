@@ -17,7 +17,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent
 SOURCE_TREES = (
-    "lbr-api", "lbr-core", "modules", "integrations", "examples", "web-ui", "docs",
+    "lc-api", "lc-core", "modules", "integrations", "examples", "web-ui", "docs",
     "gradle", "third-party/lagfixer", "tools", "resource-packs",
 )
 ROOT_FILES = (
@@ -50,17 +50,17 @@ SOURCE_BINARIES = {
 }
 REQUIRED = (
     "gradlew", "gradlew.bat", "gradle/wrapper/gradle-wrapper.jar",
-    "gradle/wrapper/gradle-wrapper.properties", "lbr-core/build.gradle.kts",
+    "gradle/wrapper/gradle-wrapper.properties", "lc-core/build.gradle.kts",
     "web-ui/package.json", "web-ui/package-lock.json", "web-ui/vite.config.js",
     "web-ui/index.html", "web-ui/tests/api-security.test.js",
-    "web-ui/tests/panel.test.js", "modules/lbr-qqauth/build.gradle.kts",
-    "modules/lbr-vote/src/main/java/com/lunarboreal/vote/VoteModule.java", "third-party/lagfixer/upstream/LICENSE",
-    "modules/lbr-world/src/main/java/com/lunarboreal/world/WorldModule.java",
-    "modules/lbr-world/src/main/java/com/lunarboreal/world/WorldWeb.java",
-    "integrations/lbr-multiverse-web/build.gradle.kts",
-    "integrations/lbr-multiverse-web/src/main/resources/plugin.yml",
-    "integrations/lbr-playertitle-web/build.gradle.kts",
-    "integrations/lbr-playertitle-web/src/main/resources/plugin.yml",
+    "web-ui/tests/panel.test.js", "modules/lc-qqauth/build.gradle.kts",
+    "modules/lc-vote/src/main/java/com/lunarboreal/vote/VoteModule.java", "third-party/lagfixer/upstream/LICENSE",
+    "modules/lc-world/src/main/java/com/lunarboreal/world/WorldModule.java",
+    "modules/lc-world/src/main/java/com/lunarboreal/world/WorldWeb.java",
+    "integrations/lc-multiverse-web/build.gradle.kts",
+    "integrations/lc-multiverse-web/src/main/resources/plugin.yml",
+    "integrations/lc-playertitle-web/build.gradle.kts",
+    "integrations/lc-playertitle-web/src/main/resources/plugin.yml",
     "tools/lagfixer-probe/src/main/java/com/lunarboreal/probe/LagFixerProbe.java",
     "tools/lagfixer-probe/src/main/resources/plugin.yml",
     "tools/terrain-native-probe/offline/TerrainRegionRead.java",
@@ -71,16 +71,16 @@ REQUIRED = (
     "resource-packs/lunar-island/pack/assets/lunar/font/mono.json",
 )
 BRIDGES = (
-    ("lbr-multiverse-web", "LbrMultiverseWeb"),
-    ("lbr-playertitle-web", "LbrPlayerTitleWeb"),
+    ("lc-multiverse-web", "LcMultiverseWeb"),
+    ("lc-playertitle-web", "LcPlayerTitleWeb"),
 )
 
 
 def version() -> str:
     text = (ROOT / "gradle.properties").read_text(encoding="utf-8")
-    found = re.findall(r"^lbrVersion=(alpha[1-9][0-9]*)\s*$", text, re.MULTILINE)
+    found = re.findall(r"^lcVersion=(alpha[1-9][0-9]*)\s*$", text, re.MULTILINE)
     if len(found) != 1:
-        raise ValueError("gradle.properties must contain exactly one lbrVersion=alphaN")
+        raise ValueError("gradle.properties must contain exactly one lcVersion=alphaN")
     return found[0]
 
 
@@ -98,7 +98,7 @@ def allowed(path: Path) -> bool:
         return False
     if any(word in lower for word in ("web-admin-password", "credential", "private-key")):
         return False
-    if name.startswith("integrations/lbr-playertitle-web/inspect-") and lower.endswith(".sh"):
+    if name.startswith("integrations/lc-playertitle-web/inspect-") and lower.endswith(".sh"):
         return False
     # The checked-in Gradle wrapper is required to rebuild from source.
     if name in SOURCE_BINARIES:
@@ -160,7 +160,7 @@ def validate_plugin(path: Path, release: str, plugin_name: str) -> None:
         if not re.search(r"^name:\s*['\"]?" + re.escape(plugin_name) + r"['\"]?\s*$", plugin, re.MULTILINE):
             raise ValueError(f"Unexpected plugin name in {path.relative_to(ROOT)}")
         if not re.search(r"^version:\s*['\"]?" + re.escape(release) + r"['\"]?\s*$", plugin, re.MULTILINE):
-            raise ValueError(f"Built plugin.yml version does not match lbrVersion: {path.relative_to(ROOT)}")
+            raise ValueError(f"Built plugin.yml version does not match lcVersion: {path.relative_to(ROOT)}")
 
 
 def main() -> None:
@@ -179,12 +179,12 @@ def main() -> None:
     if args.check_source:
         print(json.dumps({"version": release, "source_files": len(paths), "output": f"dist/{release}"}))
         return
-    built = ROOT / f"lbr-core/build/libs/LunarCore-{release}.jar"
+    built = ROOT / f"lc-core/build/libs/LunarCore-{release}.jar"
     if not built.is_file():
         raise FileNotFoundError(f"Build and verify {built.relative_to(ROOT)} first")
     validate_plugin(built, release, "LunarCore")
     with zipfile.ZipFile(built) as archive:
-        for name in ("web/index.html", "builtin-modules/lbr-qqauth.jar", "builtin-modules/lbr-vote.jar"):
+        for name in ("web/index.html", "builtin-modules/lc-qqauth.jar", "builtin-modules/lc-vote.jar"):
             archive.getinfo(name)
     bridges = []
     for project, plugin_name in BRIDGES:
@@ -215,7 +215,7 @@ def main() -> None:
 先备份并停服，替换 plugins 中的 LunarCore JAR；不要留下多个版本，也不要热覆盖。
 QQAuth 默认不自动启动；配置群组和桥接后停服设 modules.qqauth-autostart: true，且从 modules.disabled 移除 qqauth。
 QQAuth 启停可能踢出在线玩家，不要同时启用 AuthMe。内置优化默认关闭。
-LbrMultiverseWeb.jar 与 LbrPlayerTitleWeb.jar 若随包提供，均为可选独立桥接插件，
+LcMultiverseWeb.jar 与 LcPlayerTitleWeb.jar 若随包提供，均为可选独立桥接插件，
 仅在安装对应第三方插件时另放入 plugins；它们不在核心 JAR 内，不含第三方插件。
 本包含源码与许可，不含 Paper、JDK、运行服、数据库或生成凭据。
 阅读 docs/RELEASE-{release}.md 与所链接的测试清单，真实客户端/多人测试仍待验收。

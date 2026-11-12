@@ -1,0 +1,261 @@
+# Essentials module language file (MiniMessage). {xxx} are placeholders.
+usage: "<red>Usage: <yellow>{usage}"
+player-only: "<red>Only players can use this command."
+player-not-found: "<red>Online player <yellow>{player}</yellow> not found."
+no-permission-others: "<red>You don't have permission to do this to other players."
+no-permission-sub: "<red>You don't have permission to use <yellow>{sub}</yellow>."
+invalid-number: "<red>Invalid number: <yellow>{value}"
+invalid-item: "<red>Unknown item: <yellow>{item}"
+world-not-found: "<red>World not found: <yellow>{world}"
+hand-empty: "<red>You are not holding anything."
+data-loading: "<red>Your data is still loading, please try again shortly."
+
+state:
+  on: "<green>enabled</green>"
+  off: "<red>disabled</red>"
+
+gamemode:
+  set: "<white>Set <aqua>{player}</aqua>'s game mode to <gold>{mode}</gold>."
+  notify: "<white>Your game mode was set to <gold>{mode}</gold>."
+  no-mode-permission: "<red>You don't have permission to switch to {mode}."
+  names:
+    survival: "Survival"
+    creative: "Creative"
+    adventure: "Adventure"
+    spectator: "Spectator"
+
+fly:
+  set: "<white>Flight for <aqua>{player}</aqua>: {state}"
+  notify: "<white>Your flight: {state}"
+god:
+  set: "<white>God mode for <aqua>{player}</aqua>: {state}"
+  notify: "<white>Your god mode: {state}"
+heal:
+  done: "<green>Healed <aqua>{player}</aqua>."
+  notify: "<green>You have been healed."
+feed:
+  done: "<green>Fed <aqua>{player}</aqua>."
+  notify: "<green>Your hunger has been satisfied."
+speed:
+  set: "<white>Set <aqua>{player}</aqua>'s {type} speed to <gold>{speed}</gold>."
+  notify: "<white>Your {type} speed was set to <gold>{speed}</gold>."
+  range: "<red>Speed must be between 0 and {max}."
+  type-walk: "walk"
+  type-fly: "fly"
+afk:
+  broadcast-on: "<white>* <yellow>{player}</yellow> is now AFK."
+  broadcast-off: "<white>* <yellow>{player}</yellow> is no longer AFK."
+  self-on: "<white>You are now AFK."
+  self-off: "<white>You are no longer AFK."
+  kick: "<red>You were kicked for being AFK too long."
+vanish:
+  set: "<white>Vanish for <aqua>{player}</aqua>: {state}"
+  notify: "<white>Your vanish: {state}"
+  fake-join: "<yellow>{player} joined the game"
+  fake-quit: "<yellow>{player} left the game"
+kill:
+  done: "<white>Killed <aqua>{player}</aqua>."
+  exempt: "<red>{player} cannot be killed."
+suicide:
+  done: "<white>Goodbye, cruel world..."
+burn:
+  done: "<white>Set <aqua>{player}</aqua> on fire for {seconds} seconds."
+ext:
+  done: "<white>Extinguished <aqua>{player}</aqua>."
+lightning:
+  done: "<white>Lightning struck <aqua>{target}</aqua>!"
+invsee:
+  self: "<red>You cannot invsee yourself."
+  open: "<white>Viewing <aqua>{player}</aqua>'s inventory (editable)."
+  open-readonly: "<white>Viewing <aqua>{player}</aqua>'s inventory (read-only)."
+clear:
+  done: "<white>Cleared <aqua>{player}</aqua>'s inventory."
+  notify: "<white>Your inventory has been cleared."
+exp:
+  show: "<aqua>{player}</aqua> <white>level <gold>{level}</gold>, total exp <gold>{total}</gold>."
+  done: "<white>Updated <aqua>{player}</aqua>'s exp: level <gold>{level}</gold>, total <gold>{total}</gold>."
+ping: "<aqua>{player}</aqua><white>'s ping: <gold>{ping}ms"
+getpos: "<aqua>{player}</aqua> <white>is in <gold>{world}</gold> <white>X:{x} Y:{y} Z:{z}</white> <aqua>(yaw {yaw}, pitch {pitch})"
+depth:
+  above: "<white>You are <gold>{blocks}</gold> blocks above sea level."
+  below: "<white>You are <gold>{blocks}</gold> blocks below sea level."
+  at: "<white>You are at sea level."
+compass: "<white>You are facing <gold>{direction}</gold> <aqua>({yaw}°)"
+compass-dir:
+  N: "North"
+  NE: "North-East"
+  E: "East"
+  SE: "South-East"
+  S: "South"
+  SW: "South-West"
+  W: "West"
+  NW: "North-West"
+near:
+  list: "<white>Players within {radius} blocks: <white>{players}"
+  none: "<white>No other players within {radius} blocks."
+jump:
+  done: "<white>Whoosh!"
+  no-block: "<red>No block in sight."
+sudo:
+  done: "<white>Forced <aqua>{player}</aqua> to run: <white>{command}"
+  exempt: "<red>You cannot sudo {player}."
+
+give:
+  done: "<white>Gave <aqua>{player}</aqua> <gold>{amount}</gold> x <yellow>{item}</yellow>."
+  received: "<white>You received <gold>{amount}</gold> x <yellow>{item}</yellow>."
+  blacklisted: "<red>Item {item} is blacklisted."
+more:
+  done: "<white>Stack filled to <gold>{amount}</gold>."
+repair:
+  hand: "<green>Repaired <yellow>{item}</yellow>."
+  all: "<green>Repaired <gold>{count}</gold> items."
+  cannot: "<red>This item cannot be repaired or is not damaged."
+enchant:
+  list: "<white>Enchantments: <white>{list}"
+  unknown: "<red>Unknown enchantment: {name}"
+  done: "<white>Applied <light_purple>{enchant} {level}</light_purple>."
+  removed: "<white>Removed <light_purple>{enchant}</light_purple>."
+  unsafe: "<red>This enchantment can't be applied to this item or exceeds level {max}."
+  too-high: "<red>Enchantment level cannot exceed {max}."
+hat:
+  done: "<white>Enjoy your new hat!"
+  removed: "<white>Hat removed."
+  none: "<red>You are not wearing a hat."
+skull:
+  done: "<white>You received <yellow>{name}</yellow>'s head."
+  invalid: "<red>Invalid player name: {name}"
+itemname:
+  done: "<white>Item renamed."
+  reset: "<white>Item name reset."
+lore:
+  done: "<white>Lore updated."
+  bad-line: "<red>Invalid line number (current lines: {max})."
+book:
+  unlocked: "<white>The book is now editable."
+  locked: "<white>Signed book <yellow>{title}</yellow>."
+  author: "<white>Author changed to <yellow>{author}</yellow>."
+  title: "<white>Title changed."
+  not-owner: "<red>You did not write this book."
+  not-book: "<red>Hold a written book or a book and quill."
+condense:
+  done: "<white>Condensed into <gold>{count}</gold> items."
+  none: "<white>Nothing to condense."
+unbreakable: "<white>Unbreakable: {state}"
+powertool:
+  set: "<white>Bound <yellow>{item}</yellow> to: <white>{command}"
+  list: "<yellow>{item}</yellow> <white>commands: <white>{commands}"
+  empty: "<white>This item has no bound commands."
+  cleared: "<white>Cleared commands of <yellow>{item}</yellow>."
+  cleared-all: "<white>Cleared all power tools."
+disposal:
+  title: "<aqua>Disposal (cleared on close)"
+worth:
+  show: "<yellow>{item}</yellow> <white>is worth <gold>{price}</gold> each, {amount} for <gold>{total}</gold>."
+  none: "<red>{item} has no price."
+  set: "<white>Set <yellow>{item}</yellow> price to <gold>{price}</gold>."
+sell:
+  done: "<green>Sold <gold>{count}</gold> items for <gold>{money}</gold>."
+  cannot: "<red>Nothing to sell."
+  failed: "<red>Sale failed: {error}"
+  no-economy: "<red>Economy is unavailable."
+  creative: "<red>You cannot sell items in creative or spectator mode."
+
+time:
+  show: "<white>Time in <gold>{world}</gold>: <yellow>{time}</yellow> <aqua>({ticks} ticks)"
+  set: "<white>Set time in <gold>{world}</gold> to <yellow>{time}</yellow>."
+  added: "<white>Added <yellow>{time}</yellow> ticks to <gold>{world}</gold>."
+  invalid: "<red>Invalid time: {value}"
+weather:
+  set: "<white>Set weather in <gold>{world}</gold> to <yellow>{weather}</yellow>."
+  names:
+    sun: "clear"
+    rain: "rain"
+    storm: "thunderstorm"
+ptime:
+  set: "<white>Set <aqua>{player}</aqua>'s time to <yellow>{time}</yellow>."
+  reset: "<white>Reset <aqua>{player}</aqua>'s time."
+pweather:
+  set: "<white>Set <aqua>{player}</aqua>'s weather to <yellow>{weather}</yellow>."
+  reset: "<white>Reset <aqua>{player}</aqua>'s weather."
+spawnmob:
+  done: "<white>Spawned <gold>{count}</gold> x <yellow>{mob}</yellow>."
+  unknown: "<red>Unknown or unspawnable mob: {mob}"
+  blacklisted: "<red>Mob {mob} is blacklisted."
+butcher:
+  done: "<white>Removed <gold>{count}</gold> entities ({type})."
+tree:
+  done: "<white>Tree generated ({type})."
+  failed: "<red>Cannot generate a tree here."
+  unknown: "<red>Unknown tree type: {type}"
+recipe:
+  none: "<red>{item} has no displayable recipe."
+  title: "<dark_aqua>Recipe: {item} <aqua>({page}/{pages})"
+  arrow: "<white>→"
+  prev: "<yellow>Previous recipe <white>({page}/{pages})"
+  next: "<yellow>Next recipe <white>({page}/{pages})"
+  options: "<white>Any of {count} items"
+  fuel: "<white>Cooks in {time}s, {exp} exp"
+  type:
+    crafting: "<gold>Shaped crafting"
+    shapeless: "<gold>Shapeless crafting"
+    furnace: "<gold>Furnace"
+    blasting: "<gold>Blast furnace"
+    smoking: "<gold>Smoker"
+    campfire: "<gold>Campfire"
+    stonecutting: "<gold>Stonecutter"
+    smithing: "<gold>Smithing table"
+    other: "<gold>Other"
+
+seen:
+  online: "<aqua>{player}</aqua> is <green>online</green><white> for <yellow>{time}</yellow>."
+  offline: "<aqua>{player}</aqua> is <red>offline</red><white>, last seen <yellow>{time}</yellow> ago <aqua>({date})"
+  never: "<red>{player} has never joined."
+  ip: "<white>Last IP: <white>{ip}"
+whois:
+  header: "<gold>======== <yellow>{player}</yellow> ========"
+  uuid: "<white>UUID: <white>{uuid}"
+  health: "<white>Health: <red>{health}</red>  Food: <gold>{food}"
+  exp: "<white>Level: <green>{level}</green>  Total exp: <green>{total}"
+  location: "<white>Location: <white>{world} {x}, {y}, {z}"
+  gamemode: "<white>Game mode: <white>{mode}"
+  states: "<white>God: {god}  Fly: {fly}  AFK: {afk}  Vanish: {vanish}  OP: {op}"
+  ping: "<white>Ping: <white>{ping}ms"
+  ip: "<white>IP: <white>{ip}"
+  offline: "<white>Status: <red>offline</red>, last seen <white>{date}"
+  times: "<white>First join: <white>{first}</white>  Playtime: <white>{playtime}"
+list:
+  header: "<white>There are <gold>{count}</gold>/<gold>{max}</gold> players online:"
+  group: "<yellow>{group}</yellow> <aqua>({count})</aqua><white>: <white>{players}"
+  default-group: "Players"
+  afk-tag: "<white>[AFK]</white>"
+  vanish-tag: "<aqua>[V]</aqua>"
+gc:
+  uptime: "<white>Uptime: <white>{time}"
+  tps: "<white>TPS (1m, 5m, 15m): {tps}"
+  mspt: "<white>Average tick time: <white>{mspt} ms"
+  memory: "<white>Memory: <white>{used}MB</white> used / <white>{allocated}MB</white> allocated / <white>{max}MB</white> max"
+  world: "<white> - <gold>{world}</gold> <aqua>({env})</aqua>: chunks <white>{chunks}</white>, entities <white>{entities}</white>, players <white>{players}</white>"
+
+kit:
+  received: "<green>You received kit <yellow>{kit}</yellow>!"
+  given: "<white>Gave kit <yellow>{kit}</yellow> to <aqua>{player}</aqua>."
+  not-found: "<red>Kit {kit} does not exist."
+  no-permission: "<red>You don't have permission for kit {kit}."
+  already: "<red>Kit {kit} can only be claimed once."
+  cooldown: "<red>Kit {kit} is on cooldown for <yellow>{time}</yellow>."
+  list: "<white>Kits: <white>{kits}"
+  list-empty: "<white>No kits available."
+  created: "<green>Created kit <yellow>{kit}</yellow> ({count} items, cooldown {cooldown})."
+  updated: "<green>Updated kit <yellow>{kit}</yellow> ({count} items, cooldown {cooldown})."
+  deleted: "<white>Deleted kit <yellow>{kit}</yellow>."
+  invalid-name: "<red>Kit names may only contain letters, digits, _ and - (max 32)."
+  invalid-cooldown: "<red>Invalid cooldown: {value} (e.g. 1d, 12h, 30m)"
+  empty-inventory: "<red>Your inventory is empty."
+  no-cooldown: "none"
+  gui-title: "<dark_aqua>Kits"
+  preview-title: "<dark_aqua>Kit preview: {kit}"
+  gui-available: "<green>Available"
+  gui-claimed: "<red>Claimed (one-time)"
+  gui-cooldown: "<red>Cooldown: {time}"
+  gui-items: "<white>{count} items"
+  gui-hint: "<aqua>Left-click to claim · Right-click to preview"

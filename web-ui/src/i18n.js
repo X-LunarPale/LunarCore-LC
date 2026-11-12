@@ -14,7 +14,7 @@ import enGrimSchema from './locales/en-grim-schema.js'
 import enSecurity from './locales/en-security.js'
 import enMarket from './locales/en-market.js'
 
-const STORAGE_KEY = 'lbr-locale'
+const STORAGE_KEY = 'lc-locale'
 const translations = { ...enCoreViews, ...enAdminViews, ...enWorkspaces, ...enPanel, ...enBranding, ...enSurvival, ...enTerrain, ...enAiChat, ...enQQAuth, ...enGrimConfig, ...enGrimSchema, ...enSecurity, ...enMarket, ...enShell }
 
 function storedLocale() {

@@ -38,4 +38,4 @@ QQ 认证配置完成后，停服把 `modules.qqauth-autostart` 设为 `true`，
 
 ## 独立插件
 
-`LbrMultiverseWeb.jar` 与 `LbrPlayerTitleWeb.jar` 放入 `plugins/`，分别需要 Multiverse 或 PlayerTitle。它们不是内部模块，也不包含第三方插件本体。
+`LcMultiverseWeb.jar` 与 `LcPlayerTitleWeb.jar` 放入 `plugins/`，分别需要 Multiverse 或 PlayerTitle。它们不是内部模块，也不包含第三方插件本体。

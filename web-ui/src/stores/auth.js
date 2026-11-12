@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { api, socket } from '../api'
 import { useApp } from './app'
 
-const TOKEN_KEY = 'lbr-token'
+const TOKEN_KEY = 'lc-token'
 
 function matchGlob(pattern, node) {
   if (pattern === '*' || pattern === node) return true
@@ -50,7 +50,7 @@ export const useAuth = defineStore('auth', {
       return this.user
     },
     async logout(remote = true) {
-      try { localStorage.removeItem('lbr-cmd-history') } catch { /* storage unavailable */ }
+      try { localStorage.removeItem('lc-cmd-history') } catch { /* storage unavailable */ }
       useApp().clearPanelCache()
       if (remote && this.token) {
         try {

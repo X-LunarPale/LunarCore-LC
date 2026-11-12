@@ -16,13 +16,13 @@
 | File | Purpose |
 |---|---|
 | `LunarCore-0.0.7.jar` | Core for `plugins/` |
-| `lbr-*.jar` | Optional modules for `plugins/LunarCore/modules/` |
+| `lc-*.jar` | Optional modules for `plugins/LunarCore/modules/` |
 | `LunarCore-modules-0.0.7.zip` | Official optional modules and the structure management module |
 | `LunarCore-0.0.7-source.zip` | Source and build files |
 | `LunarCore-0.0.7.zip` | Core, modules, source and installation guide |
 | `LC-Terrain-Agent.jar` | Terrain startup agent, placed in the server directory with a startup argument |
-| `lbr-structures-web.jar` | Structure management; download the generation plugin separately |
-| `LbrMultiverseWeb.jar`, `LbrPlayerTitleWeb.jar` | Optional standalone plugins |
+| `lc-structures-web.jar` | Structure management; download the generation plugin separately |
+| `LcMultiverseWeb.jar`, `LcPlayerTitleWeb.jar` | Optional standalone plugins |
 | `module-market.json` | Versions, dependencies and file checksums |
 | `SHA256SUMS.txt` | Download checksums |
 

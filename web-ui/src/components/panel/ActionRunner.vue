@@ -115,11 +115,11 @@ defineExpose({ run })
 </template>
 
 <style scoped>
-:global(.panel-action-dialog) { padding: 20px; border: 1px solid var(--el-border-color-light); border-radius: 9px; background: var(--lbr-surface); --el-dialog-padding-primary: 0px; --el-dialog-border-radius: 9px; }
-.dialog-heading { display: flex; align-items: flex-start; gap: 9px; padding-bottom: 14px; color: var(--lbr-text); }
+:global(.panel-action-dialog) { padding: 20px; border: 1px solid var(--el-border-color-light); border-radius: 9px; background: var(--lc-surface); --el-dialog-padding-primary: 0px; --el-dialog-border-radius: 9px; }
+.dialog-heading { display: flex; align-items: flex-start; gap: 9px; padding-bottom: 14px; color: var(--lc-text); }
 .dialog-heading > span { display: flex; padding-top: 1px; color: var(--el-color-primary); }
 .dialog-heading h3 { margin: 0; font-size: 15px; font-weight: 650; line-height: 1.5; }
-.dialog-heading p { margin: 2px 0 0; font-size: 11px; color: var(--lbr-text-soft); }
+.dialog-heading p { margin: 2px 0 0; font-size: 11px; color: var(--lc-text-soft); }
 .action-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
 .action-form :deep(.el-form-item) { min-width: 0; margin-bottom: 0; }
 .action-form .field-wide { grid-column: 1 / -1; }
@@ -131,5 +131,5 @@ defineExpose({ run })
 @media (prefers-reduced-motion: reduce) { :global(.panel-action-dialog), .action-form :deep(*) { transition: none !important; animation: none !important; } }
 .action-form :deep(.el-form-item__label) { height: auto; font-size: 12px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; padding-bottom: 5px; }
 .action-form :deep(.el-form-item__content) { min-width: 0; }
-.help { font-size: 11px; color: var(--lbr-text-soft); line-height: 1.5; width: 100%; }
+.help { font-size: 11px; color: var(--lc-text-soft); line-height: 1.5; width: 100%; }
 </style>

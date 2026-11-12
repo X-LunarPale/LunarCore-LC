@@ -44,7 +44,7 @@ async function settle() {
 async function environment(context, initial = snapshot()) {
   globalThis.window = new EventTarget()
   const calls = [], notices = [], confirms = [], events = []
-  window.addEventListener('lbr:panel-changed', event => events.push(event.detail))
+  window.addEventListener('lc:panel-changed', event => events.push(event.detail))
   const allowed = vue.ref(true)
   const api = {
     get: async path => { calls.push(['get', path]); return structuredClone(initial) },

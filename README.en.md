@@ -32,6 +32,12 @@ Upgrading keeps existing modules, settings, databases and worlds. Stop and back 
 | Protection | Punishments, anti-xray, GrimAC settings, game permissions, QQ authentication |
 | Server | Worlds, terrain, performance, server-list text |
 
+## LuckPerms Permissions
+
+In-game permissions use official **LuckPerms**. The LC permission module bridges the WebUI to LuckPerms; user, group, inheritance and temporary-permission changes are saved directly to LP.
+
+Place LuckPerms in `plugins/`, install **LuckPerms bridge** from the LC module market, then fully restart. On Windows, run `.\tools\install-luckperms.ps1 -ServerDirectory "D:\Minecraft"` to download the latest release. Use `/lp` for in-game administration. LC command permissions use `lc.*`; existing permission-module records are imported when the bridge first connects. See [Permissions](docs/en-US/PERMISSIONS.md).
+
 ## Module Market
 
 The [GitHub module market](module-market/README.en.md) provides descriptions and individual downloads. The panel supports installation, updates, removal and cancellation. It handles one set of changes at a time and downloads required modules together. Fully restart when **Restart required** appears. Removal keeps settings and data.

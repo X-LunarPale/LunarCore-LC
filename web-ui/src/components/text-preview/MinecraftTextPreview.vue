@@ -37,11 +37,11 @@ const unresolvedText = computed(() => unresolved.value.map(key => `{${key}}`).jo
 
 <style scoped>
 .minecraft-preview { min-width:0; margin-top:12px; }
-.preview-label { color:var(--lbr-text-soft); font-size:11px; line-height:1.5; margin-bottom:6px; }
+.preview-label { color:var(--lc-text-soft); font-size:11px; line-height:1.5; margin-bottom:6px; }
 .preview-surface { background:#20242c; border:1px solid #414855; border-radius:7px; padding:12px 14px; color:#fff; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:13px; line-height:1.7; overflow-wrap:anywhere; white-space:pre-wrap; tab-size:4; }
 .preview-line { min-height:1.7em; }
 .empty-line { color:#a3aab6; font-size:12px; }
 .preview-variable { text-underline-offset:3px; }
-.preview-help,.preview-warning { font-size:11px; line-height:1.65; margin:5px 0 0; color:var(--lbr-text-soft); }
+.preview-help,.preview-warning { font-size:11px; line-height:1.65; margin:5px 0 0; color:var(--lc-text-soft); }
 .preview-warning { color:var(--el-color-warning); }
 </style>

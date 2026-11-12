@@ -24,7 +24,7 @@ const presets = [
 ]
 function world(name, options = config, seed = '123456789') {
   return {
-    name, key: `lbr_terrain:${name}`, seed, config: { ...options }, autoLoad: true,
+    name, key: `lc_terrain:${name}`, seed, config: { ...options }, autoLoad: true,
     loaded: true, players: 0, minY: -64, maxY: options.height - 64,
     status: 'ready', error: ''
   }
@@ -45,8 +45,8 @@ const results = []
 async function open(state, permissions = ['*'], locale = 'zh_CN') {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1040 } })
   await context.addInitScript(value => {
-    localStorage.setItem('lbr-token', 'fixture-token')
-    localStorage.setItem('lbr-locale', value)
+    localStorage.setItem('lc-token', 'fixture-token')
+    localStorage.setItem('lc-locale', value)
   }, locale)
   await context.route('**/api/**', async route => {
     const request = route.request()

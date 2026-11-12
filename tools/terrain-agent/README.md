@@ -30,5 +30,5 @@ The agent checks native method layouts rather than a fixed Paper build number.
 To run the agent's native tests against a bootstrapped local Paper server:
 
 ```powershell
-.\gradlew.bat :terrain-agent:test "-Plbr.paperServerHome=E:/LBR-Test-26.3"
+.\gradlew.bat :terrain-agent:test "-Plc.paperServerHome=E:/LC-Test-26.3"
 ```

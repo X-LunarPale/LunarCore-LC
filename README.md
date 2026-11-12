@@ -32,6 +32,12 @@ LunarCore 琉月 为 Minecraft 生存服务器提供基础命令和网页管理�
 | 保护 | 处罚、反矿透、GrimAC 配置、游戏权限、QQ 认证 |
 | 服务器 | 世界管理、宏伟地形、性能、服务器列表文字 |
 
+## LuckPerms 权限
+
+游戏权限使用官方 **LuckPerms**。LC 权限模块提供 WebUI 桥接，面板中的用户、权限组、继承和临时授权直接保存到 LuckPerms。
+
+将官方 LuckPerms 放入 `plugins/`，在 LC 模块市场安装“LuckPerms 权限桥接”，然后完整重启。Windows 可运行 `.\tools\install-luckperms.ps1 -ServerDirectory "D:\Minecraft"` 下载最新版。游戏内使用 `/lp` 管理权限，LC 命令节点统一为 `lc.*`；旧权限模块的数据会在首次连接后迁入 LP。详见[权限设置](docs/zh-CN/PERMISSIONS.md)。
+
 ## 模块市场
 
 [GitHub 模块市场](module-market/README.md) 提供模块说明和独立下载。面板支持安装、更新、卸载与取消变更；每次处理一组变更，需要的依赖会一起下载。显示“等待重启”后，完整重启即可应用。卸载保留模块配置和数据。

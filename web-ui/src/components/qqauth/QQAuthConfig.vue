@@ -148,7 +148,7 @@ async function applyConfig() {
     requireSuccess(await api.post('/api/modules/qqauth/reload', {}))
     saved.value = false
     const refreshed = await load(true)
-    window.dispatchEvent(new CustomEvent('lbr:panel-changed', { detail: { namespace: 'qqauth' } }))
+    window.dispatchEvent(new CustomEvent('lc:panel-changed', { detail: { namespace: 'qqauth' } }))
     if (refreshed && !pendingReload.value) ElMessage.success(t('配置已应用'))
   } catch (cause) { ElMessage.error(cause.message) }
   finally { busy.value = false }

@@ -1,6 +1,0 @@
-prefix: "<dark_gray>[</dark_gray><aqua>AntiCheat</aqua><dark_gray>]</dark_gray> "
-command:
-  usage: "<prefix><gray>/ac status: GrimAC status; /ac reload: reload bridge settings."
-  status: "<prefix><gray>GrimAC: <white>{status}</white>, version: <white>{version}</white>, recent flags: <white>{count}</white>."
-  no-permission: "<prefix><red>You do not have permission to perform this action."
-  reloaded: "<prefix><green>Bridge settings reloaded. Detection and punishment are managed by GrimAC."

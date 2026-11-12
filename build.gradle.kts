@@ -5,7 +5,7 @@ plugins {
     java
 }
 
-val lbrVersion: String by project
+val lcVersion: String by project
 
 // 固定 Paper 26.3 构建；运行时库由 plugin.yml libraries 从 Maven Central 加载
 extra["paperApi"] = "io.papermc.paper:paper-api:26.3.build.202-stable"
@@ -19,7 +19,7 @@ extra["bcrypt"] = "at.favre.lib:bcrypt:0.10.2"
 
 // A server directory may retain libraries from several Paper builds. Resolve only
 // the bundle matching the patched server hash, rather than mixing all cached JARs.
-val localPaperHome = providers.gradleProperty("lbr.paperServerHome").orNull
+val localPaperHome = providers.gradleProperty("lc.paperServerHome").orNull
 if (localPaperHome != null) {
     val home = file(localPaperHome)
     val nativeJar = home.resolve("versions/26.3/paper-26.3.jar")
@@ -40,12 +40,12 @@ if (localPaperHome != null) {
     } ?: error("Keep the matching Paper server bundle JAR in $home for local native builds")
     val libraries = entries.filter { it.isNotBlank() }.map { home.resolve("libraries/" + it.substringAfterLast('\t')) }
     require(libraries.all { it.isFile }) { "Bootstrap the matching Paper bundle to extract all native dependencies" }
-    extra["lbrLocalNativeClasspath"] = files(nativeJar, libraries)
+    extra["lcLocalNativeClasspath"] = files(nativeJar, libraries)
 }
 
 allprojects {
     group = "com.lunarboreal"
-    version = lbrVersion
+    version = lcVersion
 
     repositories {
         mavenCentral()
@@ -79,7 +79,7 @@ subprojects {
     }
 
     dependencies {
-        if (localPaperHome == null || project.name != "lbr-terrain") {
+        if (localPaperHome == null || project.name != "lc-terrain") {
             "compileOnly"(rootProject.extra["paperApi"] as String)
             "testImplementation"(rootProject.extra["paperApi"] as String)
         }
@@ -98,10 +98,10 @@ subprojects {
 }
 
 // 功能模块单独构建，核心仅内置基础模块。
-configure(subprojects.filter { it.path != ":lbr-api" && it.path != ":lbr-core" }) {
+configure(subprojects.filter { it.path != ":lc-api" && it.path != ":lc-core" }) {
     dependencies {
-        "compileOnly"(project(":lbr-api"))
-        "testImplementation"(project(":lbr-api"))
+        "compileOnly"(project(":lc-api"))
+        "testImplementation"(project(":lc-api"))
     }
     tasks.named<Jar>("jar") {
         archiveBaseName.set(project.name)

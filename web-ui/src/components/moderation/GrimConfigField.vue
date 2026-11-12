@@ -86,17 +86,17 @@ function commandPart(index, part, value) {
 <style scoped>
 .grim-field { min-width: 0; }.wide { grid-column: 1 / -1; }
 .field-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 4px; }label { font-size: 13px; font-weight: 550; line-height: 1.6; overflow-wrap: anywhere; }
-.config-key { display: block; margin-bottom: 10px; color: var(--lbr-text-soft); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
-.readonly-label { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; font-size: 11px; color: var(--lbr-text-soft); }
+.config-key { display: block; margin-bottom: 10px; color: var(--lc-text-soft); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
+.readonly-label { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; font-size: 11px; color: var(--lc-text-soft); }
 .readonly-value { font-size: 13px; padding-block: 7px; overflow-wrap: anywhere; white-space: pre-wrap; }
-.field-help,.field-error { margin: 7px 0 0; font-size: 12px; color: var(--lbr-text-soft); line-height: 1.7; overflow-wrap: anywhere; }.field-error { color: var(--el-color-danger); }
+.field-help,.field-error { margin: 7px 0 0; font-size: 12px; color: var(--lc-text-soft); line-height: 1.7; overflow-wrap: anywhere; }.field-error { color: var(--el-color-danger); }
 .list-editor,.command-rules { display: grid; gap: 8px; }.list-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 8px; }
-.rule-row,.rule-columns { display: grid; grid-template-columns: 128px 128px minmax(0, 1fr) 34px; gap: 10px; align-items: start; }.rule-columns { font-size: 11px; color: var(--lbr-text-soft); }.raw-rule { grid-column: 1 / 4; }
+.rule-row,.rule-columns { display: grid; grid-template-columns: 128px 128px minmax(0, 1fr) 34px; gap: 10px; align-items: start; }.rule-columns { font-size: 11px; color: var(--lc-text-soft); }.raw-rule { grid-column: 1 / 4; }
 .rule-part { min-width: 0; }.mobile-label { display: none; }
 .rule-row :deep(.el-input-number) { width: 100%; }.rule-row :deep(.el-input-number .el-input__inner) { text-align: left; }.rule-row :deep(.el-input),.list-row :deep(.el-input) { min-width: 0; }
-.icon-button { width: 34px; height: 34px; padding: 0; }.add-row { justify-self: start; }.empty-list { padding: 5px 0; color: var(--lbr-text-soft); font-size: 12px; }
-.rule-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 3px; }.rule-footer span { font-size: 12px; color: var(--lbr-text-soft); }
-.secret-status,.secret-editor { display: flex; align-items: center; gap: 12px; min-height: 34px; }.secret-status > span { font-size: 12px; color: var(--lbr-text-soft); }.secret-editor > :deep(.el-input) { min-width: 0; flex: 1; }.secret-editor > :deep(.el-button) { flex-shrink: 0; }
+.icon-button { width: 34px; height: 34px; padding: 0; }.add-row { justify-self: start; }.empty-list { padding: 5px 0; color: var(--lc-text-soft); font-size: 12px; }
+.rule-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 3px; }.rule-footer span { font-size: 12px; color: var(--lc-text-soft); }
+.secret-status,.secret-editor { display: flex; align-items: center; gap: 12px; min-height: 34px; }.secret-status > span { font-size: 12px; color: var(--lc-text-soft); }.secret-editor > :deep(.el-input) { min-width: 0; flex: 1; }.secret-editor > :deep(.el-button) { flex-shrink: 0; }
 :deep(.el-button) { gap: 5px; margin: 0; border-radius: 5px; }:deep(.el-form) { width: 100%; }
-@media (max-width: 760px) { .rule-columns { display: none; }.mobile-label { display: block; margin-bottom: 6px; color: var(--lbr-text-soft); font-size: 11px; line-height: 1.6; }.rule-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px; padding-block: 9px; border-bottom: 1px solid var(--el-border-color-lighter); }.rule-command { grid-column: 1 / 3; grid-row: 2; }.rule-row > :deep(.icon-button) { grid-column: 3; grid-row: 1 / 3; }.rule-row > :deep(.raw-rule) { grid-column: 1 / 3; grid-row: 1 / 3; } }
+@media (max-width: 760px) { .rule-columns { display: none; }.mobile-label { display: block; margin-bottom: 6px; color: var(--lc-text-soft); font-size: 11px; line-height: 1.6; }.rule-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px; padding-block: 9px; border-bottom: 1px solid var(--el-border-color-lighter); }.rule-command { grid-column: 1 / 3; grid-row: 2; }.rule-row > :deep(.icon-button) { grid-column: 3; grid-row: 1 / 3; }.rule-row > :deep(.raw-rule) { grid-column: 1 / 3; grid-row: 1 / 3; } }
 </style>

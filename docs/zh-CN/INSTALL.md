@@ -33,11 +33,11 @@
 
 全部附加模块也可从 `LunarCore-modules-0.0.7.zip` 按需解压。安装更多模块会增加资源占用。
 
-地形模块还需将 `LC-Terrain-Agent.jar` 放到服务端目录，在 Java 启动命令的 `-jar` 前添加 `-javaagent:LC-Terrain-Agent.jar`，然后完整重启。详见[地形模块说明](../../modules/lbr-terrain/README.md)。
+地形模块还需将 `LC-Terrain-Agent.jar` 放到服务端目录，在 Java 启动命令的 `-jar` 前添加 `-javaagent:LC-Terrain-Agent.jar`，然后完整重启。详见[地形模块说明](../../modules/lc-terrain/README.md)。
 
 ## 结构美化插件
 
-从独立插件仓库下载 `LunarCoreStructures.jar` 放入 `plugins/`，另将 `lbr-structures-web.jar` 放入 `plugins/LunarCore/modules/`。核心和生成插件须满足[桥接兼容要求](../../modules/lbr-structures-web/README.md)。九类结构默认关闭；在“服务器 → 结构美化”保存设置后完整重启。支持全服默认及按世界设置，只影响新区块和新世界。安装说明见[结构美化](STRUCTURES.md)，实测范围见[验证记录](STRUCTURES-VALIDATION.md)。
+从独立插件仓库下载 `LunarCoreStructures.jar` 放入 `plugins/`，另将 `lc-structures-web.jar` 放入 `plugins/LunarCore/modules/`。核心和生成插件须满足[桥接兼容要求](../../modules/lc-structures-web/README.md)。九类结构默认关闭；在“服务器 → 结构美化”保存设置后完整重启。支持全服默认及按世界设置，只影响新区块和新世界。安装说明见[结构美化](STRUCTURES.md)，实测范围见[验证记录](STRUCTURES-VALIDATION.md)。
 
 ## 远程访问面板
 

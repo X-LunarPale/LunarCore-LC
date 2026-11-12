@@ -1,0 +1,4 @@
+# 本模块使用声明式Web面板，不注册游戏命令。
+prefix: "<aqua>[</aqua><green><bold>世界管理</bold></green><aqua>]</aqua> "
+status:
+  ready: "世界管理已就绪"

@@ -2,9 +2,9 @@
 
 ## QQAuth / QQ 认证模块
 
-QQAuth 由 LunarCore 作者与 [qqauth-private](https://github.com/crx97220130101-dotcom/qqauth-private) 的协作者共同开发。当前发行包从 `modules/lbr-qqauth` 构建模块，随 LunarCore 以 GPL v3 发布，并保留 QQAuth 既有贡献者署名和许可说明。
+QQAuth 由 LunarCore 作者与 [qqauth-private](https://github.com/crx97220130101-dotcom/qqauth-private) 的协作者共同开发。当前发行包从 `modules/lc-qqauth` 构建模块，随 LunarCore 以 GPL v3 发布，并保留 QQAuth 既有贡献者署名和许可说明。
 
-QQAuth is jointly developed by LunarCore's author and the qqauth-private collaborators. This distribution builds the module from `modules/lbr-qqauth` under GPL v3, preserving existing QQAuth contributor credits and license notices.
+QQAuth is jointly developed by LunarCore's author and the qqauth-private collaborators. This distribution builds the module from `modules/lc-qqauth` under GPL v3, preserving existing QQAuth contributor credits and license notices.
 
 这是一个 LunarCore 模块，并非独立 Bukkit 插件。
 启用 / 关闭该模块可能会导致在线玩家断开连接，且必须配置桥接令牌、分组信息才能正常使用。
@@ -19,7 +19,7 @@ QQAuth is jointly developed by LunarCore's author and the qqauth-private collabo
 
 ## LagFixer
 
-LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声明更正早期版本“未复制或打包LagFixer源码”的表述；本次分发含原始源码快照和单独维护的LC适配代码。原作者及原项目不会因移植而改为LBR原创。
+LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声明更正早期版本“未复制或打包LagFixer源码”的表述；本次分发含原始源码快照和单独维护的LC适配代码。原作者及原项目不会因移植而改为LC原创。
 
 | 项目 | 固定信息 |
 |---|---|
@@ -35,15 +35,15 @@ LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声
 
 ### 修改说明（2026-10-19）
 
-适配实现位于[EmbeddedLagFixer](<modules/lbr-performance/src/main/java/com/lunarboreal/performance/lagfixer/EmbeddedLagFixer.java>)及同包协作文件，与原始快照分开。修改包括LC模块生命周期、配置命名空间、中文Web面板/权限、主线程任务、Paper/Bukkit事件适配及Paper26.3 NMS/CraftBukkit AI与载具适配、默认全部关闭、有界处理与状态计数。没有将上游插件改名后冒充原作者作品，也不宣称原作者认可本次修改。
+适配实现位于[EmbeddedLagFixer](<modules/lc-performance/src/main/java/com/lunarboreal/performance/lagfixer/EmbeddedLagFixer.java>)及同包协作文件，与原始快照分开。修改包括LC模块生命周期、配置命名空间、中文Web面板/权限、主线程任务、Paper/Bukkit事件适配及Paper26.3 NMS/CraftBukkit AI与载具适配、默认全部关闭、有界处理与状态计数。没有将上游插件改名后冒充原作者作品，也不宣称原作者认可本次修改。
 
 上游ModuleManager注册12项：MobAiReducer、LagShield、RedstoneLimiter、EntityLimiter、ConsoleFilter、WorldCleaner、VehicleMotionReducer、InstantLeafDecay、AbilityLimiter、ExplosionOptimizer、AFKOptimizer、TrashDisposal。上游另有HopperOptimizer资源但未注册，LC本次补接漏斗，总计暴露13个内置开关。上游原配置多项默认开启，LC总开关全部false；其自动报告/更新/bStats和历史日志删除不因此自动引入。
 
-上游包含版本化NMS实现至v26_2；LBR事件模块使用公开API，AI/载具模块在nms子包中包含针对Paper26.3重新编译的NMS/CraftBukkit移植，保留上游来源并增加关闭恢复逻辑，不直接加载旧v26_2二进制；没有宣称完整复刻所有封包和第三方插件hook。原始快照仅保存来源，不作为插件自动启动。独立LagFixer发布JAR未随包分发；可选的固定monitor桥接是另一条功能路径，上游Paper26.3兼容性尚未验证。内置适配的最终构建与实服证据由集成测试补充，不承诺TPS提升。
+上游包含版本化NMS实现至v26_2；LC事件模块使用公开API，AI/载具模块在nms子包中包含针对Paper26.3重新编译的NMS/CraftBukkit移植，保留上游来源并增加关闭恢复逻辑，不直接加载旧v26_2二进制；没有宣称完整复刻所有封包和第三方插件hook。原始快照仅保存来源，不作为插件自动启动。独立LagFixer发布JAR未随包分发；可选的固定monitor桥接是另一条功能路径，上游Paper26.3兼容性尚未验证。内置适配的最终构建与实服证据由集成测试补充，不承诺TPS提升。
 
 ### 分发与对应源码
 
-发布包含本声明、完整GPLv3文本、固定上游快照、LBR修改源码和构建文件，供接收者按GPLv3查看、修改和重新分发。分发二进制时必须同时按GPLv3提供完整对应源码与必要构建材料；仅一个网页链接或本声明不能替代实际源码交付。具体包内容、构建步骤和校验值由对应发布包列出。保留上游文件自带版权/许可说明；不要删除快照或将其许可证替换成项目署名。
+发布包含本声明、完整GPLv3文本、固定上游快照、LC修改源码和构建文件，供接收者按GPLv3查看、修改和重新分发。分发二进制时必须同时按GPLv3提供完整对应源码与必要构建材料；仅一个网页链接或本声明不能替代实际源码交付。具体包内容、构建步骤和校验值由对应发布包列出。保留上游文件自带版权/许可说明；不要删除快照或将其许可证替换成项目署名。
 
 ### 上游依赖及可选集成
 
@@ -55,10 +55,10 @@ LunarCore performance内置优化包含基于LagFixer源码的GPL适配。此声
 
 ## Tectonic
 
-`modules/lbr-terrain` adapts Apollo's MIT-licensed Tectonic 3.0.29 mod model for
+`modules/lc-terrain` adapts Apollo's MIT-licensed Tectonic 3.0.29 mod model for
 Minecraft 26.3 to Paper 26.3. The pinned official Fabric artifact,
 SHA-512, MIT text, author attribution and reproducible asset extraction are
-recorded in `modules/lbr-terrain/src/main/resources/upstream/TECTONIC-NOTICE.txt`
+recorded in `modules/lc-terrain/src/main/resources/upstream/TECTONIC-NOTICE.txt`
 and the adjacent `extract-model.ps1` and `extract-features.ps1` scripts. The
 module JAR includes that notice, the mod's terrain model and selected feature
 and overlay resources; Minecraft's base resources are read from the server at

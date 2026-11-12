@@ -1,0 +1,2 @@
+# 首次连接 LuckPerms 时导入原权限数据，原 permissions.json 保留。
+migrate-legacy-data: true

@@ -9,12 +9,12 @@ Build the classpath from the matching Paper runtime JAR and its libraries. This 
 ```powershell
 $probeBuild = Join-Path (Get-Location) 'artifacts/terrain-native/region-reader-classes'
 New-Item -ItemType Directory -Force -Path $probeBuild | Out-Null
-$probeClasspath = @($probeBuild, 'E:/LBR-Test-26.3/versions/26.3/paper-26.3.jar') +
-    @(Get-ChildItem -LiteralPath 'E:/LBR-Test-26.3/libraries' -Filter '*.jar' -Recurse |
+$probeClasspath = @($probeBuild, 'E:/LC-Test-26.3/versions/26.3/paper-26.3.jar') +
+    @(Get-ChildItem -LiteralPath 'E:/LC-Test-26.3/libraries' -Filter '*.jar' -Recurse |
         Where-Object { $_.Name -notmatch '^log4j-slf4j2-impl-' } |
         ForEach-Object { $_.FullName })
 & 'D:/dsh work/_tools/jdk-25.0.4.1+1/bin/javac.exe' '-encoding' 'UTF-8' '-cp' ($probeClasspath -join ';') '-d' $probeBuild 'tools/terrain-native-probe/offline/TerrainRegionRead.java'
-& 'D:/dsh work/_tools/jdk-25.0.4.1+1/bin/java.exe' '-cp' ($probeClasspath -join ';') 'TerrainRegionRead' 'E:/LBR-Test-26.3/world/dimensions/lbr_terrain/worldtext/region' '-64' '1024' 'spawn_candidate:-29791:-30831:473'
+& 'D:/dsh work/_tools/jdk-25.0.4.1+1/bin/java.exe' '-cp' ($probeClasspath -join ';') 'TerrainRegionRead' 'E:/LC-Test-26.3/world/dimensions/lc_terrain/worldtext/region' '-64' '1024' 'spawn_candidate:-29791:-30831:473'
 ```
 
 The JSON reports chunk status, target-column surface and biome, heightmaps, block and biome totals, section palettes, and water, ice, lichen, lantern, and chain observations. Missing or invalid chunks appear as per-target errors. Check for errors and `minecraft:full` before treating a result as evidence of completed generation.

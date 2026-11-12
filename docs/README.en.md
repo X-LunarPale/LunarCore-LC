@@ -7,6 +7,7 @@
 - [Installation](en-US/INSTALL.md)
 - [Modules](en-US/MODULES.md)
 - [Panel and features](en-US/USAGE.md)
+- [LuckPerms permissions](en-US/PERMISSIONS.md)
 - [YUNG’s structure upgrades](en-US/STRUCTURES.md)
 - [FAQ](en-US/FAQ.md)
 - [Release notes](en-US/RELEASE.md)

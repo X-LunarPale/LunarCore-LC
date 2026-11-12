@@ -1,0 +1,10 @@
+// Optional focused verification while sibling module sources are being developed.
+allprojects {
+    afterEvaluate { p ->
+        if (p.path == ':lc-qqauth') {
+            p.layout.buildDirectory.set(p.layout.projectDirectory.dir('build-bridge-tests'))
+            p.sourceSets.main.java.setIncludes(['com/lunarboreal/qqauth/bridge/**'])
+            p.sourceSets.test.java.setIncludes(['com/lunarboreal/qqauth/bridge/**'])
+        }
+    }
+}

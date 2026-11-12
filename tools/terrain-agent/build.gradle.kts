@@ -35,7 +35,7 @@ tasks.jar {
     )
 }
 
-val localPaper = providers.gradleProperty("lbr.paperServerHome").orNull
+val localPaper = providers.gradleProperty("lc.paperServerHome").orNull
 if (localPaper == null) {
     apply(plugin = "io.papermc.paperweight.userdev")
     dependencies {

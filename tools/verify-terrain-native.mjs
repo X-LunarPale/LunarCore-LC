@@ -71,8 +71,8 @@ if (mode === 'stop') {
   assert.equal(world.maxY, 896)
   assert.equal(world.config.advanced['general.snow_start_offset'], 512)
   await call('/api/ext/terrain/height-ranges', { 'min-y': -256, 'max-y': 1024 })
-  await call('/api/console/exec', { command: `tectonic debug lbr_terrain:${name}` })
-  await call('/api/console/exec', { command: `tectonic locate mountain_range lbr_terrain:${name}` })
+  await call('/api/console/exec', { command: `tectonic debug lc_terrain:${name}` })
+  await call('/api/console/exec', { command: `tectonic locate mountain_range lc_terrain:${name}` })
   await call('/api/console/exec', { command: `terrainprobe ${name} hooks` })
   console.log('Native custom world created; climate, chunk and reload fixture started')
 } else if (mode === 'browser') {
@@ -84,7 +84,7 @@ if (mode === 'stop') {
   })
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1040 } })
-    await context.addInitScript(value => localStorage.setItem('lbr-token', value), token)
+    await context.addInitScript(value => localStorage.setItem('lc-token', value), token)
     const page = await context.newPage()
     const errors = []
     page.on('pageerror', error => errors.push(error.message))

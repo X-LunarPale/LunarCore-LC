@@ -1,4 +1,0 @@
-# 本模块使用声明式Web面板，不注册游戏命令。
-prefix: "<dark_gray>[</dark_gray><green><bold>世界管理</bold></green><dark_gray>]</dark_gray> "
-status:
-  ready: "世界管理已就绪"
