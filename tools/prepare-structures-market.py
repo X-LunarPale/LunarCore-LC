@@ -13,10 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--jar", type=Path, default=ROOT / "modules/lbr-structures-web/build/libs/lbr-structures-web.jar")
+    parser.add_argument("--jar", type=Path, default=ROOT / "modules/lc-structures-web/build/libs/lc-structures-web.jar")
     parser.add_argument("--download", required=True)
     parser.add_argument("--source", required=True)
-    core_version = re.search(r"^lbrVersion=(\S+)$",
+    core_version = re.search(r"^lcVersion=(\S+)$",
                              (ROOT / "gradle.properties").read_text(encoding="utf-8"), re.MULTILINE).group(1)
     parser.add_argument("--core-version", default=core_version)
     parser.add_argument("--output", type=Path, default=ROOT / "module-market/community/structures.json")

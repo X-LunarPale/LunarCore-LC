@@ -11,7 +11,7 @@ errors=[]
 with sync_playwright() as p:
     browser=p.chromium.launch(executable_path='C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless=True)
     context=browser.new_context(viewport={'width':1600,'height':1000},device_scale_factor=1)
-    context.add_init_script('(value => { if (location.origin === '+json.dumps(base)+') localStorage.setItem("lbr-token",value); })('+json.dumps(token)+')')
+    context.add_init_script('(value => { if (location.origin === '+json.dumps(base)+') localStorage.setItem("lc-token",value); })('+json.dumps(token)+')')
     page=context.new_page()
     page.on('pageerror',lambda error:errors.append(str(error)))
     panels=ctx['call']('/api/panels')
@@ -72,7 +72,7 @@ with sync_playwright() as p:
     header=page.locator('.el-table th').first.evaluate('(e)=>getComputedStyle(e).backgroundColor')
     assert header=='rgb(26, 42, 64)',header
     print('Dark navigation and table tokens verified',nav,header)
-    print('Dark computed:',page.locator('.card').first.evaluate('(e)=>({background:getComputedStyle(e).backgroundColor,surface:getComputedStyle(e).getPropertyValue("--lbr-surface")})'))
+    print('Dark computed:',page.locator('.card').first.evaluate('(e)=>({background:getComputedStyle(e).backgroundColor,surface:getComputedStyle(e).getPropertyValue("--lc-surface")})'))
     page.screenshot(path=str(out/'dark-signin.png'))
     page.emulate_media(reduced_motion='reduce')
     page.screenshot(path=str(out/'reduced-motion.png'))

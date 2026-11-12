@@ -42,7 +42,7 @@ tools/start-test-server.ps1
 tools/test-server-control.py
 
 # Private reverse-engineering helper scripts with local artifact paths
-integrations/lbr-playertitle-web/inspect-*.sh
+integrations/lc-playertitle-web/inspect-*.sh
 
 # Generated/private resource-pack deliverables
 resource-packs/lunar-island/NotoSansSC.ttf
@@ -56,5 +56,5 @@ resource-packs/lunar-island/build-manifest.json
 
 # Independent generation-plugin checkout (delivered separately)
 /output/standalone/
-/modules/lbr-structures-web/web/node_modules/
-/modules/lbr-structures-web/web/dist/
+/modules/lc-structures-web/web/node_modules/
+/modules/lc-structures-web/web/dist/

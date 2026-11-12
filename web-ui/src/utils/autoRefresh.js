@@ -58,7 +58,7 @@ export function useAutoRefresh(refresh, { seconds = () => 5, namespace, active =
     hasConnected = wasOnline = socket.connected
     document.addEventListener('visibilitychange', requestRefresh)
     window.addEventListener('focus', requestRefresh)
-    window.addEventListener('lbr:panel-changed', changed)
+    window.addEventListener('lc:panel-changed', changed)
     offStatus = socket.onStatus(online => {
       if (online && !wasOnline) {
         // The first socket opening can share the initial load; reconnects must queue.
@@ -82,6 +82,6 @@ export function useAutoRefresh(refresh, { seconds = () => 5, namespace, active =
     stopWatch?.()
     document.removeEventListener('visibilitychange', requestRefresh)
     window.removeEventListener('focus', requestRefresh)
-    window.removeEventListener('lbr:panel-changed', changed)
+    window.removeEventListener('lc:panel-changed', changed)
   })
 }

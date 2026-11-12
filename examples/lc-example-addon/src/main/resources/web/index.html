@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LcExampleAddon - 实时动态</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif; }
+    body { margin: 0; padding: 16px; background: transparent; }
+    h3 { margin: 0 0 8px; font-size: 15px; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .card { flex: 1 1 260px; border: 1px solid rgba(128,128,128,.3); border-radius: 8px; padding: 12px; }
+    ul { margin: 0; padding-left: 18px; max-height: 260px; overflow: auto; font-size: 13px; }
+    .status { font-size: 12px; opacity: .7; margin-bottom: 10px; }
+    .ok { color: #22c55e; } .bad { color: #ef4444; }
+    code { font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="status">WebSocket：<span id="ws" class="bad">未连接</span></div>
+<div class="row">
+  <div class="card">
+    <h3>实时点击（topic <code>example.click</code>）</h3>
+    <ul id="events"><li>等待游戏内 /lcexample click …</li></ul>
+  </div>
+  <div class="card">
+    <h3>在线玩家 / 前 5 名（GET <code>/api/ext/example/online</code>）</h3>
+    <ul id="online"></ul>
+  </div>
+</div>
+<script>
+  // 本页由 registerStatic 提供，地址为 {base}/ext/example/index.html，与面板同源，
+  // 可直接读取面板登录后保存在 localStorage 的 token（键名 lc-token）。
+  const base = location.pathname.substring(0, location.pathname.indexOf('/ext/example/'));
+  const token = localStorage.getItem('lc-token') || '';
+
+  async function api(path, opts = {}) {
+    const res = await fetch(base + '/api/ext/example' + path, {
+      ...opts,
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+    });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.status);
+    return res.json();
+  }
+
+  async function refresh() {
+    try {
+      const d = await api('/online');
+      const ul = document.getElementById('online');
+      ul.innerHTML = '';
+      const li = document.createElement('li');
+      li.textContent = '在线：' + (d.online.length ? d.online.join('、') : '无');
+      ul.appendChild(li);
+      d.top.forEach((e, i) => {
+        const t = document.createElement('li');
+        t.textContent = `#${i + 1} ${e.name} - ${e.points}`;
+        ul.appendChild(t);
+      });
+    } catch (e) {
+      document.getElementById('online').innerHTML = '<li class="bad">加载失败：' + e.message + '</li>';
+    }
+  }
+
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${proto}//${location.host}${base}/api/ws?token=${encodeURIComponent(token)}`);
+    const st = document.getElementById('ws');
+    ws.onopen = () => {
+      st.textContent = '已连接'; st.className = 'ok';
+      // 订阅协议：{"op":"sub","topic":"..."}；服务端推送 {"topic":"...","data":...}
+      ws.send(JSON.stringify({ op: 'sub', topic: 'example.click' }));
+      ws.send(JSON.stringify({ op: 'sub', topic: 'example.announce' }));
+    };
+    ws.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.topic !== 'example.click' && msg.topic !== 'example.announce') return;
+      const ul = document.getElementById('events');
+      if (ul.dataset.init !== '1') { ul.innerHTML = ''; ul.dataset.init = '1'; }
+      const li = document.createElement('li');
+      const time = new Date().toLocaleTimeString();
+      li.textContent = msg.topic === 'example.click'
+        ? `[${time}] ${msg.data.player} 点击，当前 ${msg.data.points} 点`
+        : `[${time}] ${msg.data.by} 广播：${msg.data.message}`;
+      ul.prepend(li);
+      refresh();
+    };
+    ws.onclose = () => { st.textContent = '已断开，5 秒后重连'; st.className = 'bad'; setTimeout(connect, 5000); };
+    current = ws;
+  }
+
+  let current = null;
+  // 保活
+  setInterval(() => current && current.readyState === 1 && current.send(JSON.stringify({ op: 'ping' })), 30000);
+  refresh();
+  connect();
+</script>
+</body>
+</html>

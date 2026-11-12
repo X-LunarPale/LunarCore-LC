@@ -16,13 +16,13 @@ const auth = useAuth()
 </template>
 
 <style scoped>
-.welcome-page { color: var(--lbr-text); }
-.access-panel { display: flex; align-items: flex-start; gap: 24px; padding: 40px; background: var(--lbr-surface); border: 1px solid var(--el-border-color-light); border-radius: 10px; max-width: 960px; }
+.welcome-page { color: var(--lc-text); }
+.access-panel { display: flex; align-items: flex-start; gap: 24px; padding: 40px; background: var(--lc-surface); border: 1px solid var(--el-border-color-light); border-radius: 10px; max-width: 960px; }
 .access-icon { width: 60px; height: 60px; flex: 0 0 60px; border: 1px solid var(--el-border-color-light); background: var(--el-fill-color-light); color: var(--el-text-color-secondary); display: grid; place-items: center; border-radius: 12px; }
-.account-label { font-size: 12px; color: var(--lbr-text-soft); margin-bottom: 8px; overflow-wrap: anywhere; }
+.account-label { font-size: 12px; color: var(--lc-text-soft); margin-bottom: 8px; overflow-wrap: anywhere; }
 h1 { font-size: 23px; font-weight: 600; line-height: 1.4; letter-spacing: -.4px; margin: 0; }
-.access-copy > p { max-width: 560px; font-size: 13px; line-height: 1.9; color: var(--lbr-text-soft); margin: 12px 0 24px; }
+.access-copy > p { max-width: 560px; font-size: 13px; line-height: 1.9; color: var(--lc-text-soft); margin: 12px 0 24px; }
 .el-button { gap: 10px; }
-.access-footer { display: flex; gap: 9px; align-items: flex-start; color: var(--lbr-text-soft); margin-top: 18px; font-size: 12px; }.access-footer .lbr-icon { margin-top: 2px; }.access-footer p { margin: 0; line-height: 1.8; }
+.access-footer { display: flex; gap: 9px; align-items: flex-start; color: var(--lc-text-soft); margin-top: 18px; font-size: 12px; }.access-footer .lc-icon { margin-top: 2px; }.access-footer p { margin: 0; line-height: 1.8; }
 @media (max-width: 600px) { .access-panel { flex-direction: column; padding: 26px 22px; gap: 20px; } .access-icon { width: 48px; height: 48px; flex-basis: 48px; } h1 { font-size: 21px; } }
 </style>

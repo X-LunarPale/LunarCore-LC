@@ -7,7 +7,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 local = Path('resource-packs/lunar-island/lunar-island.zip')
-url = os.environ.get('LBR_ISLAND_PACK_URL', 'http://localhost:8765/ext/scoreboard/island-pack.zip')
+url = os.environ.get('LC_ISLAND_PACK_URL', 'http://localhost:8765/ext/scoreboard/island-pack.zip')
 with urllib.request.urlopen(url, timeout=20) as response:
     payload = response.read()
 assert payload == local.read_bytes(), 'Served ZIP differs from artifact'

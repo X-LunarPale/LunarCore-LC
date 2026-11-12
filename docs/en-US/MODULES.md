@@ -38,4 +38,4 @@ After configuring QQ authentication, stop the server, set `modules.qqauth-autost
 
 ## Standalone Plugins
 
-`LbrMultiverseWeb.jar` and `LbrPlayerTitleWeb.jar` belong in `plugins/`, requiring Multiverse and PlayerTitle respectively. They are separate from internal modules and do not include the third-party plugins.
+`LcMultiverseWeb.jar` and `LcPlayerTitleWeb.jar` belong in `plugins/`, requiring Multiverse and PlayerTitle respectively. They are separate from internal modules and do not include the third-party plugins.

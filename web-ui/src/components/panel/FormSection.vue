@@ -92,7 +92,7 @@ async function save() {
     saveError.value = { status: e.status, message: e.message }
   } finally { saving.value = false }
   if (!saveError.value) {
-    window.dispatchEvent(new CustomEvent('lbr:panel-changed', { detail: { namespace: props.namespace } }))
+    window.dispatchEvent(new CustomEvent('lc:panel-changed', { detail: { namespace: props.namespace } }))
   }
 }
 
@@ -144,19 +144,19 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.form-surface { padding: 20px 24px 12px; background: var(--lbr-surface); border: 1px solid var(--el-border-color-light); border-radius: 8px; color: var(--lbr-text); box-shadow: none; container-type: inline-size; }
+.form-surface { padding: 20px 24px 12px; background: var(--lc-surface); border: 1px solid var(--el-border-color-light); border-radius: 8px; color: var(--lc-text); box-shadow: none; container-type: inline-size; }
 .surface-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid var(--el-border-color-lighter); }
 .heading-block { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .heading-mark { color: var(--el-color-primary); flex-shrink: 0; }
 h3 { font-size: 15px; font-weight: 600; line-height: 1.5; margin: 0; }
-.dirty-state, .saved-state { font-size: 12px; flex-shrink: 0; color: var(--lbr-text-soft); }
+.dirty-state, .saved-state { font-size: 12px; flex-shrink: 0; color: var(--lc-text-soft); }
 .dirty-state { display: flex; gap: 6px; align-items: center; color: var(--el-color-warning); padding: 3px 7px; border-radius: 4px; background: var(--el-color-warning-light-9); }
 .dirty-state span { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-.read-only { display: flex; align-items: center; gap: 7px; padding: 8px 10px; background: var(--el-fill-color-light); border-radius: 6px; font-size: 12px; margin-bottom: 12px; color: var(--lbr-text-soft); }
-.initial-loading { min-height: 72px; display: grid; place-items: center; color: var(--lbr-text-soft); font-size: 12px; }
-.help { font-size: 12px; color: var(--lbr-text-soft); line-height: 1.6; width: 100%; overflow-wrap: anywhere; }
+.read-only { display: flex; align-items: center; gap: 7px; padding: 8px 10px; background: var(--el-fill-color-light); border-radius: 6px; font-size: 12px; margin-bottom: 12px; color: var(--lc-text-soft); }
+.initial-loading { min-height: 72px; display: grid; place-items: center; color: var(--lc-text-soft); font-size: 12px; }
+.help { font-size: 12px; color: var(--lc-text-soft); line-height: 1.6; width: 100%; overflow-wrap: anywhere; }
 .read-value { min-height: 36px; display: flex; align-items: center; overflow-wrap: anywhere; }
-.action-note { font-size: 12px; color: var(--lbr-text-soft); margin-right: auto; }
+.action-note { font-size: 12px; color: var(--lc-text-soft); margin-right: auto; }
 .action-buttons { display: flex; gap: 8px; flex-shrink: 0; }
 .action-buttons :deep(.el-button + .el-button) { margin-left: 0; }
 .form-surface :deep(.el-button) { border-radius: 5px; font-size: 13px; transition: background-color 180ms, border-color 180ms, transform 320ms var(--motion-spring); }
@@ -174,7 +174,7 @@ h3 { font-size: 15px; font-weight: 600; line-height: 1.5; margin: 0; }
 .panel-form :deep(.el-input-number .el-input__inner) { text-align: left; }
 .field-switch :deep(.el-switch) { height: 36px; margin: 0; }
 .field-wide { grid-column: 1 / -1; }
-.form-actions { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px 0 8px; margin-top: 24px; background: var(--lbr-surface); border-top: 1px solid var(--el-border-color-light); box-shadow: 0 -8px 16px -16px #19283b66; }
+.form-actions { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px 0 8px; margin-top: 24px; background: var(--lc-surface); border-top: 1px solid var(--el-border-color-light); box-shadow: 0 -8px 16px -16px #19283b66; }
 @container (max-width: 820px) { .field-group--named { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
 @container (max-width: 520px) { .fields-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; } .action-note { width: 100%; } .action-buttons { width: 100%; } .action-buttons .el-button { flex: 1; min-width: 0; } }
 @media (max-width: 760px) { .form-surface { padding: 16px 16px 8px; } .surface-header { align-items: flex-start; flex-wrap: wrap; margin-bottom: 20px; } .saved-state { display: none; } }

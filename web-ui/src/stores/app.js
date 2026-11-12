@@ -5,7 +5,7 @@ import { t } from '../i18n.js'
 export const useApp = defineStore('app', {
   state: () => ({
     dark: document.documentElement.classList.contains('dark'),
-    collapsed: localStorage.getItem('lbr-collapsed') === '1',
+    collapsed: localStorage.getItem('lc-collapsed') === '1',
     panels: [],
     panelsLoaded: false,
     panelsGeneration: 0,
@@ -16,11 +16,11 @@ export const useApp = defineStore('app', {
     toggleTheme() {
       this.dark = !this.dark
       document.documentElement.classList.toggle('dark', this.dark)
-      localStorage.setItem('lbr-theme', this.dark ? 'dark' : 'light')
+      localStorage.setItem('lc-theme', this.dark ? 'dark' : 'light')
     },
     toggleCollapse() {
       this.collapsed = !this.collapsed
-      localStorage.setItem('lbr-collapsed', this.collapsed ? '1' : '0')
+      localStorage.setItem('lc-collapsed', this.collapsed ? '1' : '0')
     },
     clearPanelCache() {
       this.panelsGeneration++

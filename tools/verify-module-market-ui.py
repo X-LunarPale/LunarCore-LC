@@ -46,7 +46,7 @@ def respond(route):
         module, action = path.split("/")[-2:]
         state["writes"].append((action, module))
         ids = ["land", "landmarks"] if module == "landmarks" else [module]
-        state["pending"] = [{"id": i, "asset": None if action == "remove" else f"lbr-{i}.jar"} for i in ids]
+        state["pending"] = [{"id": i, "asset": None if action == "remove" else f"lc-{i}.jar"} for i in ids]
         body = {"ok": True}
     else:
         unknown.append(path)
@@ -59,7 +59,7 @@ with sync_playwright() as driver:
     browser = driver.chromium.launch(
         executable_path="C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", headless=True)
     context = browser.new_context(viewport={"width": 1440, "height": 1000})
-    context.add_init_script("localStorage.setItem('lbr-token','fixture-session')")
+    context.add_init_script("localStorage.setItem('lc-token','fixture-session')")
     context.route("**/api/**", respond)
     page = context.new_page()
     page.on("pageerror", lambda error: errors.append(str(error)))
@@ -104,7 +104,7 @@ with sync_playwright() as driver:
         box = row.bounding_box()
         assert box["x"] >= 0 and box["x"] + box["width"] <= 392
     page.screenshot(path=str(output / "market-mobile.png"), full_page=True, animations="disabled")
-    page.evaluate("localStorage.setItem('lbr-locale','en_US')")
+    page.evaluate("localStorage.setItem('lc-locale','en_US')")
     page.reload()
     page.get_by_role("tab", name="Module market", exact=True).click()
     expect(page.locator(".market-row")).to_have_count(19)

@@ -1,0 +1,6 @@
+id: permissions
+name: LuckPerms 权限桥接
+version: '${version}'
+main: com.lunarboreal.permissions.PermissionsModule
+description: 在面板中管理 LuckPerms 权限组、玩家与临时授权
+authors: [LunarBoreal]

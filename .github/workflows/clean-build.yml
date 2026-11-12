@@ -51,12 +51,12 @@ jobs:
           npm run build
       - name: Build and test from public Maven and Paper development bundles
         run: |
-          ./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures-web:jar :lbr-api:publishMavenPublicationToDistRepository \
+          ./gradlew test :lc-core:jar :terrain-agent:jar :lc-multiverse-web:jar :lc-playertitle-web:jar :lc-structures-web:jar :lc-api:publishMavenPublicationToDistRepository \
             --no-daemon --no-build-cache --no-configuration-cache --max-workers=2 \
             -Duser.home="$RUNNER_TEMP/lunar-home" -Dmaven.repo.local="$RUNNER_TEMP/lunar-maven"
       - name: Test bridge frontend and package release
         run: |
-          npm test --prefix modules/lbr-structures-web/web
+          npm test --prefix modules/lc-structures-web/web
           python3 tools/validate-module-market.py
           python3 tools/test-module-market-validator.py
           python3 package-release.py
@@ -69,6 +69,6 @@ jobs:
           path: |
             **/build/reports/
             **/build/test-results/
-            dist/0.0.6-preview/
-            lbr-api/build/repo/
+            dist/0.0.7/
+            lc-api/build/repo/
             build/repo/

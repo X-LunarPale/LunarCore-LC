@@ -54,9 +54,9 @@ with sync_playwright() as playwright:
     )
     context = browser.new_context(viewport={"width": 1440, "height": 1040})
     context.add_init_script(
-        "localStorage.setItem('lbr-token', 'fixture-token');"
-        "localStorage.setItem('lbr-locale', 'zh_CN');"
-        "localStorage.setItem('lbr-nav-open-groups', '[\"player-services\"]');"
+        "localStorage.setItem('lc-token', 'fixture-token');"
+        "localStorage.setItem('lc-locale', 'zh_CN');"
+        "localStorage.setItem('lc-nav-open-groups', '[\"player-services\"]');"
     )
     state = {"settings": deepcopy(INITIAL), "writes": [], "reads": 0, "unmocked": []}
     results = []

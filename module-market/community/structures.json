@@ -9,8 +9,8 @@
     "0.0.7"
   ],
   "author": "rtiags",
-  "source": "https://github.com/X-LunarPale/LunarCore-LC/tree/v0.0.7/modules/lbr-structures-web",
-  "download": "https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-structures-web.jar",
+  "source": "https://github.com/X-LunarPale/LunarCore-LC/tree/v0.0.7/modules/lc-structures-web",
+  "download": "https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-structures-web.jar",
   "license": "GPL-3.0-only",
   "sha256": "b10bb44471096a1ed6c2b01814ad5db5d96544a75bb315b0b54322b1b9b0f7d7",
   "depends": []

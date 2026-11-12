@@ -255,7 +255,7 @@ onMounted(load)
 .account-panel :deep(.el-table td.el-table__cell) { padding-block: 10px; }
 .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; }
 .list-toolbar h3 { margin: 0; font-size: 15px; font-weight: 600; }
-.list-toolbar p { margin: 4px 0 0; font-size: 12px; color: var(--lbr-text-soft); }
+.list-toolbar p { margin: 4px 0 0; font-size: 12px; color: var(--lc-text-soft); }
 .role-identity { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .role-form :deep(.el-form-item__label), .account-form :deep(.el-form-item__label) { padding-bottom: 6px; }
 .ptag { margin: 2px 4px 2px 0; max-width: 100%; }
@@ -265,7 +265,7 @@ onMounted(load)
 .perm-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 2px 12px; padding-left: 22px; }
 .perm-items :deep(.el-checkbox) { margin-right: 0; height: auto; min-height: 30px; white-space: normal; }
 .perm-items :deep(.el-checkbox__label) { display: flex; flex-wrap: wrap; gap: 0 6px; line-height: 1.5; padding-block: 4px; overflow-wrap: anywhere; }
-.permission-help { font-size: 12px; color: var(--lbr-text-soft); line-height: 1.8; margin: -2px 0 14px; }
+.permission-help { font-size: 12px; color: var(--lc-text-soft); line-height: 1.8; margin: -2px 0 14px; }
 .small { font-size: 11px; }
 code { background: var(--el-fill-color-light); padding: 1px 5px; border-radius: 4px; }
 @media (max-width: 600px) { .account-panel { padding: 0 12px 8px; } .list-toolbar { align-items: flex-start; gap: 10px; } .list-toolbar p { max-width: 190px; } .role-identity { grid-template-columns: 1fr; gap: 0; } .perm-items { padding-left: 8px; } }

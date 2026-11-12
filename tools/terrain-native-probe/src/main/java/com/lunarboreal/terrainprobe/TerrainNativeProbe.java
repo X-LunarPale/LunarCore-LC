@@ -40,7 +40,7 @@ public final class TerrainNativeProbe extends JavaPlugin {
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length < 1 || args.length > 2 || !args[0].matches("[a-z][a-z0-9_-]{0,31}")
                 || args.length == 2 && !args[1].equalsIgnoreCase("hooks")) return false;
-        World world = Bukkit.getWorld(new NamespacedKey("lbr_terrain", args[0]));
+        World world = Bukkit.getWorld(new NamespacedKey("lc_terrain", args[0]));
         if (world == null) {
             sender.sendMessage("Terrain world is not loaded");
             return true;
@@ -141,7 +141,7 @@ public final class TerrainNativeProbe extends JavaPlugin {
                 require(initialWorld.getPlayers().isEmpty(), "Run the hooks probe without players in the test world");
                 vanilla = Bukkit.getWorlds().stream()
                         .filter(world -> world.getEnvironment() == World.Environment.NORMAL
-                                && !world.getKey().getNamespace().equals("lbr_terrain"))
+                                && !world.getKey().getNamespace().equals("lc_terrain"))
                         .findFirst().orElseThrow(() -> new IllegalStateException("No vanilla overworld is loaded"));
                 module = terrainModule();
                 Object options = invoke(module, "optionsFor", new Class<?>[]{World.class}, initialWorld);

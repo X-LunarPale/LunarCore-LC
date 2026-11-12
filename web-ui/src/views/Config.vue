@@ -141,26 +141,26 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
 
 <style scoped>
 .tab-state { margin-left: 8px; }
-.core-description { color: var(--lbr-text-soft); font-size: 13px; margin: 5px 0 16px; }
-.editor-panel { min-width: 0; overflow: hidden; border: 1px solid var(--el-border-color); border-radius: 10px; background: var(--lbr-surface); }
+.core-description { color: var(--lc-text-soft); font-size: 13px; margin: 5px 0 16px; }
+.editor-panel { min-width: 0; overflow: hidden; border: 1px solid var(--el-border-color); border-radius: 10px; background: var(--lc-surface); }
 .editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; border-bottom: 1px solid var(--el-border-color-light); }
 .file-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.file-info > .lbr-icon { color: var(--lbr-text-soft); }
+.file-info > .lc-icon { color: var(--lc-text-soft); }
 .file-info > div { min-width: 0; }
 .file-info strong { font-size: 13px; font-weight: 600; display: block; }
-.file-info div > span { display: block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lbr-text-soft); font-size: 11px; margin-top: 2px; }
+.file-info div > span { display: block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lc-text-soft); font-size: 11px; margin-top: 2px; }
 .editor-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .editor-actions > .el-button { margin-left: 0; }
 .editor-body { padding: 8px; background: var(--el-fill-color-extra-light); }
-.editor-status { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 9px 18px; font-size: 11px; color: var(--lbr-text-soft); border-top: 1px solid var(--el-border-color-light); }
+.editor-status { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 9px 18px; font-size: 11px; color: var(--lc-text-soft); border-top: 1px solid var(--el-border-color-light); }
 .editor-status > span { display: inline-flex; align-items: center; gap: 7px; }
 .status-dot { width: 6px; height: 6px; background: var(--el-text-color-secondary); border-radius: 50%; }
 .status-dot.modified { background: var(--el-color-warning); }
 .status-separator { opacity: .5; }
 .config-alert { margin-bottom: 12px; }
-.config-notes { display: flex; flex-wrap: wrap; gap: 10px 28px; padding: 16px 2px 0; color: var(--lbr-text-soft); font-size: 12px; }
+.config-notes { display: flex; flex-wrap: wrap; gap: 10px 28px; padding: 16px 2px 0; color: var(--lc-text-soft); font-size: 12px; }
 .config-notes > div { display: flex; align-items: flex-start; gap: 8px; }
-.config-notes .lbr-icon { margin-top: 3px; }
+.config-notes .lc-icon { margin-top: 3px; }
 .config-notes p { margin: 0; line-height: 1.8; }
 code { background: var(--el-fill-color-light); border-radius: 3px; padding: 2px 4px; overflow-wrap: anywhere; }
 @media (max-width: 640px) { .editor-toolbar { padding: 14px 12px; gap: 14px; } .file-info { width: 100%; } .file-info div > span { max-width: 190px; } .editor-actions { width: 100%; } .editor-actions > .el-button { flex: 1; padding-inline: 8px; } .editor-status { padding-inline: 12px; } }

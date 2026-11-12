@@ -2,11 +2,11 @@
 
 [简体中文](../zh-CN/USAGE.md) | [Home](../../README.en.md)
 
-LC is short for LunarCore. Use `/lc help` for management commands and `/lc m list` to check module statuses as an administrator. The `/lbr` command has been removed. Basic commands still work directly. Use `%lc_module_key%` in custom text, such as `%lc_core_online%`.
+LC is short for LunarCore. Use `/lc help` for management commands and `/lc m list` to check module statuses as an administrator. The `/lc` command has been removed. Basic commands still work directly. Use `%lc_module_key%` in custom text, such as `%lc_core_online%`.
 
 ## Accounts
 
-Assign panel access under **Accounts and roles**. Observers view basic status; moderators manage allowed features. In-game permissions are separate and handled by the permission module or another plugin.
+Assign panel access under **Accounts and roles**. Observers view basic status; moderators manage allowed features. Official LuckPerms handles in-game permissions separately. LC's permission panel connects directly to LP; see [Permissions](PERMISSIONS.md) for installation and common tasks.
 
 Reset a panel password in the server console with `lc web user passwd account new-password`. Keep password-bearing logs private. If admin loses its authenticator and recovery codes, `lc web resetadmin` resets its password and clears its two-step verification.
 
@@ -53,4 +53,4 @@ The anti-cheat module provides translated GrimAC setting names. Explicitly reloa
 
 Optimizations start disabled. Review them before enabling; operation counts do not prove improved performance. Terrain creates separate new worlds without converting existing ones. Fully restart after installation or supported height changes. Unloading worlds saves them without deleting their folders.
 
-Terrain also needs `-javaagent:LC-Terrain-Agent.jar` in the launch command for climate, monument placement and old-chunk blending. See the [terrain guide](../../modules/lbr-terrain/README.en.md) for installation, settings and `/tectonic` commands.
+Terrain also needs `-javaagent:LC-Terrain-Agent.jar` in the launch command for climate, monument placement and old-chunk blending. See the [terrain guide](../../modules/lc-terrain/README.en.md) for installation, settings and `/tectonic` commands.

@@ -1,8 +1,0 @@
-usage: "<prefix><gray>Usage: <yellow>/lcexample <hello|click|top>"
-hello: "<prefix><aqua>Hello, <white>{player}</white>! This message comes from the external plugin <gold>LbrExampleAddon</gold>."
-click: "<prefix><green>Clicked! Your points: <gold>{points}</gold>"
-cooldown: "<prefix><red>Too fast, try again in {seconds}s."
-announce: "<prefix><light_purple><white>{player}</white> reached <gold>{points}</gold> points!"
-top-header: "<gold>===== Click Leaderboard ====="
-top-entry: "<gray>#{rank} <white>{player}</white> - <gold>{points}"
-web-message: "<prefix><yellow>[Web] <white>{message}"

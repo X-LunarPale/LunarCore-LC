@@ -13,13 +13,13 @@ cd web-ui
 npm ci
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures-web:jar
+./gradlew test :lc-core:jar :terrain-agent:jar :lc-multiverse-web:jar :lc-playertitle-web:jar :lc-structures-web:jar
 python package-release.py
 ```
 
 Use `gradlew.bat` on Windows. Outputs are in `dist/0.0.7/`. Only basic commands are embedded in the core.
 
-If local Paper tooling fails, use `-Plbr.paperServerHome=server-directory` with a matching complete Paper installation. Normal builds do not require it.
+If local Paper tooling fails, use `-Plc.paperServerHome=server-directory` with a matching complete Paper installation. Normal builds do not require it.
 
 Local native builds match the patched server SHA-256 to a Paper bundle in that directory and use its dependency manifest. Keep the bundle JAR; stale libraries from other builds are not mixed in. See [structure validation](docs/en-US/STRUCTURES-VALIDATION.md) for generation and recovery checks.
 
@@ -36,13 +36,13 @@ npm run test:i18n
 
 ## Layout and Rules
 
-`lbr-api/` provides interfaces, `lbr-core/` shared services and the panel, `modules/` features, `integrations/` standalone plugins and `web-ui/` the frontend.
+`lc-api/` provides interfaces, `lc-core/` shared services and the panel, `modules/` features, `integrations/` standalone plugins and `web-ui/` the frontend.
 
 Communicate through APIs rather than importing other module implementations. Keep database queries and downloads off the game thread. Access Bukkit players, worlds and module lifecycle on the main thread. Release tasks, threads and connections on shutdown.
 
 Provide Chinese and English UI text. User descriptions should explain purpose, conditions and results. Keep implementation details in code or developer references.
 
-Use LC as the short name, `/lc` as the main command, `%lc_module_key%` for placeholders and `LC.get()` for API access. Legacy commands, placeholders and the `LBR` entry point remain compatible. Existing `lbr.*` game permissions, data identifiers, project directories and module filenames stay unchanged so upgrades preserve access and data.
+Use LC as the short name, `/lc` as the main command, `%lc_module_key%` for placeholders and `LC.get()` for API access. Legacy commands, placeholders and the `LC` entry point remain compatible. Existing `lc.*` game permissions, data identifiers, project directories and module filenames stay unchanged so upgrades preserve access and data.
 
 ## Release
 
@@ -54,7 +54,7 @@ Keep ordinary Bukkit plugins separate from internal modules. Binary releases inc
 
 Public releases use `X-LunarPale/LunarCore-LC`. The market downloads public Release files directly without an access token. Run `python tools/validate-module-market.py` to check entries and `python tools/test-module-market-validator.py` to test validation behavior. Public snapshots and source archives include current guides, without earlier handoffs or runtime data.
 
-The generation engine is now a separate project: https://github.com/rtiags/LunarCoreStructures . This repository builds only the `:lbr-structures-web` management module, including its npm frontend. Build the generator separately against this branch's published `lbr-api`; see that repository's README.
+The generation engine is now a separate project: https://github.com/rtiags/LunarCoreStructures . This repository builds only the `:lc-structures-web` management module, including its npm frontend. Build the generator separately against this branch's published `lc-api`; see that repository's README.
 
 ## Clean build verification
 

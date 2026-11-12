@@ -111,11 +111,11 @@ const textValue = computed({
 .text-field,.bounded-number { width:100%; min-width:0; }
 .number-controls { display:flex; align-items:center; gap:14px; }
 .number-slider { flex:1; min-width:0; accent-color:var(--el-color-primary); }
-.exact-number { box-sizing:border-box; width:112px; max-width:45%; padding:8px 10px; border:1px solid var(--el-border-color); border-radius:5px; background:var(--lbr-surface); color:var(--lbr-text); font:inherit; font-size:12px; }
+.exact-number { box-sizing:border-box; width:112px; max-width:45%; padding:8px 10px; border:1px solid var(--el-border-color); border-radius:5px; background:var(--lc-surface); color:var(--lc-text); font:inherit; font-size:12px; }
 .exact-number:focus-visible,.number-slider:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:3px; }
 .exact-number:invalid { border-color:var(--el-color-warning); }
-.hint { font-size: 11px; color: var(--lbr-text-soft); line-height: 1.5; margin-top: 4px; }
-:deep(.el-input__wrapper), :deep(.el-select__wrapper), :deep(.el-textarea__inner) { border-radius: 5px; background: var(--lbr-surface); box-shadow: 0 0 0 1px var(--el-border-color) inset; transition: box-shadow 180ms; }
+.hint { font-size: 11px; color: var(--lc-text-soft); line-height: 1.5; margin-top: 4px; }
+:deep(.el-input__wrapper), :deep(.el-select__wrapper), :deep(.el-textarea__inner) { border-radius: 5px; background: var(--lc-surface); box-shadow: 0 0 0 1px var(--el-border-color) inset; transition: box-shadow 180ms; }
 :deep(.el-input__wrapper), :deep(.el-select__wrapper) { min-height: 32px; }
 :deep(.el-input__inner), :deep(.el-select__wrapper) { font-size: 12px; }
 :deep(.el-textarea__inner) { font-size: 12px; line-height: 1.6; padding: 8px 10px; }

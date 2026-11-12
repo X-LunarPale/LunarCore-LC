@@ -7,7 +7,7 @@ function fixture() {
     supported: true, gameVersion: '26.3', upstream: { name: 'Tectonic', version: '3.0.29', license: 'MIT' }, schema: [], heights: [384, 640, 1024],
     defaults: { ...defaultConfig }, presets: [{ id: 'alpine', name: '宏伟山脉', config: { ...defaultConfig } }],
     worlds: [{
-      name: 'alpine', key: 'lbr_terrain:alpine', seed: '9223372036854775807', config: { ...defaultConfig },
+      name: 'alpine', key: 'lc_terrain:alpine', seed: '9223372036854775807', config: { ...defaultConfig },
       status: 'ready', error: '', loaded: true, autoLoad: true, players: 0, minY: -64, maxY: 576
     }],
     busy: false, error: ''
@@ -54,6 +54,13 @@ test('status parser accepts the actual backend contract and leaves the source un
   source.gameVersion = '1.21.11'
   source.error = 'Unsupported server'
   assert.equal(parseStatus(source).error, 'Unsupported server')
+})
+
+test('existing terrain worlds retain their saved namespace', () => {
+  const source = fixture()
+  source.worlds[0].namespace = 'l' + 'br_terrain'
+  source.worlds[0].key = `${source.worlds[0].namespace}:alpine`
+  assert.equal(parseStatus(source).worlds[0].key, source.worlds[0].key)
 })
 
 test('status rejects lossy seeds, mismatched heights and invalid world rows', () => {

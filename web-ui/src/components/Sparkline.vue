@@ -63,6 +63,6 @@ const last = computed(() => (props.values.length ? props.values[props.values.len
 <style scoped>
 .spark { position: relative; }
 svg { width: 100%; display: block; }
-.legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--lbr-text-soft); margin-top: 6px; }
-.empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--lbr-text-soft); font-size: 13px; }
+.legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--lc-text-soft); margin-top: 6px; }
+.empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--lc-text-soft); font-size: 13px; }
 </style>

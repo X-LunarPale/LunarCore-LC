@@ -1,0 +1,113 @@
+# ==========================================================
+#  LunarCore 领地模块 (land) 配置
+#  修改后执行 /lc module reload land 或在网页面板保存即可生效
+# ==========================================================
+
+# 选区工具（材料名），左键选择第一点，右键选择第二点
+selection-tool: GOLDEN_HOE
+# 选区粒子边框显示时长（秒）
+selection-show-seconds: 30
+# /land show 显示边界时长（秒）
+show-seconds: 20
+
+# 领地名格式（正则），领地名全服唯一（忽略大小写）
+name-pattern: "^[\\p{L}\\p{N}_-]{1,16}$"
+
+limits:
+  # 最小边长（格）
+  min-side: 5
+  # 最大边长（格）
+  max-side: 256
+  # 单个领地最小面积
+  min-area: 25
+  # 每位玩家默认最多领地数（权限 lc.land.limit.<n> 覆盖，lc.land.limit.unlimited 不限）
+  max-lands: 3
+  # 每位玩家默认总面积上限（权限 lc.land.area.<n> 覆盖，lc.land.area.unlimited 不限）
+  max-total-area: 20000
+  # 与世界出生点的最小距离（格），0 表示不限制
+  spawn-distance: 64
+  # 禁止圈地的世界
+  world-blacklist:
+    - world_the_end
+
+admin:
+  # OP 默认拥有 lc.land.admin；显式撤销该权限仍会禁止绕过。
+  # true = 管理员默认绕过，false = 必须 /land admin bypass 手动开启。
+  default-bypass: true
+
+border:
+  transitions:
+    enabled: true
+    # 成功步行/传送进入或离开后显示固定 XYZ 十二边，叠放切换显示双方。
+    duration-seconds: 5
+    # 每玩家共用冷却，0 表示每次触发；范围 0..300000。
+    cooldown-ms: 3000
+
+economy:
+  # area 保持原默认面积计价；volume = 面积 × 有效高度。
+  # 预估/创建/水平扩建共用；旧全高领地按世界实际高度计算，税仍按面积。
+  pricing-mode: area
+  # 每计价单位价格（area = 1x1 平面，volume = 1x1x1）
+  price-per-block: 1.0
+  # 按世界覆盖每格价格
+  world-prices:
+    world_nether: 2.0
+  # 未安装经济服务时：free = 免费圈地，deny = 禁止圈地
+  no-economy: free
+  # 删除领地时退还购买花费的比例（0~1）
+  refund-ratio: 0.5
+  # 玩家间交易税率（0~1），从卖家所得中扣除
+  sale-tax: 0.05
+
+# 领地税（按天按面积扣费），默认关闭
+tax:
+  enabled: false
+  # 每格每天税额
+  per-block-per-day: 0.01
+  # 余额不足时冻结领地（冻结后主人无法传送、扩建、出售、交易、修改设置，直到下次扣费成功）
+  freeze: true
+  # 冻结超过多少天自动删除领地，0 表示不删除
+  delete-after-days: 0
+
+# 进出领地提示
+messages:
+  # 显示方式：actionbar / title / chat
+  display: actionbar
+  # 未设置自定义提示时是否显示默认提示
+  show-default: true
+
+protection:
+  # 阻止领地外液体流入领地，以及跨 XYZ 边界海绵吸走领地内水（同领地与向野外允许）
+  liquid-flow: true
+  # 阻止活塞跨越领地边界推拉方块
+  pistons: true
+  # 阻止末影人/凋灵等生物修改领地内方块
+  mob-grief: true
+  # 拒绝进入（ENTER=false）时的提示冷却（毫秒）
+  deny-message-cooldown: 1500
+
+# 新建领地的默认 flag
+# global = 访客（非成员）权限 + 领地环境开关；member = 成员（角色 member）权限。主人与管理员（manager）拥有全部权限。
+default-flags:
+  global:
+    BUILD: false
+    BREAK: false
+    INTERACT: false
+    CONTAINER: false
+    USE_DOOR: false
+    PVP: false
+    MOB_SPAWN: true
+    EXPLOSION: false
+    FIRE_SPREAD: false
+    ENTER: true
+    TELEPORT: true
+    ANIMAL_DAMAGE: false
+  member:
+    BUILD: true
+    BREAK: true
+    INTERACT: true
+    CONTAINER: true
+    USE_DOOR: true
+    ANIMAL_DAMAGE: true
+    ENTER: true
+    TELEPORT: true

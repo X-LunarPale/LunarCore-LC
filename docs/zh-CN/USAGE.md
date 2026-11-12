@@ -2,11 +2,11 @@
 
 [English](../en-US/USAGE.md) | [首页](../../README.md)
 
-LunarCore 简称 LC。游戏内输入 `/lc help` 查看管理命令，管理员可用 `/lc m list` 快速查看模块状态。`/lbr` 命令已移除。普通基础命令仍可直接输入。自定义文本中的变量使用 `%lc_模块_变量%`，例如 `%lc_core_online%`。
+LunarCore 简称 LC。游戏内输入 `/lc help` 查看管理命令，管理员可用 `/lc m list` 快速查看模块状态。`/lc` 命令已移除。普通基础命令仍可直接输入。自定义文本中的变量使用 `%lc_模块_变量%`，例如 `%lc_core_online%`。
 
 ## 账号与登录
 
-在“账号与角色”分配面板权限。观察者查看基础状态，协管管理已授权功能。游戏权限由权限模块或其他权限插件管理，与面板账号分开。
+在“账号与角色”分配面板权限。观察者查看基础状态，协管管理已授权功能。游戏权限由官方 LuckPerms 管理，与面板账号分开。LC 的“权限管理”直接连接 LP，安装和常用操作见[权限设置](PERMISSIONS.md)。
 
 忘记面板密码时，在服务端控制台执行 `lc web user passwd 账号 新密码`。不要公开包含密码的记录。若 admin 同时丢失验证器与恢复码，可执行 `lc web resetadmin`，它会重置 admin 密码并清除该账号的两步验证。
 
@@ -53,4 +53,4 @@ LunarCore 简称 LC。游戏内输入 `/lc help` 查看管理命令，管理员�
 
 性能优化默认关闭，应先了解用途再启用；操作数不代表性能提升。地形模块只生成独立新世界，不转换旧世界。安装或调整支持高度后需完整重启。世界卸载会保存并停止加载，不删除目录。
 
-地形模块还需在启动命令加入 `-javaagent:LC-Terrain-Agent.jar`，用于气候、神殿位置和旧区块衔接。安装方式、全部设置与 `/tectonic` 命令见[地形说明](../../modules/lbr-terrain/README.md)。
+地形模块还需在启动命令加入 `-javaagent:LC-Terrain-Agent.jar`，用于气候、神殿位置和旧区块衔接。安装方式、全部设置与 `/tectonic` 命令见[地形说明](../../modules/lc-terrain/README.md)。

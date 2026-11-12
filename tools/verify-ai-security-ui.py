@@ -51,7 +51,7 @@ with sync_playwright() as driver:
     browser = driver.chromium.launch(
         executable_path="C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", headless=True)
     context = browser.new_context(viewport={"width": 1440, "height": 1000})
-    context.add_init_script("localStorage.setItem('lbr-locale','zh_CN')")
+    context.add_init_script("localStorage.setItem('lc-locale','zh_CN')")
     state = {"enabled": False, "writes": [], "balance_reads": 0}
     errors = []
     unknown = []
@@ -106,11 +106,11 @@ with sync_playwright() as driver:
     page.get_by_label("密码", exact=True).fill("fixture-password")
     page.get_by_role("button", name="登 录").click()
     expect(page.get_by_label("动态验证码或恢复码", exact=True)).to_be_visible()
-    assert page.evaluate("localStorage.getItem('lbr-token')") is None
+    assert page.evaluate("localStorage.getItem('lc-token')") is None
     page.get_by_label("动态验证码或恢复码", exact=True).fill("123456")
     page.get_by_role("button", name="登 录").click()
     page.wait_for_url(BASE + "/profile")
-    assert page.evaluate("localStorage.getItem('lbr-token')") == "fixture-session"
+    assert page.evaluate("localStorage.getItem('lc-token')") == "fixture-session"
     page.goto(BASE + "/profile", wait_until="networkidle")
     page.get_by_label("当前密码", exact=True).fill("fixture-password")
     page.get_by_role("button", name="设置两步验证", exact=True).click()

@@ -26,9 +26,11 @@ Read the console and keep the server stopped. Preserve original modules and data
 
 Custom names are preserved. Reset Branding to use “LunarCore 琉月”. The data directory remains `plugins/LunarCore/`.
 
-## Complete EssentialsX or LuckPerms Replacement?
+## Does LC Provide Its Own Permission Engine?
 
-Full compatibility is not guaranteed. Test specific commands and third-party behavior on a test server.
+No. Official LuckPerms handles permissions; LC provides its web management bridge. Put LuckPerms in `plugins/`, install the LC bridge module and fully restart. Existing permission records are imported into LP; use the panel or `/lp` afterward.
+
+Basic commands are not an exact EssentialsX replacement. Check specific commands and third-party behavior in your environment.
 
 ## Current Limitations
 

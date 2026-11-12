@@ -1,7 +1,7 @@
 """Verify deployed panel bundle includes the action dialog layout fix."""
 import re
 import urllib.request
-base = __import__('os').environ.get('LBR_WEB_BASE_URL', 'http://localhost:8765')
+base = __import__('os').environ.get('LC_WEB_BASE_URL', 'http://localhost:8765')
 def fetch(path):
     return urllib.request.urlopen(base + path, timeout=15).read().decode()
 index = fetch('/')

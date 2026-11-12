@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from playwright.sync_api import expect, sync_playwright
 
 
-BASE = os.environ.get("LBR_UI_BASE", "http://127.0.0.1:5197")
+BASE = os.environ.get("LC_UI_BASE", "http://127.0.0.1:5197")
 OUTPUT = Path(__file__).resolve().parents[1] / "artifacts" / "grim-config-ui"
 PRIVATE_VALUE = "fixture-private-webhook-must-not-reach-browser"
 PREFIX = "/api/ext/anticheat"
@@ -99,9 +99,9 @@ with sync_playwright() as playwright:
         context = browser.new_context(viewport={"width": 1440, "height": 1040})
         contexts.append(context)
         context.add_init_script(
-            "localStorage.setItem('lbr-token','fixture-token');"
-            "localStorage.setItem('lbr-locale','zh_CN');"
-            "localStorage.setItem('lbr-theme','light');"
+            "localStorage.setItem('lc-token','fixture-token');"
+            "localStorage.setItem('lc-locale','zh_CN');"
+            "localStorage.setItem('lc-theme','light');"
         )
 
         def respond(route):

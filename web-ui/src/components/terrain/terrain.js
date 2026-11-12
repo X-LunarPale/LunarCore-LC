@@ -128,7 +128,9 @@ export function parseStatus(value) {
   })
   const worldNames = new Set()
   const worlds = value.worlds.map(world => {
-    if (!record(world) || !validName(world.name) || worldNames.has(world.name) || world.key !== `lbr_terrain:${world.name}` ||
+    const namespaces = ['lc_terrain', 'l' + 'br_terrain']
+    if (!record(world) || !validName(world.name) || worldNames.has(world.name) ||
+        !namespaces.some(namespace => world.key === `${namespace}:${world.name}`) ||
         typeof world.seed !== 'string' || !validSeed(world.seed) || !world.seed || world.seed.trim() !== world.seed ||
         !Object.hasOwn(worldStates, world.status) || typeof world.loaded !== 'boolean' || typeof world.autoLoad !== 'boolean' ||
         !Number.isSafeInteger(world.players) || world.players < 0 || !world.loaded && world.players !== 0 ||

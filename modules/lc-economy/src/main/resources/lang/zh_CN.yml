@@ -1,0 +1,53 @@
+# 经济模块语言文件（MiniMessage 格式），引用 key：economy.<路径>
+prefix: "<aqua>[</aqua><gold><bold>经济</bold></gold><aqua>]</aqua> "
+usage:
+  money: "<prefix><white>用法：<yellow>/money [玩家]</yellow> 或 <yellow>/money log [玩家] [页]"
+  pay: "<prefix><white>用法：<yellow>/pay <玩家> <金额></yellow>，大额转账需 <yellow>/pay confirm</yellow> 确认"
+  eco: "<prefix><white>用法：<yellow>/eco <give|take|set|reset> <玩家|*> [金额]"
+
+balance:
+  self: "<prefix><white>你的余额：<gold>{amount}"
+  other: "<prefix><white>玩家 <white>{player}</white> 的余额：<gold>{amount}"
+
+pay:
+  min: "<prefix><red>单笔转账金额不能低于 <gold>{min}</gold>。"
+  self: "<prefix><red>不能给自己转账。"
+  confirm: "<prefix><yellow>你将向 <white>{player}</white> 转账 <gold>{amount}</gold>（手续费 <gold>{fee}</gold>，合计 <gold>{total}</gold>）。<br><prefix><yellow>请在 {seconds} 秒内输入 <click:run_command:'/pay confirm'><green><u>/pay confirm</u></green></click> 确认。"
+  no-pending: "<prefix><red>没有待确认的转账。"
+  expired: "<prefix><red>转账确认已过期，请重新发起。"
+  sent: "<prefix><green>已向 <white>{player}</white> 转账 <gold>{amount}</gold>，当前余额 <gold>{balance}</gold>。"
+  sent-fee: "<prefix><green>已向 <white>{player}</white> 转账 <gold>{amount}</gold>（手续费 <gold>{fee}</gold>），当前余额 <gold>{balance}</gold>。"
+  received: "<prefix><green>你收到了 <white>{player}</white> 的转账 <gold>{amount}</gold>。"
+
+baltop:
+  header: "<gold>===== 财富排行榜 <white>({page}/{pages})</white> 全服总额 <yellow>{total}</yellow> ====="
+  entry: "<white>#{rank} <white>{player}</white> <aqua>-</aqua> <gold>{amount}"
+  self: "<white>你的排名：<yellow>#{rank}"
+  empty: "<white>暂无数据。"
+
+eco:
+  give: "<prefix><green>已给予 <white>{player}</white> <gold>{amount}</gold>，余额 <gold>{balance}</gold>。"
+  take: "<prefix><green>已扣除 <white>{player}</white> <gold>{amount}</gold>，余额 <gold>{balance}</gold>。"
+  set: "<prefix><green>已将 <white>{player}</white> 的余额设置为 <gold>{balance}</gold>。"
+  reset: "<prefix><green>已将 <white>{player}</white> 的余额重置为 <gold>{balance}</gold>。"
+  batch: "<prefix><green>批量操作完成：成功 {count}/{total}。"
+  notify: "<prefix><white>你的余额已被管理员调整，当前余额：<gold>{amount}"
+
+log:
+  header: "<gold>===== <white>{player}</white> 的流水 <white>({page}/{pages})</white> ====="
+  entry-in: "<aqua>[{time}]</aqua> <green>+{change}</green> <white>余额 {balance}</white> <white>{reason}</white> <aqua>by {operator}"
+  entry-out: "<aqua>[{time}]</aqua> <red>-{change}</red> <white>余额 {balance}</white> <white>{reason}</white> <aqua>by {operator}"
+  empty: "<white>暂无流水记录。"
+
+error:
+  no-permission: "<prefix><red>你没有权限这样做。"
+  player-not-found: "<prefix><red>找不到玩家 <white>{player}</white> 或其没有经济账户。"
+  invalid-amount: "<prefix><red>金额无效：<white>{input}</white>"
+  database: "<prefix><red>数据库查询失败，请稍后再试。"
+  # 以下为 EconomyService 错误码
+  invalid_amount: "<prefix><red>金额无效。"
+  insufficient_funds: "<prefix><red>余额不足（需要 <gold>{need}</gold>，当前 <gold>{balance}</gold>）。"
+  max_balance: "<prefix><red>超过账户最大余额上限。"
+  no_account: "<prefix><red>账户不存在。"
+  same_account: "<prefix><red>不能给自己转账。"
+  loading: "<prefix><yellow>经济数据加载中，请稍后再试。"

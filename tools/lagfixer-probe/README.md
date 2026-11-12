@@ -2,7 +2,7 @@
 
 Diagnostic JavaPlugin source only; intentionally excluded from Gradle/settings and production jars. Compile with Java 25 against the existing Paper 26.3 API plus its API dependencies; no NMS compile dependency. Package compiled `com/lunarboreal/probe/LagFixerProbe.class` and `src/main/resources/plugin.yml` at jar root. Place only on a disposable isolated server with LunarCore. Do not install on production: seed writes an 11x11 stone platform near spawn, and cleanup removes newly spawned nearby entities.
 
-No credentials or LBR private APIs are needed. `depend: [LunarCore]` ensures startup ordering. The probe uses Bukkit UUID lookup and read-only reflection of real CraftEntity/NMS goal lists, never reflects into module classes or assumes classloader sharing.
+No credentials or LC private APIs are needed. `depend: [LunarCore]` ensures startup ordering. The probe uses Bukkit UUID lookup and read-only reflection of real CraftEntity/NMS goal lists, never reflects into module classes or assumes classloader sharing.
 
 Console protocol (external controller waits for log markers):
 

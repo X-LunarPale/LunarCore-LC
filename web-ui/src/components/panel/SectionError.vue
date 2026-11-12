@@ -15,5 +15,5 @@ defineProps({ error: { type: Object, default: null } })
 .section-error { display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--el-color-danger-light-7); border-radius: 6px; background: var(--el-color-danger-light-9); color: var(--el-color-danger); }
 .error-icon { flex: 0 0 auto; padding-top: 1px; }
 strong { font-size: 12px; font-weight: 600; line-height: 1.45; }
-p { margin: 2px 0 0; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; color: var(--lbr-text-soft); }
+p { margin: 2px 0 0; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; color: var(--lc-text-soft); }
 </style>

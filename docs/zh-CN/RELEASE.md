@@ -16,13 +16,13 @@
 | 文件 | 用途 |
 |---|---|
 | `LunarCore-0.0.7.jar` | 核心，放入 `plugins/` |
-| `lbr-*.jar` | 附加模块，放入 `plugins/LunarCore/modules/` |
+| `lc-*.jar` | 附加模块，放入 `plugins/LunarCore/modules/` |
 | `LunarCore-modules-0.0.7.zip` | 官方附加模块及结构美化管理模块 |
 | `LunarCore-0.0.7-source.zip` | 源码与构建文件 |
 | `LunarCore-0.0.7.zip` | 核心、模块、源码与安装说明 |
 | `LC-Terrain-Agent.jar` | 地形启动补丁，放在服务端目录并添加启动参数 |
-| `lbr-structures-web.jar` | 结构管理模块；生成插件另行下载 |
-| `LbrMultiverseWeb.jar`、`LbrPlayerTitleWeb.jar` | 可选独立插件 |
+| `lc-structures-web.jar` | 结构管理模块；生成插件另行下载 |
+| `LcMultiverseWeb.jar`、`LcPlayerTitleWeb.jar` | 可选独立插件 |
 | `module-market.json` | 版本、依赖与文件校验信息 |
 | `SHA256SUMS.txt` | 下载文件校验值 |
 

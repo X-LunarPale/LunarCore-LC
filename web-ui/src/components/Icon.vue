@@ -52,5 +52,5 @@ const comp = computed(() => {
 </script>
 
 <template>
-  <component :is="comp" :size="size" :stroke-width="strokeWidth" class="lbr-icon" />
+  <component :is="comp" :size="size" :stroke-width="strokeWidth" class="lc-icon" />
 </template>

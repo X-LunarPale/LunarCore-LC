@@ -8,5 +8,5 @@ fi
 if [ "$1" != "--skip-web" ]; then
   (cd web-ui && { [ -d node_modules ] || npm ci; } && npm run build)
 fi
-./gw.sh :lbr-core:jar
-ls -l lbr-core/build/libs/
+./gw.sh :lc-core:jar
+ls -l lc-core/build/libs/

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-globalThis.window = { __LBR_BASE__: '', location: new URL('https://panel.example/lbr/') }
+globalThis.window = { __LC_BASE__: '', location: new URL('https://panel.example/lc/') }
 const { request, setAuthHooks, socket } = await import('../src/api.js')
 setAuthHooks(() => 'secret-session-token', () => {})
 

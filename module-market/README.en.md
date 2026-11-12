@@ -16,40 +16,40 @@ Replace older files instead of keeping duplicate JARs. Removal can keep settings
 
 | Module | Purpose | Download |
 |---|---|---|
-| Economy | Balances, transfers, rankings and optional Vault support | [lbr-economy.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-economy.jar) |
-| Daily rewards | Check-in rewards; money rewards need economy | [lbr-signin.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-signin.jar) |
-| Land claims | Claims, members and protection; paid purchases need economy | [lbr-land.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-land.jar) |
-| Gameplay votes | Vote on gameplay changes | [lbr-vote.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-vote.jar) |
-| Exploration journal | Record biomes, advancements and fishing | [lbr-journal.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-journal.jar) |
-| Building landmarks | Submit and review builds; requires land | [lbr-landmarks.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-landmarks.jar) |
+| Economy | Balances, transfers, rankings and optional Vault support | [lc-economy.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-economy.jar) |
+| Daily rewards | Check-in rewards; money rewards need economy | [lc-signin.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-signin.jar) |
+| Land claims | Claims, members and protection; paid purchases need economy | [lc-land.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-land.jar) |
+| Gameplay votes | Vote on gameplay changes | [lc-vote.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-vote.jar) |
+| Exploration journal | Record biomes, advancements and fishing | [lc-journal.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-journal.jar) |
+| Building landmarks | Submit and review builds; requires land | [lc-landmarks.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-landmarks.jar) |
 
 ## Players
 
 | Module | Purpose | Download |
 |---|---|---|
-| Teleportation | Homes, requests, warps and spawn | [lbr-teleport.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-teleport.jar) |
-| Chat and AI | Messages, mail, chat formats, multiple AI characters and memory | [lbr-chat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-chat.jar) |
-| Titles | Create, grant, revoke and equip titles | [lbr-titles.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-titles.jar) |
-| Scoreboard | Sidebar and top information bar | [lbr-scoreboard.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-scoreboard.jar) |
+| Teleportation | Homes, requests, warps and spawn | [lc-teleport.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-teleport.jar) |
+| Chat and AI | Messages, mail, chat formats, multiple AI characters and memory | [lc-chat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-chat.jar) |
+| Titles | Create, grant, revoke and equip titles | [lc-titles.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-titles.jar) |
+| Scoreboard | Sidebar and top information bar | [lc-scoreboard.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-scoreboard.jar) |
 
 ## Protection
 
 | Module | Purpose | Download |
 |---|---|---|
-| Punishments | Bans, mutes, warnings and history | [lbr-ban.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-ban.jar) |
-| Anti-xray | Paper settings and mining alerts | [lbr-antixray.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-antixray.jar) |
-| Anti-cheat | GrimAC status and settings; install GrimAC separately | [lbr-anticheat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-anticheat.jar) |
-| Game permissions | Groups, temporary permissions and checks | [lbr-permissions.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-permissions.jar) |
-| QQ authentication | Group and account authentication; starts disabled | [lbr-qqauth.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-qqauth.jar) |
+| Punishments | Bans, mutes, warnings and history | [lc-ban.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-ban.jar) |
+| Anti-xray | Paper settings and mining alerts | [lc-antixray.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-antixray.jar) |
+| Anti-cheat | GrimAC status and settings; install GrimAC separately | [lc-anticheat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-anticheat.jar) |
+| Game permissions | Groups, temporary permissions and checks | [lc-permissions.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-permissions.jar) |
+| QQ authentication | Group and account authentication; starts disabled | [lc-qqauth.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-qqauth.jar) |
 
 ## Server
 
 | Module | Purpose | Download |
 |---|---|---|
-| Worlds | Create, load, unload and configure worlds | [lbr-world.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-world.jar) |
-| Terrain | Separate worlds, climate and terrain search; requires the [startup agent](../modules/lbr-terrain/README.en.md) | [lbr-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-terrain.jar) |
-| Performance | Metrics, cleanup and optional optimizations, initially disabled | [lbr-performance.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-performance.jar) |
-| Server list | Description text, colors and variables | [lbr-motd.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lbr-motd.jar) |
+| Worlds | Create, load, unload and configure worlds | [lc-world.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-world.jar) |
+| Terrain | Separate worlds, climate and terrain search; requires the [startup agent](../modules/lc-terrain/README.en.md) | [lc-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-terrain.jar) |
+| Performance | Metrics, cleanup and optional optimizations, initially disabled | [lc-performance.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-performance.jar) |
+| Server list | Description text, colors and variables | [lc-motd.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.7/lc-motd.jar) |
 
 ## Other Downloads
 

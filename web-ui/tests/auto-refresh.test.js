@@ -76,7 +76,7 @@ function environment(context) {
     return mount({ setup() { useAutoRefresh(refresh, options); return () => null } })
   }
   function changed(namespace) {
-    const event = new Event('lbr:panel-changed')
+    const event = new Event('lc:panel-changed')
     event.detail = { namespace }
     window.dispatchEvent(event)
   }

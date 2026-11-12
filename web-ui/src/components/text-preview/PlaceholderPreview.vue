@@ -34,5 +34,5 @@ onBeforeUnmount(() => { disposed = true; revision++ })
   </div>
 </template>
 <style scoped>
-.placeholder-preview{padding-top:10px;font-size:11px;color:var(--lbr-text-soft)}.placeholder-actions{display:flex;flex-wrap:wrap;gap:8px}.placeholder-actions :deep(.el-select){width:210px;max-width:100%}.placeholder-actions :deep(.el-button){margin:0}.placeholder-preview p{margin:6px 0;line-height:1.7;overflow-wrap:anywhere}.placeholder-error{color:var(--el-color-danger)}
+.placeholder-preview{padding-top:10px;font-size:11px;color:var(--lc-text-soft)}.placeholder-actions{display:flex;flex-wrap:wrap;gap:8px}.placeholder-actions :deep(.el-select){width:210px;max-width:100%}.placeholder-actions :deep(.el-button){margin:0}.placeholder-preview p{margin:6px 0;line-height:1.7;overflow-wrap:anywhere}.placeholder-error{color:var(--el-color-danger)}
 </style>

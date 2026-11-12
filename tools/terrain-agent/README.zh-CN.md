@@ -27,5 +27,5 @@ Windows 也可使用仓库自带的启动脚本：
 使用已启动过的本地 Paper 服务端运行测试：
 
 ```powershell
-.\gradlew.bat :terrain-agent:test "-Plbr.paperServerHome=E:/LBR-Test-26.3"
+.\gradlew.bat :terrain-agent:test "-Plc.paperServerHome=E:/LC-Test-26.3"
 ```

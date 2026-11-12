@@ -1,0 +1,33 @@
+display-enabled: true
+default-mode: sidebar
+title: '<gradient:#7fd3ff:#ffffff>LunarCore</gradient>'
+lines:
+  - '<white>玩家 <white>{player}'
+  - '<white>称号 <white>{title}'
+  - '<white>余额 <gold>{balance}'
+  - '<white>世界 <white>{world}'
+  - ''
+  - '<white>在线 <aqua>{online}</aqua>  延迟 <white>{ping}ms'
+  - '<white>TPS <green>{tps}</green>  MSPT <white>{mspt}'
+admin:
+  enabled: true
+  title: '<gold>琉月·冰澜 <white>| <yellow>管理'
+  lines:
+    - '<white>管理员 <white>{player}'
+    - '<white>称号 <white>{title}'
+    - '<white>余额 <gold>{balance}'
+    - ''
+    - '<white>在线 <aqua>{online} <white>/ {max_players}'
+    - '<white>TPS <green>{tps} <white>MSPT <white>{mspt}'
+    - '<white>实体 <white>{entities} <white>区块 <white>{chunks}'
+    - '<white>内存 <white>{memory_used} / {memory_max} MB'
+    - '<white>世界 <white>{world}'
+    - '<white>延迟 <white>{ping}ms'
+island-frames:
+  - '<aqua>LunarCore</aqua> <white>·</white> <white>{player}</white> <white>· 在线 {online}'
+  - '<white>TPS <green>{tps}</green> · 延迟 <white>{ping}ms'
+update-ticks: 20
+rotate: true
+rotation-ticks: 100
+boss-color: BLUE
+boss-progress: 1.0

@@ -15,7 +15,7 @@
 
 ## 隔离方式
 
-工作流使用新 runner，并在工具安装前检查自定义 Gradle/npm 缓存目录不存在；独立设置 Maven 本地仓库和 Java user.home，阻止隐式使用已有 ~/.m2。Gradle 使用 `--no-build-cache --no-configuration-cache`，Paper 通过固定版本的公开 development bundle 构建，不传 `lbr.paperServerHome`。生成插件所用 API 来自同一次干净流水线的源码编译产物。
+工作流使用新 runner，并在工具安装前检查自定义 Gradle/npm 缓存目录不存在；独立设置 Maven 本地仓库和 Java user.home，阻止隐式使用已有 ~/.m2。Gradle 使用 `--no-build-cache --no-configuration-cache`，Paper 通过固定版本的公开 development bundle 构建，不传 `lc.paperServerHome`。生成插件所用 API 来自同一次干净流水线的源码编译产物。
 
 当前自动检查运行在 rtiags 的两个仓库。核心工作流随 PR #4 提交，合并后上游才具有同样的自动检查。Actions 的版本均固定到提交 SHA；构建仅需 contents:read，不依赖发布令牌。
 
@@ -38,14 +38,14 @@ npm ci --no-audit --no-fund
 node --test tests/*.test.js tests/*.test.mjs
 npm run build
 cd ..
-./gradlew test :lbr-core:jar :terrain-agent:jar :lbr-multiverse-web:jar :lbr-playertitle-web:jar :lbr-structures-web:jar :lbr-api:publishMavenPublicationToDistRepository   --no-daemon --no-build-cache --no-configuration-cache --max-workers=2   -Duser.home="$LC_CLEAN_ROOT/java-home" -Dmaven.repo.local="$LC_CLEAN_ROOT/maven-empty"
-npm test --prefix modules/lbr-structures-web/web
+./gradlew test :lc-core:jar :terrain-agent:jar :lc-multiverse-web:jar :lc-playertitle-web:jar :lc-structures-web:jar :lc-api:publishMavenPublicationToDistRepository   --no-daemon --no-build-cache --no-configuration-cache --max-workers=2   -Duser.home="$LC_CLEAN_ROOT/java-home" -Dmaven.repo.local="$LC_CLEAN_ROOT/maven-empty"
+npm test --prefix modules/lc-structures-web/web
 python3 package-release.py
 cd "$LC_CLEAN_ROOT/generator"
 GRADLE_USER_HOME="$LC_CLEAN_ROOT/gradle-generator" ./gradlew :plugin:test :plugin:jar   -PlunarCoreRepository="$LC_CLEAN_ROOT/core/build/repo"   --no-daemon --no-build-cache --no-configuration-cache --max-workers=2   -Duser.home="$LC_CLEAN_ROOT/java-home" -Dmaven.repo.local="$LC_CLEAN_ROOT/maven-empty"
 ```
 
-如需精确复现上述证据，在各仓库先 checkout 对应验证提交。不要增加 --offline 或 lbr.paperServerHome 参数，也不要把旧缓存、旧 build 目录或已有 API JAR 复制进去。
+如需精确复现上述证据，在各仓库先 checkout 对应验证提交。不要增加 --offline 或 lc.paperServerHome 参数，也不要把旧缓存、旧 build 目录或已有 API JAR 复制进去。
 
 ## 边界与失败记录
 

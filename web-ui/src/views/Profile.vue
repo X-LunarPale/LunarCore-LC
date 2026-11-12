@@ -86,22 +86,22 @@ async function unbind() {
 
 <style scoped>
 .profile-layout { display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 20px; align-items: start; }
-.identity-panel, .settings-panel { min-width: 0; border: 1px solid var(--el-border-color-light); background: var(--lbr-surface); border-radius: 10px; }
+.identity-panel, .settings-panel { min-width: 0; border: 1px solid var(--el-border-color-light); background: var(--lc-surface); border-radius: 10px; }
 .identity-head { padding: 24px 22px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--el-border-color-lighter); }
 .identity-icon { width: 44px; height: 44px; display: grid; place-items: center; background: var(--el-fill-color-light); border-radius: 9px; color: var(--el-text-color-secondary); flex-shrink: 0; }
 .identity-head h3 { font-size: 17px; margin: 0 0 3px; overflow-wrap: anywhere; }
-.identity-head span { font-size: 12px; color: var(--lbr-text-soft); }
+.identity-head span { font-size: 12px; color: var(--lc-text-soft); }
 .identity-details { margin: 0; padding: 18px 22px; display: grid; gap: 15px; }
-.identity-details dt { color: var(--lbr-text-soft); font-size: 11px; margin-bottom: 4px; }
+.identity-details dt { color: var(--lc-text-soft); font-size: 11px; margin-bottom: 4px; }
 .identity-details dd { margin: 0; font-size: 12px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .permission-section { border-top: 1px solid var(--el-border-color-lighter); padding: 18px 22px 22px; }
-.permission-section h4 { font-size: 12px; font-weight: 500; margin: 0 0 12px; }.permission-section h4 span { color: var(--lbr-text-soft); margin-left: 6px; }
+.permission-section h4 { font-size: 12px; font-weight: 500; margin: 0 0 12px; }.permission-section h4 span { color: var(--lc-text-soft); margin-left: 6px; }
 .permission-tags { display: flex; flex-wrap: wrap; gap: 6px; max-height: 240px; overflow: auto; font-size: 12px; }.permission-tags :deep(.el-tag) { max-width: 100%; height: auto; min-height: 22px; white-space: normal; overflow-wrap: anywhere; }
 .setting-section { padding: 24px; }.setting-section + .setting-section { border-top: 1px solid var(--el-border-color-light); }
-.setting-section header { display: flex; gap: 12px; margin-bottom: 22px; }.setting-section header > .lbr-icon { color: var(--lbr-text-soft); margin-top: 2px; }.setting-section h3 { font-size: 15px; margin: 0; font-weight: 600; }.setting-section header p { font-size: 12px; color: var(--lbr-text-soft); margin: 5px 0 0; }
+.setting-section header { display: flex; gap: 12px; margin-bottom: 22px; }.setting-section header > .lc-icon { color: var(--lc-text-soft); margin-top: 2px; }.setting-section h3 { font-size: 15px; margin: 0; font-weight: 600; }.setting-section header p { font-size: 12px; color: var(--lc-text-soft); margin: 5px 0 0; }
 .password-form { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; max-width: 660px; }.password-form :deep(.el-form-item) { margin-bottom: 18px; }.full-field, .form-footer { grid-column: 1 / -1; }.full-field { max-width: calc(50% - 8px); }.form-footer { margin-top: 2px; }
 .bound { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px; border-radius: 6px; background: var(--el-fill-color-extra-light); border: 1px solid var(--el-border-color-lighter); }
-.binding-help { color: var(--lbr-text-soft); font-size: 12px; margin: 0 0 14px; line-height: 1.9; }.bind-form { display: flex; gap: 10px; max-width: 430px; }.bind-form .el-input { min-width: 0; }.bind-form .el-button { margin-left: 0; }
+.binding-help { color: var(--lc-text-soft); font-size: 12px; margin: 0 0 14px; line-height: 1.9; }.bind-form { display: flex; gap: 10px; max-width: 430px; }.bind-form .el-input { min-width: 0; }.bind-form .el-button { margin-left: 0; }
 code { background: var(--el-fill-color-light); padding: 2px 5px; border-radius: 4px; overflow-wrap: anywhere; }
 @media (max-width: 1000px) { .profile-layout { grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 16px; } .password-form { grid-template-columns: 1fr; }.full-field { max-width: none; } }
 @media (max-width: 760px) { .profile-layout { grid-template-columns: 1fr; }.identity-details { grid-template-columns: 1fr 1fr; }.setting-section { padding: 20px; }.permission-tags { max-height: 140px; } }

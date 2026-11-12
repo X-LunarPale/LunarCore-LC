@@ -15,7 +15,7 @@ const command = ref('')
 const sending = ref(false)
 const box = ref(null)
 // Remove legacy persisted commands without parsing untrusted/corrupt storage.
-try { localStorage.removeItem('lbr-cmd-history') } catch { /* storage unavailable */ }
+try { localStorage.removeItem('lc-cmd-history') } catch { /* storage unavailable */ }
 let pending = []
 let off
 let idSeq = 0
@@ -147,11 +147,11 @@ onUnmounted(() => {
 
 <style scoped>
 .console-page { display: flex; flex-direction: column; height: calc(100dvh - 54px); min-height:480px; min-width:0; position: relative; }
-.page-header{margin-bottom:16px;gap:12px}.page-title{font-size:25px;letter-spacing:-.5px}.eyebrow{margin:0 0 5px;font-size:11px;color:var(--lbr-text-soft);letter-spacing:.08em}.toolbar{gap:8px;max-width:100%}.toolbar :deep(.el-input){min-width:0}.log-status{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--lbr-surface);border:1px solid var(--lbr-sidebar-border);border-bottom:0;border-radius:8px 8px 0 0;color:var(--lbr-text-soft);font-size:11px}.log-status>span:first-child{display:flex;align-items:center;gap:6px}.log-status i{width:6px;height:6px;border-radius:50%;background:var(--el-color-success)}.log-status .paused i{background:var(--el-color-warning)}
+.page-header{margin-bottom:16px;gap:12px}.page-title{font-size:25px;letter-spacing:-.5px}.eyebrow{margin:0 0 5px;font-size:11px;color:var(--lc-text-soft);letter-spacing:.08em}.toolbar{gap:8px;max-width:100%}.toolbar :deep(.el-input){min-width:0}.log-status{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--lc-surface);border:1px solid var(--lc-sidebar-border);border-bottom:0;border-radius:8px 8px 0 0;color:var(--lc-text-soft);font-size:11px}.log-status>span:first-child{display:flex;align-items:center;gap:6px}.log-status i{width:6px;height:6px;border-radius:50%;background:var(--el-color-success)}.log-status .paused i{background:var(--el-color-warning)}
 .term {
   flex: 1; min-height: 200px; overflow: auto;
-  background: var(--lbr-console-bg); color: var(--lbr-console-text);
-  border-radius: 0 0 8px 8px; padding: 12px 14px; border: 1px solid var(--lbr-sidebar-border);
+  background: var(--lc-console-bg); color: var(--lc-console-text);
+  border-radius: 0 0 8px 8px; padding: 12px 14px; border: 1px solid var(--lc-sidebar-border);
   font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace; font-size: 12.5px; line-height: 1.55;
 }
 .line { white-space: pre-wrap; word-break: break-all; }
@@ -165,6 +165,6 @@ onUnmounted(() => {
 .cmd { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
 .prompt { font-family: monospace; font-weight: 700; color: var(--el-color-primary); font-size: 16px; }
 .jump { position: absolute; right: 40px; bottom: 100px; }
-.cmd{padding:10px;background:var(--lbr-surface);border:1px solid var(--lbr-sidebar-border);border-radius:8px}.cmd :deep(.el-input){min-width:0;flex:1}.cmd .el-button{flex-shrink:0}.term{min-width:0;overscroll-behavior:contain}.line{overflow-wrap:anywhere}@media(max-width:700px){.console-page{height:calc(100dvh - 54px);padding-bottom:16px}.page-header{align-items:flex-start}.page-title{font-size:23px}.toolbar{width:100%;display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:8px}.toolbar :deep(.el-input),.toolbar :deep(.el-select){width:100%!important}.toolbar .el-button{margin:0}.jump{right:26px;bottom:86px}.cmd{gap:6px;padding:8px}.prompt{display:none}.term{font-size:12px;padding:10px}}
+.cmd{padding:10px;background:var(--lc-surface);border:1px solid var(--lc-sidebar-border);border-radius:8px}.cmd :deep(.el-input){min-width:0;flex:1}.cmd .el-button{flex-shrink:0}.term{min-width:0;overscroll-behavior:contain}.line{overflow-wrap:anywhere}@media(max-width:700px){.console-page{height:calc(100dvh - 54px);padding-bottom:16px}.page-header{align-items:flex-start}.page-title{font-size:23px}.toolbar{width:100%;display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:8px}.toolbar :deep(.el-input),.toolbar :deep(.el-select){width:100%!important}.toolbar .el-button{margin:0}.jump{right:26px;bottom:86px}.cmd{gap:6px;padding:8px}.prompt{display:none}.term{font-size:12px;padding:10px}}
 
 </style>

@@ -68,7 +68,7 @@ function syncScroll() {
 .code-editor-wrap:focus-within { border-color: var(--el-color-primary); }
 .gutter {
   overflow: hidden; padding: 8px 8px 8px 6px; text-align: right; min-width: 44px; user-select: none;
-  color: var(--lbr-text-soft); background: var(--el-fill-color-light); border-right: 1px solid var(--el-border-color-lighter);
+  color: var(--lc-text-soft); background: var(--el-fill-color-light); border-right: 1px solid var(--el-border-color-lighter);
 }
 .code {
   flex: 1; border: none; outline: none; resize: none; padding: 8px 12px; margin: 0;

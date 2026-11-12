@@ -7,6 +7,7 @@
 - [安装与升级](zh-CN/INSTALL.md)
 - [模块使用](zh-CN/MODULES.md)
 - [面板与常用功能](zh-CN/USAGE.md)
+- [LuckPerms 权限设置](zh-CN/PERMISSIONS.md)
 - [YUNG’s 结构美化](zh-CN/STRUCTURES.md)
 - [常见问题](zh-CN/FAQ.md)
 - [更新说明](zh-CN/RELEASE.md)
