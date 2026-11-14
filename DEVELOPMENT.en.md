@@ -17,7 +17,7 @@ cd ..
 python package-release.py
 ```
 
-Use `gradlew.bat` on Windows. Outputs are in `dist/0.0.7/`. Only basic commands are embedded in the core.
+Use `gradlew.bat` on Windows. Outputs are in `dist/0.0.8-pre.1/`. Only basic commands are embedded in the core.
 
 If local Paper tooling fails, use `-Plc.paperServerHome=server-directory` with a matching complete Paper installation. Normal builds do not require it.
 
@@ -46,7 +46,7 @@ Use LC as the short name, `/lc` as the main command, `%lc_module_key%` for place
 
 ## Release
 
-`gradle.properties` defines `0.0.7`, using GitHub tag `v0.0.7`.
+`gradle.properties` defines `0.0.8-pre.1`, using GitHub tag `v0.0.8-pre.1`.
 
 `module-market/catalog.json` defines names, descriptions, categories and required modules. The build adds sizes and SHA-256 file checksums. Upload modules from the same package build. Rebuild the core after rebuilding modules; do not mix outputs.
 

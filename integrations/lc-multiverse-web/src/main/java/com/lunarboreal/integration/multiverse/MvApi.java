@@ -4,6 +4,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 
 /** Calls public methods only; no vendor implementation or dependency is bundled. */
 final class MvApi {
@@ -40,7 +43,27 @@ final class MvApi {
         if (!Boolean.TRUE.equals(call(result,"isSuccess"))) throw new IllegalStateException("Multiverse拒绝操作: "+result);
     }
     Object world(String name) throws Exception {
-        for(Object w : (Collection<?>)call(manager,"getWorlds")) if(name.equals(call(w,"getName"))) return w;
+        Object direct=call(call(manager,"getWorld",name),"getOrNull");
+        if(direct!=null)return direct;
+        for(Object w : worlds(manager)) if(name.equals(call(w,"getName")) || name.equals(identity(w))) return w;
         throw new IllegalArgumentException("世界未在Multiverse注册");
+    }
+    static Collection<Object> worlds(Object manager)throws Exception{
+        Map<String,Object> worlds=new LinkedHashMap<>();
+        // MV 5.8.1 omits newly unloaded worlds from getWorlds().
+        for(String getter:List.of("getWorlds","getUnloadedWorlds","getLoadedWorlds"))
+            for(Object world:(Collection<?>)call(manager,getter))worlds.put(identity(world),world);
+        return worlds.values();
+    }
+    static String identity(Object world) throws Exception {
+        try { return call(world,"getKey").toString(); }
+        catch (NoSuchMethodException ignored) { return call(world,"getName").toString(); }
+    }
+    static World bukkitWorld(Object world) throws Exception {
+        try {
+            Object key=call(world,"getKey");
+            if(key instanceof NamespacedKey namespacedKey)return Bukkit.getWorld(namespacedKey);
+        } catch(NoSuchMethodException ignored) {}
+        return Bukkit.getWorld(call(world,"getName").toString());
     }
 }

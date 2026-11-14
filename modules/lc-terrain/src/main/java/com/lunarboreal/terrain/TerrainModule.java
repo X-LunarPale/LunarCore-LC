@@ -1,6 +1,7 @@
 package com.lunarboreal.terrain;
 
 import com.lunarboreal.api.module.LcModule;
+import com.lunarboreal.api.world.TerrainWorldLifecycle;
 import com.lunarboreal.terrain.nms.NativeTectonicBridge;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -9,6 +10,9 @@ import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.PluginEnableEvent;
 
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -26,12 +30,14 @@ import java.util.Set;
 import java.util.logging.Level;
 
 /** World registrations, queues and Bukkit operations are confined to the server thread. */
-public final class TerrainModule extends LcModule {
+public final class TerrainModule extends LcModule implements Listener {
     private final Map<String, TerrainWorldSpec> worlds = new LinkedHashMap<>();
     private final Map<String, String> states = new LinkedHashMap<>();
     private final Map<String, String> errors = new LinkedHashMap<>();
     private final ArrayDeque<LoadRequest> queue = new ArrayDeque<>();
     private final Set<String> established = new HashSet<>();
+    private final Set<String> deleting = new HashSet<>();
+    private final Map<String, String> multiverseErrors = new LinkedHashMap<>();
     private NativeTectonicBridge bridge;
     private TerrainCommands commands;
     private Path registrations;
@@ -69,6 +75,30 @@ public final class TerrainModule extends LcModule {
             initializationError = "原生地形生成器需要 Paper 26.3";
         }
         new TerrainWeb(this).register();
+        registerListener(this);
+        provide(TerrainWorldLifecycle.class, new TerrainWorldLifecycle() {
+            @Override public boolean manages(String keyOrName) { return managedName(keyOrName) != null; }
+            @Override public void load(String keyOrName, String actor) throws Exception {
+                String name = managedName(keyOrName);
+                if (name == null) throw new IllegalArgumentException("地形世界未登记");
+                queueLoad(name, actor);
+            }
+            @Override public void unload(String keyOrName, String actor) throws Exception {
+                String name = managedName(keyOrName);
+                if (name == null) throw new IllegalArgumentException("地形世界未登记");
+                TerrainModule.this.unload(name, actor);
+            }
+            @Override public boolean autoLoad(String keyOrName) {
+                String name = managedName(keyOrName);
+                if (name == null) throw new IllegalArgumentException("地形世界未登记");
+                return require(name).autoLoad();
+            }
+            @Override public void autoLoad(String keyOrName, boolean enabled, String actor) throws Exception {
+                String name = managedName(keyOrName);
+                if (name == null) throw new IllegalArgumentException("地形世界未登记");
+                TerrainModule.this.autoLoad(name, enabled, actor);
+            }
+        });
         commands = new TerrainCommands(this);
         registerCommand(commands);
         placeholder((player, key) -> switch (key) {
@@ -81,11 +111,13 @@ public final class TerrainModule extends LcModule {
             if (!supported || !storageReady) return;
             boolean autoLoad = config().getBoolean("auto-load", true);
             for (TerrainWorldSpec spec : List.copyOf(worlds.values())) {
+                if (deleting.contains(spec.name())) continue;
                 try {
                     if (world(spec.name()) != null) {
-                        bridge.create(spec.name(), spec.seed(), spec.options(), true);
+                        World world = bridge.create(spec.name(), spec.seed(), spec.options(), true);
                         states.put(spec.name(), "ready");
                         errors.put(spec.name(), "");
+                        syncMultiverse(spec.name(), world);
                     } else if (autoLoad && spec.autoLoad()) {
                         queueLoad(spec.name(), "startup");
                     }
@@ -94,6 +126,56 @@ public final class TerrainModule extends LcModule {
                 }
             }
         });
+    }
+
+    private String managedName(String keyOrName) {
+        if (keyOrName == null) return null;
+        if (worlds.containsKey(keyOrName)) return keyOrName;
+        NamespacedKey key = NamespacedKey.fromString(keyOrName);
+        if (key != null && TerrainNamespace.isTerrain(key.getNamespace()) && worlds.containsKey(key.getKey())) return key.getKey();
+        for (String name : worlds.keySet()) {
+            World world = world(name);
+            if (world != null && world.getName().equals(keyOrName)) return name;
+        }
+        return null;
+    }
+
+    private void autoLoad(String name, boolean enabled, String actor) throws IOException {
+        requireWritable();
+        TerrainWorldSpec spec = require(name);
+        if (deleting.contains(name) || Set.of("queued", "running").contains(states.get(name))) {
+            throw new IllegalArgumentException("世界操作正在执行");
+        }
+        worlds.put(name, spec.withAutoLoad(enabled));
+        try {
+            persist();
+        } catch (IOException failure) {
+            worlds.put(name, spec);
+            throw failure;
+        }
+        audit(actor, "terrain.autoload", name + " " + enabled);
+    }
+
+    @EventHandler public void multiverseEnabled(PluginEnableEvent event) {
+        if (event.getPlugin().getName().equals("Multiverse-Core")) runTask(this::syncMultiverse);
+    }
+
+    void syncMultiverse() {
+        for (String name : List.copyOf(worlds.keySet())) {
+            World world = world(name);
+            if (world != null && !deleting.contains(name)) syncMultiverse(name, world);
+        }
+    }
+
+    private void syncMultiverse(String name, World world) {
+        try {
+            TerrainMultiverse mv = TerrainMultiverse.available();
+            if (mv != null) mv.register(world);
+            multiverseErrors.remove(name);
+        } catch (Exception | LinkageError failure) {
+            multiverseErrors.put(name, message(failure));
+            logger().log(Level.WARNING, "地形世界的 Multiverse 登记失败：" + name, failure);
+        }
     }
 
     TerrainOptions optionsFor(World world) {
@@ -132,6 +214,7 @@ public final class TerrainModule extends LcModule {
 
     @Override public void onReload() {
         reloadConfig();
+        syncMultiverse();
         // Generation parameters belong to the saved world and remain immutable.
     }
 
@@ -157,8 +240,10 @@ public final class TerrainModule extends LcModule {
                     readOptions(options), row.getBoolean("autoLoad", true));
             worlds.put(name, spec);
             if (row.getBoolean("created", false)) established.add(name);
-            states.put(name, "registered");
-            errors.put(name, "");
+            boolean incompleteDeletion = row.getBoolean("deleting", false);
+            if (incompleteDeletion) deleting.add(name);
+            states.put(name, incompleteDeletion ? "delete-failed" : "registered");
+            errors.put(name, incompleteDeletion ? "世界删除尚未完成，请重试删除；已暂停自动加载" : "");
         }
     }
 
@@ -184,6 +269,7 @@ public final class TerrainModule extends LcModule {
             yaml.set(prefix + "config", spec.options().map());
             yaml.set(prefix + "autoLoad", spec.autoLoad());
             yaml.set(prefix + "created", established.contains(spec.name()));
+            yaml.set(prefix + "deleting", deleting.contains(spec.name()));
         }
         Path temporary = Files.createTempFile(dataFolder().toPath(), "worlds-", ".tmp");
         try {
@@ -226,6 +312,16 @@ public final class TerrainModule extends LcModule {
             }
             row.put("status", states.getOrDefault(spec.name(), "registered"));
             row.put("error", errors.getOrDefault(spec.name(), ""));
+            row.put("multiverseError", multiverseErrors.getOrDefault(spec.name(), ""));
+            try {
+                TerrainMultiverse mv = TerrainMultiverse.available();
+                row.put("multiverseRegistered", mv != null && mv.contains(NamespacedKey.fromString(key),
+                        world == null ? spec.name() : world.getName()));
+            } catch (Exception | LinkageError failure) {
+                row.put("multiverseRegistered", false);
+                row.put("multiverseError", message(failure));
+            }
+            row.put("deletable", world == null || !world.equals(Bukkit.getWorlds().getFirst()) && world.getPlayers().isEmpty());
             rows.add(row);
         }
         Map<String, Object> result = new LinkedHashMap<>();
@@ -238,7 +334,9 @@ public final class TerrainModule extends LcModule {
         result.put("heightRanges", supported ? bridge.heightRanges() : List.of());
         result.put("presets", TerrainPresets.all());
         result.put("worlds", rows);
-        result.put("busy", working || !queue.isEmpty());
+        result.put("busy", working || !queue.isEmpty() || states.containsValue("deleting"));
+        result.put("multiverseAvailable", Bukkit.getPluginManager().isPluginEnabled("Multiverse-Core"));
+        result.put("deleting", states.containsValue("deleting"));
         result.put("error", initializationError);
         return result;
     }
@@ -307,6 +405,7 @@ public final class TerrainModule extends LcModule {
     void queueLoad(String name, String actor) throws IOException {
         requireWritable();
         TerrainWorldSpec spec = require(name);
+        if (deleting.contains(name)) throw new IllegalArgumentException("世界删除尚未完成，只能重试删除");
         if (Set.of("queued", "running").contains(states.get(name))) throw new IllegalArgumentException("世界操作正在执行");
         if (world(name) != null) throw new IllegalArgumentException("世界已经加载");
         worlds.put(name, spec.withAutoLoad(true));
@@ -351,6 +450,7 @@ public final class TerrainModule extends LcModule {
             states.put(name, "ready");
             errors.put(name, "");
             world.save();
+            syncMultiverse(name, world);
             audit(request.actor(), "terrain.ready", name + " height=" + spec.options().height());
         } catch (Exception | LinkageError e) {
             fail(name, e);
@@ -376,6 +476,13 @@ public final class TerrainModule extends LcModule {
         if (world.equals(Bukkit.getWorlds().getFirst()) || !world.getPlayers().isEmpty()) {
             throw new IllegalArgumentException("主世界或有在线玩家的世界不能卸载");
         }
+        TerrainMultiverse mv;
+        try {
+            mv = TerrainMultiverse.available();
+            if (mv != null) mv.protectDefault(world.getKey(), world.getName());
+        } catch (Exception failure) {
+            throw new IOException("无法检查 Multiverse 世界状态：" + message(failure), failure);
+        }
         worlds.put(name, spec.withAutoLoad(false));
         try {
             persist();
@@ -383,13 +490,86 @@ public final class TerrainModule extends LcModule {
             worlds.put(name, spec);
             throw e;
         }
-        if (!Bukkit.unloadWorld(world, true)) {
+        try {
+            if (mv != null) mv.unload(world);
+        } catch (Exception failure) {
+            worlds.put(name, spec);
+            persist();
+            throw new IOException("Multiverse 未能卸载世界：" + message(failure), failure);
+        }
+        if (world(name) != null && !Bukkit.unloadWorld(world, true)) {
             worlds.put(name, spec);
             persist();
             throw new IllegalArgumentException("服务器拒绝卸载地形世界");
         }
         states.put(name, "unloaded");
         audit(actor, "terrain.unload", name);
+    }
+
+    void delete(String name, String confirmation, String actor) throws Exception {
+        requireWritable();
+        TerrainWorldSpec spec = require(name);
+        if (!name.equals(confirmation)) throw new IllegalArgumentException("请输入完整世界名称确认删除");
+        if (Set.of("queued", "running", "deleting").contains(states.get(name))) throw new IllegalArgumentException("世界操作正在执行");
+        World world = world(name);
+        if (world != null && (world.equals(Bukkit.getWorlds().getFirst()) || !world.getPlayers().isEmpty())) {
+            throw new IllegalArgumentException("主世界或有在线玩家的世界不能删除");
+        }
+        Path levelDirectory = Bukkit.getServer().getLevelDirectory();
+        Path target = TerrainWorldFiles.deletionTarget(levelDirectory, name, world == null ? null : world.getWorldFolder().toPath());
+        String key = spec.key(levelDirectory);
+        TerrainMultiverse mv = TerrainMultiverse.available();
+        if (mv != null) mv.protectDefault(NamespacedKey.fromString(key), world == null ? name : world.getName());
+        worlds.put(name, spec.withAutoLoad(false));
+        deleting.add(name);
+        try {
+            persist();
+            if (mv != null) mv.remove(NamespacedKey.fromString(key), world == null ? name : world.getName());
+            if (world(name) != null && !Bukkit.unloadWorld(world, true)) throw new IOException("服务器拒绝卸载地形世界");
+        } catch (Exception failure) {
+            states.put(name, "delete-failed");
+            errors.put(name, message(failure));
+            throw failure;
+        }
+        states.put(name, "deleting");
+        errors.put(name, "");
+        audit(actor, "terrain.delete.request", key);
+        runAsync(() -> {
+            Exception failure = null;
+            try {
+                TerrainWorldFiles.delete(levelDirectory, name, target);
+            } catch (Exception exception) {
+                failure = exception;
+            }
+            Exception finalFailure = failure;
+            if (!isEnabled()) return;
+            runTask(() -> finishDelete(name, spec, actor, finalFailure));
+        });
+    }
+
+    private void finishDelete(String name, TerrainWorldSpec spec, String actor, Exception failure) {
+        if (failure == null) {
+            worlds.remove(name);
+            established.remove(name);
+            deleting.remove(name);
+            try {
+                persist();
+                states.remove(name);
+                errors.remove(name);
+                multiverseErrors.remove(name);
+                audit(actor, "terrain.delete.success", name);
+                return;
+            } catch (IOException exception) {
+                worlds.put(name, spec.withAutoLoad(false));
+                established.add(name);
+                deleting.add(name);
+                failure = exception;
+            }
+        }
+        states.put(name, "delete-failed");
+        errors.put(name, "世界未完整删除，请重试：" + message(failure));
+        logger().log(Level.WARNING, "地形世界删除未完成：" + name, failure);
+        audit(actor, "terrain.delete.failed", name + " " + message(failure));
     }
 
     void teleport(String name, String playerName, String actor) {

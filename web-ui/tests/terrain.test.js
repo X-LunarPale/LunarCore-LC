@@ -63,6 +63,23 @@ test('existing terrain worlds retain their saved namespace', () => {
   assert.equal(parseStatus(source).worlds[0].key, source.worlds[0].key)
 })
 
+test('deletion and Multiverse state remain visible while an operation completes or needs retry', () => {
+  for (const status of ['deleting', 'delete-failed']) {
+    const source = fixture()
+    Object.assign(source.worlds[0], { status, loaded: false, autoLoad: false, deletable: true,
+      multiverseRegistered: false, multiverseError: '' })
+    const parsed = parseStatus(source)
+    assert.equal(parsed.worlds[0].status, status)
+    assert.equal(parsed.worlds[0].deletable, true)
+    assert.equal(parsed.worlds[0].multiverseRegistered, false)
+  }
+  for (const patch of [{ deletable: 'true' }, { multiverseRegistered: 1 }, { multiverseError: null }]) {
+    const source = fixture()
+    Object.assign(source.worlds[0], patch)
+    assert.throws(() => parseStatus(source))
+  }
+})
+
 test('status rejects lossy seeds, mismatched heights and invalid world rows', () => {
   const patches = [
     { seed: 9007199254740992 }, { seed: '' }, { seed: ' 42 ' }, { key: 'minecraft:overworld' }, { name: 'con' },

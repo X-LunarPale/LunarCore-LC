@@ -1,0 +1,120 @@
+# Paper 26.3 生存服预设。合并到 GrimAC 对应文件，不替换消息或数据库设置。
+# Simulation 从所有处罚分组排除，并通过 LuckPerms 豁免其检测与回弹。
+permissions:
+  grim.exempt.simulation: true
+
+config:
+  Simulation:
+    immediate-setback-threshold: -1
+    max-advantage: -1
+  Phase:
+    setbackvl: 5
+  AirLiquidPlace:
+    cancelvl: 10
+  FabricatedPlace:
+    cancelvl: 10
+  FarPlace:
+    cancelvl: 10
+  PositionPlace:
+    cancelvl: 10
+  RotationPlace:
+    cancelvl: 10
+  NoSlow:
+    threshold: 0.03
+    setbackvl: 15
+    decay: 0.1
+  Knockback:
+    setback-decay-multiplier: 0.98
+    threshold: 0.03
+    immediate-setback-threshold: 0.5
+    max-advantage: 3
+    max-ceiling: 6
+  Explosion:
+    threshold: 0.03
+    setbackvl: 10
+  TimerA:
+    setbackvl: 25
+    drift: 180
+  TimerLimit:
+    ping-abuse-limit-threshold: 2000
+  VehicleTimer:
+    setbackvl: 25
+  PacketOrderI:
+    exempt-placing-while-digging: true
+  Reach:
+    threshold: 0.03
+    block-impossible-hits: true
+    enable-post-packet: false
+  experimental-checks: false
+  max-transaction-time: 90
+  max-ping-out-of-flying: 2000
+  max-ping-firework-boost: 2000
+
+punishments:
+  Simulation:
+    remove-violations-after: 60
+    checks: []
+    commands: []
+  Movement:
+    remove-violations-after: 60
+    checks: [GroundSpoof, Timer, NoFall, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "30:30 [alert]"
+  Knockback:
+    remove-violations-after: 120
+    checks: [Knockback, Explosion, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "20:20 [alert]"
+      - "150:150 lc:tempban %player% 1h --source=anticheat --check=%check_name% %check_name%"
+  Post:
+    remove-violations-after: 60
+    checks: [Post, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "30:30 [alert]"
+  BadPackets:
+    remove-violations-after: 120
+    checks: [BadPackets, Crash, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "30:30 [alert]"
+      - "200:200 lc:tempban %player% 1h --source=anticheat --check=%check_name% %check_name%"
+  PacketOrder:
+    remove-violations-after: 60
+    checks: [PacketOrder, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "30:30 [alert]"
+  Reach:
+    remove-violations-after: 120
+    checks: [Reach, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "10:10 [alert]"
+      - "50:50 lc:tempban %player% 1h --source=anticheat --check=%check_name% %check_name%"
+  Hitboxes:
+    remove-violations-after: 60
+    checks: [Hitboxes, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "20:20 [alert]"
+  Misc:
+    remove-violations-after: 60
+    checks: [Vehicle, NoSlow, Sprint, MultiActions, Place, Baritone, Break, TransactionOrder, Elytra, Chat, Exploit, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "30:30 [alert]"
+  Combat:
+    remove-violations-after: 60
+    checks: [Interact, Aim, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "30:30 [alert]"
+  Autoclicker:
+    remove-violations-after: 60
+    checks: [Autoclicker, "!Simulation"]
+    commands:
+      - "1:1 [log]"
+      - "30:30 [alert]"

@@ -2,6 +2,7 @@ package com.lunarboreal.teleport;
 
 import com.lunarboreal.api.service.EconomyService;
 import com.lunarboreal.api.service.LandService;
+import com.lunarboreal.api.service.SoundService;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -160,6 +161,7 @@ public final class TeleportManager {
         String hint = "";
         if (m.config().getBoolean("teleport.cancel-on-move", true)) hint = m.raw("teleport.warmup-hint");
         m.msg(p, "teleport.warmup", "seconds", seconds, "hint", com.lunarboreal.api.message.MessageService.rich(hint));
+        playSound(p, "teleport-warmup");
     }
 
     public boolean hasWarmup(UUID uuid) {
@@ -187,7 +189,10 @@ public final class TeleportManager {
         Warmup w = warmups.remove(p.getUniqueId());
         if (w == null) return;
         if (w.task != null) w.task.cancel();
-        if (notify) m.msg(p, "teleport.warmup-cancelled");
+        if (notify) {
+            m.msg(p, "teleport.warmup-cancelled");
+            playSound(p, "teleport-cancel");
+        }
     }
 
     public void forget(UUID uuid) {
@@ -211,6 +216,7 @@ public final class TeleportManager {
             if (err != null || loc == null || loc.getWorld() == null) {
                 if (err != null) m.logger().fine("解析传送目标失败: " + err);
                 m.msg(p, r.targetFailKey);
+                playSound(p, "teleport-fail");
                 return;
             }
             prepareChunk(loc).whenComplete((c, e2) -> sync(() -> finish(r, loc)));
@@ -225,11 +231,13 @@ public final class TeleportManager {
             dest = SafeLocation.find(loc, m.config().getInt("teleport.safe-search-radius", 3));
             if (dest == null) {
                 m.msg(p, "teleport.unsafe");
+                playSound(p, "teleport-fail");
                 return;
             }
         }
         if (r.land && !landAllowed(p, dest)) {
             m.msg(p, "teleport.land-denied");
+            playSound(p, "teleport-fail");
             return;
         }
         Player payer = r.payer != null && r.payer.isOnline() ? r.payer : p;
@@ -258,12 +266,18 @@ public final class TeleportManager {
                 if (r.recordBack) setBack(p.getUniqueId(), from);
                 if (r.cooldown) setCooldown(p, r.key);
                 if (r.successKey != null) m.msg(p, r.successKey, r.successArgs);
+                playSound(p, "teleport-success");
                 if (r.onSuccess != null) r.onSuccess.accept(finalDest);
             } else {
                 if (eco != null) eco.deposit(payer.getUniqueId(), cost, "传送失败退款");
                 m.msg(p, "teleport.failed");
+                playSound(p, "teleport-fail");
             }
         }));
+    }
+
+    private void playSound(Player player, String event) {
+        m.api().services().get(SoundService.class).ifPresent(sounds -> sounds.play(player, event));
     }
 
     /** 直接传送（不经过任何检查），返回是否成功。 */

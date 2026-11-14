@@ -8,6 +8,10 @@
 
 ## 配置与数据
 
+`src/main/resources/presets/paper-26.3.yml` 提供高版本生存服配置。模拟移动从全部处罚分组排除，关闭其回弹，并设置默认组 `grim.exempt.simulation=true`。数据包顺序、碰撞箱和一般移动等版本敏感项只记录及告警；击退、攻击距离和异常数据包在短时间累计较多违规后仍使用 LC 临时封禁，原因直接显示检测项。该配置降低了检测敏感度，不能保证完全消除误判。
+
+预设中的 `config` 合并到 GrimAC `config.yml`，`punishments` 合并到 `punishments.yml` 的 `Punishments` 下。自定义分组也应在 `checks` 末尾加入 `!Simulation`。应用后重载 GrimAC。
+
 - `bridge.capture-enabled`：是否采集后台近期违规；不影响 GrimAC 检测或处罚。
 - `bridge.recent-capacity`：内存容量，范围 1 至 10000，默认 500。超过容量移除最旧记录，模块停止时清空。详情限制 2048 字符。
 - 原有数据库历史表保留原样，不再读取、写入、清理或删除。

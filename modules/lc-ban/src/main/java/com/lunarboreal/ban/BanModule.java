@@ -2,6 +2,7 @@ package com.lunarboreal.ban;
 
 import com.lunarboreal.api.module.LcModule;
 import com.lunarboreal.api.service.BanService;
+import com.lunarboreal.api.service.SoundService;
 import com.lunarboreal.api.service.BanService.Punishment;
 import com.lunarboreal.api.service.BanService.Type;
 import com.lunarboreal.api.util.Durations;
@@ -515,11 +516,17 @@ public final class BanModule extends LcModule {
             }
             case MUTE -> {
                 Player pl = p.target() == null ? null : Bukkit.getPlayer(p.target());
-                if (pl != null) msg(pl, p.expiresAt() == null ? "notify.muted" : "notify.tempmuted", punishmentArgs(p));
+                if (pl != null) {
+                    msg(pl, p.expiresAt() == null ? "notify.muted" : "notify.tempmuted", punishmentArgs(p));
+                    api().services().get(SoundService.class).ifPresent(sounds -> sounds.play(pl, "punishment-mute"));
+                }
             }
             case WARN -> {
                 Player pl = p.target() == null ? null : Bukkit.getPlayer(p.target());
-                if (pl != null) msg(pl, "notify.warned", append(punishmentArgs(p), "count", store.warnCount(p.target())));
+                if (pl != null) {
+                    msg(pl, "notify.warned", append(punishmentArgs(p), "count", store.warnCount(p.target())));
+                    api().services().get(SoundService.class).ifPresent(sounds -> sounds.play(pl, "punishment-warn"));
+                }
             }
         }
         broadcastPunishment(p, silent);

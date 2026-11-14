@@ -17,7 +17,7 @@ cd ..
 python package-release.py
 ```
 
-Windows 使用 `gradlew.bat`。产物位于 `dist/0.0.7/`。核心只内置基础命令，其余模块单独构建。
+Windows 使用 `gradlew.bat`。产物位于 `dist/0.0.8-pre.1/`。核心只内置基础命令，其余模块单独构建。
 
 若 Paper 本地工具处理失败，可用 `-Plc.paperServerHome=服务端目录` 指向匹配版本的完整 Paper 安装。普通构建无需该参数。
 
@@ -46,7 +46,7 @@ npm run test:i18n
 
 ## 发布
 
-版本由 `gradle.properties` 决定：`0.0.7`，对应 GitHub 标签 `v0.0.7`。
+版本由 `gradle.properties` 决定：`0.0.8-pre.1`，对应 GitHub 标签 `v0.0.8-pre.1`。
 
 `module-market/catalog.json` 定义名称、说明、分类和必需模块。构建自动记录文件大小与 SHA-256（用于检查文件是否一致的校验值）。发布必须上传同次打包的模块；模块重建后也要重建核心，不能混用产物。
 

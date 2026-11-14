@@ -19,7 +19,7 @@
 
 ## 公开下载与投稿
 
-v0.0.7 的源码、模块市场与发布附件位于公开仓库 [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC)。网页下载和面板安装无需登录 GitHub，也不需要令牌。
+v0.0.8-pre.1 的源码、模块市场与发布附件位于公开仓库 [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC)。网页下载和面板安装无需登录 GitHub，也不需要令牌。
 
 所有人都可以通过 PR 或 Issues [投稿模块](../../CONTRIBUTING.md)。社区作者在自己的公开 Release 上传文件，市场目录提供下载链接。社区模块目前需手动安装；面板一键安装提供与核心一起发布的官方模块。
 

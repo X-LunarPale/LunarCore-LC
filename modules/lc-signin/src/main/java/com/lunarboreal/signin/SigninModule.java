@@ -3,6 +3,7 @@ package com.lunarboreal.signin;
 import com.lunarboreal.api.message.MessageService;
 import com.lunarboreal.api.module.LcModule;
 import com.lunarboreal.api.service.EconomyService;
+import com.lunarboreal.api.service.SoundService;
 import com.lunarboreal.signin.SigninStore.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -186,6 +187,7 @@ public final class SigninModule extends LcModule implements Listener {
         settings.daily.give(this, p, "每日签到");
         msg(p, "sign.success", "streak", streak, "total", total,
                 "reward", rich(settings.daily.description()));
+        api().services().get(SoundService.class).ifPresent(sounds -> sounds.play(p, "signin-success"));
         Reward sr = settings.streak.get(settings.streakKey(streak));
         if (sr != null && !sr.isEmpty()) {
             sr.give(this, p, "连续签到 " + streak + " 天");

@@ -7,6 +7,7 @@ import com.lunarboreal.api.command.CommandRegistry;
 import com.lunarboreal.api.module.LcModule;
 import com.lunarboreal.api.module.ModuleManager;
 import com.lunarboreal.api.player.PlayerCache;
+import com.lunarboreal.api.service.SoundService;
 import com.lunarboreal.api.web.WebRegistry;
 import com.lunarboreal.core.audit.LcAuditLog;
 import com.lunarboreal.core.command.LcCommandRegistry;
@@ -20,6 +21,7 @@ import com.lunarboreal.core.placeholder.CorePlaceholders;
 import com.lunarboreal.core.placeholder.LcPlaceholderRegistry;
 import com.lunarboreal.core.player.LcPlayerCache;
 import com.lunarboreal.core.service.SimpleServiceRegistry;
+import com.lunarboreal.core.service.LcSoundService;
 import com.lunarboreal.core.web.WebServer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
@@ -41,6 +43,7 @@ public final class LunarCorePlugin extends JavaPlugin implements LunarBorealAPI 
     private LcPlayerCache playerCache;
     private LcAuditLog auditLog;
     private SimpleServiceRegistry services;
+    private LcSoundService sounds;
     private LcCommandRegistry commandRegistry;
     private LcPlaceholderRegistry placeholders;
     private WebServer webServer;
@@ -103,6 +106,8 @@ public final class LunarCorePlugin extends JavaPlugin implements LunarBorealAPI 
         placeholders.register("core", new CorePlaceholders(this), this);
         services.register(PlayerCache.class, playerCache, this);
         services.register(AuditLog.class, auditLog, this);
+        sounds = new LcSoundService(this);
+        services.register(SoundService.class, sounds, this);
 
         // Web（构造后即可接受模块的路由/面板注册）
         webServer = new WebServer(this);
@@ -349,6 +354,10 @@ public final class LunarCorePlugin extends JavaPlugin implements LunarBorealAPI 
     @Override
     public LcPlaceholderRegistry placeholders() {
         return placeholders;
+    }
+
+    public LcSoundService sounds() {
+        return sounds;
     }
 
     @Override

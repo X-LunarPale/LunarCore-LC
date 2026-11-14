@@ -2,6 +2,19 @@
 
 [简体中文](../zh-CN/VALIDATION.md) | [Release notes](RELEASE.md)
 
+## v0.0.8 Prerelease Checks
+
+Date: 2026-11-14. Environment: Windows, Java 25, isolated Paper 26.3 and Multiverse-Core 5.8.1.
+
+- Java: 575 tests, with 573 passed, 2 skipped and no failures or errors.
+- Core WebUI: 3 of 106 tests initially failed because the test harness lacked a stub for the new component. After adding the stub, all 14 auto-refresh tests passed; the remaining tests had already passed.
+- All 14 structure-page tests and 3 module-market validator tests passed.
+- An actual isolated server passed terrain world creation with automatic Multiverse registration, unload/load, registration recovery after restart and world deletion.
+- Browser checks used simulated APIs for chat, TAB and terrain pages. At widths of 1440 and 390 pixels, there were no page errors or horizontal overflow. World colors, isolated title colors and configuration saving passed. This was not a browser check against the production server.
+- Core, module, bridge and terrain-agent builds completed. Compilation used locally cached PlaceholderAPI 2.12.3; it is not bundled.
+
+Real player-client rendering, long-term load and every third-party plugin combination were not verified.
+
 ## v0.0.7 Release Checks
 
 Date: 2026-11-07. Environment: Windows, Java 25 and local Paper 26.3 build 238.

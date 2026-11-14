@@ -4,6 +4,7 @@ import com.lunarboreal.core.LunarCorePlugin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServerLoadEvent;
@@ -47,5 +48,10 @@ public final class CoreListener implements Listener {
             plugin.placeholders().dropPapi();
         }
         plugin.unregisterExternal(other);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        plugin.sounds().forget(event.getPlayer().getUniqueId());
     }
 }

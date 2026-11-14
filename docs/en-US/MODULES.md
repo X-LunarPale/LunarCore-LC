@@ -19,7 +19,7 @@ Removal deletes only the JAR, keeping settings, databases and worlds. Remove dep
 
 ## Public Downloads and Submissions
 
-The v0.0.7 source, module market and release assets are public in [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC). Browser downloads and panel installation require neither a GitHub login nor a token.
+The v0.0.8-pre.1 source, module market and release assets are public in [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC). Browser downloads and panel installation require neither a GitHub login nor a token.
 
 Everyone can [submit modules](../../CONTRIBUTING.en.md) through a PR or Issues. Authors upload files to their own public Releases; the catalog links to those files. Community modules currently use manual installation. The panel installer offers official modules released with the core.
 

@@ -2,7 +2,7 @@ export const baseConfigKeys = ['height', 'verticalScale', 'horizontalScale', 'ro
 export const configKeys = [...baseConfigKeys, 'advanced']
 export const terrainHeights = [384, 512, 640, 704, 832, 1024]
 export const defaultConfig = { height: 640, verticalScale: 1.8, horizontalScale: 1.2, rollingHills: true, undergroundRivers: true, lavaTunnels: true, junglePillars: true, advanced: {} }
-export const worldStates = { registered: '等待加载', queued: '排队中', running: '生成中', ready: '就绪', failed: '生成失败', unloaded: '已卸载' }
+export const worldStates = { registered: '等待加载', queued: '排队中', running: '生成中', ready: '就绪', failed: '生成失败', unloaded: '已卸载', deleting: '删除中', 'delete-failed': '删除未完成' }
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const spawnKeys = ['x', 'y', 'z']
 const spawnCoordinates = value => record(value) && Object.keys(value).length === 3 &&
@@ -134,7 +134,10 @@ export function parseStatus(value) {
         typeof world.seed !== 'string' || !validSeed(world.seed) || !world.seed || world.seed.trim() !== world.seed ||
         !Object.hasOwn(worldStates, world.status) || typeof world.loaded !== 'boolean' || typeof world.autoLoad !== 'boolean' ||
         !Number.isSafeInteger(world.players) || world.players < 0 || !world.loaded && world.players !== 0 ||
-        typeof world.error !== 'string') throw new Error('地形世界接口返回格式错误')
+        typeof world.error !== 'string' ||
+        world.deletable !== undefined && typeof world.deletable !== 'boolean' ||
+        world.multiverseRegistered !== undefined && typeof world.multiverseRegistered !== 'boolean' ||
+        world.multiverseError !== undefined && typeof world.multiverseError !== 'string') throw new Error('地形世界接口返回格式错误')
     const config = parseConfig(world.config, schema)
     if (world.minY !== configMinY(config) || world.maxY !== config.height + configMinY(config)) throw new Error('地形世界接口返回格式错误')
     if (world.spawn !== undefined && !spawnCoordinates(world.spawn)) throw new Error('地形出生点接口返回格式错误')

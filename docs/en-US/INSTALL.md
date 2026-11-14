@@ -4,7 +4,7 @@
 
 ## Requirements
 
-Use Java 25, Paper 26.3 and `LunarCore-0.0.7.jar`. First startup needs Maven Central access for runtime libraries.
+Use Java 25, Paper 26.3 and `LunarCore-0.0.8-pre.1.jar`. First startup needs Maven Central access for runtime libraries.
 
 ## First Installation
 
@@ -31,7 +31,7 @@ The internal name remains `LunarCore`; its data folder stays the same.
 
 Download JARs matching the core version. Stop and place them in `plugins/LunarCore/modules/`. Replace old files instead of keeping duplicates. Building landmarks requires the land module.
 
-You can select modules from `LunarCore-modules-0.0.7.zip`. Installing more modules uses more resources.
+You can select modules from `LunarCore-modules-0.0.8-pre.1.zip`. Installing more modules uses more resources.
 
 The terrain module also needs `LC-Terrain-Agent.jar` in the server directory. Add `-javaagent:LC-Terrain-Agent.jar` before `-jar` in the Java command and fully restart. See the [terrain guide](../../modules/lc-terrain/README.en.md).
 
