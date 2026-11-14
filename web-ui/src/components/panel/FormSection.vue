@@ -8,6 +8,7 @@ import { api, resolveEndpoint } from '../../api'
 import { useAutoRefresh } from '../../utils/autoRefresh'
 import { groupFields, latestRequest, missingRequired, requireSuccess } from '../../utils/panel'
 import FieldInput from './FieldInput.vue'
+import ChatAppearance from '../chat/ChatAppearance.vue'
 import { t } from '../../i18n'
 
 const props = defineProps({ section: Object, namespace: String, active: { type: Boolean, default: true } })
@@ -22,7 +23,7 @@ const auth = useAuth()
 const baseline = ref('{}')
 const dirty = computed(() => loaded.value && JSON.stringify(model) !== baseline.value)
 const canSave = computed(() => auth.can(props.section.savePermission))
-const fieldGroups = computed(() => groupFields(props.section.fields))
+const fieldGroups = computed(() => groupFields((props.section.fields || []).filter(field => field.type !== 'world-aliases')))
 const grouped = computed(() => fieldGroups.value.some(group => group.title))
 let discardPrompt
 let refreshing = false
@@ -133,6 +134,7 @@ onBeforeUnmount(() => {
           </el-form-item>
         </div>
       </div>
+      <ChatAppearance v-if="namespace === 'chat' && Array.isArray(model.worldAliases)" :model="model" :disabled="!canSave || saving || loading" />
       <footer v-if="section.saveEndpoint" class="form-actions">
         <div class="action-note" role="status">{{ saving ? t('正在保存，请稍候…') : dirty ? t('修改尚未生效') : t('配置与当前加载内容一致') }}</div>
         <div class="action-buttons"><el-button @click="load" :disabled="saving"><Icon name="rotate-ccw" :size="14" />&nbsp;{{ t('重新加载') }}</el-button>

@@ -16,7 +16,7 @@ final class TerrainWeb {
 
     void register() {
         module.webPermission("terrain.view", "查看宏伟地形世界");
-        module.webPermission("terrain.manage", "创建、加载、卸载和设置原生地形世界出生点");
+        module.webPermission("terrain.manage", "创建、加载、卸载、删除地形世界及设置出生点");
         module.webPermission("terrain.teleport", "传送在线玩家到地形世界");
         module.webRoutes(r -> r
                 .get("/status", "terrain.view", c -> c.json(sync(c, module::status)))
@@ -39,6 +39,20 @@ final class TerrainWeb {
                     String name = c.pathParam("name");
                     sync(c, () -> { module.unload(name, actor(c)); return null; });
                     c.ok("地形世界已保存并卸载");
+                })
+                .post("/worlds/{name}/delete", "terrain.manage", c -> {
+                    String name = c.pathParam("name");
+                    Map<String, Object> body = c.bodyMap();
+                    if (!body.keySet().equals(java.util.Set.of("confirmation"))
+                            || !(body.get("confirmation") instanceof String confirmation)) {
+                        throw HttpException.badRequest("请填写世界名称确认删除");
+                    }
+                    sync(c, () -> { module.delete(name, confirmation, actor(c)); return null; });
+                    accepted(c, name, "世界删除已开始");
+                })
+                .post("/multiverse/sync", "terrain.manage", c -> {
+                    sync(c, () -> { module.syncMultiverse(); return null; });
+                    c.ok("已同步 Multiverse 世界登记");
                 })
                 .post("/worlds/{name}/spawn", "terrain.manage", c -> {
                     String name = c.pathParam("name");

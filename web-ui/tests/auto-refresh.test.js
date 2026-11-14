@@ -88,7 +88,7 @@ async function scriptComponent(path) {
   const script = compileScript(descriptor, { id: path, genDefaultAs: '__component' })
   const scope = {
     ...vue, ...panel, ...format, api, resolveEndpoint, useAutoRefresh, t,
-    SectionError: {}, FieldInput: {}, PlayerCell: {},
+    SectionError: {}, FieldInput: {}, PlayerCell: {}, ChatAppearance: {},
     useAuth: () => ({ can: () => true }),
     onBeforeRouteLeave() {}, onBeforeRouteUpdate() {},
     ElMessage: { success() {}, error() {}, warning() {} },

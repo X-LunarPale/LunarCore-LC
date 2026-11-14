@@ -61,6 +61,10 @@ java -Xmx4G -javaagent:LC-Terrain-Agent.jar -jar paper.jar --nogui
 
 创建后可加载、保存并卸载、设置安全出生点和传送在线玩家。有玩家的世界不能卸载；卸载不会删除存档。已创建世界的参数保持不变，避免后续区块突变。
 
+安装 Multiverse-Core 后，新建和已登记的地形世界会自动加入 MV，不需要手动执行 `mv import`。多世界面板也可加载、卸载和修改自动加载开关；生成参数始终由地形模块恢复。MV 自身的自动加载保持关闭，避免抢先以普通地形加载。
+
+选择“删除世界”并输入完整世界名称，可永久删除该世界存档及 LC、MV 登记。主世界、MV 默认世界和有在线玩家的世界不能删除。删除在后台执行；中断后暂停自动加载，可在面板重试。
+
 - 登记文件：`plugins/LunarCore/modules/terrain/worlds.yml`。
 - 世界目录：主世界的 `dimensions/lc_terrain/<世界名>/`。
 - 生成设置：该世界的 `data/minecraft/world_gen_settings.dat`。
@@ -77,7 +81,7 @@ java -Xmx4G -javaagent:LC-Terrain-Agent.jar -jar paper.jar --nogui
 | 权限 | 功能 |
 | --- | --- |
 | `terrain.view` | 面板查看状态 |
-| `terrain.manage` | 面板创建、加载、卸载、设置出生点和登记高度 |
+| `terrain.manage` | 面板创建、加载、卸载、删除、设置出生点和登记高度 |
 | `terrain.teleport` | 面板请求玩家传送 |
 | `lc.terrain.command` | 游戏内地形信息和查找 |
 
@@ -91,6 +95,8 @@ java -Xmx4G -javaagent:LC-Terrain-Agent.jar -jar paper.jar --nogui
 - `POST /height-ranges`：`{min-y, max-y}`，保存后需重启。
 - `POST /worlds`：`{name, seed, config}`，返回 202 后查看状态。
 - `POST /worlds/{name}/load`、`POST /worlds/{name}/unload`。
+- `POST /worlds/{name}/delete`：`{confirmation}`，须与世界名称完全一致；返回 202 后查看删除状态。
+- `POST /multiverse/sync`：重新同步已加载地形世界的 MV 登记。
 - `POST /worlds/{name}/spawn`：`{x, y, z}`，坐标须为整数且落点安全。
 - `POST /worlds/{name}/teleport`：`{player}`。
 

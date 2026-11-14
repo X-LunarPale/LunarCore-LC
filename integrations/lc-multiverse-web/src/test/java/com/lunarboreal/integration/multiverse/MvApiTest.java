@@ -19,8 +19,27 @@ class MvApiTest {
         public boolean isAllowWeather(){return false;}
         public boolean isAutoLoad(){return true;}
     }
+    public static class NativeWorld extends ConfiguredWorld {
+        public org.bukkit.NamespacedKey getKey(){return new org.bukkit.NamespacedKey("lc_terrain","alpine");}
+    }
+    public static class WorldManager {
+        final ConfiguredWorld loaded=new ConfiguredWorld();
+        final NativeWorld unloaded=new NativeWorld();
+        public java.util.Collection<?> getWorlds(){return java.util.List.of(loaded);}
+        public java.util.Collection<?> getLoadedWorlds(){return java.util.List.of(loaded);}
+        public java.util.Collection<?> getUnloadedWorlds(){return java.util.List.of(unloaded);}
+    }
+    @Test void keepsUnloadedWorldsWhenMultiverseOmitsThemFromItsCombinedList()throws Exception{
+        WorldManager manager=new WorldManager();
+        assertEquals(java.util.List.of(manager.loaded,manager.unloaded),
+                new java.util.ArrayList<>(MvApi.worlds(manager)));
+    }
+    @Test void worldIdentityUsesTheDimensionKeyAndKeepsOldApiCompatibility()throws Exception{
+        assertEquals("lc_terrain:alpine",MvApi.identity(new NativeWorld()));
+        assertEquals("world",MvApi.identity(new ConfiguredWorld()));
+    }
     @Test void worldRowsIncludeTheCompleteEditableSnapshot()throws Exception{
-        assertEquals(Map.of("name","world","loaded",true,"players",0,"alias","","pvp",true,"allowWeather",false,"autoLoad",true),
+        assertEquals(Map.of("name","world","key","world","loaded",true,"players",0,"alias","","pvp",true,"allowWeather",false,"autoLoad",true),
                 MultiverseWebPlugin.worldRow(new ConfiguredWorld(),0));
     }
     @Test void reflectionSupportsOnlyCompatiblePublicSignatures()throws Exception{

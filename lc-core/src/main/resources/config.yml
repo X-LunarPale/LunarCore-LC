@@ -71,3 +71,18 @@ modules:
 commands:
   # 禁用的命令（不会注册），如 [fly, god]
   disabled: []
+
+# 按游戏事件播放 Minecraft 提示音；执行 /lc reload 后生效。
+# 每项可设置 enabled、sound、volume（0–1）、pitch（0.5–2）、cooldown-ms（默认 1000）。
+# sound 支持 Minecraft 音效 ID 或 Bukkit 音效名。
+sounds:
+  enabled: true
+  events:
+    teleport-request: {enabled: true, sound: "minecraft:block.note_block.pling", volume: 0.55, pitch: 1.15}
+    teleport-warmup: {enabled: true, sound: "minecraft:block.note_block.pling", volume: 0.35, pitch: 0.9}
+    teleport-success: {enabled: true, sound: "minecraft:entity.experience_orb.pickup", volume: 0.55, pitch: 1.2}
+    teleport-cancel: {enabled: true, sound: "minecraft:block.note_block.bass", volume: 0.45, pitch: 0.8}
+    teleport-fail: {enabled: true, sound: "minecraft:block.note_block.bass", volume: 0.45, pitch: 0.65}
+    punishment-warn: {enabled: true, sound: "minecraft:block.note_block.pling", volume: 0.6, pitch: 0.75}
+    punishment-mute: {enabled: true, sound: "minecraft:block.note_block.bass", volume: 0.6, pitch: 0.7}
+    signin-success: {enabled: true, sound: "minecraft:entity.player.levelup", volume: 0.45, pitch: 1.1}

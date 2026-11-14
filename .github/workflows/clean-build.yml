@@ -69,6 +69,6 @@ jobs:
           path: |
             **/build/reports/
             **/build/test-results/
-            dist/0.0.7/
+            dist/
             lc-api/build/repo/
             build/repo/

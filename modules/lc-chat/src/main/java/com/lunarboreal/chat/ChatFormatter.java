@@ -35,8 +35,10 @@ final class ChatFormatter {
     private String itemPlaceholder = "[item]";
     private boolean mentions;
     private String mentionColor = "<gold>";
+    final ChatAppearance appearance = new ChatAppearance();
 
     void load(ConfigurationSection format) {
+        appearance.load(format);
         List<FormatGroup> list = new ArrayList<>();
         ConfigurationSection gs = format == null ? null : format.getConfigurationSection("groups");
         if (gs != null) {
@@ -124,19 +126,42 @@ final class ChatFormatter {
     }
 
     Component formatChat(Player player, Component message) {
-        return render(player, formatFor(player),
-                Map.of("player", player.getName(), "world", player.getWorld().getName()),
-                Placeholder.component("displayname", player.displayName()),
-                Placeholder.component("message", message));
+        Component title = appearance.cachedTitle(player);
+        return formatLine(player, formatFor(player), player.getWorld().getName(), player.getName(),
+                player.displayName(), title, message);
     }
 
     Component formatVirtualChat(String worldName, String name, Component message) {
         // A virtual speaker must not inherit the triggering player's placeholder values.
-        String template = PERSONAL_PLACEHOLDER.matcher(defaultFormat()).replaceAll("")
+        String template = PERSONAL_PLACEHOLDER.matcher(withDisplayTokens(titleTokens(defaultFormat()), Component.empty())).replaceAll("")
                 .replace("{player}", MM.escapeTags(name))
-                .replace("{world}", MM.escapeTags(worldName));
+                .replace("{world_name}", MM.escapeTags(worldName));
         return MM.deserialize(template,
+                Placeholder.component("world", appearance.world(worldName)),
+                Placeholder.component("title", Component.empty()),
                 Placeholder.component("displayname", Component.text(name)),
+                Placeholder.component("message", message));
+    }
+
+    static String withDisplayTokens(String template, Component title) {
+        return TabList.withoutEmptyTitle(template, title).replace("{world}", "<world>")
+                .replace("{title}", "<title>");
+    }
+
+    String titleTokens(String template) {
+        return template.replace(appearance.titlePlaceholder(), "{title}")
+                .replace(ChatAppearance.TITLE_PLACEHOLDER, "{title}")
+                .replace("%lc_playertitle_current%", "{title}").replace("%lc_titles_title%", "{title}");
+    }
+
+    Component formatLine(OfflinePlayer context, String template, String world, String name, Component displayName,
+                         Component title, Component message) {
+        if (!appearance.showChatTitle()) title = Component.empty();
+        return render(context, withDisplayTokens(titleTokens(template), title),
+                Map.of("player", MM.escapeTags(name), "world_name", MM.escapeTags(world)),
+                Placeholder.component("world", appearance.world(world)),
+                Placeholder.component("title", title),
+                Placeholder.component("displayname", displayName),
                 Placeholder.component("message", message));
     }
 

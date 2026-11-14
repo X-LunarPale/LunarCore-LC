@@ -55,8 +55,29 @@ AI网络客户端在首个实际请求时才创建，禁用、繁忙或冷却时
 
 ## TAB 配置
 
-`tablist.enabled` 默认 true；`refresh-seconds` 默认 5，运行时限制为 1–3600 秒。`header` / `footer` 为多行 MiniMessage，`name-format` 默认 `<title> <displayname>`，留空恢复原列表名。旧配置已有键保留，需自行将称号加入原 name-format。模板支持 `{player}`、`{world}`、`{ping}`（毫秒）、`{online}`、`{max_players}`、`{tps}`（1分钟，最高20）、`{mspt}`；TPS/MSPT 显示两位小数。
+`tablist.enabled` 默认 true；`refresh-seconds` 默认 5，范围 1–3600 秒。`header` / `footer` 使用 MiniMessage；`player-name-format` 默认 `{title} {player}`，仍可读取旧 `name-format`。留空不接管列表名称。支持 `{title}`、`{player}`、`{world}`、`{world_name}`、`{ping}`、`{online}`、`{max_players}`、`{tps}`、`{mspt}`。
 
-称号支持 `<title>`、`{title}`、`%lc_titles_title%`，通过 titles 注册的现有 placeholder 解析，没有新的 API/硬依赖；未启用 titles 时为空。其他 `%lc_...%` 变量以普通文本插入。昵称按安全组件插入，世界名/变量文本不会成为 MiniMessage 指令；只有服主模板自身可使用完整 MiniMessage。所有 Bukkit TAB 更新均在主线程，复用单一刷新任务；reload 重建周期，disable/关闭TAB恢复接管前的 header/footer/name，退出清理缓存。其他插件同时修改 TAB 时后写入者生效。
+聊天与 TAB 共用 `format.title.placeholder`，默认官方 PlayerTitle 变量 `%playerTitle_use%`。未连接该变量时，依次使用 PlayerTitle 桥接、内置称号；未佩戴时留空。称号颜色保留。称号每秒在主线程更新，异步聊天仅读取缓存。
 
-Web 聊天配置可改开关、刷新秒数、header/footer/name（`chat.manage`，后端校验并审计）；header/footer 最多8192字符，名称格式最多1024字符。针对性测试 `:lc-chat:test` 覆盖刷新间隔上下界与 Web 类型/数值边界。实际 Paper 客户端显示及其它 TAB 插件交互需运行服验证。
+若由 LunarCore 统一显示，请关闭 PlayerTitle 的 `isChat` 和 `isTabPrefix`，避免重复称号。检测到独立 TAB 插件或其他插件接管列表时，LunarCore 让出相应显示。
+
+## 世界显示名与预览
+
+世界目录仍使用英文名；`format.worlds.aliases` 单独保存中文显示名和颜色，不会改动世界文件。
+
+```yaml
+format:
+  worlds:
+    default-color: "#55ffff"
+    aliases:
+      - world: survival
+        name: 梦幻生存
+        color: "#55ff55"
+  title:
+    enabled: true
+    placeholder: "%playerTitle_use%"
+```
+
+聊天格式中的 `{world}` 显示带颜色的中文别名，`{world_name}` 显示原始世界名，`{title}` 显示当前称号。默认顺序为「世界 → 称号 → 玩家 → 消息」。内置旧模板会自动升级，服主自定义模板保留。AI 使用相同世界显示名，但不冒用触发玩家的称号。
+
+WebUI 的“聊天设置”可编辑世界名称、选择颜色，并实时预览聊天和 TAB。预览可指定世界、玩家名、称号和消息；修改后需保存，保存会立即重载配置。权限为 `chat.manage`。

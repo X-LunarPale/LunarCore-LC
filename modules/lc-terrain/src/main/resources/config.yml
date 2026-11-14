@@ -2,6 +2,9 @@
 # 已登记世界在主世界初始化完成后加载，不会接管已有的普通世界。
 auto-load: true
 
+# 已安装 Multiverse-Core 时，地形世界会自动登记，无需手动 mv import。
+# 地形世界的自动加载由本模块负责，保留其原生生成参数。
+
 # Additional bounds become available after restarting the server.
 # height-ranges:
 #   - min-y: -128

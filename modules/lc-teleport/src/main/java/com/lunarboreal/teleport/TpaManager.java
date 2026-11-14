@@ -3,6 +3,7 @@ package com.lunarboreal.teleport;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import com.lunarboreal.api.service.SoundService;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -92,6 +93,10 @@ public final class TpaManager {
         m.msg(requester, here ? "tpa.sent-here" : "tpa.sent", "player", target.getName(), "seconds", timeout);
         m.msg(target, here ? "tpa.received-here" : "tpa.received", "player", requester.getName(), "seconds", timeout);
         target.sendMessage(buttons(requester.getName()));
+        m.api().services().get(SoundService.class).ifPresent(sounds -> {
+            sounds.play(requester, "teleport-request");
+            sounds.play(target, "teleport-request");
+        });
         return true;
     }
 

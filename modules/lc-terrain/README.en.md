@@ -61,6 +61,10 @@ Names use 1–32 lowercase letters, digits, underscores or hyphens, beginning wi
 
 Load or save and unload worlds, set safe spawn points and teleport online players from the panel. Worlds containing players cannot unload. Unloading does not delete saves. Generation settings remain fixed after creation.
 
+With Multiverse-Core installed, new and registered terrain worlds are added to MV automatically; `mv import` is no longer needed. The Multiverse panel delegates loading, unloading and autoload changes to the terrain module so the saved native settings remain in use. MV's own autoload flag stays off to let the terrain module initialize first.
+
+Choose **Delete world** and enter the full world name to permanently remove its save and LC/MV registrations. Primary worlds, the MV default world and worlds with online players cannot be deleted. Deletion runs in the background. Interrupted deletions pause autoload and can be retried from the panel.
+
 - Registrations: `plugins/LunarCore/modules/terrain/worlds.yml`.
 - Worlds: `dimensions/lc_terrain/<name>/` inside the primary save.
 - Generation settings: that world's `data/minecraft/world_gen_settings.dat`.
@@ -91,6 +95,8 @@ Base path: `/api/ext/terrain`.
 - `POST /height-ranges`: `{min-y, max-y}`; restart to apply.
 - `POST /worlds`: `{name, seed, config}`; returns 202 before generation finishes.
 - `POST /worlds/{name}/load`, `POST /worlds/{name}/unload`.
+- `POST /worlds/{name}/delete`: `{confirmation}` must exactly match the name; returns 202 while deletion continues.
+- `POST /multiverse/sync`: resynchronize loaded terrain worlds with MV.
 - `POST /worlds/{name}/spawn`: integer `{x, y, z}` at a safe location.
 - `POST /worlds/{name}/teleport`: `{player}`.
 

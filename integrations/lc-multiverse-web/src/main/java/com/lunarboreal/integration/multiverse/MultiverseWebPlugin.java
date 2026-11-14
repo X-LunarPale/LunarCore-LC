@@ -2,6 +2,7 @@ package com.lunarboreal.integration.multiverse;
 
 import com.lunarboreal.api.LC;
 import com.lunarboreal.api.web.*;
+import com.lunarboreal.api.world.TerrainWorldLifecycle;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.Location;
@@ -66,9 +67,10 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
         String query=c.query("q");
         var rows=c.sync(()->{
             MvApi m=mv();List<Map<String,Object>> out=new ArrayList<>();
-            for(Object w:(Collection<?>)MvApi.call(m.manager,"getWorlds")){
-                String name=(String)MvApi.call(w,"getName");World bw=Bukkit.getWorld(name);
+            for(Object w:MvApi.worlds(m.manager)){
+                String name=(String)MvApi.call(w,"getName");World bw=MvApi.bukkitWorld(w);
                 Map<String,Object> row=worldRow(w,bw==null?0:bw.getPlayers().size());
+                row.put("terrainManaged",terrain(w)!=null);
                 String alias=(String)row.get("alias");
                 if(query==null || query.isBlank() || name.toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT)) || alias.toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT)))
                     out.add(row);
@@ -81,6 +83,7 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
     static Map<String,Object> worldRow(Object world,int players)throws Exception{
         Map<String,Object> row=new LinkedHashMap<>();
         row.put("name",MvApi.call(world,"getName"));
+        row.put("key",MvApi.identity(world));
         row.put("loaded",MvApi.call(world,"isLoaded"));
         row.put("players",players);
         row.putAll(readConfig(world));
@@ -139,7 +142,19 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
             Object value=MvApi.call(world,configGetter(key));
             values.put(key,key.equals("alias")?Objects.toString(value,""):value);
         }
+        TerrainWorldLifecycle terrain=terrain(world);
+        if(terrain!=null)values.put("autoLoad",terrain.autoLoad(MvApi.identity(world)));
         return values;
+    }
+    private static TerrainWorldLifecycle terrain(Object world)throws Exception{
+        if(!LC.isLoaded())return null;
+        TerrainWorldLifecycle service=LC.get().services().get(TerrainWorldLifecycle.class).orElse(null);
+        return service!=null&&service.manages(MvApi.identity(world))?service:null;
+    }
+    private static void setConfig(Object world,String key,Object value)throws Exception{
+        TerrainWorldLifecycle terrain=key.equals("autoLoad")?terrain(world):null;
+        if(terrain!=null)terrain.autoLoad(MvApi.identity(world),(Boolean)value,"multiverse-web");
+        else MvApi.success(MvApi.call(world,setter(key),value));
     }
     private static void applyConfig(MvApi api,Object world,Map<String,Object> changes)throws Exception{
         Map<String,Object> before=readConfig(world);
@@ -147,13 +162,13 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
         try{
             for(var entry:changes.entrySet()){
                 attempted.add(entry.getKey());
-                MvApi.success(MvApi.call(world,setter(entry.getKey()),entry.getValue()));
+                setConfig(world,entry.getKey(),entry.getValue());
             }
             MvApi.success(MvApi.call(api.manager,"saveWorldsConfig"));
         }catch(Exception failure){
             Collections.reverse(attempted);
             for(String key:attempted){
-                try{MvApi.success(MvApi.call(world,setter(key),before.get(key)));}
+                try{setConfig(world,key,before.get(key));}
                 catch(Exception rollback){failure.addSuppressed(rollback);}
             }
             try{MvApi.success(MvApi.call(api.manager,"saveWorldsConfig"));}
@@ -185,10 +200,19 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
     private void lifecycle(WebContext c)throws Exception{
         var b=body(c,"name","operation");String name=text(b,"name"),op=text(b,"operation");
         if(!List.of("load","unload").contains(op))throw HttpException.badRequest("未知操作");
+        boolean queued=c.sync(()->{
+            MvApi m=mv();Object world=m.world(name);TerrainWorldLifecycle terrain=terrain(world);
+            if(terrain==null)return false;
+            if(op.equals("load"))terrain.load(MvApi.identity(world),actor(c));
+            else terrain.unload(MvApi.identity(world),actor(c));
+            audit(c,op,name);
+            return true;
+        });
+        if(queued){c.ok(op.equals("load")?"地形世界加载已排队":"地形世界已保存并卸载");return;}
         c.sync(()->{MvApi m=mv();Object w=m.world(name);
             if(op.equals("load")){MvApi.success(MvApi.call(m.manager,"loadWorld",name));}
             else{
-                World bw=Bukkit.getWorld(name);
+                World bw=MvApi.bukkitWorld(w);
                 Object defaultOption=MvApi.call(m.manager,"getDefaultWorld");
                 Object defaultWorld=MvApi.call(defaultOption,"getOrNull");
                 boolean primary=!Bukkit.getWorlds().isEmpty()&&Bukkit.getWorlds().getFirst().getName().equals(name);

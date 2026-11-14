@@ -151,6 +151,10 @@ async function confirm(message, title) {
 
 function verifyWrite(operation, expectedName, body) {
   const world = worlds.value.find(item => item.name === expectedName)
+  if (operation === 'delete') {
+    if (!world || world.status === 'deleting') return
+    throw new Error(world.error || t('世界删除尚未完成，请重新读取后重试。'))
+  }
   const mismatch = !world
     || operation === 'create' && (
       !sameConfig(world.config, body.config)
@@ -173,7 +177,7 @@ async function submit(operation, world) {
     body = { name: expectedName, seed: draft.seed.trim(), config }
     endpoint = '/api/ext/terrain/worlds'
   } else {
-    if (!world || ['queued', 'running'].includes(world.status)) return
+    if (!world || ['queued', 'running', 'deleting'].includes(world.status)) return
     if (operation === 'unload' && (!world.loaded || world.players > 0)) return
     if (operation === 'load' && (world.loaded || !rangeAvailable(world.config))) return
     if (operation === 'teleport' && (!world.loaded || world.status !== 'ready' || !/^[A-Za-z0-9_]{1,16}$/.test(player.value.trim()))) return
@@ -183,11 +187,22 @@ async function submit(operation, world) {
       body = { x: spawnDraft.x, y: spawnDraft.y, z: spawnDraft.z }
     }
     expectedName = world.name
+    if (operation === 'delete') {
+      if (world.players > 0 || world.deletable === false) return
+      try {
+        const result = await ElMessageBox.prompt(
+          t('永久删除「{name}」的世界存档，同时移除地形与 Multiverse 登记。请输入完整世界名称确认。', { name: world.name }),
+          t('删除世界'),
+          { confirmButtonText: t('永久删除'), cancelButtonText: t('取消'), type: 'warning', closeOnClickModal: false,
+            inputPlaceholder: world.name, inputValidator: value => value === world.name || t('世界名称不一致') })
+        body = { confirmation: result.value }
+      } catch { return }
+    }
     const message = operation === 'unload' ? t('保存并卸载「{name}」，保留世界存档？', { name: world.name })
       : operation === 'load' ? t('加载「{name}」，沿用创建时的地形参数？', { name: world.name })
       : operation === 'spawn' ? t('将「{name}」的出生点设为 {x}, {y}, {z}？服务器将检查地板与两格净空。', { name: world.name, ...body })
       : t('将在线玩家「{player}」传送到「{name}」的安全出生点？', { player: player.value.trim(), name: world.name })
-    if (!await confirm(message, t(operation === 'teleport' ? '传送在线玩家' : operation === 'spawn' ? '设置出生点' : operation === 'load' ? '加载世界' : '保存并卸载世界'))) return
+    if (operation !== 'delete' && !await confirm(message, t(operation === 'teleport' ? '传送在线玩家' : operation === 'spawn' ? '设置出生点' : operation === 'load' ? '加载世界' : '保存并卸载世界'))) return
     if (operation === 'teleport') body = { player: player.value.trim() }
     endpoint = `/api/ext/terrain/worlds/${encodeURIComponent(world.name)}/${operation}`
   }
@@ -202,13 +217,26 @@ async function submit(operation, world) {
     await readSnapshot()
     if (disposed) return
     verifyWrite(operation, expectedName, body)
-    selectedName.value = expectedName
+    if (operation !== 'delete' || worlds.value.some(item => item.name === expectedName)) selectedName.value = expectedName
     if (operation === 'create') { draft.name = ''; draft.seed = ''; baseline = copyConfig(draft) }
     if (operation === 'teleport') player.value = ''
     notice.value = result?.message || t(operation === 'create' ? '世界创建请求已提交' : '世界状态已更新')
   } catch (cause) {
     if (!disposed) { uncertain.value = true; verified.value = false; error.value = t(cause.message || '操作失败，请稍后重试。') }
   } finally { if (!disposed) { pending.value = ''; schedulePoll() } }
+}
+
+async function syncMultiverse() {
+  if (blocked.value || !canManage.value) return
+  pending.value = 'multiverse'
+  error.value = ''
+  try {
+    const result = requireSuccess(await api.post('/api/ext/terrain/multiverse/sync', {}))
+    await readSnapshot()
+    notice.value = result.message || t('已同步 Multiverse 世界登记')
+  } catch (cause) {
+    if (!disposed) error.value = t(cause.message || '操作失败，请稍后重试。')
+  } finally { if (!disposed) pending.value = '' }
 }
 
 async function leave() {
@@ -307,7 +335,16 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
           <dl class="world-details"><div><dt>{{ t('世界种子') }}</dt><dd><code>{{ selected.seed }}</code></dd></div><div><dt>{{ t('世界总高度') }}</dt><dd>{{ selected.config.height }}</dd></div><div><dt>{{ t('山体高度倍率') }}</dt><dd>{{ selected.config.verticalScale }}</dd></div><div><dt>{{ t('地形水平倍率') }}</dt><dd>{{ selected.config.horizontalScale }}</dd></div><div><dt>{{ t('服务器启动时自动加载') }}</dt><dd>{{ t(selected.autoLoad ? '开启' : '关闭') }}</dd></div><div v-for="item in toggles" :key="item.key"><dt>{{ t(item.label) }}</dt><dd>{{ t(selected.config[item.key] ? '开启' : '关闭') }}</dd></div></dl>
           <details v-if="advancedGroups.length" class="saved-advanced"><summary>{{ t('完整生成参数') }}</summary><section v-for="group in advancedGroups" :key="group.name"><h4>{{ t(group.name) }}</h4><dl class="world-details"><div v-for="field in group.fields" :key="field.key"><dt>{{ t(field.label) }}</dt><dd>{{ field.type === 'boolean' ? t(selected.config.advanced[field.key] ? '开启' : '关闭') : selected.config.advanced[field.key] }}</dd></div></dl></section></details>
           <p v-if="selected.error" class="feedback failure" role="alert">{{ selected.error }}</p>
-          <div class="world-actions"><el-button :loading="pending === (selected.loaded ? 'unload' : 'load')" :disabled="!canManage || blocked || ['queued', 'running'].includes(selected.status) || selected.loaded && selected.players > 0 || !selected.loaded && !rangeAvailable(selected.config)" @click="submit(selected.loaded ? 'unload' : 'load', selected)"><Icon :name="selected.loaded ? 'folder-down' : 'folder-up'" :size="14" />{{ t(selected.loaded ? '保存并卸载' : '加载') }}</el-button><span v-if="selected.loaded && selected.players">{{ t('有在线玩家时无法卸载。') }}</span><span v-else-if="!selected.loaded && !rangeAvailable(selected.config)">{{ t('此高度尚未在当前运行的服务器注册，重启服务器后可用。') }}</span></div>
+          <div v-if="snapshot.multiverseAvailable" class="multiverse-status">
+            <span>{{ t(selected.multiverseRegistered ? 'Multiverse 已登记' : 'Multiverse 未登记') }}</span>
+            <el-button v-if="canManage && selected.loaded" text :loading="pending === 'multiverse'" :disabled="blocked" @click="syncMultiverse"><Icon name="refresh-cw" :size="13" />{{ t('同步登记') }}</el-button>
+          </div>
+          <p v-if="selected.multiverseError" class="feedback warning" role="alert">{{ selected.multiverseError }}</p>
+          <div class="world-actions">
+            <el-button :loading="pending === (selected.loaded ? 'unload' : 'load')" :disabled="!canManage || blocked || ['queued', 'running', 'deleting', 'delete-failed'].includes(selected.status) || selected.loaded && selected.players > 0 || !selected.loaded && !rangeAvailable(selected.config)" @click="submit(selected.loaded ? 'unload' : 'load', selected)"><Icon :name="selected.loaded ? 'folder-down' : 'folder-up'" :size="14" />{{ t(selected.loaded ? '保存并卸载' : '加载') }}</el-button>
+            <el-button v-if="canManage" type="danger" plain :loading="pending === 'delete'" :disabled="blocked || ['queued', 'running', 'deleting'].includes(selected.status) || selected.players > 0 || selected.deletable === false" @click="submit('delete', selected)"><Icon name="trash-2" :size="14" />{{ t(selected.status === 'delete-failed' ? '重试删除' : '删除世界') }}</el-button>
+            <span v-if="selected.loaded && selected.players">{{ t('有在线玩家时无法卸载或删除。') }}</span><span v-else-if="!selected.loaded && !rangeAvailable(selected.config)">{{ t('此高度尚未在当前运行的服务器注册，重启服务器后可用。') }}</span>
+          </div>
           <div class="spawn-section">
             <div class="spawn-summary"><strong>{{ t('安全出生点') }}</strong><code v-if="selected.spawn">{{ selected.spawn.x }}, {{ selected.spawn.y }}, {{ selected.spawn.z }}</code><span v-else>{{ t('尚未读取出生点') }}</span></div>
             <form v-if="canManage" novalidate @submit.prevent="submit('spawn', selected)">
@@ -390,13 +427,14 @@ fieldset { padding:0; margin:0; border:0; min-width:0; }
 .world-table tr.selected { background:var(--el-color-primary-light-9); }
 .world-table td { font-variant-numeric:tabular-nums; white-space:nowrap; }
 .world-select { padding:3px 0; border:0; color:var(--el-color-primary); background:none; cursor:pointer; font-size:12px; max-width:180px; overflow-wrap:anywhere; white-space:normal; text-align:left; }
-.state.ready { color:var(--el-color-success); }.state.failed { color:var(--el-color-danger); }.state.running,.state.queued { color:var(--el-color-warning); }
+.state.ready { color:var(--el-color-success); }.state.failed,.state.delete-failed { color:var(--el-color-danger); }.state.running,.state.queued,.state.deleting { color:var(--el-color-warning); }
 .empty { padding:30px 0; text-align:center; font-size:12px; color:var(--lc-text-soft); border-bottom:1px solid var(--el-border-color-light); }
 .selected-heading { padding-top:22px; margin-top:7px; }
 .world-details { margin:16px 0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 20px; }
 .world-details > div { min-width:0; }.world-details > div:first-child { grid-column:1/-1; }
 dt { color:var(--lc-text-soft); font-size:11px; }dd { margin:4px 0 0; font-size:12px; overflow-wrap:anywhere; }dd code { font:inherit; font-variant-numeric:tabular-nums; }
-.world-actions { display:flex; align-items:center; gap:10px; padding:15px 0; border-top:1px solid var(--el-border-color-light); }
+.world-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:15px 0; border-top:1px solid var(--el-border-color-light); }
+.multiverse-status { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; font-size:12px; color:var(--el-color-primary); }
 .spawn-section { border-top:1px solid var(--el-border-color-light); padding:16px 0; }
 .spawn-summary { display:flex; align-items:center; flex-wrap:wrap; gap:6px 14px; margin-bottom:12px; font-size:12px; }
 .spawn-summary code { font:inherit; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }

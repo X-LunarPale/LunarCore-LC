@@ -119,6 +119,7 @@ public final class ChatModule extends LcModule implements Listener {
     }
 
     void loadSettings() {
+        if (ChatFormatDefaults.migrate(config())) saveConfig();
         filter.load(config().getConfigurationSection("anti-spam"));
         formatter.load(config().getConfigurationSection("format"));
         logEnabled = config().getBoolean("log.enabled", true);
@@ -254,6 +255,7 @@ public final class ChatModule extends LcModule implements Listener {
             }
         }
         tablist.forget(p);
+        formatter.appearance.forget(p.getUniqueId());
         store.evict(p.getUniqueId());
         filter.forget(p.getUniqueId());
         for (ChatUser u : store.allCached()) if (p.getUniqueId().equals(u.lastMessaged)) u.lastMessaged = null;
@@ -346,6 +348,16 @@ public final class ChatModule extends LcModule implements Listener {
                     m.put("tabName", TabList.nameFormat(config()));
                     m.put("tabShowTitle", config().getBoolean("tablist.show-current-title", true));
                     m.put("defaultChatFormat", formatter.defaultFormat());
+                    m.put("chatShowTitle", config().getBoolean("format.title.enabled", true));
+                    m.put("titlePlaceholder", config().getString("format.title.placeholder", ChatAppearance.TITLE_PLACEHOLDER));
+                    m.put("worldDefaultColor", config().getString("format.worlds.default-color", ChatAppearance.DEFAULT_COLOR));
+                    m.put("worldAliases", ctx.sync(() -> {
+                        Map<String, Map<String, String>> rows = new LinkedHashMap<>();
+                        for (Map<String, String> row : formatter.appearance.aliases()) rows.put(row.get("world"), row);
+                        for (var world : Bukkit.getWorlds()) rows.putIfAbsent(world.getName(), Map.of(
+                                "world", world.getName(), "name", world.getName(), "color", config().getString("format.worlds.default-color", ChatAppearance.DEFAULT_COLOR)));
+                        return new ArrayList<>(rows.values());
+                    }));
                     ctx.json(m);
                 })
                 .post("/config", "chat.manage", ctx -> {
@@ -359,6 +371,10 @@ public final class ChatModule extends LcModule implements Listener {
                         setIf(b, "tabName", "tablist.player-name-format", String.class);
                         setIf(b, "tabShowTitle", "tablist.show-current-title", Boolean.class);
                         setIf(b, "defaultChatFormat", "format.groups.default.format", String.class);
+                        setIf(b, "chatShowTitle", "format.title.enabled", Boolean.class);
+                        setIf(b, "titlePlaceholder", "format.title.placeholder", String.class);
+                        setIf(b, "worldDefaultColor", "format.worlds.default-color", String.class);
+                        if (b.containsKey("worldAliases")) config().set("format.worlds.aliases", b.get("worldAliases"));
                         setIf(b, "antiSpam", "anti-spam.enabled", Boolean.class);
                         if (b.get("cooldownMs") != null) config().set("anti-spam.cooldown-ms", ((Number) b.get("cooldownMs")).longValue());
                         setIf(b, "antiAd", "anti-spam.anti-ad.enabled", Boolean.class);
@@ -427,7 +443,11 @@ public final class ChatModule extends LcModule implements Listener {
                         .field(new WebPanel.Field("motd", "登录欢迎消息（每行一条）", "textarea"))
                         .field(new WebPanel.Field("logEnabled", "记录聊天到数据库", "bool"))
                         .field(new WebPanel.Field("defaultChatFormat", "默认玩家聊天格式", "text")
-                                .help("支持 <displayname> 玩家显示名、<message> 消息、{player} 原名和 {world} 世界名；AI 回复沿用模板，但不会套用触发玩家的 %...% 占位符。"))
+                                .help("{world} 世界显示名、{title} 当前称号、<displayname> 玩家显示名、<message> 消息；{world_name} 保留原始世界名。"))
+                        .field(new WebPanel.Field("chatShowTitle", "聊天显示当前称号", "bool"))
+                        .field(new WebPanel.Field("titlePlaceholder", "PlayerTitle 占位符", "text"))
+                        .field(new WebPanel.Field("worldDefaultColor", "默认世界颜色", "text"))
+                        .field(new WebPanel.Field("worldAliases", "世界显示名称", "world-aliases"))
                         .field(new WebPanel.Field("tabEnabled", "启用 TAB", "bool"))
                         .field(new WebPanel.Field("tabRefresh", "TAB 刷新秒数（1–3600）", "number"))
                         .field(new WebPanel.Field("tabHeader", "玩家列表顶部文字（每行一条）", "textarea"))
@@ -440,6 +460,7 @@ public final class ChatModule extends LcModule implements Listener {
     }
 
     static void validateTabConfig(Map<String, Object> body) {
+        validateAppearanceConfig(body);
         if (body.containsKey("tabEnabled") && !(body.get("tabEnabled") instanceof Boolean)) throw HttpException.badRequest("玩家列表开关必须为布尔值");
         if (body.containsKey("tabShowTitle") && !(body.get("tabShowTitle") instanceof Boolean)) throw HttpException.badRequest("称号显示开关必须为布尔值");
         if (body.containsKey("tabRefresh")) {
@@ -456,6 +477,27 @@ public final class ChatModule extends LcModule implements Listener {
                     || !s.contains("<displayname>") || !s.contains("<message>")) {
                 throw HttpException.badRequest("默认聊天格式需包含 <displayname> 与 <message>，长度不超过1024字符");
             }
+        }
+    }
+
+    static void validateAppearanceConfig(Map<String, Object> body) {
+        if (body.containsKey("chatShowTitle") && !(body.get("chatShowTitle") instanceof Boolean))
+            throw HttpException.badRequest("聊天称号开关必须为布尔值");
+        if (body.containsKey("titlePlaceholder") && (!(body.get("titlePlaceholder") instanceof String token)
+                || !token.matches("%[A-Za-z0-9_.:-]{1,128}%")))
+            throw HttpException.badRequest("称号占位符格式无效");
+        if (body.containsKey("worldDefaultColor") && (!(body.get("worldDefaultColor") instanceof String color) || ChatAppearance.color(color) == null))
+            throw HttpException.badRequest("世界颜色需使用 #RRGGBB 或 Minecraft 颜色名称");
+        if (!body.containsKey("worldAliases")) return;
+        if (!(body.get("worldAliases") instanceof List<?> rows) || rows.size() > 500)
+            throw HttpException.badRequest("世界名称列表格式无效");
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (Object value : rows) {
+            if (!(value instanceof Map<?, ?> row)
+                    || !(row.get("world") instanceof String world) || world.isBlank() || world.length() > 256 || !names.add(world)
+                    || !(row.get("name") instanceof String name) || name.isBlank() || name.length() > 64 || name.codePoints().anyMatch(Character::isISOControl)
+                    || !(row.get("color") instanceof String color) || ChatAppearance.color(color) == null)
+                throw HttpException.badRequest("世界名称、颜色或重复条目无效");
         }
     }
 

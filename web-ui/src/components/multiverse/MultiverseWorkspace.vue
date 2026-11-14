@@ -10,6 +10,7 @@ import { t, locale } from '../../i18n'
 const auth = useAuth()
 const pageSize = 20
 const configKeys = ['alias', 'pvp', 'allowWeather', 'autoLoad']
+const worldId = world => world?.key || world?.name || ''
 const worlds = ref([])
 const total = ref(0)
 const page = ref(1)
@@ -99,10 +100,10 @@ function applySnapshot(snapshot, chooseFirst = false) {
   worlds.value = snapshot.worlds.items
   total.value = snapshot.worlds.total
   bridge.value = snapshot.bridge
-  let next = worlds.value.find(world => world.name === selected.value?.name)
+  let next = worlds.value.find(world => worldId(world) === worldId(selected.value))
   if (!next && (chooseFirst || !selected.value)) next = worlds.value[0] || null
   if (next) applySelection(next)
-  else if (!worlds.value.some(world => world.name === selected.value?.name)) applySelection(null)
+  else if (!worlds.value.some(world => worldId(world) === worldId(selected.value))) applySelection(null)
   uncertain.value = false
   updateTimestamp()
 }
@@ -117,7 +118,7 @@ async function load({ force = false, chooseFirst = false } = {}) {
     const snapshot = await fetchSnapshot()
     if (disposed) return false
     applySnapshot(snapshot, chooseFirst)
-    if (selected.value && !worlds.value.some(world => world.name === selected.value.name)) {
+    if (selected.value && !worlds.value.some(world => worldId(world) === worldId(selected.value))) {
       applySelection(worlds.value[0] || null)
     }
     return true
@@ -130,11 +131,11 @@ async function load({ force = false, chooseFirst = false } = {}) {
 }
 
 async function selectWorld(world) {
-  if (world?.name === selected.value?.name) return
+  if (worldId(world) === worldId(selected.value)) return
   if (uncertain.value) {
     if (!await confirmDiscard(t('保存结果尚未核对。请先重新读取服务器状态，再切换世界。'))) return
     if (!await load({ force: true })) return
-    const fresh = worlds.value.find(item => item.name === world?.name)
+    const fresh = worlds.value.find(item => worldId(item) === worldId(world))
     if (fresh) applySelection(fresh)
     return
   }
@@ -185,7 +186,7 @@ async function saveConfig() {
   try {
     submitted = true
     const result = requireSuccess(await api.post('/api/ext/multiverse/configure', {
-      name: selected.value.name,
+      name: worldId(selected.value),
       values: configOf(draft),
       expected: { ...saved.value }
     }))
@@ -240,9 +241,9 @@ async function runWorldAction(operation) {
     submitted = true
     let result
     if (operation === 'teleport') {
-      result = await api.post('/api/ext/multiverse/teleport', { name: selected.value.name, player: playerName.value.trim() })
+      result = await api.post('/api/ext/multiverse/teleport', { name: worldId(selected.value), player: playerName.value.trim() })
     } else {
-      result = await api.post('/api/ext/multiverse/lifecycle', { name: selected.value.name, operation })
+      result = await api.post('/api/ext/multiverse/lifecycle', { name: worldId(selected.value), operation })
     }
     requireSuccess(result)
     const snapshot = await fetchSnapshot()
@@ -325,8 +326,8 @@ onBeforeUnmount(() => {
         <div v-if="loading && !worlds.length" class="roster-state" role="status">{{ t('正在读取世界列表…') }}</div>
         <div v-else-if="!worlds.length" class="roster-state">{{ t(query ? '没有匹配的世界。' : '没有已注册的世界。') }}</div>
         <ul v-else class="world-list">
-          <li v-for="world in worlds" :key="world.name">
-            <button type="button" class="world-option" :class="{ selected: selected?.name === world.name }" :aria-current="selected?.name === world.name ? 'true' : undefined" @click="selectWorld(world)">
+          <li v-for="world in worlds" :key="worldId(world)">
+            <button type="button" class="world-option" :class="{ selected: worldId(selected) === worldId(world) }" :aria-current="worldId(selected) === worldId(world) ? 'true' : undefined" @click="selectWorld(world)">
               <span class="world-state-dot" :class="{ loaded: world.loaded }" />
               <span class="world-option-copy"><strong>{{ world.alias || world.name }}</strong><small>{{ world.name }}<span v-if="world.players"> · {{ t('{count} 名玩家', { count: world.players }) }}</span></small></span>
               <span class="world-option-status">{{ t(world.loaded ? '已加载' : '未加载') }}</span>
@@ -380,7 +381,7 @@ onBeforeUnmount(() => {
                 <el-switch v-model="draft.allowWeather" :disabled="locked" :aria-label="t('允许天气变化')" />
               </label>
               <label class="setting-row">
-                <span><strong>{{ t('服务器启动时自动加载') }}</strong><small>{{ t('控制该世界是否随 Multiverse 启动自动加载。') }}</small></span>
+                <span><strong>{{ t('服务器启动时自动加载') }}</strong><small>{{ t(selected.terrainManaged ? '使用已保存的宏伟地形参数加载。' : '控制该世界是否随 Multiverse 启动自动加载。') }}</small></span>
                 <el-switch v-model="draft.autoLoad" :disabled="locked" :aria-label="t('服务器启动时自动加载')" />
               </label>
             </div>

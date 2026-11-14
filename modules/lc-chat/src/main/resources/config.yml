@@ -7,20 +7,31 @@ format:
   # 是否接管聊天格式
   enabled: true
   # 按 priority 从高到低匹配，玩家拥有 permission 即使用该格式（permission 留空表示所有人）
-  # 可用：{player} 玩家名、{world} 世界名、<displayname> 显示名(含昵称)、<message> 消息
+  # {world} 显示名、{world_name} 原名、{title} PlayerTitle 称号
+  worlds:
+    default-color: "#55ffff"
+    # 世界目录名保持不变，此处单独设置玩家看到的名称与颜色。
+    aliases: []
+    # - world: survival
+    #   name: 生存世界
+    #   color: "#55ff55"
+  title:
+    enabled: true
+    # 聊天与 TAB 共用；未连接 PAPI 时回退至 PlayerTitle 桥接。
+    placeholder: "%playerTitle_use%"
   groups:
     admin:
       permission: lc.chat.format.admin
       priority: 100
-      format: "<aqua>[<red>管理</red>]</aqua> <hover:show_text:'<white>点击私聊 {player}'><click:suggest_command:'/msg {player} '><aqua><displayname></aqua></click></hover><aqua> » </aqua><white><message>"
+      format: "<aqua>[{world}]</aqua> {title} <aqua>[<red>管理</red>]</aqua> <hover:show_text:'<white>点击私聊 {player}'><click:suggest_command:'/msg {player} '><aqua><displayname></aqua></click></hover><aqua> » </aqua><white><message>"
     vip:
       permission: lc.chat.format.vip
       priority: 50
-      format: "<aqua>[<gold>VIP</gold>]</aqua> <hover:show_text:'<white>点击私聊 {player}'><click:suggest_command:'/msg {player} '><yellow><displayname></yellow></click></hover><aqua> » </aqua><white><message>"
+      format: "<aqua>[{world}]</aqua> {title} <aqua>[<gold>VIP</gold>]</aqua> <hover:show_text:'<white>点击私聊 {player}'><click:suggest_command:'/msg {player} '><yellow><displayname></yellow></click></hover><aqua> » </aqua><white><message>"
     default:
       permission: ''
       priority: 0
-      format: "<aqua>[<white>{world}</white>]</aqua> <hover:show_text:'<white>点击私聊 {player}'><click:suggest_command:'/msg {player} '><white><displayname></white></click></hover><aqua> » </aqua><white><message>"
+      format: "<aqua>[{world}]</aqua> {title} <hover:show_text:'<white>点击私聊 {player}'><click:suggest_command:'/msg {player} '><white><displayname></white></click></hover><aqua> » </aqua><white><message>"
   # 消息中输入 [item] 展示手持物品（权限 lc.chat.item）
   item-placeholder: "[item]"
   # @玩家名 提醒（高亮 + 音效）
@@ -143,7 +154,7 @@ tablist:
     - "<white>在线 <white>{online}/{max_players}</white>  TPS <white>{tps}</white>  MSPT <white>{mspt}</white>"
   footer:
     - "<aqua>Powered by LunarCore"
-  # 显示 PlayerTitle 当前称号；未安装时使用内置称号。
+  # 使用上方 title.placeholder 的 PAPI 称号；未安装时使用桥接或内置称号。
   show-current-title: true
   # 玩家列表名称；留空不修改。旧配置 name-format 在本项缺失时仍可读取。
   player-name-format: "{title} {player}"
