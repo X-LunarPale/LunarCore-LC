@@ -32,6 +32,7 @@ public final class QQAuthModule extends LcModule {
     private volatile DailyBindingReminders reminders;
     volatile boolean ready;
     volatile boolean active;
+    private volatile boolean nameBasedIdentity;
     private ThreadPoolExecutor workers;
     private AutoCloseable transport;
     private volatile long epoch;
@@ -79,7 +80,7 @@ public final class QQAuthModule extends LcModule {
             try {
                 SqlAccountRepository accounts = new SqlAccountRepository(api().database());
                 accounts.initialize();
-                AuthService nextAuth = new AuthService(accounts, policy());
+                AuthService nextAuth = new AuthService(accounts, policy(), nameBasedIdentity);
                 BindingRepository repo = new BindingRepository(api().database());
                 repo.initialize();
                 repo.all().forEach(binding -> bound.add(binding.uuid()));
@@ -122,6 +123,9 @@ public final class QQAuthModule extends LcModule {
     private void validateConfig() {
         policy(); bindingSettings();
         reminderZone();
+        String identityMode = config().getString("auth.identity-mode", "auto").toLowerCase(Locale.ROOT);
+        if (!Set.of("auto", "uuid", "name").contains(identityMode)) throw new IllegalArgumentException("auth.identity-mode 无效");
+        nameBasedIdentity = identityMode.equals("name") || identityMode.equals("auto") && !Bukkit.getOnlineMode();
         String mode = config().getString("integration.mode", "astrbot");
         if (!Set.of("astrbot", "onebot", "disabled").contains(mode)) throw new IllegalArgumentException("integration.mode 无效");
         if (mode.equals("astrbot")) {
@@ -136,7 +140,14 @@ public final class QQAuthModule extends LcModule {
 
     boolean bindingRequired() { return config().getBoolean("binding.required", true); }
 
+    boolean nameBasedIdentity() { return nameBasedIdentity; }
+
     boolean bindingAllowed(UUID uuid) { return !bindingRequired() || bound.contains(uuid); }
+
+    boolean canEnter(UUID uuid, String name) {
+        return bindingAllowed(uuid) || nameBasedIdentity && auth.account(name)
+                .filter(account -> !account.locked() && bound.contains(account.uuid())).isPresent();
+    }
 
     ZoneId reminderZone() {
         String timezone = config().getString("binding.reminder.timezone", "").trim();
@@ -224,6 +235,11 @@ public final class QQAuthModule extends LcModule {
             };
             if (result.status() == BindingService.Status.SUCCESS) {
                 if (command.equals("验证")) {
+                    if (result.previousUuid() != null) {
+                        bound.remove(result.previousUuid());
+                        granted.remove(result.previousUuid());
+                        kick(result.previousUuid(), msg("kick.qq-completed"));
+                    }
                     bound.add(result.binding().uuid());
                     sync(() -> {
                         Player player = Bukkit.getPlayer(result.binding().uuid());
@@ -233,7 +249,7 @@ public final class QQAuthModule extends LcModule {
                 if (command.equals("解绑")) bound.remove(result.binding().uuid());
                 if (!command.equals("验证")) kick(result.binding().uuid(), msg("kick.qq-completed"));
                 audit("QQ:" + sender, "qq-" + command, result.binding().playerName());
-                return GroupResult.reply(msg(command.equals("验证") && !bindingRequired()
+                return GroupResult.reply(msg(command.equals("验证") && !bindingRequired() && result.previousUuid() == null
                         ? "group.bind-success" : "group.success", "command", command, "player", result.binding().playerName()));
             }
             return GroupResult.reply(msg("group.failed", "status", bindingStatus(result.status())));

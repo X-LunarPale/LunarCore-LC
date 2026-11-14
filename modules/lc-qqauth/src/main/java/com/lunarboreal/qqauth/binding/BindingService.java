@@ -20,8 +20,11 @@ public final class BindingService {
     }
     public enum Status { SUCCESS, INVALID_CODE, ALREADY_BOUND, NOT_BOUND, LIMIT_REACHED, IDENTITY_CONFLICT, QQ_MISMATCH, STALE_GENERATION }
     public record IssuedCode(String code, long expiresAt) {}
-    public record Result(Status status, Binding binding) {}
+    public record Result(Status status, Binding binding, UUID previousUuid) {
+        public Result(Status status, Binding binding) { this(status, binding, null); }
+    }
     private record Pending(UUID uuid, String name, long expiresAt) {}
+    private record Recovery(UUID uuid, String name, Binding original, long expiresAt) {}
     private record Unbind(UUID uuid, String name, String qq, long expiresAt) {}
     private record Reset(UUID uuid, String name, String qq, String generation, AuthService.PreparedPassword prepared, long expiresAt) {}
 
@@ -32,6 +35,8 @@ public final class BindingService {
     private final Clock clock;
     private final Map<String, Pending> binds = new HashMap<>();
     private final Map<UUID, String> bindByUuid = new HashMap<>();
+    private final Map<String, Recovery> recoveries = new HashMap<>();
+    private final Map<UUID, String> recoveryByUuid = new HashMap<>();
     private final Map<String, Unbind> unbinds = new HashMap<>();
     private final Map<String, Reset> resets = new HashMap<>();
 
@@ -51,13 +56,38 @@ public final class BindingService {
             if (pending != null) { Pending refresh = new Pending(uuid, playerName, expiry(s.bindTtl())); binds.put(old, refresh); return new IssuedCode(old, refresh.expiresAt); }
         }
         ensureCapacity();
-        String code = newCode(s.codeLength(), binds, unbinds, resets);
+        String code = newCode(s.codeLength(), binds, recoveries, unbinds, resets);
         long until = expiry(s.bindTtl()); binds.put(code, new Pending(uuid, playerName, until)); bindByUuid.put(uuid, code);
         return new IssuedCode(code, until);
     }
 
+    public synchronized IssuedCode issueIdentityRecovery(UUID uuid, String playerName) throws SQLException {
+        Objects.requireNonNull(uuid, "uuid"); validateName(playerName); sweepExpired();
+        Binding original = repository.findByName(playerName).orElseThrow(() -> new IllegalStateException("player is not bound"));
+        if (original.uuid().equals(uuid) || repository.find(uuid).isPresent()) throw new IllegalStateException("target UUID is already bound");
+        BindingSettings s = settings.get();
+        String old = recoveryByUuid.get(uuid);
+        if (old != null) {
+            Recovery pending = recoveries.get(old);
+            if (pending != null && original.equals(pending.original) && playerName.equals(pending.name)) {
+                long until = expiry(s.bindTtl());
+                recoveries.put(old, new Recovery(uuid, playerName, original, until));
+                return new IssuedCode(old, until);
+            }
+            removeRecovery(old);
+        }
+        ensureCapacity();
+        String code = newCode(s.codeLength(), binds, recoveries, unbinds, resets);
+        long until = expiry(s.bindTtl());
+        recoveries.put(code, new Recovery(uuid, playerName, original, until)); recoveryByUuid.put(uuid, code);
+        return new IssuedCode(code, until);
+    }
+
     public synchronized Result redeemBind(String code, String group, String sender) throws SQLException {
-        sweepExpired(); Pending pending = binds.get(code); if (pending == null) return result(Status.INVALID_CODE);
+        sweepExpired();
+        Recovery recovery = recoveries.get(code);
+        if (recovery != null) return redeemIdentityRecovery(code, recovery, group, sender);
+        Pending pending = binds.get(code); if (pending == null) return result(Status.INVALID_CODE);
         BindingSettings s = settings.get();
         OptionalBinding existing = findPendingIdentity(pending);
         if (existing.bound) { removeBind(code); return result(Status.ALREADY_BOUND); }
@@ -71,6 +101,17 @@ public final class BindingService {
         removeBind(code); return new Result(Status.SUCCESS, binding);
     }
 
+    private Result redeemIdentityRecovery(String code, Recovery pending, String group, String sender) throws SQLException {
+        Binding original = pending.original;
+        if (!original.qq().equals(sender) || !original.group().equals(group)) return result(Status.QQ_MISMATCH);
+        if (!repository.migrateIdentity(original, pending.uuid, pending.name)) {
+            removeRecovery(code); return result(Status.IDENTITY_CONFLICT);
+        }
+        Binding migrated = new Binding(pending.uuid, pending.name, original.qq(), original.group(), original.boundAt());
+        cancel(original.uuid()); cancel(pending.uuid);
+        return new Result(Status.SUCCESS, migrated, original.uuid());
+    }
+
     private record OptionalBinding(boolean bound, boolean nameConflict) {}
     private OptionalBinding findPendingIdentity(Pending pending) throws SQLException {
         if (repository.find(pending.uuid).isPresent()) return new OptionalBinding(true, false);
@@ -80,7 +121,7 @@ public final class BindingService {
     public synchronized IssuedCode issueUnbind(UUID uuid) throws SQLException {
         sweepExpired(); Binding binding = repository.find(uuid).orElseThrow(() -> new IllegalStateException("player is not bound"));
         ensureCapacity(); BindingSettings s = settings.get();
-        String code = newCode(s.codeLength(), binds, unbinds, resets); long until = expiry(s.unbindTtl());
+        String code = newCode(s.codeLength(), binds, recoveries, unbinds, resets); long until = expiry(s.unbindTtl());
         unbinds.put(code, new Unbind(uuid, binding.playerName(), binding.qq(), until)); return new IssuedCode(code, until);
     }
     public synchronized Result redeemUnbind(String code, String group, String sender) throws SQLException {
@@ -95,7 +136,7 @@ public final class BindingService {
     public synchronized IssuedCode issueReset(UUID uuid, AuthService.PreparedPassword prepared, String generation) throws SQLException {
         Objects.requireNonNull(prepared, "prepared"); if (generation == null || generation.isBlank()) throw new IllegalArgumentException("generation");
         sweepExpired(); Binding binding = repository.find(uuid).orElseThrow(() -> new IllegalStateException("player is not bound"));
-        ensureCapacity(); BindingSettings s = settings.get(); String code = newCode(s.codeLength(), binds, unbinds, resets); long until = expiry(s.resetTtl());
+        ensureCapacity(); BindingSettings s = settings.get(); String code = newCode(s.codeLength(), binds, recoveries, unbinds, resets); long until = expiry(s.resetTtl());
         resets.put(code, new Reset(uuid, binding.playerName(), binding.qq(), generation, prepared, until)); return new IssuedCode(code, until);
     }
     public synchronized Result redeemReset(String code, String group, String sender) throws SQLException {
@@ -110,13 +151,22 @@ public final class BindingService {
 
     public synchronized void cancel(UUID uuid) {
         String bind = bindByUuid.remove(uuid); if (bind != null) binds.remove(bind);
+        for (Iterator<Map.Entry<String, Recovery>> it = recoveries.entrySet().iterator(); it.hasNext();) {
+            var e = it.next(); Recovery recovery = e.getValue();
+            if (recovery.uuid.equals(uuid) || recovery.original.uuid().equals(uuid)) {
+                recoveryByUuid.remove(recovery.uuid, e.getKey()); it.remove();
+            }
+        }
         unbinds.values().removeIf(p -> p.uuid.equals(uuid)); resets.values().removeIf(p -> p.uuid.equals(uuid));
     }
-    public synchronized void clear() { binds.clear(); bindByUuid.clear(); unbinds.clear(); resets.clear(); }
+    public synchronized void clear() { binds.clear(); bindByUuid.clear(); recoveries.clear(); recoveryByUuid.clear(); unbinds.clear(); resets.clear(); }
     public synchronized int sweepExpired() {
         long now = clock.millis(); int removed = 0;
         for (Iterator<Map.Entry<String, Pending>> it = binds.entrySet().iterator(); it.hasNext();) {
             var e = it.next(); if (e.getValue().expiresAt <= now) { bindByUuid.remove(e.getValue().uuid, e.getKey()); it.remove(); removed++; }
+        }
+        for (Iterator<Map.Entry<String, Recovery>> it = recoveries.entrySet().iterator(); it.hasNext();) {
+            var e = it.next(); if (e.getValue().expiresAt <= now) { recoveryByUuid.remove(e.getValue().uuid, e.getKey()); it.remove(); removed++; }
         }
         removed += removeExpired(unbinds, now); removed += removeExpired(resets, now); return removed;
     }
@@ -129,6 +179,16 @@ public final class BindingService {
     public synchronized java.util.Optional<Binding> find(UUID uuid) throws SQLException { return repository.find(uuid); }
     public synchronized java.util.Optional<Binding> findByName(String name) throws SQLException { return repository.findByName(name); }
     public synchronized void updateName(UUID uuid, String name) throws SQLException { validateName(name); repository.updateName(uuid, name); }
+    public synchronized AuthService.Result login(AuthService auth, UUID uuid, String name, String ip, String password) throws SQLException {
+        var previous = auth.account(name).orElse(null);
+        var result = auth.login(uuid, name, ip, password,
+                (connection, playerName, oldUuid, newUuid) -> repository.migrateUuid(connection, playerName, oldUuid, newUuid));
+        if (result == AuthService.Result.SUCCESS && previous != null && !previous.uuid().equals(uuid)) {
+            cancel(previous.uuid());
+            cancel(uuid);
+        }
+        return result;
+    }
     public synchronized Result forceUnbind(String name) throws SQLException {
         Binding binding = repository.findByName(name).orElse(null);
         if (binding == null) return result(Status.NOT_BOUND);
@@ -136,7 +196,8 @@ public final class BindingService {
     }
     public BindingRepository repository() { return repository; }
     private void removeBind(String code) { Pending p = binds.remove(code); if (p != null) bindByUuid.remove(p.uuid, code); }
-    private void ensureCapacity() { sweepExpired(); if (binds.size() + unbinds.size() + resets.size() >= settings.get().maxPending()) throw new IllegalStateException("pending code capacity reached"); }
+    private void removeRecovery(String code) { Recovery p = recoveries.remove(code); if (p != null) recoveryByUuid.remove(p.uuid, code); }
+    private void ensureCapacity() { sweepExpired(); if (binds.size() + recoveries.size() + unbinds.size() + resets.size() >= settings.get().maxPending()) throw new IllegalStateException("pending code capacity reached"); }
     private long expiry(java.time.Duration ttl) { return Math.addExact(clock.millis(), ttl.toMillis()); }
     @SafeVarargs
     private final String newCode(int length, Map<String, ?>... maps) {

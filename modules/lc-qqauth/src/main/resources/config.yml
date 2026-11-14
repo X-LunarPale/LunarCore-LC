@@ -24,6 +24,7 @@ binding:
   per-qq-limits: {}
 auth:
   enabled: true
+  identity-mode: auto # auto follows online-mode; uuid always requires a UUID match; name permits password-verified UUID migration.
   # New and existing players must register/login in-game; no AuthMe password hashes are imported.
   min-password-length: 10
   max-password-length: 64
@@ -106,6 +107,7 @@ messages:
     bind-required: "请先在 QQ 群发送 /验证 {code}，完成绑定后重新连接。验证码请勿转发，有效期以服务器配置为准。"
     changed: "身份验证已变化，请重新连接。"
     identity-mismatch: "账号名称身份不一致，请使用原始大小写与认证方式连接。"
+    identity-recovery: "认证方式已变化。请使用原绑定 QQ 在群 {group} 发送 /验证 {code}，恢复绑定后重新连接。验证码有效期 {ttl} 秒，请勿转发。"
     invalid-name: "玩家名必须为 3–16 位英文字母、数字或下划线。"
     locked: "账号已锁定或身份不一致，请联系管理员。"
     not-ready: "QQAuth 正在加载或配置异常，请稍后再试。"

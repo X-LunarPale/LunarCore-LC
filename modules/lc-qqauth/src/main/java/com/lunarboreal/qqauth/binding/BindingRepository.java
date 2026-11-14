@@ -47,6 +47,44 @@ public final class BindingRepository {
     public void updateName(UUID uuid, String name) throws SQLException {
         database.update("UPDATE " + table + " SET player_name=?,name_key=? WHERE uuid=?", name, nameKey(name), uuid.toString());
     }
+    boolean migrateUuid(java.sql.Connection c, String name, UUID oldUuid, UUID newUuid) throws SQLException {
+        lock(c);
+        try (var ps = c.prepareStatement("SELECT 1 FROM " + table + " WHERE uuid=?")) {
+            ps.setString(1, newUuid.toString());
+            try (var rs = ps.executeQuery()) { if (rs.next()) return false; }
+        }
+        try (var ps = c.prepareStatement("SELECT uuid FROM " + table + " WHERE LOWER(name_key)=LOWER(?)")) {
+            ps.setString(1, name);
+            try (var rs = ps.executeQuery()) {
+                if (!rs.next()) return true;
+                if (!oldUuid.toString().equals(rs.getString(1))) return false;
+            }
+        }
+        try (var ps = c.prepareStatement("UPDATE " + table + " SET uuid=?,player_name=? WHERE uuid=? AND LOWER(name_key)=LOWER(?)")) {
+            ps.setString(1, newUuid.toString()); ps.setString(2, name); ps.setString(3, oldUuid.toString()); ps.setString(4, name);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    public boolean migrateIdentity(Binding expected, UUID newUuid, String playerName) throws SQLException {
+        java.util.Objects.requireNonNull(expected, "expected");
+        java.util.Objects.requireNonNull(newUuid, "newUuid");
+        if (expected.uuid().equals(newUuid) || !expected.playerName().equalsIgnoreCase(playerName)) return false;
+        return database.transaction(c -> {
+            lock(c);
+            if (exists(c, "uuid", newUuid.toString())) return false;
+            String rowLock = database.isMySQL() ? " FOR UPDATE" : "";
+            try (var ps = c.prepareStatement("SELECT uuid,player_name,qq,group_id,bound_at FROM " + table + " WHERE uuid=?" + rowLock)) {
+                ps.setString(1, expected.uuid().toString());
+                try (var rs = ps.executeQuery()) { if (!rs.next() || !expected.equals(map(rs))) return false; }
+            }
+            try (var ps = c.prepareStatement("UPDATE " + table + " SET uuid=?,player_name=?,name_key=? WHERE uuid=?")) {
+                ps.setString(1, newUuid.toString()); ps.setString(2, playerName); ps.setString(3, nameKey(playerName));
+                ps.setString(4, expected.uuid().toString());
+                return ps.executeUpdate() == 1;
+            }
+        });
+    }
 
     /** Insert only if UUID and case-insensitive name are free; quota is checked in the same transaction. */
     public boolean bind(Binding binding, int quota) throws SQLException {

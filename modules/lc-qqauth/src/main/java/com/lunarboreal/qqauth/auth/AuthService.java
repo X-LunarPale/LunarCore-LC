@@ -10,6 +10,9 @@ import java.util.*;
  * Cache/session queries are safe from event threads. Never serialize PreparedPassword or repository internals.
  */
 public final class AuthService {
+    @FunctionalInterface public interface IdentityMigration {
+        boolean migrate(java.sql.Connection connection, String name, UUID previous, UUID next) throws SQLException;
+    }
     public enum Result { SUCCESS, NOT_REGISTERED, ALREADY_REGISTERED, IDENTITY_MISMATCH, LOCKED,
         INVALID_PASSWORD, WRONG_PASSWORD, THROTTLED, IP_LIMIT, STALE_GENERATION, NOT_AUTHENTICATED }
     public record AccountView(UUID uuid, String name, String generation, boolean locked, long createdAt) { }
@@ -21,6 +24,7 @@ public final class AuthService {
     }
     private final SqlAccountRepository repository;
     private final AuthPolicy policy;
+    private final boolean nameBasedIdentity;
     private final Clock clock;
     private final Map<UUID, Session> online = new HashMap<>();
     private final Map<UUID, Session> remembered = new HashMap<>();
@@ -28,9 +32,16 @@ public final class AuthService {
     private record Session(String key, String generation, String ip, long expires) { }
     private record Attempt(int count, long expires) { }
 
-    public AuthService(SqlAccountRepository repository, AuthPolicy policy) { this(repository, policy, Clock.systemUTC()); }
+    public AuthService(SqlAccountRepository repository, AuthPolicy policy) { this(repository, policy, false, Clock.systemUTC()); }
+    public AuthService(SqlAccountRepository repository, AuthPolicy policy, boolean nameBasedIdentity) {
+        this(repository, policy, nameBasedIdentity, Clock.systemUTC());
+    }
     public AuthService(SqlAccountRepository repository, AuthPolicy policy, Clock clock) {
+        this(repository, policy, false, clock);
+    }
+    public AuthService(SqlAccountRepository repository, AuthPolicy policy, boolean nameBasedIdentity, Clock clock) {
         this.repository = Objects.requireNonNull(repository); this.policy = Objects.requireNonNull(policy);
+        this.nameBasedIdentity = nameBasedIdentity;
         this.clock = Objects.requireNonNull(clock);
     }
     public static String nameKey(String name) {
@@ -103,15 +114,32 @@ public final class AuthService {
         if (registered != null && !authenticate(registered, ip)) return Result.STALE_GENERATION;
         return result;
     }
-    public Result login(UUID uuid, String name, String ip, String password) {
+    public Result login(UUID uuid, String name, String ip, String password) throws SQLException {
+        return login(uuid, name, ip, password, (connection, playerName, previous, next) -> true);
+    }
+    public Result login(UUID uuid, String name, String ip, String password, IdentityMigration migration) throws SQLException {
         Objects.requireNonNull(uuid); String key = nameKey(name); ip = ip(ip);
         if (!admit(key, ip)) return Result.THROTTLED;
         SqlAccountRepository.Row row = repository.row(key);
-        Result check = identity(row, uuid);
+        Result check = loginIdentity(row, uuid);
         if (check != Result.SUCCESS) return check;
         if (!verify(password, row.hash)) return Result.WRONG_PASSWORD;
+        if (!row.uuid.equals(uuid)) {
+            UUID previous = row.uuid;
+            synchronized (repository) {
+                Result migrated = repository.migrateUuid(key, previous, uuid, row.generation, migration);
+                if (migrated != Result.SUCCESS) return migrated;
+                row = repository.row(key);
+            }
+            logout(previous);
+        }
         // Recheck under the session lock; concurrent reset invalidates this generation.
         return authenticate(row, ip) ? Result.SUCCESS : Result.STALE_GENERATION;
+    }
+    private Result loginIdentity(SqlAccountRepository.Row row, UUID uuid) {
+        if (row == null) return Result.NOT_REGISTERED;
+        if (!row.uuid.equals(uuid) && !nameBasedIdentity) return Result.IDENTITY_MISMATCH;
+        return row.locked ? Result.LOCKED : Result.SUCCESS;
     }
     private Result identity(SqlAccountRepository.Row row, UUID uuid) {
         if (row == null) return Result.NOT_REGISTERED;

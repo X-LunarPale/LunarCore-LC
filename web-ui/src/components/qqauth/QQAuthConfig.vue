@@ -47,6 +47,7 @@ const labels = {
   'binding.max-pending-codes': '待处理验证码上限', 'binding.max-per-qq': '每 QQ 默认绑定上限',
   'binding.required': '强制 QQ 验证', 'binding.reminder.enabled': '未绑定每日提醒',
   'binding.reminder.timezone': '每日提醒时区',
+  'auth.identity-mode': '账号身份模式',
   'auth.min-password-length': '最短密码长度', 'auth.max-password-length': '最长密码长度',
   'auth.bcrypt-cost': '密码哈希强度', 'auth.max-attempts': '登录尝试上限',
   'auth.attempt-window-seconds': '登录限流窗口（秒）', 'auth.max-attempt-entries': '限流记录上限',
@@ -54,6 +55,7 @@ const labels = {
   'auth.sessions.ttl-seconds': '免密会话有效期（秒）', 'auth.sessions.max-sessions': '会话数量上限',
   'auth.restrictions.allow-commands': '未登录时允许的额外命令'
 }
+const identityModes = { auto: '自动（跟随服务器）', uuid: '严格 UUID', name: '玩家名与密码' }
 const groups = [
   { title: 'QQ 桥接', prefix: 'integration.' }, { title: '验证码与绑定', prefix: 'binding.' },
   { title: '密码与会话', prefix: 'auth.' }
@@ -69,6 +71,8 @@ function visibleFields(prefix) {
   return Object.keys(values.value).filter(key => key.startsWith(prefix) && labels[key] && activeField(key))
 }
 const validationError = computed(() => {
+  if (Object.hasOwn(values.value, 'auth.identity-mode') && !Object.hasOwn(identityModes, values.value['auth.identity-mode']))
+    return t('账号身份模式无效')
   for (const [key, [min, max]] of Object.entries(bounds)) {
     if (!activeField(key) || !Object.hasOwn(values.value, key)) continue
     const value = values.value[key]
@@ -183,6 +187,10 @@ onBeforeRouteUpdate(confirmDiscard)
         <el-form label-position="top" class="field-grid">
           <el-form-item v-for="key in visibleFields(group.prefix)" :key="key" :for="`qq-${key}`" :label="t(labels[key])">
             <el-select v-if="key === 'integration.mode'" :id="`qq-${key}`" v-model="values[key]"><el-option v-for="mode in ['astrbot', 'onebot', 'disabled']" :key="mode" :label="mode" :value="mode" /></el-select>
+            <template v-else-if="key === 'auth.identity-mode'">
+              <el-select :id="`qq-${key}`" v-model="values[key]"><el-option v-for="(label, mode) in identityModes" :key="mode" :label="t(label)" :value="mode" /></el-select>
+              <p class="field-help">{{ t('身份切换需验证原密码，仅更新认证与 QQ 绑定，不迁移背包等游戏数据。') }}</p>
+            </template>
             <el-switch v-else-if="typeof values[key] === 'boolean'" :id="`qq-${key}`" v-model="values[key]" />
             <el-input-number v-else-if="Object.hasOwn(bounds, key)" :id="`qq-${key}`" v-model="values[key]" :min="numericBounds(key)[0]" :max="numericBounds(key)[1]" :precision="0" controls-position="right" />
             <el-select v-else-if="Array.isArray(values[key])" :id="`qq-${key}`" v-model="values[key]" multiple filterable allow-create default-first-option />
@@ -228,6 +236,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}h2
 .config-section{padding:22px 0;border-bottom:1px solid var(--el-border-color-light)}
 .bridge-note{margin:0 0 18px}
 .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px}.field-grid :deep(.el-select),.field-grid :deep(.el-input-number){width:100%}
+.field-help{margin:6px 0 0;font-size:12px;line-height:1.6;color:var(--el-text-color-secondary);overflow-wrap:anywhere}
 .quota-row{display:flex;gap:10px;max-width:580px;margin-bottom:10px}.quota-row>.el-input{min-width:0}
 .message-editor{display:grid;grid-template-columns:minmax(180px,300px) minmax(0,1fr);gap:20px}.message-editor aside{display:flex;flex-direction:column;gap:10px}
 .message-body{min-width:0}.message-body pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:var(--el-fill-color-light);font:inherit}
