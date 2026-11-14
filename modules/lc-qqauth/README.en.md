@@ -64,6 +64,8 @@ Choose **Account identity mode** in the QQAuth panel, or set `auth.identity-mode
 
 After switching to offline mode or changing name capitalization, sign in with the existing password to update the authentication identity. A matching name alone never grants access. This updates only the QQAuth account and QQ binding; inventories, locations, permissions and other plugins' player data are not moved.
 
+If a player has a QQ binding but has not registered a password, the connection screen shows a recovery code. The original QQ account must send `/验证 code` in the original group before the player can reconnect and register. Recovery preserves the QQ account, group and binding time without using another binding slot. It also supports accounts whose UUID has already changed while their QQ binding still uses the old UUID.
+
 ## Development
 
 Run `:lc-qqauth:test` for Java tests and `python -B -m unittest discover -s modules/lc-qqauth/bridge -p test_bridge.py` for bridge tests. Real QQ integration and MySQL need checks in the target environment.

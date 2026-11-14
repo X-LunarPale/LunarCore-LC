@@ -26,7 +26,21 @@ final class AuthListener implements Listener {
             var existingName = module.bindings.findByName(e.getName());
             if (existingName.isPresent() && !existingName.get().uuid().equals(e.getUniqueId())) {
                 var account = module.auth.account(e.getName());
-                if (!module.nameBasedIdentity() || account.isEmpty() || !account.get().uuid().equals(existingName.get().uuid())) {
+                if (!module.nameBasedIdentity()) {
+                    e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.identity-mismatch")); return;
+                }
+                if (account.isPresent() && account.get().locked()) {
+                    e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.locked")); return;
+                }
+                if (account.isEmpty() || account.get().uuid().equals(e.getUniqueId())) {
+                    var issued = module.bindings.issueIdentityRecovery(e.getUniqueId(), e.getName());
+                    e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.identity-recovery",
+                            "code", issued.code(), "player", e.getName(),
+                            "group", module.config().getString("integration.group-id", ""),
+                            "ttl", module.bindingSettings().bindTtl().toSeconds()));
+                    return;
+                }
+                if (!account.get().uuid().equals(existingName.get().uuid())) {
                     e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.identity-mismatch")); return;
                 }
             }

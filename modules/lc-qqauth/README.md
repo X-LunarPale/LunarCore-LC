@@ -27,7 +27,7 @@ messages:
 
 | 配置项 | 可用占位符 |
 |---|---|
-| login.bind-required | {player}、{code}、{group}、{ttl}（秒） |
+| login.bind-required / identity-recovery | {player}、{code}、{group}、{ttl}（秒） |
 | join.instructions / session-restored、reminder.login / register | {player} |
 | command.unbind-code / reset-code | {code} |
 | command.failed、group.failed、web.error.operation-failed | {status}（取自 status.auth / binding 配置） |
@@ -74,6 +74,8 @@ binding:
 未绑定玩家不能自助改密、恢复密码、注销或解绑；管理员的账号救援操作保留。提醒文字在 `messages` 中自定义，面板可预览。
 
 ## 正版与离线身份
+
+如果只有 QQ 绑定、尚未注册密码，切换认证方式后会显示恢复码。使用原绑定 QQ 在原群发送 `/验证 <码>`，再重新连接并注册密码。恢复会保留原 QQ、群和绑定时间，不占用新的绑定名额。密码账号已更新、QQ 绑定仍旧的情况也可通过此流程恢复。
 
 在 QQAuth 配置的“账号身份模式”中选择，也可修改 `auth.identity-mode`，保存后点击“应用配置”：
 

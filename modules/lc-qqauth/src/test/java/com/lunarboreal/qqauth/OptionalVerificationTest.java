@@ -286,10 +286,69 @@ class OptionalVerificationTest {
             var prelogin = prelogin("Player");
             listener.prelogin(prelogin);
             assertEquals(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, prelogin.getLoginResult());
+            String message = PlainTextComponentSerializer.plainText().serialize(prelogin.kickMessage());
+            assertTrue(message.matches("(?s).*/验证 [0-9]{6,8}.*"), message);
+            assertTrue(message.contains("QQ"), message);
         }
         assertTrue(module.auth.account("Player").isEmpty());
         assertEquals(binding, module.bindings.find(previous).orElseThrow());
         assertTrue(module.bindings.find(uuid).isEmpty());
+    }
+
+    @Test void originalQqCanRecoverABindingAndThenRegisterAfterReconnect() throws Exception {
+        useNameBasedIdentity();
+        module.config().set("binding.required", true);
+        module.config().set("integration.group-id", "group");
+        UUID previous = UUID.randomUUID();
+        var binding = new Binding(previous, "Player", "qq", "group", 1234);
+        module.bindings.repository().bind(binding, 1);
+        module.bound.add(previous);
+        enableImmediateTasks();
+
+        var before = prelogin("Player");
+        listener.prelogin(before);
+        assertEquals(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, before.getLoginResult());
+        String message = PlainTextComponentSerializer.plainText().serialize(before.kickMessage());
+        var code = java.util.regex.Pattern.compile("/验证 ([0-9]{6,8})").matcher(message);
+        assertTrue(code.find(), message);
+        assertTrue(module.auth.account("Player").isEmpty());
+        assertEquals(binding, module.bindings.find(previous).orElseThrow());
+
+        var groupMessage = QQAuthModule.class.getDeclaredMethod("groupMessage", String.class, String.class, String.class);
+        groupMessage.setAccessible(true);
+        groupMessage.invoke(module, "group", "qq", "/验证 " + code.group(1));
+
+        assertEquals(new Binding(uuid, "Player", "qq", "group", 1234), module.bindings.find(uuid).orElseThrow());
+        assertTrue(module.bindings.find(previous).isEmpty());
+        assertEquals(Set.of(uuid), module.bound);
+        assertTrue(module.auth.account("Player").isEmpty());
+        var after = prelogin("Player");
+        listener.prelogin(after);
+        assertEquals(AsyncPlayerPreLoginEvent.Result.ALLOWED, after.getLoginResult());
+        var login = login();
+        listener.login(login);
+        assertEquals(PlayerLoginEvent.Result.ALLOWED, login.getResult());
+        listener.join(new PlayerJoinEvent(player, Component.empty()));
+        assertFalse(module.authenticated(player));
+        AuthCommands.execute(module, player, "register", new String[]{"valid-password", "valid-password"});
+        assertTrue(module.authenticated(player));
+        assertEquals(uuid, module.auth.account("Player").orElseThrow().uuid());
+    }
+
+    @Test void uuidIdentityDoesNotIssueRecoveryCodesForAnUnregisteredOldBinding() throws Exception {
+        UUID previous = UUID.randomUUID();
+        var binding = new Binding(previous, "Player", "qq", "group", 1);
+        module.bindings.repository().bind(binding, 1);
+        module.bound.add(previous);
+
+        var prelogin = prelogin("Player");
+        listener.prelogin(prelogin);
+        assertEquals(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, prelogin.getLoginResult());
+        String message = PlainTextComponentSerializer.plainText().serialize(prelogin.kickMessage());
+        assertFalse(message.contains("/验证"), message);
+        assertEquals(binding, module.bindings.find(previous).orElseThrow());
+        assertTrue(module.bindings.find(uuid).isEmpty());
+        assertTrue(module.auth.account("Player").isEmpty());
     }
 
     @Test void unboundAccountCannotMigrateToAnotherPlayersBoundUuid() throws Exception {

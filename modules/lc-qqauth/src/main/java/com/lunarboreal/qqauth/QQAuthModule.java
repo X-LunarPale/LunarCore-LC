@@ -235,6 +235,11 @@ public final class QQAuthModule extends LcModule {
             };
             if (result.status() == BindingService.Status.SUCCESS) {
                 if (command.equals("验证")) {
+                    if (result.previousUuid() != null) {
+                        bound.remove(result.previousUuid());
+                        granted.remove(result.previousUuid());
+                        kick(result.previousUuid(), msg("kick.qq-completed"));
+                    }
                     bound.add(result.binding().uuid());
                     sync(() -> {
                         Player player = Bukkit.getPlayer(result.binding().uuid());
@@ -244,7 +249,7 @@ public final class QQAuthModule extends LcModule {
                 if (command.equals("解绑")) bound.remove(result.binding().uuid());
                 if (!command.equals("验证")) kick(result.binding().uuid(), msg("kick.qq-completed"));
                 audit("QQ:" + sender, "qq-" + command, result.binding().playerName());
-                return GroupResult.reply(msg(command.equals("验证") && !bindingRequired()
+                return GroupResult.reply(msg(command.equals("验证") && !bindingRequired() && result.previousUuid() == null
                         ? "group.bind-success" : "group.success", "command", command, "player", result.binding().playerName()));
             }
             return GroupResult.reply(msg("group.failed", "status", bindingStatus(result.status())));

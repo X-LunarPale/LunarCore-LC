@@ -63,6 +63,52 @@ class BindingServiceTest {
         assertEquals(BindingService.Status.IDENTITY_CONFLICT,service.redeemBind(b.code(),"g","other").status());
         assertEquals("Alice",repo.findByName("ALICE").orElseThrow().playerName());
     }
+    @Test void identityRecoveryRequiresTheOriginalQqAndGroupAndPreservesBindingDetails() throws Exception {
+        UUID previous=UUID.randomUUID(), next=UUID.randomUUID();
+        var original=new Binding(previous,"Alice","original-qq","original-group",1234);
+        assertTrue(repo.bind(original,1));
+        var code=service.issueIdentityRecovery(next,"Alice");
+        assertEquals(BindingService.Status.QQ_MISMATCH,
+                service.redeemBind(code.code(),"original-group","other-qq").status());
+        assertEquals(BindingService.Status.QQ_MISMATCH,
+                service.redeemBind(code.code(),"other-group","original-qq").status());
+        assertEquals(original,repo.find(previous).orElseThrow());
+        assertTrue(repo.find(next).isEmpty());
+
+        var result=service.redeemBind(code.code(),"original-group","original-qq");
+        assertEquals(BindingService.Status.SUCCESS,result.status());
+        assertEquals(previous,result.previousUuid());
+        var migrated=new Binding(next,"Alice","original-qq","original-group",1234);
+        assertEquals(migrated,result.binding());
+        assertEquals(migrated,repo.find(next).orElseThrow());
+        assertTrue(repo.find(previous).isEmpty());
+        assertEquals(1,repo.countForQq("original-qq"));
+        assertEquals(BindingService.Status.INVALID_CODE,
+                service.redeemBind(code.code(),"original-group","original-qq").status());
+    }
+    @Test void identityRecoveryCannotOverwriteATargetBoundAfterTheCodeWasIssued() throws Exception {
+        UUID previous=UUID.randomUUID(), next=UUID.randomUUID();
+        var original=new Binding(previous,"Alice","qq","g",1);
+        assertTrue(repo.bind(original,1));
+        var code=service.issueIdentityRecovery(next,"Alice");
+        var occupied=new Binding(next,"Bob","other-qq","g",2);
+        assertTrue(repo.bind(occupied,1));
+
+        assertEquals(BindingService.Status.IDENTITY_CONFLICT,service.redeemBind(code.code(),"g","qq").status());
+        assertEquals(original,repo.find(previous).orElseThrow());
+        assertEquals(occupied,repo.find(next).orElseThrow());
+    }
+    @Test void expiredIdentityRecoveryCannotMoveTheBinding() throws Exception {
+        UUID previous=UUID.randomUUID(), next=UUID.randomUUID();
+        var original=new Binding(previous,"Alice","qq","g",1);
+        assertTrue(repo.bind(original,1));
+        var code=service.issueIdentityRecovery(next,"Alice");
+        clock.time=code.expiresAt();
+
+        assertEquals(BindingService.Status.INVALID_CODE,service.redeemBind(code.code(),"g","qq").status());
+        assertEquals(original,repo.find(previous).orElseThrow());
+        assertTrue(repo.find(next).isEmpty());
+    }
     @Test void importIsAdditiveAndRollsBackEveryRowOnConflict() throws Exception {
         UUID original=UUID.randomUUID(); repo.bind(new Binding(original,"Alice","qq","g",1),1);
         var b=new Binding(UUID.randomUUID(),"Bob","b","g",1);
