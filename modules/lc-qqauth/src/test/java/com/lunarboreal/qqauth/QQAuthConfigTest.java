@@ -182,6 +182,47 @@ class QQAuthConfigTest {
         assertEquals(6, ((Map<?, ?>) saved.get("values")).get("auth.min-password-length"));
     }
 
+    @Test void existingConfigurationUsesAutoIdentityUntilSavedModeIsReloaded(@TempDir Path directory) throws Exception {
+        QQAuthModule module = configuredModule(directory);
+        module.config().set("auth.identity-mode", null);
+        module.saveConfig();
+        QQAuthConfig store = new QQAuthConfig(module);
+        var initial = store.read();
+        assertEquals("auto", ((Map<?, ?>) initial.get("values")).get("auth.identity-mode"));
+        assertEquals(false, initial.get("requiresReload"));
+
+        var saved = store.save(browserBody(initial, Map.of("auth.identity-mode", "name")));
+        assertEquals("name", ((Map<?, ?>) saved.get("values")).get("auth.identity-mode"));
+        assertEquals("auto", module.config().getString("auth.identity-mode", "auto"));
+        assertEquals(true, saved.get("requiresReload"));
+        assertEquals("name", YamlConfiguration.loadConfiguration(directory.resolve("config.yml").toFile())
+                .getString("auth.identity-mode"));
+        module.config().set("auth.identity-mode", "name");
+        assertEquals(false, store.read().get("requiresReload"));
+    }
+
+    @Test void identityModesRoundTripThroughBrowserSave(@TempDir Path directory) throws Exception {
+        QQAuthModule module = configuredModule(directory);
+        QQAuthConfig store = new QQAuthConfig(module);
+        for (String mode : List.of("uuid", "name", "auto")) {
+            var saved = store.save(browserBody(store.read(), Map.of("auth.identity-mode", mode)));
+            assertEquals(mode, ((Map<?, ?>) saved.get("values")).get("auth.identity-mode"));
+            assertEquals(!mode.equals("auto"), saved.get("requiresReload"));
+        }
+    }
+
+    @Test void invalidIdentityModesDoNotChangeSavedConfiguration(@TempDir Path directory) throws Exception {
+        QQAuthModule module = configuredModule(directory);
+        QQAuthConfig store = new QQAuthConfig(module);
+        var initial = store.read();
+        for (Object mode : List.of("", "offline", "AUTO", true, 1, List.of("auto"))) {
+            var failure = assertThrows(HttpException.class,
+                    () -> store.save(browserBody(initial, Map.of("auth.identity-mode", mode))));
+            assertTrue(failure.getMessage().contains("账号身份模式"), failure.getMessage());
+            assertEquals(initial.get("revision"), store.read().get("revision"));
+        }
+    }
+
     @Test void savesMessagesImmediatelyWhileAuthSettingsWaitForReload(@TempDir Path directory) throws Exception {
         QQAuthModule module = new QQAuthModule();
         module.init(null, directory.toFile(), getClass().getClassLoader(), Logger.getAnonymousLogger());

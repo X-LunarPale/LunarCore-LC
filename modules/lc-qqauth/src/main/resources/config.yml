@@ -24,6 +24,7 @@ binding:
   per-qq-limits: {}
 auth:
   enabled: true
+  identity-mode: auto # auto follows online-mode; uuid always requires a UUID match; name permits password-verified UUID migration.
   # New and existing players must register/login in-game; no AuthMe password hashes are imported.
   min-password-length: 10
   max-password-length: 64

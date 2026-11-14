@@ -47,6 +47,24 @@ public final class BindingRepository {
     public void updateName(UUID uuid, String name) throws SQLException {
         database.update("UPDATE " + table + " SET player_name=?,name_key=? WHERE uuid=?", name, nameKey(name), uuid.toString());
     }
+    boolean migrateUuid(java.sql.Connection c, String name, UUID oldUuid, UUID newUuid) throws SQLException {
+        lock(c);
+        try (var ps = c.prepareStatement("SELECT 1 FROM " + table + " WHERE uuid=?")) {
+            ps.setString(1, newUuid.toString());
+            try (var rs = ps.executeQuery()) { if (rs.next()) return false; }
+        }
+        try (var ps = c.prepareStatement("SELECT uuid FROM " + table + " WHERE LOWER(name_key)=LOWER(?)")) {
+            ps.setString(1, name);
+            try (var rs = ps.executeQuery()) {
+                if (!rs.next()) return true;
+                if (!oldUuid.toString().equals(rs.getString(1))) return false;
+            }
+        }
+        try (var ps = c.prepareStatement("UPDATE " + table + " SET uuid=?,player_name=? WHERE uuid=? AND LOWER(name_key)=LOWER(?)")) {
+            ps.setString(1, newUuid.toString()); ps.setString(2, name); ps.setString(3, oldUuid.toString()); ps.setString(4, name);
+            return ps.executeUpdate() == 1;
+        }
+    }
 
     /** Insert only if UUID and case-insensitive name are free; quota is checked in the same transaction. */
     public boolean bind(Binding binding, int quota) throws SQLException {

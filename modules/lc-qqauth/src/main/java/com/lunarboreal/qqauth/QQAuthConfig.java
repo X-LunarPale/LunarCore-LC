@@ -213,6 +213,7 @@ final class QQAuthConfig {
 
     private static String label(String key) {
         return switch (key) {
+            case "auth.identity-mode" -> "账号身份模式";
             case "auth.min-password-length" -> "最短密码长度";
             case "auth.max-password-length" -> "最长密码长度";
             case "auth.bcrypt-cost" -> "密码哈希强度";
@@ -239,6 +240,8 @@ final class QQAuthConfig {
     }
 
     private static void validate(YamlConfiguration c) {
+        if (!Set.of("auto", "uuid", "name").contains(c.getString("auth.identity-mode", "auto")))
+            throw HttpException.badRequest("账号身份模式无效");
         String mode = c.getString("integration.mode", "");
         if (!Set.of("astrbot", "onebot", "disabled").contains(mode))
             throw HttpException.badRequest("桥接模式无效");

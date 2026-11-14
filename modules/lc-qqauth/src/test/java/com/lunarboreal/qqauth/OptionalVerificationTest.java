@@ -160,6 +160,154 @@ class OptionalVerificationTest {
         assertTrue(replies.stream().anyMatch(text -> text.contains("会话已恢复")));
     }
 
+    @Test void nameIdentityAllowsBoundAccountToEnterWithoutRestoringThePreviousUuidSession() throws Exception {
+        useNameBasedIdentity();
+        module.config().set("binding.required", true);
+        UUID previous = registerBoundAccount();
+        module.auth.disconnect(previous);
+        var account = module.auth.account("Player").orElseThrow();
+        var binding = module.bindings.find(previous).orElseThrow();
+
+        var prelogin = prelogin("Player");
+        listener.prelogin(prelogin);
+        assertEquals(AsyncPlayerPreLoginEvent.Result.ALLOWED, prelogin.getLoginResult());
+        var login = login();
+        listener.login(login);
+        assertEquals(PlayerLoginEvent.Result.ALLOWED, login.getResult());
+        listener.join(new PlayerJoinEvent(player, Component.empty()));
+
+        assertFalse(module.authenticated(player));
+        assertFalse(module.auth.isAuthenticated(uuid));
+        assertFalse(module.granted.containsKey(uuid));
+        assertFalse(module.bound.contains(uuid));
+        assertEquals(account, module.auth.account("Player").orElseThrow());
+        assertEquals(binding, module.bindings.find(previous).orElseThrow());
+        assertFalse(replies.stream().anyMatch(text -> text.contains("会话已恢复")));
+        var block = new BlockBreakEvent(proxy(Block.class, (method, args) -> null), player);
+        listener.breakBlock(block);
+        assertTrue(block.isCancelled());
+    }
+
+    @Test void wrongPasswordDoesNotMoveTheAccountOrQqBindingToTheNewUuid() throws Exception {
+        useNameBasedIdentity();
+        module.config().set("binding.required", true);
+        UUID previous = registerBoundAccount();
+        var account = module.auth.account("Player").orElseThrow();
+        var binding = module.bindings.find(previous).orElseThrow();
+        enableImmediateTasks();
+        listener.join(new PlayerJoinEvent(player, Component.empty()));
+
+        AuthCommands.execute(module, player, "login", new String[]{"wrong-password"});
+
+        assertEquals(account, module.auth.account("Player").orElseThrow());
+        assertEquals(binding, module.bindings.find(previous).orElseThrow());
+        assertTrue(module.auth.account(uuid).isEmpty());
+        assertTrue(module.bindings.find(uuid).isEmpty());
+        assertEquals(Set.of(previous), module.bound);
+        assertFalse(module.auth.isAuthenticated(uuid));
+        assertFalse(module.authenticated(player));
+        assertFalse(module.busy.contains(uuid));
+    }
+
+    @Test void passwordLoginMovesTheAccountAndBindingAndRevokesPreviousUuidCredentials() throws Exception {
+        useNameBasedIdentity();
+        module.config().set("binding.required", true);
+        UUID previous = registerBoundAccount();
+        var account = module.auth.account("Player").orElseThrow();
+        var binding = module.bindings.find(previous).orElseThrow();
+        var oldUnbind = module.bindings.issueUnbind(previous);
+        var oldReset = module.bindings.issueReset(previous,
+                module.auth.preparePassword("unused-password"), account.generation());
+        enableImmediateTasks();
+        listener.join(new PlayerJoinEvent(player, Component.empty()));
+
+        AuthCommands.execute(module, player, "login", new String[]{"valid-password"});
+
+        var migrated = module.auth.account("Player").orElseThrow();
+        assertEquals(uuid, migrated.uuid());
+        assertEquals(account.name(), migrated.name());
+        assertEquals(account.createdAt(), migrated.createdAt());
+        assertNotEquals(account.generation(), migrated.generation());
+        assertEquals(new Binding(uuid, binding.playerName(), binding.qq(), binding.group(), binding.boundAt()),
+                module.bindings.find(uuid).orElseThrow());
+        assertTrue(module.auth.account(previous).isEmpty());
+        assertTrue(module.bindings.find(previous).isEmpty());
+        assertEquals(Set.of(uuid), module.bound);
+        assertTrue(module.authenticated(player));
+        assertFalse(module.auth.isAuthenticated(previous));
+        assertNotEquals(AuthService.Result.SUCCESS,
+                module.auth.resumeSession(previous, "Player", module.ip(player)));
+        assertEquals(BindingService.Status.INVALID_CODE,
+                module.bindings.redeemUnbind(oldUnbind.code(), "group", "qq").status());
+        assertEquals(BindingService.Status.INVALID_CODE,
+                module.bindings.redeemReset(oldReset.code(), "group", "qq").status());
+
+        AuthCommands.execute(module, player, "logout", new String[0]);
+        AuthCommands.execute(module, player, "login", new String[]{"valid-password"});
+        assertTrue(module.authenticated(player));
+        AuthCommands.execute(module, player, "changepassword", new String[]{"valid-password", "replacement-password"});
+        assertFalse(module.authenticated(player));
+        AuthCommands.execute(module, player, "login", new String[]{"replacement-password"});
+        assertTrue(module.authenticated(player));
+        AuthCommands.execute(module, player, "unbind", new String[0]);
+        var code = java.util.regex.Pattern.compile("/解绑 ([0-9]{6,8})").matcher(replies.getLast());
+        assertTrue(code.find(), replies.getLast());
+        assertEquals(BindingService.Status.SUCCESS,
+                module.bindings.redeemUnbind(code.group(1), "group", "qq").status());
+        assertTrue(module.bindings.find(uuid).isEmpty());
+    }
+
+    @Test void uuidIdentityStillRejectsANameOwnedByAnotherUuid() throws Exception {
+        module.config().set("binding.required", true);
+        UUID previous = registerBoundAccount();
+        var account = module.auth.account("Player").orElseThrow();
+        var binding = module.bindings.find(previous).orElseThrow();
+
+        var prelogin = prelogin("Player");
+        listener.prelogin(prelogin);
+        assertEquals(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, prelogin.getLoginResult());
+        var login = login();
+        listener.login(login);
+        assertEquals(PlayerLoginEvent.Result.KICK_OTHER, login.getResult());
+        assertEquals(account, module.auth.account("Player").orElseThrow());
+        assertEquals(binding, module.bindings.find(previous).orElseThrow());
+        assertFalse(module.authenticated(player));
+    }
+
+    @Test void nameIdentityCannotTakeOverABindingWithoutAnExistingPassword() throws Exception {
+        useNameBasedIdentity();
+        UUID previous = UUID.randomUUID();
+        var binding = new Binding(previous, "Player", "qq", "group", 1);
+        module.bindings.repository().bind(binding, 1);
+        module.bound.add(previous);
+
+        for (boolean required : List.of(false, true)) {
+            module.config().set("binding.required", required);
+            var prelogin = prelogin("Player");
+            listener.prelogin(prelogin);
+            assertEquals(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, prelogin.getLoginResult());
+        }
+        assertTrue(module.auth.account("Player").isEmpty());
+        assertEquals(binding, module.bindings.find(previous).orElseThrow());
+        assertTrue(module.bindings.find(uuid).isEmpty());
+    }
+
+    @Test void unboundAccountCannotMigrateToAnotherPlayersBoundUuid() throws Exception {
+        useNameBasedIdentity();
+        UUID previous = UUID.randomUUID();
+        assertEquals(AuthService.Result.SUCCESS,
+                module.auth.register(previous, "Player", module.ip(player), "valid-password"));
+        var account = module.auth.account("Player").orElseThrow();
+        var binding = new Binding(uuid, "OtherPlayer", "qq", "group", 1);
+        module.bindings.repository().bind(binding, 1);
+
+        assertEquals(AuthService.Result.IDENTITY_MISMATCH,
+                module.bindings.login(module.auth, uuid, "Player", module.ip(player), "valid-password"));
+        assertEquals(account, module.auth.account("Player").orElseThrow());
+        assertEquals(binding, module.bindings.find(uuid).orElseThrow());
+        assertFalse(module.auth.isAuthenticated(uuid));
+    }
+
     @Test void unboundPlayersCannotChangeResetDeleteOrUnbindTheirAccount() throws Exception {
         authenticate();
         for (String command : List.of("changepassword", "changepass", "qqauthreset", "unregister", "unbind")) {
@@ -287,6 +435,22 @@ class OptionalVerificationTest {
 
     private PlayerLoginEvent login() {
         return new PlayerLoginEvent(player, "localhost", InetAddress.getLoopbackAddress());
+    }
+
+    private void useNameBasedIdentity() throws Exception {
+        setField(QQAuthModule.class, module, "nameBasedIdentity", true);
+        SqlAccountRepository accounts = new SqlAccountRepository(database);
+        accounts.initialize();
+        module.auth = new AuthService(accounts, module.policy(), true);
+    }
+
+    private UUID registerBoundAccount() throws Exception {
+        UUID previous = UUID.randomUUID();
+        assertEquals(AuthService.Result.SUCCESS,
+                module.auth.register(previous, "Player", module.ip(player), "valid-password"));
+        module.bindings.repository().bind(new Binding(previous, "Player", "qq", "group", 1), 1);
+        module.bound.add(previous);
+        return previous;
     }
 
     private AsyncPlayerPreLoginEvent prelogin(String name) {

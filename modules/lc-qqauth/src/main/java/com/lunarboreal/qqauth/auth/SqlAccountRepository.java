@@ -103,6 +103,22 @@ public final class SqlAccountRepository {
                     ? AuthService.Result.SUCCESS : AuthService.Result.STALE_GENERATION;
         });
     }
+    AuthService.Result migrateUuid(String key, UUID oldUuid, UUID newUuid, String generation,
+                                  AuthService.IdentityMigration migration) throws SQLException {
+        return mutate((c, rows) -> {
+            Row current = rows.get(key);
+            if (current == null) return AuthService.Result.NOT_REGISTERED;
+            if (!current.uuid.equals(oldUuid) || !current.generation.equals(generation)) return AuthService.Result.STALE_GENERATION;
+            if (current.locked) return AuthService.Result.LOCKED;
+            if (rows.values().stream().anyMatch(row -> !row.key.equals(key) && row.uuid.equals(newUuid)))
+                return AuthService.Result.IDENTITY_MISMATCH;
+            if (!migration.migrate(c, current.name, oldUuid, newUuid)) return AuthService.Result.IDENTITY_MISMATCH;
+            if (execute(c, "UPDATE " + table + " SET player_uuid=?,generation=? WHERE name_key=? AND player_uuid=? AND generation=?",
+                    newUuid.toString(), UUID.randomUUID().toString(), key, oldUuid.toString(), generation) != 1)
+                throw new SQLException("Account identity changed during migration");
+            return AuthService.Result.SUCCESS;
+        });
+    }
     AuthService.Result replacePassword(String key, String generation, String hash) throws SQLException {
         return mutate((c, rows) -> {
             Row row = rows.get(key);

@@ -57,7 +57,14 @@ final class AuthCommands {
                 AuthService.Result result=null;
                 switch(label) {
                     case "register","reg" -> result=m.auth.register(id,name,ip,args[0]);
-                    case "login","l" -> result=m.auth.login(id,name,ip,args[0]);
+                    case "login","l" -> {
+                        var previous = m.auth.account(name).orElse(null);
+                        result=m.bindings.login(m.auth,id,name,ip,args[0]);
+                        if (result == AuthService.Result.SUCCESS) {
+                            if (previous != null && !previous.uuid().equals(id)) m.bound.remove(previous.uuid());
+                            if (m.bindings.find(id).isPresent()) m.bound.add(id);
+                        }
+                    }
                     case "changepassword","changepass" -> {
                         result=m.auth.changePassword(id,name,ip,args[0],args[1]);
                         if(result==AuthService.Result.SUCCESS) m.bindings.cancel(id);
@@ -96,6 +103,7 @@ final class AuthCommands {
                 respond(m,id,reply);
             } catch(Exception ex) {
                 m.logger().warning("账号操作未完成："+ex.getClass().getSimpleName());
+                if (Set.of("login", "l").contains(label) && m.auth != null) m.auth.logout(id);
                 respond(m,id,m.msg("command.operation-error"));
             } finally { Arrays.fill(args, ""); m.sync(() -> m.busy.remove(id)); }
         });

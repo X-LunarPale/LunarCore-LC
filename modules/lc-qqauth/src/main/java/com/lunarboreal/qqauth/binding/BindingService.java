@@ -129,6 +129,16 @@ public final class BindingService {
     public synchronized java.util.Optional<Binding> find(UUID uuid) throws SQLException { return repository.find(uuid); }
     public synchronized java.util.Optional<Binding> findByName(String name) throws SQLException { return repository.findByName(name); }
     public synchronized void updateName(UUID uuid, String name) throws SQLException { validateName(name); repository.updateName(uuid, name); }
+    public synchronized AuthService.Result login(AuthService auth, UUID uuid, String name, String ip, String password) throws SQLException {
+        var previous = auth.account(name).orElse(null);
+        var result = auth.login(uuid, name, ip, password,
+                (connection, playerName, oldUuid, newUuid) -> repository.migrateUuid(connection, playerName, oldUuid, newUuid));
+        if (result == AuthService.Result.SUCCESS && previous != null && !previous.uuid().equals(uuid)) {
+            cancel(previous.uuid());
+            cancel(uuid);
+        }
+        return result;
+    }
     public synchronized Result forceUnbind(String name) throws SQLException {
         Binding binding = repository.findByName(name).orElse(null);
         if (binding == null) return result(Status.NOT_BOUND);

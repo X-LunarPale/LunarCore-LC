@@ -25,15 +25,19 @@ final class AuthListener implements Listener {
         try {
             var existingName = module.bindings.findByName(e.getName());
             if (existingName.isPresent() && !existingName.get().uuid().equals(e.getUniqueId())) {
-                e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.identity-mismatch")); return;
+                var account = module.auth.account(e.getName());
+                if (!module.nameBasedIdentity() || account.isEmpty() || !account.get().uuid().equals(existingName.get().uuid())) {
+                    e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.identity-mismatch")); return;
+                }
             }
-            boolean bound = module.bindings.find(e.getUniqueId()).isPresent();
+            boolean bound = module.bindings.find(e.getUniqueId()).isPresent()
+                    || module.nameBasedIdentity() && existingName.isPresent();
             if (!bound && module.bindingRequired()) {
                 var issued = module.bindings.issueBind(e.getUniqueId(), e.getName());
                 e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.bind-required", "code", issued.code(), "player", e.getName(), "group", module.config().getString("integration.group-id", ""), "ttl", module.bindingSettings().bindTtl().toSeconds()));
             } else {
-                var oldAccount = module.auth.account(e.getUniqueId());
-                if (oldAccount.isPresent() && !oldAccount.get().name().equals(e.getName())) {
+                var oldAccount = module.nameBasedIdentity() ? module.auth.account(e.getName()) : module.auth.account(e.getUniqueId());
+                if (oldAccount.isPresent() && oldAccount.get().uuid().equals(e.getUniqueId()) && !oldAccount.get().name().equals(e.getName())) {
                     if (module.auth.renameByUuid(e.getUniqueId(), e.getName()) != com.lunarboreal.qqauth.auth.AuthService.Result.SUCCESS) {
                         e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, module.componentMsg("login.rename-conflict")); return;
                     }
@@ -48,11 +52,12 @@ final class AuthListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void login(PlayerLoginEvent e) {
         if (e.getResult() != PlayerLoginEvent.Result.ALLOWED) return;
-        if (!module.ready || !module.bindingAllowed(e.getPlayer().getUniqueId()))
+        if (!module.ready || !module.canEnter(e.getPlayer().getUniqueId(), e.getPlayer().getName()))
             e.disallow(PlayerLoginEvent.Result.KICK_OTHER, module.msg("login.changed"));
         else {
             var account = module.auth.account(e.getPlayer().getName());
-            if (account.isPresent() && (account.get().locked() || !account.get().uuid().equals(e.getPlayer().getUniqueId())))
+            if (account.isPresent() && (account.get().locked()
+                    || !module.nameBasedIdentity() && !account.get().uuid().equals(e.getPlayer().getUniqueId())))
                 e.disallow(PlayerLoginEvent.Result.KICK_OTHER, module.msg("login.locked"));
         }
     }

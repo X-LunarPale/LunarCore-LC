@@ -28,6 +28,7 @@ function snapshot(overrides = {}) {
     values: {
       'integration.mode': 'astrbot', 'integration.group-id': '12345678', 'binding.per-qq-limits': {},
       'binding.required': true, 'binding.reminder.enabled': true, 'binding.reminder.timezone': '',
+      'auth.identity-mode': 'auto',
       'auth.min-password-length': 10, 'auth.max-password-length': 64
     },
     messages: { 'login.bind-required': 'Original {code}' },
@@ -218,6 +219,41 @@ test('password limit inputs follow the paired limit without changing either sett
   assert.equal(env.state.validationError, '')
 })
 
+test('identity modes are selectable and saved for module reload', async context => {
+  const env = await environment(context)
+  assert.equal(env.state.values['auth.identity-mode'], 'auto')
+  assert.ok(env.state.visibleFields('auth.').includes('auth.identity-mode'))
+  assert.deepEqual(env.state.identityModes, {
+    auto: '自动（跟随服务器）', uuid: '严格 UUID', name: '玩家名与密码'
+  })
+  for (const mode of ['name', 'uuid', 'auto']) {
+    env.state.values['auth.identity-mode'] = mode
+    env.api.post = async (path, data) => {
+      env.calls.push(['post', path, data])
+      return snapshot({ values: data.values, requiresReload: true, revision: mode })
+    }
+    await env.state.save()
+    assert.equal(env.calls.at(-1)[2].values['auth.identity-mode'], mode)
+    assert.equal(env.state.values['auth.identity-mode'], mode)
+    assert.equal(env.state.pendingReload, true)
+    assert.equal(env.state.dirty, false)
+    assert.deepEqual(env.notices.at(-1), ['success', '已保存，重载模块后生效'])
+  }
+})
+
+test('invalid identity modes keep the draft and do not submit a save', async context => {
+  const env = await environment(context)
+  for (const mode of ['', 'offline', 'AUTO', null, true]) {
+    env.state.values['auth.identity-mode'] = mode
+    await env.state.save()
+    assert.equal(env.state.validationError, '账号身份模式无效')
+    assert.equal(env.calls.filter(call => call[0] === 'post').length, 0)
+    assert.equal(env.state.values['auth.identity-mode'], mode)
+    assert.equal(env.state.dirty, true)
+    assert.deepEqual(env.notices.at(-1), ['error', '账号身份模式无效'])
+  }
+})
+
 test('empty, fractional and out-of-range numeric fields are rejected without submitting drafts', async context => {
   const env = await environment(context)
   for (const value of [undefined, null, '12', 1.5, 0, 65]) {
@@ -317,6 +353,11 @@ test('new QQ verification labels and numeric validation are translated', () => {
     assert.equal(t('强制 QQ 验证'), 'Require QQ verification')
     assert.equal(t('未绑定每日提醒'), 'Daily reminder for unverified players')
     assert.equal(t('每日提醒时区'), 'Daily reminder timezone')
+    assert.equal(t('账号身份模式'), 'Account identity mode')
+    assert.equal(t('自动（跟随服务器）'), 'Automatic (follow server)')
+    assert.equal(t('严格 UUID'), 'Strict UUID')
+    assert.equal(t('玩家名与密码'), 'Player name and password')
+    assert.equal(t('账号身份模式无效'), 'Invalid account identity mode.')
     assert.equal(t('最短密码长度不能大于最长密码长度'), 'Minimum password length cannot exceed maximum password length.')
     assert.equal(t('{field}须为 {min} 至 {max} 的整数', { field: t('最短密码长度'), min: 1, max: 64 }),
       'Minimum password length must be an integer from 1 to 64.')
