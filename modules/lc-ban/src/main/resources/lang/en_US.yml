@@ -138,7 +138,7 @@ broadcast:
   kick:
     - "<yellow>Kick » {player}</yellow><white> has been kicked"
     - "<aqua>Reason: <white>{reason}</white> · Source: <white>{operator}"
-  silent-prefix: "<aqua>[Silent]</aqua> {message}"
+  silent-prefix: "<light_purple>[Silent]</light_purple> {message}"
   unban: "<red>Ban » </red><yellow>{player}</yellow><green> has been unbanned <aqua>· Source: <white>{operator}"
   unbanip: "<red>Ban » </red><yellow>{player}</yellow><green> has been IP-unbanned <aqua>· Source: <white>{operator}"
   unmute: "<gold>Mute » </gold><yellow>{player}</yellow><green> has been unmuted <aqua>· Source: <white>{operator}"

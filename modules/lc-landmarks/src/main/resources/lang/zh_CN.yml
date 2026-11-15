@@ -1,4 +1,4 @@
-prefix: "<aqua>[</aqua><aqua>地标册</aqua><aqua>]</aqua> "
+prefix: "<dark_aqua>[地标册]</dark_aqua> "
 help:
   - "<gold>建筑地标册"
   - "<yellow>/landmarks <white>浏览已公开地标"

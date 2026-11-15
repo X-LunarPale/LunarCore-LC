@@ -104,9 +104,18 @@ public final class LcMainCommand implements TabExecutor {
     private void reload(CommandSender sender) {
         long t0 = System.currentTimeMillis();
         plugin.reloadCore();
-        int n = plugin.moduleManager().reloadConfigs();
-        plugin.audit().log("core", actor(sender), "reload", "重载核心配置与 " + n + " 个模块配置");
-        plugin.messages().send(sender, "core.reload.done", "modules", n, "time", System.currentTimeMillis() - t0);
+        LcModuleManager.ConfigReloadResult result = plugin.moduleManager().reloadConfigsReport();
+        plugin.audit().log("core", actor(sender), "reload",
+                "重载核心配置与 " + result.reloaded() + " 个模块配置；需单独重载："
+                        + String.join(", ", result.restartRequired()) + "；失败：" + String.join(", ", result.failed()));
+        plugin.messages().send(sender, "core.reload.done", "modules", result.reloaded(), "time", System.currentTimeMillis() - t0);
+        if (!result.restartRequired().isEmpty()) {
+            plugin.messages().send(sender, "core.reload.restart-required", "modules", String.join(", ", result.restartRequired()));
+        }
+        if (!result.failed().isEmpty()) {
+            plugin.messages().send(sender, "core.reload.failed", "modules", String.join(", ", result.failed()),
+                    "count", result.failed().size());
+        }
     }
 
     private void module(CommandSender sender, String label, String[] args) {

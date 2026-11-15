@@ -158,6 +158,10 @@ export default {
   '确定禁用模块「{name}」吗？依赖它的模块也会被禁用。': 'Disable module “{name}”? Modules that depend on it will also be disabled.',
   '已禁用': 'Disabled',
   '已重载': 'Reloaded',
+  '模块列表返回格式错误': 'Invalid module list response',
+  '模块列表加载失败': 'Failed to load modules',
+  '模块列表更新失败，正在显示上次读取的内容。': 'Failed to refresh modules. Showing the last loaded list.',
+  '模块操作已完成，但菜单更新失败：{error}': 'Module action completed, but the menu could not be refreshed: {error}',
 
   // Profile and access states
   '个人设置': 'Profile',

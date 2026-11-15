@@ -4,7 +4,7 @@
 
 ## 需要准备
 
-使用 Java 25、Paper 26.3，以及 `LunarCore-0.0.8-pre.1.jar`。首次启动需访问 Maven Central 下载运行依赖。
+使用 Java 25、Paper 26.3，以及 `LunarCore-0.0.9-pre.1.jar`。首次启动需访问 Maven Central 下载运行依赖。
 
 ## 首次安装
 
@@ -25,13 +25,15 @@
 
 已有附加模块不会自动删除。核心升级只自动更新内置基础命令。已自定义的面板名称和 Logo 保留；恢复默认名称后显示“LunarCore 琉月”。
 
+聊天模块会更新旧内置格式，保留已有自定义格式和显示设置。升级后可在聊天设置分别调整聊天、TAB 和头顶称号；世界中文名与颜色不改变世界目录。若 PlayerTitle 与 LC 重复显示称号，只保留一个显示来源。详见[聊天显示](USAGE.md#聊天显示与公告)。
+
 内部插件名仍为 `LunarCore`，数据目录保持原样，无需移动。
 
 ## 手动安装模块
 
 下载与核心同版本的模块 JAR，停服后放入 `plugins/LunarCore/modules/`。更新时替换原文件，不保留重复副本。建筑地标还需要领地模块。
 
-全部附加模块也可从 `LunarCore-modules-0.0.8-pre.1.zip` 按需解压。安装更多模块会增加资源占用。
+全部附加模块也可从 `LunarCore-modules-0.0.9-pre.1.zip` 按需解压。安装更多模块会增加资源占用。
 
 地形模块还需将 `LC-Terrain-Agent.jar` 放到服务端目录，在 Java 启动命令的 `-jar` 前添加 `-javaagent:LC-Terrain-Agent.jar`，然后完整重启。详见[地形模块说明](../../modules/lc-terrain/README.md)。
 

@@ -1,0 +1,4 @@
+# This module provides a web panel and does not register in-game commands.
+prefix: "<green>[<bold>Worlds</bold>]</green> "
+status:
+  ready: "World management is ready"

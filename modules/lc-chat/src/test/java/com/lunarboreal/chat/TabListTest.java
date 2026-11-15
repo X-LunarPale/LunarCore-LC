@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,6 +49,24 @@ class TabListTest {
         config.set("tablist.player-name-format","{title} {player}");
         assertEquals("{title} {player}",TabList.nameFormat(config));
     }
+    @Test void newTabDefaultsDoNotRestoreTitlesAndUnusedTitlesNeedNoPolling() {
+        var config=new org.bukkit.configuration.file.YamlConfiguration();
+        config.addDefault("tablist.player-name-format","{world} {player}");
+        assertEquals("{world} {player}",TabList.nameFormat(config));
+        config.set("format.title.enabled",false);
+        config.set("tablist.show-current-title",false);
+        assertFalse(TabList.needsTitles(config));
+        for(String setting:java.util.List.of("nameplate.enabled","format.title.enabled","tablist.show-current-title")){
+            config.set(setting,true);
+            assertTrue(TabList.needsTitles(config),setting);
+            config.set(setting,false);
+        }
+        config.set("format.enabled",false);
+        config.set("format.title.enabled",true);
+        config.set("tablist.enabled",false);
+        config.set("tablist.show-current-title",true);
+        assertFalse(TabList.needsTitles(config));
+    }
     @Test void removesEmptyLcTitlePlaceholders() {
         for (String token : java.util.List.of("titles_title", "playertitle_current")) {
             String template = "%lc_" + token + "% Player";
@@ -60,6 +80,23 @@ class TabListTest {
         assertFalse(TabList.stillOwns(foreign,ours,true));
         assertFalse(TabList.stillOwns(ours,ours,false));
         assertTrue(TabList.stillOwns(null,null,true));
+    }
+    @Test void permissionNameColorsSelectHighestPriorityWithoutAddingPrefixes() {
+        var config=new org.bukkit.configuration.file.YamlConfiguration();
+        config.set("vip.permission","lc.chat.format.vip");
+        config.set("vip.priority",50);
+        config.set("vip.color","gold");
+        config.set("admin.permission","lc.chat.format.admin");
+        config.set("admin.priority",100);
+        config.set("admin.color","#aaddff");
+        config.set("invalid.color","not-a-color");
+        var rules=TabList.nameColors(config);
+        Component original=Component.text("Steve");
+        Component admin=TabList.colorName(original,rules,node->true);
+        assertEquals("Steve",PlainTextComponentSerializer.plainText().serialize(admin));
+        assertEquals(TextColor.fromHexString("#aaddff"),admin.color());
+        assertEquals(NamedTextColor.GOLD,TabList.colorName(original,rules,node->node.endsWith(".vip")).color());
+        assertEquals(original,TabList.colorName(original,rules,node->false));
     }
     @Test void rejectsMalformedWebTabInputs() {
         assertThrows(RuntimeException.class, () -> ChatModule.validateTabConfig(Map.of("tabRefresh", 0)));

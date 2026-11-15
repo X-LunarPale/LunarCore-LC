@@ -20,6 +20,7 @@ const s = reactive({
   page: 1,
   size: props.section.pageSize || 20,
   q: '',
+  query: '',
   sort: '',
   order: '',
   loading: false,
@@ -42,7 +43,7 @@ async function load() {
   s.loading = true
   try {
     const r = await api.get(resolveEndpoint(props.section.endpoint, props.namespace), {
-      page: s.page, size: s.size, q: s.q, sort: s.sort, order: s.order
+      page: s.page, size: s.size, q: s.query, sort: s.sort, order: s.order
     })
     if (!current()) return
     requireSuccess(r)
@@ -66,11 +67,11 @@ async function load() {
 }
 
 function actionDone() {
-  load()
   window.dispatchEvent(new CustomEvent('lc:panel-changed', { detail: { namespace: props.namespace } }))
 }
 
 function search() {
+  s.query = s.q.trim()
   s.page = 1
   load()
 }
@@ -84,9 +85,9 @@ function onSort({ prop, order }) {
 const btnType = (style) => ({ primary: 'primary', danger: 'danger', warning: 'warning' })[style] || 'default'
 
 useAutoRefresh(() => { if (!s.loading && !runner.value?.busy) return load() }, {
-  seconds: () => Number(props.section.refreshSeconds) > 0 ? props.section.refreshSeconds : 5,
+  seconds: () => Number.isFinite(Number(props.section.refreshSeconds)) && Number(props.section.refreshSeconds) >= 0 ? Number(props.section.refreshSeconds) : 5,
   namespace: props.namespace,
-  active: () => props.active,
+  active: () => props.active && !runner.value?.busy,
   immediate: true
 })
 onBeforeUnmount(() => {
@@ -104,7 +105,7 @@ defineExpose({ reload: load })
       </el-input>
       <el-button v-for="a in (s.error ? [] : toolbarActions)" :key="a.id" :type="btnType(a.style)" :plain="a.style === 'danger' || a.style === 'warning'" @click="runner.run(a, {})">{{ t(a.label) }}</el-button>
       <div class="spacer" />
-      <el-button class="refresh-button" :disabled="s.loading" @click="load" :title="t('刷新列表')" :aria-label="t('刷新列表')"><Icon name="refresh-cw" :size="14" /></el-button>
+      <el-button class="refresh-button" :disabled="s.loading || runner?.busy" @click="load" :title="t('刷新列表')" :aria-label="t('刷新列表')"><Icon name="refresh-cw" :size="14" /></el-button>
     </div>
     <SectionError :error="s.error" />
     <el-table v-if="!s.error" :data="s.items" v-loading="s.loading" :row-key="rowKey" @sort-change="onSort">
@@ -119,7 +120,7 @@ defineExpose({ reload: load })
           </div>
         </template>
       </el-table-column>
-      <template #empty><div class="table-empty"><Icon name="inbox" :size="28" /><strong>{{ s.q ? t('没有匹配的记录') : t('暂无记录') }}</strong><span>{{ s.q ? t('请调整关键词后重新搜索。') : t('记录生成后将显示在这里。') }}</span></div></template>
+      <template #empty><div class="table-empty"><Icon name="inbox" :size="28" /><strong>{{ s.query ? t('没有匹配的记录') : t('暂无记录') }}</strong><span>{{ s.query ? t('请调整关键词后重新搜索。') : t('记录生成后将显示在这里。') }}</span></div></template>
     </el-table>
     <el-pagination v-if="!s.error" class="pager" background layout="total, sizes, prev, pager, next, jumper" :total="s.total" v-model:current-page="s.page"
       v-model:page-size="s.size" :page-sizes="[10, 20, 50, 100]" @current-change="load" @size-change="search" />

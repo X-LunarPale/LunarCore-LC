@@ -4,7 +4,7 @@
 
 ## Requirements
 
-Use Java 25, Paper 26.3 and `LunarCore-0.0.8-pre.1.jar`. First startup needs Maven Central access for runtime libraries.
+Use Java 25, Paper 26.3 and `LunarCore-0.0.9-pre.1.jar`. First startup needs Maven Central access for runtime libraries.
 
 ## First Installation
 
@@ -25,13 +25,15 @@ Only basic commands are included. Homes and teleport requests need the teleport 
 
 Existing optional modules are kept. The core automatically updates only basic commands. Custom names and logos are preserved; resetting the name restores “LunarCore 琉月”.
 
+The chat module updates older built-in formats while preserving custom formats and display settings. Review the separate chat, TAB and overhead-title controls after upgrading. World labels and colors do not rename world folders. If PlayerTitle and LC show a title twice, keep one display provider. See [Chat appearance](USAGE.md#chat-appearance-and-announcements).
+
 The internal name remains `LunarCore`; its data folder stays the same.
 
 ## Manual Module Installation
 
 Download JARs matching the core version. Stop and place them in `plugins/LunarCore/modules/`. Replace old files instead of keeping duplicates. Building landmarks requires the land module.
 
-You can select modules from `LunarCore-modules-0.0.8-pre.1.zip`. Installing more modules uses more resources.
+You can select modules from `LunarCore-modules-0.0.9-pre.1.zip`. Installing more modules uses more resources.
 
 The terrain module also needs `LC-Terrain-Agent.jar` in the server directory. Add `-javaagent:LC-Terrain-Agent.jar` before `-jar` in the Java command and fully restart. See the [terrain guide](../../modules/lc-terrain/README.en.md).
 

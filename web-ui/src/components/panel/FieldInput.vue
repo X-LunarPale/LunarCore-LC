@@ -100,7 +100,7 @@ const textValue = computed({
     <div class="hint">{{ durationPreview }}</div>
   </div>
   <el-date-picker v-else-if="type === 'datetime' || type === 'date'" v-model="dateValue" :type="type === 'date' ? 'date' : 'datetime'" value-format="x" :placeholder="t(field.placeholder || '选择时间')" style="width: 100%" />
-  <CodeEditor v-else-if="type === 'code'" v-model="textValue" :height="260" :placeholder="t(field.placeholder)" style="width: 100%" />
+  <CodeEditor v-else-if="type === 'code'" v-model="textValue" :readonly="formDisabled" :height="260" :placeholder="t(field.placeholder)" style="width: 100%" />
   <div v-else class="text-field">
     <el-input v-model="textValue" :placeholder="t(field.placeholder)" :aria-label="t(field.label)" />
     <MinecraftTextPreview v-if="showTextPreview" :text="textValue" :variables="previewVariables" />

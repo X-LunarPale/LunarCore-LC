@@ -4,12 +4,12 @@
 #   Lists are sent as multiple lines; empty string = do not send.
 # ==========================================================
 
-prefix: "<gradient:#7ec8ff:#b98cff><bold>LC</bold></gradient> <aqua>» "
+prefix: "<aqua>[<bold>LC</bold>]</aqua> "
 
 word-yes: "<green>yes"
 word-no: "<red>no"
 
-no-permission: "<prefix><red>You don't have permission to do that. <aqua>({permission})"
+no-permission: "<prefix><red>You do not have permission for this action. <yellow>Required: {permission}"
 player-only: "<prefix><red>This command can only be used by players."
 command-error: "<prefix><red>An internal error occurred, please check the console."
 unknown-subcommand: "<prefix><red>Unknown sub-command, type <yellow>/{label} help</yellow>."
@@ -20,7 +20,7 @@ web-usage: "<prefix><white>Usage: <yellow>/{label} web <sub-command></yellow>"
 help:
   - "<gradient:#7ec8ff:#b98cff><bold>LunarCore 琉月</bold></gradient> <aqua>— Help"
   - "<yellow>/{label} info</yellow> <aqua>- <white>Version, platform, database and modules"
-  - "<yellow>/{label} reload</yellow> <aqua>- <white>Reload core config, languages and module configs"
+  - "<yellow>/{label} reload</yellow> <aqua>- <white>Reload core config, languages and module configs that support live reload"
   - "<yellow>/{label} m list</yellow> <aqua>- <white>Show all module statuses"
   - "<yellow>/{label} module enable|disable|reload|info <module></yellow> <aqua>- <white>Manage modules"
   - "<yellow>/{label} web</yellow> <aqua>- <white>Web panel commands"
@@ -37,6 +37,8 @@ info:
 
 reload:
   done: "<prefix><green>Reloaded core config, languages and <yellow>{modules}</yellow> module configs. <aqua>({time}ms)"
+  restart-required: "<prefix><yellow>Configuration was not reloaded for: {modules}. Use <gold>/lc m reload <module></gold> for each module to apply it."
+  failed: "<prefix><red>Configuration reload failed for {count} module(s): {modules}. Check the console log."
 
 debug:
   enabled: "<prefix><yellow>Debug mode enabled (this run only)."
@@ -88,7 +90,7 @@ web:
   not-ready: "<prefix><red>Web account system is not ready."
   error: "<prefix><red>Failed: {message}"
   user-list-header: "<prefix><aqua>Web accounts ({count}):"
-  user-list-entry: "<aqua> - <white>{user}</white> [{role}] MC: <white>{mc}"
+  user-list-entry: "<aqua> - <white>{user}</white> <gold>[{role}]</gold> <white>MC: {mc}"
   user-added: "<prefix><green>Created web account {user} ({role})."
   user-removed: "<prefix><green>Deleted web account {user}."
   user-passwd: "<prefix><green>Password of {user} reset."

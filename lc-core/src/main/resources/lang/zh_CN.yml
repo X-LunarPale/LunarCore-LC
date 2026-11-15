@@ -9,7 +9,7 @@ prefix: "<aqua>[<bold>LC</bold>]</aqua> "
 word-yes: "<green>是"
 word-no: "<red>否"
 
-no-permission: "<prefix><red>你没有权限执行此操作。<aqua>({permission})"
+no-permission: "<prefix><red>没有执行此操作的权限。<yellow>需要：{permission}"
 player-only: "<prefix><red>该命令只能由玩家执行。"
 command-error: "<prefix><red>执行命令时发生内部错误，请联系管理员查看控制台。"
 unknown-subcommand: "<prefix><red>未知子命令，输入 <yellow>/{label} help</yellow> 查看帮助。"
@@ -20,7 +20,7 @@ web-usage: "<prefix><white>用法：<yellow>/{label} web <子命令></yellow>"
 help:
   - "<gradient:#7ec8ff:#b98cff><bold>LunarCore 琉月</bold></gradient> <aqua>— 命令帮助"
   - "<yellow>/{label} info</yellow> <aqua>- <white>查看版本、平台、数据库与模块信息"
-  - "<yellow>/{label} reload</yellow> <aqua>- <white>重载核心配置、语言与所有模块配置"
+  - "<yellow>/{label} reload</yellow> <aqua>- <white>重载核心配置、语言与支持在线重载的模块配置"
   - "<yellow>/{label} m list</yellow> <aqua>- <white>查看全部模块状态"
   - "<yellow>/{label} module enable|disable|reload|info <模块></yellow> <aqua>- <white>管理模块"
   - "<yellow>/{label} web</yellow> <aqua>- <white>Web 管理面板相关命令"
@@ -37,6 +37,8 @@ info:
 
 reload:
   done: "<prefix><green>已重载核心配置、语言与 <yellow>{modules}</yellow> 个模块配置。<aqua>({time}ms)"
+  restart-required: "<prefix><yellow>以下模块的配置未重载：{modules}。请逐个执行 <gold>/lc m reload <模块></gold> 应用配置。"
+  failed: "<prefix><red>有 {count} 个模块配置重载失败：{modules}。请查看控制台日志。"
 
 debug:
   enabled: "<prefix><yellow>调试模式已开启（仅本次运行有效）。"
@@ -91,7 +93,7 @@ web:
   not-ready: "<prefix><red>Web 面板账号系统尚未就绪（面板未启用或启动失败）。"
   error: "<prefix><red>操作失败：{message}"
   user-list-header: "<prefix><aqua>Web 账号（{count}）："
-  user-list-entry: "<aqua> - <white>{user}</white> [{role}] 游戏账号：<white>{mc}"
+  user-list-entry: "<aqua> - <white>{user}</white> <gold>[{role}]</gold> <white>游戏账号：{mc}"
   user-added: "<prefix><green>已创建 Web 账号 <white>{user}</white>，角色 <aqua>{role}</aqua>。"
   user-removed: "<prefix><green>已删除 Web 账号 <white>{user}</white>。"
   user-passwd: "<prefix><green>已重置 <white>{user}</white> 的密码。"

@@ -1,5 +1,5 @@
 # 领地模块语言文件（MiniMessage 格式），<prefix> 为领地前缀，{xxx} 为占位符
-prefix: "<aqua>[</aqua><green><bold>领地</bold></green><aqua>]</aqua> "
+prefix: "<green>[<bold>领地</bold>]</green> "
 help:
   - "<gold><bold>━━━━ 领地系统 ━━━━"
   - "<yellow>选区：<white>手持选区工具 左键/右键 选两点，或 <white>/land pos1</white> <white>/land pos2"
@@ -47,10 +47,10 @@ usage:
   admin: "<prefix><red>用法：/land admin <delete [名字/ID]|tp <名字/ID>|list [玩家]|bypass>"
 
 error:
-  loading: "<prefix><red>领地数据正在加载，请稍后再试。"
+  loading: "<prefix><yellow>领地数据正在加载，请稍后再试。"
   player-only: "<prefix><red>该命令只能由玩家执行。"
   no-permission: "<prefix><red>你没有权限执行此操作。"
-  no-economy: "<prefix><red>经济服务不可用。"
+  no-economy: "<prefix><red>经济服务暂不可用，请稍后重试。"
   not-enough-money: "<prefix><red>余额不足：需要 <gold>{cost}</gold>，当前 <gold>{balance}</gold>。"
   no-selection: "<prefix><red>请先用 <yellow>{tool}</yellow> 左右键或 /land pos1、/land pos2 选择两个点。"
   invalid-name: "<prefix><red>领地名不合法（1~16 位字母、数字、下划线、横线或中文）。"
@@ -59,7 +59,7 @@ error:
   not-in-land: "<prefix><red>你没有站在任何领地内。"
   not-owner: "<prefix><red>你不是领地 <yellow>{land}</yellow> 的主人。"
   not-manager: "<prefix><red>你没有管理领地 <yellow>{land}</yellow> 的权限。"
-  frozen: "<prefix><red>领地 <yellow>{land}</yellow> 因欠缴领地税已冻结，请充值后等待自动扣费。"
+  frozen: "<prefix><red>领地 <yellow>{land}</yellow> 因欠缴领地税已冻结。请确保账户余额充足，等待下一次自动扣费。"
   world-blacklisted: "<prefix><red>该世界禁止圈地。"
   too-small: "<prefix><red>领地边长不能小于 <yellow>{min}</yellow> 格。"
   too-large: "<prefix><red>领地边长不能大于 <yellow>{max}</yellow> 格。"

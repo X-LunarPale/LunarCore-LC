@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import MinecraftTextPreview from '../text-preview/MinecraftTextPreview.vue'
-import { chatPreview } from './chat-preview'
+import { chatPreview, nameplatePreview } from './chat-preview'
 import { t } from '../../i18n'
 
 const props = defineProps({ model: { type: Object, required: true }, disabled: Boolean })
@@ -14,10 +14,14 @@ function remove(index) { props.model.worldAliases = rows.value.filter((_, i) => 
 const values = computed(() => ({
   world: current.value?.world || 'world', worldName: current.value?.name || current.value?.world || 'world',
   color: current.value?.color || props.model.worldDefaultColor || '#55ffff', player: player.value,
-  title: title.value, message: message.value, titlePlaceholder: props.model.titlePlaceholder
+  title: title.value, message: message.value, titlePlaceholder: props.model.titlePlaceholder,
+  worldBrackets: props.model.worldBrackets === true
 }))
 const chat = computed(() => chatPreview(props.model.defaultChatFormat, { ...values.value, showTitle: props.model.chatShowTitle !== false }))
 const tab = computed(() => chatPreview(props.model.tabName, { ...values.value, showTitle: props.model.tabShowTitle !== false }))
+const nameplate = computed(() => nameplatePreview(title.value, player.value))
+const duplicateBrackets = computed(() => props.model.worldBrackets === true &&
+  [props.model.defaultChatFormat, props.model.tabEnabled && props.model.tabName].some(format => /\[(?:\{world}|<world>)]/.test(format || '')))
 </script>
 
 <template>
@@ -34,15 +38,19 @@ const tab = computed(() => chatPreview(props.model.tabName, { ...values.value, s
       <p v-if="!rows.length" class="empty">{{ t('尚未设置世界显示名称') }}</p>
     </div>
     <section class="format-preview">
-      <h4>{{ t('聊天与 TAB 预览') }}</h4>
+      <h4>{{ t('显示预览') }}</h4>
       <div class="preview-controls">
         <label>{{ t('预览世界') }}<el-select v-model="selected" :aria-label="t('预览世界')"><el-option v-for="(row, index) in rows" :key="index" :value="row.world" :label="`${row.name || row.world} (${row.world})`" /></el-select></label>
-        <label>{{ t('预览玩家') }}<el-input v-model="player" maxlength="64" /></label>
-        <label>{{ t('预览称号') }}<el-input v-model="title" maxlength="256" /></label>
-        <label>{{ t('预览消息') }}<el-input v-model="message" maxlength="256" /></label>
+        <label>{{ t('预览玩家') }}<el-input v-model="player" :aria-label="t('预览玩家')" maxlength="64" /></label>
+        <label>{{ t('预览称号') }}<el-input v-model="title" :aria-label="t('预览称号')" maxlength="256" /></label>
+        <label>{{ t('预览消息') }}<el-input v-model="message" :aria-label="t('预览消息')" maxlength="256" /></label>
       </div>
-      <MinecraftTextPreview :text="chat" :placeholder-api="false" :label="'聊天预览'" />
-      <MinecraftTextPreview v-if="model.tabEnabled" :text="tab" :placeholder-api="false" :label="'TAB 玩家名称预览'" />
+      <p v-if="duplicateBrackets" class="preview-warning" role="note">{{ t('世界名称已含方括号，请移除格式中 {world} 外的重复括号。') }}</p>
+      <MinecraftTextPreview :text="chat" :legacy="false" :show-help="false" :placeholder-api="false" :label="'聊天预览'" />
+      <MinecraftTextPreview v-if="model.tabEnabled" :text="tab" :legacy="false" :show-help="false" :placeholder-api="false" :label="'TAB 玩家名称预览'" />
+      <MinecraftTextPreview v-if="model.nameplateEnabled" class="nameplate-preview" :text="nameplate" :legacy="false" :show-help="false" :placeholder-api="false" :label="'头顶称号预览'" />
+      <p v-else class="empty">{{ t('头顶称号已关闭') }}</p>
+      <p class="preview-note">{{ t('效果仅供参考，以游戏内显示为准。') }}</p>
     </section>
   </section>
 </template>
@@ -63,5 +71,8 @@ h4{font-size:13px;margin:0;font-weight:600}
 .preview-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px;margin-top:14px}
 .preview-controls label{display:flex;flex-direction:column;gap:6px;font-size:12px;min-width:0}
 .preview-controls :deep(.el-select){width:100%}
+.preview-warning{font-size:12px;color:var(--el-color-warning);line-height:1.6;overflow-wrap:anywhere}
+.preview-note{font-size:11px;color:var(--lc-text-soft);line-height:1.6;margin:8px 0 0}
+.nameplate-preview :deep(.preview-surface){text-align:center;min-height:90px;display:grid;align-content:center;gap:8px}
 @container (max-width:620px){.column-labels{display:none}.world-row{grid-template-columns:minmax(0,1fr) 36px;padding:12px 0;border-bottom:1px solid var(--el-border-color-lighter)}.world-row>.el-input:first-child{grid-column:1}.world-row>.el-input:nth-child(2){grid-column:1}.color-field{grid-column:1;grid-row:3}.remove{grid-column:2;grid-row:1}.preview-controls{grid-template-columns:minmax(0,1fr)}}
 </style>

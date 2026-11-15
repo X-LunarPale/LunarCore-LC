@@ -1,5 +1,5 @@
 # 签到模块语言文件（MiniMessage 格式），引用 key：signin.<路径>
-prefix: "<aqua>[</aqua><yellow><bold>签到</bold></yellow><aqua>]</aqua> "
+prefix: "<yellow>[<bold>签到</bold>]</yellow> "
 usage: "<prefix><white>用法：<yellow>/signin</yellow> 打开签到日历，<yellow>/signin sign</yellow> 直接签到，<yellow>/signin top [streak|total] [页]</yellow> 排行榜"
 usage-admin: "<prefix><white>用法：<yellow>/signin admin reset <玩家>"
 
@@ -8,7 +8,7 @@ sign:
   already: "<prefix><yellow>你今天已经签到过了（连续 {streak} 天，累计 {total} 天）。"
   streak-reward: "<prefix><light_purple>连续签到 {days} 天额外奖励：</light_purple>{reward}"
   milestone-reward: "<prefix><aqua>累计签到 {days} 天里程碑奖励：</aqua>{reward}"
-  broadcast: "<prefix><white><white>{player}</white> 完成了今日签到，已连续 <gold>{streak}</gold> 天！输入 <click:run_command:'/signin'><yellow><u>/signin</u></yellow></click> 一起签到吧~"
+  broadcast: "<prefix><white>{player} 完成今日签到，已连续 <gold>{streak}</gold> 天。使用 <click:run_command:'/signin'><yellow><u>/signin</u></yellow></click> 查看签到日历。"
 
 makeup:
   success: "<prefix><green>已补签 <white>{date}</white>（花费 <gold>{cost}</gold>），当前连续 <gold>{streak}</gold> 天，累计 <gold>{total}</gold> 天，本月剩余补签 {left} 次。"
@@ -20,8 +20,8 @@ makeup:
   no-money: "<prefix><red>余额不足，补签需要 <gold>{cost}</gold>，你只有 <gold>{balance}</gold>。"
 
 remind:
-  join: "<prefix><yellow>你今天还没有签到哦！<click:run_command:'/signin'><green><u>[点击签到]</u></green></click>"
-  new-day: "<prefix><yellow>新的一天开始了，记得签到！<click:run_command:'/signin'><green><u>[点击签到]</u></green></click>"
+  join: "<prefix><yellow>今日尚未签到。<click:run_command:'/signin'><green><u>[点击签到]</u></green></click>"
+  new-day: "<prefix><yellow>新一天的签到已开放。<click:run_command:'/signin'><green><u>[点击签到]</u></green></click>"
 
 top:
   header-streak: "<gold>===== 连续签到排行 <white>(第 {page} 页)</white> ====="

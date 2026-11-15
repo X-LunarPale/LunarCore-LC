@@ -10,6 +10,7 @@ const props = defineProps({
   variables: { type: Object, default: () => ({}) },
   label: { type: String, default: '颜色文本预览' },
   legacy: { type: Boolean, default: true },
+  showHelp: { type: Boolean, default: true },
   atomicVariables: { type: Boolean, default: false },
   placeholderApi: { type: Boolean, default: true }
 })
@@ -29,7 +30,7 @@ const unresolvedText = computed(() => unresolved.value.map(key => `{${key}}`).jo
     <div class="preview-surface">
       <div v-for="(line, index) in parsed" :key="index" class="preview-line"><template v-if="line.segments.length"><span v-for="(segment, part) in line.segments" :key="part" :style="segment.style" :class="{ 'preview-variable': segment.variable }">{{ segment.text }}</span></template><span v-else class="empty-line">{{ t('（空行）') }}</span></div>
     </div>
-    <p class="preview-help">{{ t('支持常用 MiniMessage 颜色、渐变、彩虹与文字样式。') }}<template v-if="legacy">{{ t('支持 & / § 格式码。') }}</template><template v-else>{{ t('此处仅解析 MiniMessage，& / § 格式码按原文显示。') }}</template>{{ t('效果仅供参考，以游戏内显示为准。') }}</p>
+    <p v-if="showHelp" class="preview-help">{{ t('支持常用 MiniMessage 颜色、渐变、彩虹与文字样式。') }}<template v-if="legacy">{{ t('支持 & / § 格式码。') }}</template><template v-else>{{ t('此处仅解析 MiniMessage，& / § 格式码按原文显示。') }}</template>{{ t('效果仅供参考，以游戏内显示为准。') }}</p>
     <p v-if="unresolved.length" class="preview-help">{{ t('未提供实际值的变量保留为示意：{variables}。', { variables: unresolvedText }) }}</p>
     <p v-for="warning in warnings" :key="warning" class="preview-warning" role="note">{{ t(warning) }}</p>
   </div>

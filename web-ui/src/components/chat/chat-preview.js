@@ -2,7 +2,10 @@ import { parseMinecraftText } from '../text-preview/minecraft-text.js'
 
 const literal = value => String(value ?? '').replaceAll('\\', '\\\\').replaceAll('<', '\\<')
 function titleText(value) {
-  return parseMinecraftText(value, {}, { legacy: true }).segments.map(segment => {
+  const parsed = parseMinecraftText(value, {}, { legacy: true })
+  const plain = parsed.segments.map(segment => segment.text).join('').trim()
+  if (!plain || ['未佩戴', '未装备', '无称号', 'none'].includes(plain) || /%[A-Za-z0-9_.:-]+%/.test(plain)) return ''
+  return parsed.segments.map(segment => {
     const tags = []
     if (segment.style.color) tags.push(segment.style.color)
     if (segment.style.fontWeight) tags.push('bold')
@@ -34,17 +37,24 @@ function visibleTemplate(input) {
   return result
 }
 
-export function chatPreview(format, { world = 'world', worldName = world, color = '#55ffff', player = 'Steve', title = '&6[旅行者]', message = '大家好，今天一起探险吗？', titlePlaceholder = '%playerTitle_use%', showTitle = true } = {}) {
+export function nameplatePreview(title, player = 'Steve') {
+  const rendered = titleText(title)
+  return rendered ? `${rendered}\n<white>${literal(player)}</white>` : `<white>${literal(player)}</white>`
+}
+
+export function chatPreview(format, { world = 'world', worldName = world, worldBrackets = false, color = '#55ffff', player = 'Steve', title = '&6[旅行者]', message = '大家好，今天一起探险吗？', titlePlaceholder = '%playerTitle_use%', showTitle = true } = {}) {
   let template = visibleTemplate(String(format || ''))
   for (const token of [titlePlaceholder, '%playerTitle_use%', '%lc_playertitle_current%', '%lc_titles_title%']) {
     if (token) template = template.replaceAll(token, '{title}')
   }
+  const worldColor = /^#[0-9a-f]{6}$/i.test(color) || /^[a-z_]+$/.test(color) ? color : '#55ffff'
+  const renderedTitle = showTitle ? titleText(title) : ''
   const replacements = {
-    world: `<${/^#[0-9a-f]{6}$/i.test(color) || /^[a-z_]+$/.test(color) ? color : '#55ffff'}>${literal(worldName)}</${/^#[0-9a-f]{6}$/i.test(color) || /^[a-z_]+$/.test(color) ? color : '#55ffff'}>`,
-    world_name: literal(world), title: showTitle ? titleText(title) : '', player: literal(player),
+    world: `<${worldColor}>${literal(worldBrackets ? `[${worldName}]` : worldName)}</${worldColor}>`,
+    world_name: literal(world), title: renderedTitle, player: literal(player),
     displayname: literal(player), message: literal(message)
   }
-  if (!showTitle || !title.trim()) template = template.replace(/(?:\{title}|<title>)\s*/g, '')
+  if (!renderedTitle) template = template.replace(/(?:\{title}|<title>)\s*/g, '')
   return template.replace(/\{(world|world_name|title|player|displayname|message)}|<(world|title|displayname|message)>/g,
     (_, curly, tag) => replacements[curly || tag])
 }

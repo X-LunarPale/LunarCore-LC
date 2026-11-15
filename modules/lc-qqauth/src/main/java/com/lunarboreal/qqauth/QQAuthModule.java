@@ -280,6 +280,7 @@ public final class QQAuthModule extends LcModule {
         if (auth != null) auth.logout(uuid);
         sync(() -> { Player p = Bukkit.getPlayer(uuid); if (p != null) p.kick(Messages.render(reason)); });
     }
+    @Override public boolean supportsConfigReload() { return false; }
     @Override public void onReload() { throw new IllegalStateException(msg("lifecycle.reload-instructions")); }
     @Override public void onDisable() {
         synchronized (this) { active = false; ready = false; epoch++; }

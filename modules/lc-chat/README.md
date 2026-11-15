@@ -55,11 +55,21 @@ AI网络客户端在首个实际请求时才创建，禁用、繁忙或冷却时
 
 ## TAB 配置
 
-`tablist.enabled` 默认 true；`refresh-seconds` 默认 5，范围 1–3600 秒。`header` / `footer` 使用 MiniMessage；`player-name-format` 默认 `{title} {player}`，仍可读取旧 `name-format`。留空不接管列表名称。支持 `{title}`、`{player}`、`{world}`、`{world_name}`、`{ping}`、`{online}`、`{max_players}`、`{tps}`、`{mspt}`。
+`tablist.enabled` 默认 true；`refresh-seconds` 默认 5，范围 1–3600 秒。`header` / `footer` 使用 MiniMessage；`player-name-format` 默认 `{world} {player}`，仍可读取旧 `name-format`。留空不接管列表名称。支持 `{title}`、`{player}`、`{world}`、`{world_name}`、`{ping}`、`{online}`、`{max_players}`、`{tps}`、`{mspt}`。
 
-聊天与 TAB 共用 `format.title.placeholder`，默认官方 PlayerTitle 变量 `%playerTitle_use%`。未连接该变量时，依次使用 PlayerTitle 桥接、内置称号；未佩戴时留空。称号颜色保留。称号每秒在主线程更新，异步聊天仅读取缓存。
+聊天与 TAB 共用 `format.title.placeholder`，默认官方 PlayerTitle 变量 `%playerTitle_use%`。未连接该变量时，依次使用 PlayerTitle 桥接、内置称号；未佩戴时留空。称号颜色保留。需要显示称号时，每秒更新一次缓存；聊天、TAB 和头顶称号均关闭后停止查询。
 
 若由 LunarCore 统一显示，请关闭 PlayerTitle 的 `isChat` 和 `isTabPrefix`，避免重复称号。检测到独立 TAB 插件或其他插件接管列表时，LunarCore 让出相应显示。
+
+`tablist.name-colors` 可按权限设置玩家名称颜色。各条目包含 `permission`、`priority`、`color`；优先级大的先匹配。颜色使用 `aqua` 等颜色名或 `#RRGGBB`，不会添加管理员、服主等身份前缀。
+
+## 头顶称号
+
+开启 `nameplate.enabled` 后，当前佩戴称号独立显示在原生玩家名上方。`height` 为离地高度，默认 2.65 格；`view-range` 默认 32 格；`refresh-ticks` 默认 2 个游戏刻。称号与聊天共用每秒更新的缓存，不会额外请求 PAPI。
+
+需要仅在头顶显示时，关闭 `format.title.enabled`、`tablist.show-current-title`，并从聊天及 TAB 模板移除 `{title}`。PlayerTitle 的 `isChat`、`isTabPrefix`、`isTabSuffix` 均应关闭。
+
+本人、潜行、隐身和旁观状态不显示头顶称号；观察者看不见玩家时也看不见称号。退出、跨世界传送及模块停用会清理显示。在 WebUI 保存或使用 `/lc reload` 可应用显示设置。
 
 ## 世界显示名与预览
 
@@ -69,15 +79,18 @@ AI网络客户端在首个实际请求时才创建，禁用、繁忙或冷却时
 format:
   worlds:
     default-color: "#55ffff"
+    brackets: true
     aliases:
       - world: survival
         name: 梦幻生存
         color: "#55ff55"
   title:
-    enabled: true
+    enabled: false
     placeholder: "%playerTitle_use%"
 ```
 
-聊天格式中的 `{world}` 显示带颜色的中文别名，`{world_name}` 显示原始世界名，`{title}` 显示当前称号。默认顺序为「世界 → 称号 → 玩家 → 消息」。内置旧模板会自动升级，服主自定义模板保留。AI 使用相同世界显示名，但不冒用触发玩家的称号。
+聊天格式中的 `{world}` 显示带颜色的中文别名，`{world_name}` 显示原始世界名，`{title}` 显示当前称号。默认聊天顺序为「世界 → 玩家 → 消息」，聊天和 TAB 默认不显示称号。内置旧模板会自动升级，自定义模板保留。AI 使用相同世界显示名，不使用玩家称号。
 
-WebUI 的“聊天设置”可编辑世界名称、选择颜色，并实时预览聊天和 TAB。预览可指定世界、玩家名、称号和消息；修改后需保存，保存会立即重载配置。权限为 `chat.manage`。
+开启 `format.worlds.brackets` 后，`{world}` 显示为 `[世界名]`，括号与世界名颜色一致。此时聊天及 TAB 模板直接使用 `{world}`，避免重复添加括号。
+
+WebUI 的“聊天设置”可编辑世界名称、颜色和头顶称号，并分别预览聊天、TAB 和头顶显示。修改后保存即可生效，无需停用聊天模块；自动公告开关和间隔也会同步更新。权限为 `chat.manage`。

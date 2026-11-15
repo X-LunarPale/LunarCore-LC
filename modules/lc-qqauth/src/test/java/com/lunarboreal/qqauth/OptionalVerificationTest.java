@@ -157,7 +157,7 @@ class OptionalVerificationTest {
         module.granted.clear();
         listener.join(new PlayerJoinEvent(player, Component.empty()));
         assertTrue(module.authenticated(player));
-        assertTrue(replies.stream().anyMatch(text -> text.contains("会话已恢复")));
+        assertTrue(replies.stream().anyMatch(text -> text.contains("登录状态已恢复")));
     }
 
     @Test void nameIdentityAllowsBoundAccountToEnterWithoutRestoringThePreviousUuidSession() throws Exception {
@@ -384,11 +384,11 @@ class OptionalVerificationTest {
 
     @Test void qqBindRequiresPasswordLoginAndNeedsNoAdministratorPermission() throws Exception {
         AuthCommands.execute(module, player, "qqauth", new String[]{"bind"});
-        assertEquals("请先登录。", replies.getLast());
+        assertEquals("[认证] 请先使用 /login 登录。", replies.getLast());
         authenticate();
         module.bound.add(uuid);
         AuthCommands.execute(module, player, "qqauth", new String[]{"bind"});
-        assertEquals("你已经完成 QQ 验证。", replies.getLast());
+        assertEquals("[认证] 你已经完成 QQ 验证。", replies.getLast());
     }
 
     @Test void loggedInUnboundPlayerReceivesARedeemableQqBindCode() throws Exception {
@@ -398,7 +398,7 @@ class OptionalVerificationTest {
         AuthCommands.execute(module, player, "qqauth", new String[]{"bind"});
         assertEquals(1, replies.size());
         String message = replies.getFirst();
-        assertTrue(message.contains("群 12345678"));
+        assertTrue(message.contains("QQ群：12345678"));
         var code = java.util.regex.Pattern.compile("/验证 ([0-9]{6,8})").matcher(message);
         assertTrue(code.find(), message);
         assertEquals(BindingService.Status.SUCCESS, module.bindings.redeemBind(code.group(1), "12345678", "qq").status());

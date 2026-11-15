@@ -1,4 +1,5 @@
 # Anti-xray language file (MiniMessage)
+prefix: "<gold>[<bold>Anti-xray</bold>]</gold> "
 command-desc: "Anti-xray management"
 help:
   - "<prefix><aqua>Anti-xray commands:"

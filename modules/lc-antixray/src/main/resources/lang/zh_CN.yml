@@ -1,5 +1,5 @@
 # 反矿透语言文件（MiniMessage）
-prefix: "<aqua>[</aqua><gold><bold>矿透检测</bold></gold><aqua>]</aqua> "
+prefix: "<gold>[<bold>矿透检测</bold>]</gold> "
 command-desc: "反矿透管理"
 help:
   - "<prefix><aqua>反矿透命令："

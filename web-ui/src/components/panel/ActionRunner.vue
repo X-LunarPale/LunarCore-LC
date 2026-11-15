@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { request, resolveEndpoint } from '../../api'
 import { fillTemplate, fillText, toDurationText } from '../../utils/format'
@@ -14,6 +14,7 @@ const emit = defineEmits(['done'])
 
 const auth = useAuth()
 const dlg = reactive({ visible: false, action: null, row: null, values: {}, loading: false, busy: false, error: '' })
+const busy = computed(() => dlg.busy || dlg.visible || dlg.loading)
 
 /** 行值预填：duration 列（毫秒）填入文本/时长字段时转为 "1d2h" 形式。 */
 function prefill(field, value) {
@@ -94,7 +95,7 @@ async function execute(action, row, values) {
   }
 }
 
-defineExpose({ run })
+defineExpose({ run, busy })
 </script>
 
 <template>

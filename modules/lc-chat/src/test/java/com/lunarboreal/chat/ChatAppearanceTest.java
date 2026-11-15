@@ -21,6 +21,18 @@ class ChatAppearanceTest {
         assertEquals("survival_nether", ChatFormatter.plain(appearance.world("survival_nether")));
         assertEquals("survival", appearance.aliases().getFirst().get("world"));
     }
+    @Test void worldBracketsUseAliasColorAsOneComponent() {
+        var config = new YamlConfiguration();
+        config.set("worlds.brackets", true);
+        config.set("worlds.aliases", List.of(Map.of("world", "survival", "name", "生存世界", "color", "#12ab34")));
+        var appearance = new ChatAppearance();
+        appearance.load(config);
+        Component label = appearance.world("survival");
+        assertEquals("[生存世界]", ChatFormatter.plain(label));
+        assertEquals(TextColor.fromHexString("#12ab34"), label.color());
+        assertTrue(label.children().isEmpty());
+        assertEquals("[survival_nether]", ChatFormatter.plain(appearance.world("survival_nether")));
+    }
 
     @Test void titleUsesConfiguredPapiThenBridgeWithoutLeakingTokens() {
         assertEquals("[探险者]", ChatFormatter.plain(ChatAppearance.resolveTitle("%custom_title%",
@@ -78,7 +90,8 @@ class ChatAppearanceTest {
         config.set("format.groups.default.format", oldDefault);
         config.set("format.groups.admin.format", "<red>管理员 <displayname>: <message>");
         assertTrue(ChatFormatDefaults.migrate(config));
-        assertEquals(ChatFormatDefaults.DEFAULT, config.getString("format.groups.default.format"));
+        assertEquals("<aqua>[{world}]</aqua> " + ChatFormatDefaults.NAME + "<aqua> » </aqua><white><message>",
+                config.getString("format.groups.default.format"));
         assertEquals("<red>管理员 <displayname>: <message>", config.getString("format.groups.admin.format"));
         assertFalse(ChatFormatDefaults.migrate(config));
     }
@@ -93,5 +106,21 @@ class ChatAppearanceTest {
                 List.of(Map.of("world", "world", "name", "", "color", "#55ff55")))));
         var duplicate = Map.of("world", "world", "name", "世界", "color", "aqua");
         assertThrows(RuntimeException.class, () -> ChatModule.validateAppearanceConfig(Map.of("worldAliases", List.of(duplicate, duplicate))));
+    }
+
+    @Test void nameplateApiValidatesSettingsWithoutRequiringWorldAliases() {
+        assertDoesNotThrow(() -> ChatModule.validateAppearanceConfig(Map.of(
+                "worldBrackets", true, "nameplateEnabled", true, "nameplateHeight", 2.65, "nameplateViewRange", 32)));
+        for (Map<String, Object> input : List.of(
+                Map.<String, Object>of("worldBrackets", "true"),
+                Map.<String, Object>of("nameplateEnabled", 1),
+                Map.<String, Object>of("nameplateHeight", 2.64),
+                Map.<String, Object>of("nameplateHeight", 8.1),
+                Map.<String, Object>of("nameplateHeight", Double.NaN),
+                Map.<String, Object>of("nameplateViewRange", 3),
+                Map.<String, Object>of("nameplateViewRange", 65),
+                Map.<String, Object>of("nameplateViewRange", "32"))) {
+            assertThrows(RuntimeException.class, () -> ChatModule.validateAppearanceConfig(input), input.toString());
+        }
     }
 }

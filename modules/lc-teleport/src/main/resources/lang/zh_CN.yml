@@ -1,5 +1,5 @@
 # 传送模块语言文件（MiniMessage 格式，<prefix> 为统一前缀，{name} 为占位符）
-prefix: "<aqua>[</aqua><light_purple><bold>传送</bold></light_purple><aqua>]</aqua> "
+prefix: "<green>[<bold>传送</bold>]</green> "
 # 用法说明中 (参数) 为必填，[参数] 为可选
 
 common:
@@ -33,17 +33,17 @@ usage:
 
 teleport:
   success: "<prefix><green>传送成功。"
-  target-unavailable: "<prefix><red>传送目标已不可用。"
-  cooldown: "<prefix><red>传送冷却中，请等待 <yellow>{seconds}</yellow> 秒。"
+  target-unavailable: "<prefix><red>传送目标已不可用，请重新发起传送。"
+  cooldown: "<prefix><yellow>请等待 {seconds} 秒后再次传送。"
   no-money: "<prefix><red>余额不足，本次传送需要 <gold>{cost}</gold>。"
   payer-no-money: "<prefix><red>{player} 余额不足，无法支付本次传送。"
   charged: "<prefix><white>已扣除传送费用 <gold>{cost}</gold>。"
-  warmup: "<prefix><aqua>将在 <yellow>{seconds}</yellow> 秒后传送{hint}"
+  warmup: "<prefix><yellow>将在 {seconds} 秒后传送{hint}"
   warmup-hint: "<white>，请不要移动。"
   warmup-cancelled: "<prefix><red>你移动了或受到伤害，传送已取消。"
-  unsafe: "<prefix><red>目标位置不安全，且附近找不到安全落点。"
+  unsafe: "<prefix><red>目标附近没有安全落点，请更换位置后重试。"
   land-denied: "<prefix><red>目标位置位于他人领地，你没有传送进入的权限。"
-  failed: "<prefix><red>传送失败（可能被其它插件取消）。"
+  failed: "<prefix><red>传送未完成，请确认目标位置可用后重试。"
 
 tpa:
   self: "<prefix><red>你不能向自己发送传送请求。"
@@ -51,7 +51,7 @@ tpa:
   sent: "<prefix><green>已向 <yellow>{player}</yellow> 发送传送请求，<white>{seconds} 秒后过期。<white>输入 /tpacancel 取消。"
   sent-here: "<prefix><green>已请求 <yellow>{player}</yellow> 传送到你这里，<white>{seconds} 秒后过期。"
   received: "<prefix><yellow>{player}</yellow> <aqua>请求传送到你这里。<white>（{seconds} 秒内有效）"
-  received-here: "<prefix><yellow>{player}</yellow> <aqua>请求你传送到 TA 那里。<white>（{seconds} 秒内有效）"
+  received-here: "<prefix><yellow>{player}</yellow> <aqua>请求你传送到对方的位置。<white>（{seconds} 秒内有效）"
   button-accept: "<green><bold>[接受]</bold></green>"
   button-accept-hover: "<green>点击接受 {player} 的请求"
   button-deny: "<red><bold>[拒绝]</bold></red>"
@@ -68,8 +68,8 @@ tpa:
   expired-requester: "<prefix><white>你发给 {player} 的传送请求已过期。"
   expired-target: "<prefix><white>{player} 的传送请求已过期。"
   all-sent: "<prefix><green>已向 <yellow>{count}</yellow> 名玩家发送 tpahere 请求。"
-  none: "<prefix><red>你没有待处理的传送请求。"
-  none-outgoing: "<prefix><red>你没有发出的传送请求。"
+  none: "<prefix><yellow>当前没有待处理的传送请求。"
+  none-outgoing: "<prefix><yellow>当前没有发出的传送请求。"
   toggle-on: "<prefix><green>已开启接收传送请求。"
   toggle-off: "<prefix><yellow>已关闭接收传送请求。"
 
@@ -93,7 +93,7 @@ home:
   set: "<prefix><green>已设置家 <yellow>{name}</yellow>。"
   updated: "<prefix><green>已更新家 <yellow>{name}</yellow> 的位置。"
   set-other: "<prefix><green>已为 <yellow>{player}</yellow> 设置家 <yellow>{name}</yellow>。"
-  none: "<prefix><red>你还没有设置家，使用 <gold>/sethome [名称]</gold> 设置。"
+  none: "<prefix><yellow>尚未设置家，使用 <gold>/sethome [名称]</gold> 保存当前位置。"
   none-other: "<prefix><red>{player} 没有任何家。"
   not-found: "<prefix><red>家 <yellow>{name}</yellow> 不存在。"
   deleted: "<prefix><green>已删除家 <yellow>{name}</yellow>。"
@@ -114,7 +114,7 @@ warp:
   deleted: "<prefix><green>已删除地标 <yellow>{name}</yellow>。"
   teleported: "<prefix><green>已传送到地标 <yellow>{name}</yellow>。"
   sent-other: "<prefix><green>已将 <yellow>{player}</yellow> 传送到地标 <yellow>{name}</yellow>。"
-  none: "<prefix><red>当前没有可用的地标。"
+  none: "<prefix><yellow>当前没有可用的地标。"
   list-header: "<prefix><white>可用地标（<yellow>{count}</yellow>），点击传送："
   list-separator: "<aqua>, "
   list-entry: "<gold><u>{name}</u></gold>"
@@ -148,13 +148,13 @@ spawn:
   death-disabled: "<prefix><green>已关闭死亡回主城。<white>输入 <gold>/spawn ondeath on</gold> 可开启。"
 
 back:
-  none: "<prefix><red>没有可以返回的位置。"
+  none: "<prefix><yellow>当前没有可以返回的位置。"
   teleported: "<prefix><green>已返回上一个位置。"
   death-hint: "<prefix><white>输入 <gold>/back</gold> 返回死亡地点。"
 
 rtp:
-  world-disabled: "<prefix><red>该世界未开启随机传送。"
-  searching: "<prefix><aqua>正在寻找安全的随机位置……"
+  world-disabled: "<prefix><yellow>该世界未开启随机传送，请选择其他世界。"
+  searching: "<prefix><yellow>正在寻找安全位置，请稍候。"
   failed: "<prefix><red>未能找到合适的随机位置，请稍后再试。"
   success: "<prefix><green>已随机传送到 <yellow>{world} {x}, {y}, {z}</yellow>。"
   sent-other: "<prefix><green>已对 <yellow>{player}</yellow> 执行随机传送。"

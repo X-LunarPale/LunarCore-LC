@@ -1,4 +1,5 @@
 # Economy module language file (MiniMessage), key: economy.<path>
+prefix: "<gold>[<bold>Economy</bold>]</gold> "
 usage:
   money: "<prefix><white>Usage: <yellow>/money [player]</yellow> or <yellow>/money log [player] [page]"
   pay: "<prefix><white>Usage: <yellow>/pay <player> <amount></yellow>, large payments require <yellow>/pay confirm</yellow>"
@@ -12,8 +13,8 @@ pay:
   min: "<prefix><red>The minimum payment is <gold>{min}</gold>."
   self: "<prefix><red>You cannot pay yourself."
   confirm: "<prefix><yellow>You are about to pay <white>{player}</white> <gold>{amount}</gold> (fee <gold>{fee}</gold>, total <gold>{total}</gold>).<br><prefix><yellow>Type <click:run_command:'/pay confirm'><green><u>/pay confirm</u></green></click> within {seconds}s to confirm."
-  no-pending: "<prefix><red>You have no pending payment."
-  expired: "<prefix><red>The confirmation has expired, please try again."
+  no-pending: "<prefix><yellow>There is no payment awaiting confirmation."
+  expired: "<prefix><yellow>The confirmation expired without charging you. Start the payment again."
   sent: "<prefix><green>Paid <gold>{amount}</gold> to <white>{player}</white>. Balance: <gold>{balance}</gold>."
   sent-fee: "<prefix><green>Paid <gold>{amount}</gold> to <white>{player}</white> (fee <gold>{fee}</gold>). Balance: <gold>{balance}</gold>."
   received: "<prefix><green>You received <gold>{amount}</gold> from <white>{player}</white>."
@@ -34,8 +35,8 @@ eco:
 
 log:
   header: "<gold>===== Transactions of <white>{player}</white> <white>({page}/{pages})</white> ====="
-  entry-in: "<aqua>[{time}]</aqua> <green>+{change}</green> <white>bal {balance}</white> <white>{reason}</white> <aqua>by {operator}"
-  entry-out: "<aqua>[{time}]</aqua> <red>-{change}</red> <white>bal {balance}</white> <white>{reason}</white> <aqua>by {operator}"
+  entry-in: "<green>[{time}]</green> <green>+{change}</green> <white>balance {balance}</white> <white>{reason}</white> <aqua>by {operator}"
+  entry-out: "<red>[{time}]</red> <red>-{change}</red> <white>balance {balance}</white> <white>{reason}</white> <aqua>by {operator}"
   empty: "<white>No transactions."
 
 error:

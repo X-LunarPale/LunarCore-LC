@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/USAGE.md) | [Home](../../README.en.md)
 
-LC is short for LunarCore. Use `/lc help` for management commands and `/lc m list` to check module statuses as an administrator. The `/lc` command has been removed. Basic commands still work directly. Use `%lc_module_key%` in custom text, such as `%lc_core_online%`.
+LC is short for LunarCore. Use `/lc help` for management commands and `/lc m list` to check module statuses as an administrator. Basic commands still work directly. Use `%lc_module_key%` in custom text, such as `%lc_core_online%`.
 
 ## Accounts
 
@@ -21,6 +21,16 @@ Keep the one-time recovery codes. A normal password change does not disable veri
 Save or reset the name and logo separately under **Server settings → Branding**. Logos support PNG/JPEG, up to 256 KiB and 1024 pixels in each dimension. Branding appears publicly on the login page.
 
 Switch Chinese and English on the login page or panel toolbar. Player input, configuration contents and console logs keep their original text.
+
+## Chat Appearance and Announcements
+
+Set world display names and colors in chat settings without renaming English world folders. When matching world brackets are enabled, `{world}` already includes them; do not add another pair to the format.
+
+Chat, TAB player names and overhead titles have separate controls. New configurations hide titles before player names in chat and TAB. Enable overhead titles separately and set their height and viewing distance. The built-in administrator format keeps the blue player name without an extra management label.
+
+Choose an example world, player, title and message in the display preview. It sends nothing to the game; actual client rendering is authoritative. Existing custom formats are preserved. Upgrading does not replace every custom format or title-display choice.
+
+Announcement switches, intervals and contents apply when saved. Reloading or disabling the chat module stops its previous announcement task to prevent duplicate broadcasts.
 
 ## In-game AI
 

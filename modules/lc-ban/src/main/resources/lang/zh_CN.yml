@@ -143,7 +143,7 @@ broadcast:
   kick:
     - "<yellow>踢出 » {player}</yellow><white> 已被踢出服务器"
     - "<aqua>原因：<white>{reason}</white> · 来源：<white>{operator}"
-  silent-prefix: "<aqua>[静默]</aqua> {message}"
+  silent-prefix: "<light_purple>[静默]</light_purple> {message}"
   unban: "<red>封禁 » </red><yellow>{player}</yellow><green> 的封禁已解除 <aqua>· 来源：<white>{operator}"
   unbanip: "<red>封禁 » </red><yellow>{player}</yellow><green> 的 IP 封禁已解除 <aqua>· 来源：<white>{operator}"
   unmute: "<gold>禁言 » </gold><yellow>{player}</yellow><green> 的禁言已解除 <aqua>· 来源：<white>{operator}"

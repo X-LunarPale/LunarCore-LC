@@ -62,7 +62,12 @@ public abstract class LcModule {
 
     public void onDisable() {}
 
-    /** /lc module reload <id> 时调用；默认重载 config.yml。 */
+    /** 是否支持 /lc reload 直接应用配置；否则使用 /lc module reload <id>。 */
+    public boolean supportsConfigReload() {
+        return true;
+    }
+
+    /** /lc reload 时调用；默认重载 config.yml。 */
     public void onReload() {
         reloadConfig();
     }
@@ -159,11 +164,11 @@ public abstract class LcModule {
     }
 
     public final BukkitTask runTask(Runnable r) {
-        return track(Bukkit.getScheduler().runTask(plugin(), r));
+        return scheduleOnce(r, callback -> Bukkit.getScheduler().runTask(plugin(), callback));
     }
 
     public final BukkitTask runTaskLater(Runnable r, long delayTicks) {
-        return track(Bukkit.getScheduler().runTaskLater(plugin(), r, delayTicks));
+        return scheduleOnce(r, callback -> Bukkit.getScheduler().runTaskLater(plugin(), callback, delayTicks));
     }
 
     public final BukkitTask runTaskTimer(Runnable r, long delayTicks, long periodTicks) {
@@ -171,7 +176,7 @@ public abstract class LcModule {
     }
 
     public final BukkitTask runAsync(Runnable r) {
-        return track(Bukkit.getScheduler().runTaskAsynchronously(plugin(), r));
+        return scheduleOnce(r, callback -> Bukkit.getScheduler().runTaskAsynchronously(plugin(), callback));
     }
 
     public final BukkitTask runAsyncTimer(Runnable r, long delayTicks, long periodTicks) {
@@ -181,6 +186,25 @@ public abstract class LcModule {
     private BukkitTask track(BukkitTask task) {
         tasks.removeIf(BukkitTask::isCancelled);
         tasks.add(task);
+        return task;
+    }
+
+    final BukkitTask scheduleOnce(Runnable action, java.util.function.Function<Runnable, BukkitTask> schedule) {
+        var reference = new java.util.concurrent.atomic.AtomicReference<BukkitTask>();
+        var completed = new java.util.concurrent.atomic.AtomicBoolean();
+        BukkitTask task = schedule.apply(() -> {
+            try {
+                action.run();
+            } finally {
+                completed.set(true);
+                BukkitTask running = reference.get();
+                if (running != null) tasks.remove(running);
+            }
+        });
+        reference.set(task);
+        track(task);
+        // An async callback can finish before the scheduler returns its task.
+        if (completed.get()) tasks.remove(task);
         return task;
     }
 

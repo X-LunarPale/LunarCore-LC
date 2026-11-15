@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { chatPreview } from '../src/components/chat/chat-preview.js'
+import { chatPreview, nameplatePreview } from '../src/components/chat/chat-preview.js'
 import { parseMinecraftText } from '../src/components/text-preview/minecraft-text.js'
 
 const plain = text => parseMinecraftText(text).segments.map(segment => segment.text).join('')
@@ -32,4 +32,21 @@ test('legacy title color remains scoped to title in chat and TAB previews', () =
 })
 test('world and player values remain literal instead of becoming preview markup', () => {
   assert.equal(plain(chatPreview('{world} {player}', { worldName: '<red>世界', player: '<click:test>', showTitle: false })), '<red>世界 <click:test>')
+})
+test('world brackets share the configured world color and retain the raw world name', () => {
+  const output = chatPreview('{world} {world_name}', {
+    world: 'survival', worldName: '生存世界', color: '#12ab34', worldBrackets: true
+  })
+  assert.equal(plain(output), '[生存世界] survival')
+  assert.equal(parseMinecraftText(output).segments.find(segment => segment.text === '[生存世界]').style.color, '#12ab34')
+})
+test('nameplate preview keeps the title above the literal player name independently of chat titles', () => {
+  const output = nameplatePreview('&6[旅行者]', '<red>Steve')
+  assert.equal(plain(output), '[旅行者]\n<red>Steve')
+  assert.equal(parseMinecraftText(output).segments.find(segment => segment.text.includes('[旅行者]')).style.color, '#ffaa00')
+  assert.equal(plain(chatPreview('{title}<displayname>', { showTitle: false })), 'Steve')
+  for (const title of ['', '&7未佩戴', 'none', '%playerTitle_use%']) {
+    assert.equal(plain(nameplatePreview(title, 'Steve')), 'Steve')
+    assert.equal(plain(chatPreview('{title} {player}', { title })), 'Steve')
+  }
 })

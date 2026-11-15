@@ -1,5 +1,5 @@
 # 经济模块语言文件（MiniMessage 格式），引用 key：economy.<路径>
-prefix: "<aqua>[</aqua><gold><bold>经济</bold></gold><aqua>]</aqua> "
+prefix: "<gold>[<bold>经济</bold>]</gold> "
 usage:
   money: "<prefix><white>用法：<yellow>/money [玩家]</yellow> 或 <yellow>/money log [玩家] [页]"
   pay: "<prefix><white>用法：<yellow>/pay <玩家> <金额></yellow>，大额转账需 <yellow>/pay confirm</yellow> 确认"
@@ -13,8 +13,8 @@ pay:
   min: "<prefix><red>单笔转账金额不能低于 <gold>{min}</gold>。"
   self: "<prefix><red>不能给自己转账。"
   confirm: "<prefix><yellow>你将向 <white>{player}</white> 转账 <gold>{amount}</gold>（手续费 <gold>{fee}</gold>，合计 <gold>{total}</gold>）。<br><prefix><yellow>请在 {seconds} 秒内输入 <click:run_command:'/pay confirm'><green><u>/pay confirm</u></green></click> 确认。"
-  no-pending: "<prefix><red>没有待确认的转账。"
-  expired: "<prefix><red>转账确认已过期，请重新发起。"
+  no-pending: "<prefix><yellow>当前没有待确认的转账。"
+  expired: "<prefix><yellow>转账确认已过期，本次未扣款，请重新发起。"
   sent: "<prefix><green>已向 <white>{player}</white> 转账 <gold>{amount}</gold>，当前余额 <gold>{balance}</gold>。"
   sent-fee: "<prefix><green>已向 <white>{player}</white> 转账 <gold>{amount}</gold>（手续费 <gold>{fee}</gold>），当前余额 <gold>{balance}</gold>。"
   received: "<prefix><green>你收到了 <white>{player}</white> 的转账 <gold>{amount}</gold>。"
@@ -35,8 +35,8 @@ eco:
 
 log:
   header: "<gold>===== <white>{player}</white> 的流水 <white>({page}/{pages})</white> ====="
-  entry-in: "<aqua>[{time}]</aqua> <green>+{change}</green> <white>余额 {balance}</white> <white>{reason}</white> <aqua>by {operator}"
-  entry-out: "<aqua>[{time}]</aqua> <red>-{change}</red> <white>余额 {balance}</white> <white>{reason}</white> <aqua>by {operator}"
+  entry-in: "<green>[{time}]</green> <green>+{change}</green> <white>余额 {balance}</white> <white>{reason}</white> <aqua>操作人 {operator}"
+  entry-out: "<red>[{time}]</red> <red>-{change}</red> <white>余额 {balance}</white> <white>{reason}</white> <aqua>操作人 {operator}"
   empty: "<white>暂无流水记录。"
 
 error:

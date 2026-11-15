@@ -1,4 +1,4 @@
-prefix: "<aqua>[</aqua><aqua>Landmarks</aqua><aqua>]</aqua> "
+prefix: "<dark_aqua>[Landmarks]</dark_aqua> "
 help:
   - "<gold>Building landmarks"
   - "<yellow>/landmarks <white>Browse published landmarks"

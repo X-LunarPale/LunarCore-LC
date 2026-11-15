@@ -11,6 +11,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -18,7 +20,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -40,12 +45,29 @@ public final class ChatModule extends LcModule implements Listener {
     AiChatService aiChat;
     volatile boolean globalMute;
     private final AtomicInteger announceIndex = new AtomicInteger();
+    private BukkitTask announcerTask;
     private boolean logEnabled;
     private final TabList tablist = new TabList(this);
+    private final NameplateTitles nameplates = new NameplateTitles(this);
     private volatile boolean closing;
 
     @Override
+    public void onLoad() {
+        File file = new File(dataFolder(), "config.yml");
+        if (!file.isFile()) return;
+        // Preserve old display behavior before the module loader fills new defaults.
+        YamlConfiguration previous = new YamlConfiguration();
+        try {
+            previous.load(file);
+            if (ChatFormatDefaults.preserveLegacySettings(previous)) previous.save(file);
+        } catch (IOException | InvalidConfigurationException e) {
+            throw new IllegalStateException("无法读取聊天配置 config.yml", e);
+        }
+    }
+
+    @Override
     public void onEnable() {
+        closing = false;
         store = new ChatStore(api().database(), logger());
         try {
             store.createTables();
@@ -84,6 +106,7 @@ public final class ChatModule extends LcModule implements Listener {
         runAsyncTimer(store::purgeAiMemories, 1200L, 72_000L);
         startAnnouncer();
         startTablist();
+        nameplates.restart();
 
         placeholder((player, key) -> {
             if (player == null) return null;
@@ -106,7 +129,9 @@ public final class ChatModule extends LcModule implements Listener {
     public synchronized void onDisable() {
         closing = true;
         if (aiChat != null) aiChat.stop();
+        nameplates.stop();
         tablist.stop();
+        stopAnnouncer();
         if (store != null) store.flushLogs();
     }
 
@@ -115,7 +140,9 @@ public final class ChatModule extends LcModule implements Listener {
         super.onReload();
         loadSettings();
         if (aiChat != null) aiChat.reload();
+        startAnnouncer();
         tablist.restart();
+        nameplates.restart();
     }
 
     void loadSettings() {
@@ -255,6 +282,7 @@ public final class ChatModule extends LcModule implements Listener {
             }
         }
         tablist.forget(p);
+        nameplates.quit(p.getUniqueId());
         formatter.appearance.forget(p.getUniqueId());
         store.evict(p.getUniqueId());
         filter.forget(p.getUniqueId());
@@ -271,10 +299,11 @@ public final class ChatModule extends LcModule implements Listener {
     // ---------------- 公告与 Tab ----------------
 
     private void startAnnouncer() {
+        stopAnnouncer();
         ConfigurationSection a = config().getConfigurationSection("announcer");
         if (a == null || !a.getBoolean("enabled", true)) return;
-        long period = Math.max(10, a.getLong("interval-seconds", 300)) * 20L;
-        runTaskTimer(() -> {
+        long period = announcerPeriod(a.getLong("interval-seconds", 300));
+        announcerTask = runTaskTimer(() -> {
             List<String> list = config().getStringList("announcer.messages");
             if (list.isEmpty() || Bukkit.getOnlinePlayers().isEmpty()) return;
             String msg = "random".equalsIgnoreCase(config().getString("announcer.mode"))
@@ -285,6 +314,17 @@ public final class ChatModule extends LcModule implements Listener {
                 p.sendMessage(ChatFormatter.render(p, prefix + msg, vars("player", p.getName())));
             }
         }, period, period);
+    }
+
+    private void stopAnnouncer() {
+        if (announcerTask != null) {
+            announcerTask.cancel();
+            announcerTask = null;
+        }
+    }
+
+    static long announcerPeriod(long seconds) {
+        return Math.max(10, Math.min(Long.MAX_VALUE / 20, seconds)) * 20L;
     }
 
     private void startTablist() {
@@ -351,6 +391,11 @@ public final class ChatModule extends LcModule implements Listener {
                     m.put("chatShowTitle", config().getBoolean("format.title.enabled", true));
                     m.put("titlePlaceholder", config().getString("format.title.placeholder", ChatAppearance.TITLE_PLACEHOLDER));
                     m.put("worldDefaultColor", config().getString("format.worlds.default-color", ChatAppearance.DEFAULT_COLOR));
+                    m.put("worldBrackets", config().getBoolean("format.worlds.brackets", false));
+                    var nameplate = NameplateTitles.Settings.load(config());
+                    m.put("nameplateEnabled", nameplate.enabled());
+                    m.put("nameplateHeight", nameplate.height());
+                    m.put("nameplateViewRange", nameplate.range());
                     m.put("worldAliases", ctx.sync(() -> {
                         Map<String, Map<String, String>> rows = new LinkedHashMap<>();
                         for (Map<String, String> row : formatter.appearance.aliases()) rows.put(row.get("world"), row);
@@ -363,6 +408,7 @@ public final class ChatModule extends LcModule implements Listener {
                 .post("/config", "chat.manage", ctx -> {
                     Map<String, Object> b = ctx.bodyMap();
                     validateTabConfig(b);
+                    validateChatConfig(b);
                     ctx.sync(() -> {
                         setIf(b, "tabEnabled", "tablist.enabled", Boolean.class);
                         if (b.get("tabRefresh") instanceof Number n) config().set("tablist.refresh-seconds", n.longValue());
@@ -374,22 +420,26 @@ public final class ChatModule extends LcModule implements Listener {
                         setIf(b, "chatShowTitle", "format.title.enabled", Boolean.class);
                         setIf(b, "titlePlaceholder", "format.title.placeholder", String.class);
                         setIf(b, "worldDefaultColor", "format.worlds.default-color", String.class);
+                        setIf(b, "worldBrackets", "format.worlds.brackets", Boolean.class);
+                        setIf(b, "nameplateEnabled", "nameplate.enabled", Boolean.class);
+                        if (b.get("nameplateHeight") instanceof Number n) config().set("nameplate.height", n.doubleValue());
+                        if (b.get("nameplateViewRange") instanceof Number n) config().set("nameplate.view-range", n.doubleValue());
                         if (b.containsKey("worldAliases")) config().set("format.worlds.aliases", b.get("worldAliases"));
                         setIf(b, "antiSpam", "anti-spam.enabled", Boolean.class);
-                        if (b.get("cooldownMs") != null) config().set("anti-spam.cooldown-ms", ((Number) b.get("cooldownMs")).longValue());
+                        if (b.get("cooldownMs") instanceof Number n) config().set("anti-spam.cooldown-ms", n.longValue());
                         setIf(b, "antiAd", "anti-spam.anti-ad.enabled", Boolean.class);
                         setLines(b, "badWords", "anti-spam.bad-words");
                         setIf(b, "announcer", "announcer.enabled", Boolean.class);
-                        if (b.get("announceInterval") != null) config().set("announcer.interval-seconds", ((Number) b.get("announceInterval")).longValue());
+                        if (b.get("announceInterval") instanceof Number n) config().set("announcer.interval-seconds", n.longValue());
                         setLines(b, "announcements", "announcer.messages");
                         setLines(b, "motd", "motd.lines");
                         setIf(b, "logEnabled", "log.enabled", Boolean.class);
                         saveConfig();
-                        api().modules().reload(id());
+                        onReload();
                         return null;
                     });
                     audit("web:" + ctx.user().username(), "config", "更新聊天配置");
-                    ctx.ok("已保存并重载聊天模块");
+                    ctx.ok("已保存并应用聊天设置");
                 })
                 .get("/ai/settings", "chat.ai.manage", ctx -> ctx.json(aiChat.settings().publicView()))
                 .post("/ai/settings", "chat.ai.manage", ctx -> {
@@ -433,27 +483,31 @@ public final class ChatModule extends LcModule implements Listener {
                         .toolbarAction(new WebPanel.Action("chatmute", "切换全服禁言", "chatmute").style("warning").permission("chat.manage")
                                 .confirm("确定切换全服禁言状态吗？")))
                 .section(new WebPanel.Form("聊天设置", "config", "config")
-                        .field(new WebPanel.Field("antiSpam", "启用反刷屏", "bool"))
-                        .field(new WebPanel.Field("cooldownMs", "发言间隔(毫秒)", "number"))
-                        .field(new WebPanel.Field("antiAd", "广告拦截", "bool"))
-                        .field(new WebPanel.Field("badWords", "敏感词（每行一个）", "textarea"))
-                        .field(new WebPanel.Field("announcer", "启用自动公告", "bool"))
-                        .field(new WebPanel.Field("announceInterval", "公告间隔(秒)", "number"))
-                        .field(new WebPanel.Field("announcements", "公告内容（每行一条，MiniMessage）", "textarea"))
-                        .field(new WebPanel.Field("motd", "登录欢迎消息（每行一条）", "textarea"))
-                        .field(new WebPanel.Field("logEnabled", "记录聊天到数据库", "bool"))
-                        .field(new WebPanel.Field("defaultChatFormat", "默认玩家聊天格式", "text")
+                        .field(new WebPanel.Field("antiSpam", "启用反刷屏", "bool").group("聊天过滤"))
+                        .field(new WebPanel.Field("cooldownMs", "发言间隔(毫秒)", "number").group("聊天过滤"))
+                        .field(new WebPanel.Field("antiAd", "广告拦截", "bool").group("聊天过滤"))
+                        .field(new WebPanel.Field("badWords", "敏感词（每行一个）", "textarea").group("聊天过滤"))
+                        .field(new WebPanel.Field("logEnabled", "记录聊天到数据库", "bool").group("聊天过滤"))
+                        .field(new WebPanel.Field("announcer", "启用自动公告", "bool").group("公告与欢迎"))
+                        .field(new WebPanel.Field("announceInterval", "公告间隔(秒)", "number").group("公告与欢迎"))
+                        .field(new WebPanel.Field("announcements", "公告内容（每行一条，MiniMessage）", "textarea").group("公告与欢迎"))
+                        .field(new WebPanel.Field("motd", "登录欢迎消息（每行一条）", "textarea").group("公告与欢迎"))
+                        .field(new WebPanel.Field("defaultChatFormat", "默认玩家聊天格式", "text").group("聊天外观")
                                 .help("{world} 世界显示名、{title} 当前称号、<displayname> 玩家显示名、<message> 消息；{world_name} 保留原始世界名。"))
-                        .field(new WebPanel.Field("chatShowTitle", "聊天显示当前称号", "bool"))
-                        .field(new WebPanel.Field("titlePlaceholder", "PlayerTitle 占位符", "text"))
-                        .field(new WebPanel.Field("worldDefaultColor", "默认世界颜色", "text"))
+                        .field(new WebPanel.Field("chatShowTitle", "聊天显示当前称号", "bool").group("聊天外观"))
+                        .field(new WebPanel.Field("worldDefaultColor", "默认世界颜色", "text").group("聊天外观"))
+                        .field(new WebPanel.Field("worldBrackets", "世界名称自带同色方括号", "bool").group("聊天外观"))
                         .field(new WebPanel.Field("worldAliases", "世界显示名称", "world-aliases"))
-                        .field(new WebPanel.Field("tabEnabled", "启用 TAB", "bool"))
-                        .field(new WebPanel.Field("tabRefresh", "TAB 刷新秒数（1–3600）", "number"))
-                        .field(new WebPanel.Field("tabHeader", "玩家列表顶部文字（每行一条）", "textarea"))
-                        .field(new WebPanel.Field("tabFooter", "玩家列表底部文字（每行一条）", "textarea"))
-                        .field(new WebPanel.Field("tabShowTitle", "玩家名称前显示当前称号", "bool"))
-                        .field(new WebPanel.Field("tabName", "玩家列表名称格式", "text").help("{title} 表示当前称号，{player} 表示玩家名称；未佩戴时不显示称号。检测到其他玩家列表插件或外部修改时让出对应显示。"))));
+                        .field(new WebPanel.Field("titlePlaceholder", "PlayerTitle 占位符", "text").group("头顶称号"))
+                        .field(new WebPanel.Field("nameplateEnabled", "显示头顶称号", "bool").group("头顶称号"))
+                        .field(new WebPanel.Field("nameplateHeight", "称号高度（格）", "number").range(2.65, 8, 0.05).group("头顶称号"))
+                        .field(new WebPanel.Field("nameplateViewRange", "称号可见距离（格）", "number").range(4, 64, 1).group("头顶称号"))
+                        .field(new WebPanel.Field("tabEnabled", "启用 TAB", "bool").group("玩家列表"))
+                        .field(new WebPanel.Field("tabRefresh", "TAB 刷新秒数（1–3600）", "number").range(1, 3600, 1).group("玩家列表"))
+                        .field(new WebPanel.Field("tabHeader", "玩家列表顶部文字（每行一条）", "textarea").group("玩家列表"))
+                        .field(new WebPanel.Field("tabFooter", "玩家列表底部文字（每行一条）", "textarea").group("玩家列表"))
+                        .field(new WebPanel.Field("tabShowTitle", "玩家名称前显示当前称号", "bool").group("玩家列表"))
+                        .field(new WebPanel.Field("tabName", "玩家列表名称格式", "text").group("玩家列表").help("{title} 表示当前称号，{player} 表示玩家名称；未佩戴时不显示称号。检测到其他玩家列表插件或外部修改时让出对应显示。"))));
 
         webPanel(WebPanel.of("ai", "AI 聊天").icon("bot").group("玩家").order(31).permission("chat.ai.manage")
                 .section(new WebPanel.Text("配置", "AI 在游戏公开聊天中以默认玩家格式回复；设置仅授权账号可见，API Key 不会返回浏览器。")));
@@ -481,6 +535,12 @@ public final class ChatModule extends LcModule implements Listener {
     }
 
     static void validateAppearanceConfig(Map<String, Object> body) {
+        for (String key : List.of("worldBrackets", "nameplateEnabled")) {
+            if (body.containsKey(key) && !(body.get(key) instanceof Boolean))
+                throw HttpException.badRequest("世界括号与头顶称号开关必须为布尔值");
+        }
+        validateRange(body, "nameplateHeight", 2.65, 8, false, "称号高度须为 2.65–8 格");
+        validateRange(body, "nameplateViewRange", 4, 64, false, "称号可见距离须为 4–64 格");
         if (body.containsKey("chatShowTitle") && !(body.get("chatShowTitle") instanceof Boolean))
             throw HttpException.badRequest("聊天称号开关必须为布尔值");
         if (body.containsKey("titlePlaceholder") && (!(body.get("titlePlaceholder") instanceof String token)
@@ -499,6 +559,27 @@ public final class ChatModule extends LcModule implements Listener {
                     || !(row.get("color") instanceof String color) || ChatAppearance.color(color) == null)
                 throw HttpException.badRequest("世界名称、颜色或重复条目无效");
         }
+    }
+
+    static void validateChatConfig(Map<String, Object> body) {
+        for (String key : List.of("antiSpam", "antiAd", "announcer", "logEnabled")) {
+            if (body.containsKey(key) && !(body.get(key) instanceof Boolean))
+                throw HttpException.badRequest("聊天开关必须为布尔值");
+        }
+        validateRange(body, "cooldownMs", 0, Long.MAX_VALUE, true, "发言间隔须为非负整数");
+        validateRange(body, "announceInterval", 10, Long.MAX_VALUE / 20, true, "公告间隔须为不少于 10 秒的整数");
+        for (String key : List.of("badWords", "announcements", "motd")) {
+            if (body.containsKey(key) && !(body.get(key) instanceof String))
+                throw HttpException.badRequest("聊天消息列表必须为文本");
+        }
+    }
+
+    private static void validateRange(Map<String, Object> body, String key, double min, double max,
+                                      boolean integer, String message) {
+        if (!body.containsKey(key)) return;
+        if (!(body.get(key) instanceof Number n) || !Double.isFinite(n.doubleValue())
+                || n.doubleValue() < min || n.doubleValue() > max || integer && n.doubleValue() != n.longValue())
+            throw HttpException.badRequest(message);
     }
 
     private static Map<String, Object> stat(String label, Object value, String icon) {

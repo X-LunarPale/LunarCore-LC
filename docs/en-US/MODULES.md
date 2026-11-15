@@ -13,13 +13,15 @@ A module is a feature set installed separately. The core includes `essentials` b
 
 The market handles one set of changes at a time. Cancel pending changes to choose again. It offers official modules matching the current core. See [Installation](INSTALL.md) for core upgrades.
 
+On the Installed tab, wait for an enable, disable or reload operation to finish. Disabling requires confirmation; cancelling leaves the module unchanged. Failed reads offer Retry. If a refresh fails, the previous list remains visible and does not confirm the result of the latest operation.
+
 ## Removal
 
 Removal deletes only the JAR, keeping settings, databases and worlds. Remove dependent modules first. Basic commands cannot be removed through the market.
 
 ## Public Downloads and Submissions
 
-The v0.0.8-pre.1 source, module market and release assets are public in [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC). Browser downloads and panel installation require neither a GitHub login nor a token.
+The v0.0.9-pre.1 source, module market and release assets are public in [LunarCore-LC](https://github.com/X-LunarPale/LunarCore-LC). Browser downloads and panel installation require neither a GitHub login nor a token.
 
 Everyone can [submit modules](../../CONTRIBUTING.en.md) through a PR or Issues. Authors upload files to their own public Releases; the catalog links to those files. Community modules currently use manual installation. The panel installer offers official modules released with the core.
 

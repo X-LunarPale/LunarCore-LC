@@ -1,10 +1,12 @@
 package com.lunarboreal.chat;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
@@ -21,17 +23,27 @@ final class TabList {
     private final Map<UUID, View> previous = new HashMap<>();
     private BukkitTask task;
     private BukkitTask titleTask;
+    record NameColor(String permission, int priority, TextColor color) {}
+    private List<NameColor> nameColors = List.of();
     TabList(ChatModule module) { this.module=module; }
     static long period(long seconds) { return Math.max(1,Math.min(3600,seconds))*20L; }
     static String nameFormat(org.bukkit.configuration.file.FileConfiguration config) {
-        if(config.contains("tablist.player-name-format",true))return config.getString("tablist.player-name-format","{title} {player}");
-        if(config.contains("tablist.name-format",true))return config.getString("tablist.name-format","{title} {player}");
-        return "{title} {player}";
+        if(config.contains("tablist.player-name-format",true))return config.getString("tablist.player-name-format","{world} {player}");
+        if(config.contains("tablist.name-format",true))return config.getString("tablist.name-format","{world} {player}");
+        return config.getString("tablist.player-name-format","{world} {player}");
+    }
+    static boolean needsTitles(ConfigurationSection config) {
+        return config.getBoolean("nameplate.enabled", false)
+                || config.getBoolean("format.enabled", true) && config.getBoolean("format.title.enabled", true)
+                || config.getBoolean("tablist.enabled", true) && config.getBoolean("tablist.show-current-title", true);
     }
     void restart() {
         stop();
-        refreshTitles();
-        titleTask=module.runTaskTimer(this::refreshTitles,20L,20L);
+        nameColors = nameColors(module.config().getConfigurationSection("tablist.name-colors"));
+        if(needsTitles(module.config())){
+            refreshTitles();
+            titleTask=module.runTaskTimer(this::refreshTitles,20L,20L);
+        }
         if(!module.config().getBoolean("tablist.enabled",true))return;
         refresh(); long ticks=period(module.config().getLong("tablist.refresh-seconds",5));
         task=module.runTaskTimer(this::refresh,ticks,ticks);
@@ -74,19 +86,35 @@ final class TabList {
             if(v.headerOwned&&!empty(p.playerListHeader()).equals(v.lastHeader)){v.headerOwned=false;v.headerBlocked=true;}
             if(v.footerOwned&&!empty(p.playerListFooter()).equals(v.lastFooter)){v.footerOwned=false;v.footerBlocked=true;}
             Map<String,String>vars=module.vars("player",p.getName(),"world_name",ChatFormatter.MM.escapeTags(p.getWorld().getName()),"ping",p.getPing(),"online",Bukkit.getOnlinePlayers().size(),"max_players",Bukkit.getMaxPlayers(),"tps",String.format(Locale.ROOT,"%.2f",Math.min(20,tps)),"mspt",String.format(Locale.ROOT,"%.2f",mspt));
-            Component title=currentTitle(p);var titleTag=Placeholder.component("title",title);var display=Placeholder.component("displayname",p.displayName());var world=Placeholder.component("world",module.formatter.appearance.world(p.getWorld().getName()));
+            Component title=currentTitle(p);var titleTag=Placeholder.component("title",title);var display=Placeholder.component("displayname",colorName(p.displayName(),nameColors,p::hasPermission));var world=Placeholder.component("world",module.formatter.appearance.world(p.getWorld().getName()));
+            var playerTag=Placeholder.component("player_name",colorName(Component.text(p.getName()),nameColors,p::hasPermission));
             Component nextH=v.headerBlocked?empty(p.playerListHeader()):render(p,header,vars,display,titleTag,world);
             Component nextF=v.footerBlocked?empty(p.playerListFooter()):render(p,footer,vars,display,titleTag,world);
             if(!v.headerBlocked){v.lastHeader=nextH;v.headerOwned=true;}if(!v.footerBlocked){v.lastFooter=nextF;v.footerOwned=true;}
             if(!nextH.equals(empty(p.playerListHeader()))||!nextF.equals(empty(p.playerListFooter())))p.sendPlayerListHeaderAndFooter(nextH,nextF);
             if(!v.nameBlocked&&name!=null&&!name.isBlank()){
-                String template=withoutEmptyTitle(module.formatter.titleTokens(name),title);
-                Component desired=render(p,template,vars,display,titleTag,world);
+                String template=withoutEmptyTitle(module.formatter.titleTokens(name),title).replace("{player}","<player_name>");
+                Component desired=render(p,template,vars,display,titleTag,world,playerTag);
                 if(!Objects.equals(desired,p.playerListName()))p.playerListName(desired);
                 v.lastName=desired;v.nameOwned=true;
             }
         }
         previous.keySet().retainAll(online);
+    }
+    static List<NameColor> nameColors(ConfigurationSection config){
+        if(config==null)return List.of();
+        List<NameColor> result=new ArrayList<>();
+        for(String key:config.getKeys(false)){
+            ConfigurationSection row=config.getConfigurationSection(key);if(row==null)continue;
+            TextColor color=ChatAppearance.color(row.getString("color"));if(color==null)continue;
+            result.add(new NameColor(row.getString("permission",""),row.getInt("priority",0),color));
+        }
+        result.sort(Comparator.comparingInt(NameColor::priority).reversed());
+        return List.copyOf(result);
+    }
+    static Component colorName(Component name,List<NameColor> colors,java.util.function.Predicate<String> permission){
+        for(NameColor rule:colors)if(rule.permission().isBlank()||permission.test(rule.permission()))return name.color(rule.color());
+        return name;
     }
     private Component currentTitle(Player p){
         if(!module.config().getBoolean("tablist.show-current-title",true))return Component.empty();

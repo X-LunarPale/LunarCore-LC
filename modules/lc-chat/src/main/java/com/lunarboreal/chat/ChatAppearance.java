@@ -27,8 +27,8 @@ final class ChatAppearance {
     record WorldLabel(String world, String name, String color) {
         Map<String, String> view() { return Map.of("world", world, "name", name, "color", color); }
     }
-    private record Settings(Map<String, WorldLabel> worlds, String color, boolean title, String placeholder) {}
-    private volatile Settings settings = new Settings(Map.of(), DEFAULT_COLOR, true, TITLE_PLACEHOLDER);
+    private record Settings(Map<String, WorldLabel> worlds, String color, boolean brackets, boolean title, String placeholder) {}
+    private volatile Settings settings = new Settings(Map.of(), DEFAULT_COLOR, false, true, TITLE_PLACEHOLDER);
     private final Map<UUID, Component> titles = new ConcurrentHashMap<>();
 
     void load(ConfigurationSection format) {
@@ -38,7 +38,7 @@ final class ChatAppearance {
         for (WorldLabel alias : aliases) worlds.put(alias.world(), alias);
         String placeholder = format.getString("title.placeholder", TITLE_PLACEHOLDER);
         if (placeholder == null || !PLACEHOLDER.matcher(placeholder).matches()) placeholder = TITLE_PLACEHOLDER;
-        settings = new Settings(Map.copyOf(worlds), format.getString("worlds.default-color", DEFAULT_COLOR),
+        settings = new Settings(Map.copyOf(worlds), format.getString("worlds.default-color", DEFAULT_COLOR), format.getBoolean("worlds.brackets", false),
                 format.getBoolean("title.enabled", true), placeholder);
         titles.clear();
     }
@@ -63,7 +63,8 @@ final class ChatAppearance {
     Component world(String world) {
         Settings current = settings;
         WorldLabel label = current.worlds().get(world);
-        Component result = Component.text(label == null ? world : label.name());
+        String name = label == null ? world : label.name();
+        Component result = Component.text(current.brackets() ? "[" + name + "]" : name);
         TextColor color = color(label == null ? current.color() : label.color());
         return color == null ? result : result.color(color);
     }

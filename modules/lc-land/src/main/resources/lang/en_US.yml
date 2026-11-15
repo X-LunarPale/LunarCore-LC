@@ -1,4 +1,5 @@
 # Land module language file (MiniMessage)
+prefix: "<green>[<bold>Land</bold>]</green> "
 help:
   - "<gold><bold>━━━━ Lands ━━━━"
   - "<yellow>Select: <white>left/right click with the selection tool, or <white>/land pos1</white> <white>/land pos2"
@@ -46,10 +47,10 @@ usage:
   admin: "<prefix><red>Usage: /land admin delete|tp|list|bypass"
 
 error:
-  loading: "<prefix><red>Land data is loading, try again later."
+  loading: "<prefix><yellow>Land data is loading. Please try again shortly."
   player-only: "<prefix><red>Players only."
   no-permission: "<prefix><red>You don't have permission."
-  no-economy: "<prefix><red>Economy service is not available."
+  no-economy: "<prefix><red>The economy service is temporarily unavailable. Try again later."
   not-enough-money: "<prefix><red>Not enough money: need <gold>{cost}</gold>, you have <gold>{balance}</gold>."
   no-selection: "<prefix><red>Select two points with <yellow>{tool}</yellow> or /land pos1, /land pos2 first."
   invalid-name: "<prefix><red>Invalid land name."
@@ -58,7 +59,7 @@ error:
   not-in-land: "<prefix><red>You are not standing in a land."
   not-owner: "<prefix><red>You are not the owner of <yellow>{land}</yellow>."
   not-manager: "<prefix><red>You can't manage <yellow>{land}</yellow>."
-  frozen: "<prefix><red>Land <yellow>{land}</yellow> is frozen due to unpaid tax."
+  frozen: "<prefix><red>Land <yellow>{land}</yellow> is frozen due to unpaid tax. Keep enough money in your account for the next automatic payment."
   world-blacklisted: "<prefix><red>Claiming is disabled in this world."
   too-small: "<prefix><red>Each side must be at least <yellow>{min}</yellow> blocks."
   too-large: "<prefix><red>Each side must be at most <yellow>{max}</yellow> blocks."

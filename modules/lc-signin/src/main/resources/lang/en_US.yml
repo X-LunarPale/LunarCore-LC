@@ -1,4 +1,5 @@
 # Signin module language file (MiniMessage), key: signin.<path>
+prefix: "<yellow>[<bold>Sign-in</bold>]</yellow> "
 usage: "<prefix><white>Usage: <yellow>/signin</yellow> open calendar, <yellow>/signin sign</yellow> sign in, <yellow>/signin top [streak|total] [page]</yellow> leaderboard"
 usage-admin: "<prefix><white>Usage: <yellow>/signin admin reset <player>"
 
@@ -7,7 +8,7 @@ sign:
   already: "<prefix><yellow>You have already signed in today (streak {streak}, total {total})."
   streak-reward: "<prefix><light_purple>{days}-day streak bonus: </light_purple>{reward}"
   milestone-reward: "<prefix><aqua>{days} total days milestone: </aqua>{reward}"
-  broadcast: "<prefix><white><white>{player}</white> signed in today, streak <gold>{streak}</gold>! Type <click:run_command:'/signin'><yellow><u>/signin</u></yellow></click> to join."
+  broadcast: "<prefix><white>{player} signed in today with a <gold>{streak}</gold>-day streak. Use <click:run_command:'/signin'><yellow><u>/signin</u></yellow></click> to view the calendar."
 
 makeup:
   success: "<prefix><green>Made up <white>{date}</white> (cost <gold>{cost}</gold>). Streak <gold>{streak}</gold>, total <gold>{total}</gold>, {left} make-ups left this month."
@@ -19,8 +20,8 @@ makeup:
   no-money: "<prefix><red>Insufficient funds: need <gold>{cost}</gold>, you have <gold>{balance}</gold>."
 
 remind:
-  join: "<prefix><yellow>You haven't signed in today! <click:run_command:'/signin'><green><u>[Sign in]</u></green></click>"
-  new-day: "<prefix><yellow>A new day has begun, don't forget to sign in! <click:run_command:'/signin'><green><u>[Sign in]</u></green></click>"
+  join: "<prefix><yellow>You have not signed in today. <click:run_command:'/signin'><green><u>[Sign in]</u></green></click>"
+  new-day: "<prefix><yellow>A new daily sign-in is available. <click:run_command:'/signin'><green><u>[Sign in]</u></green></click>"
 
 top:
   header-streak: "<gold>===== Streak Leaderboard <white>(page {page})</white> ====="

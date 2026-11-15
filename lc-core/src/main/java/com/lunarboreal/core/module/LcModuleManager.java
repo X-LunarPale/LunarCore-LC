@@ -256,18 +256,46 @@ public final class LcModuleManager implements ModuleManager {
         }
     }
 
-    /** /lc reload：调用所有模块的 onReload。 */
+    public record ConfigReloadResult(int reloaded, List<String> restartRequired, List<String> failed) {
+        public ConfigReloadResult {
+            restartRequired = List.copyOf(restartRequired);
+            failed = List.copyOf(failed);
+        }
+    }
+
+    /** 兼容原调用方；返回实际成功重载的模块数量。 */
     public synchronized int reloadConfigs() {
+        return reloadConfigsReport().reloaded();
+    }
+
+    /** /lc reload：跳过需要完整重载的模块，并报告实际结果。 */
+    public synchronized ConfigReloadResult reloadConfigsReport() {
+        Map<String, LcModule> modules = new LinkedHashMap<>();
+        loaded.forEach((id, entry) -> modules.put(id, entry.module()));
+        return reloadConfigs(modules, (id, error) ->
+                plugin.getLogger().log(Level.SEVERE, "模块 " + id + " 重载配置失败", error));
+    }
+
+    static ConfigReloadResult reloadConfigs(Map<String, LcModule> modules,
+                                            java.util.function.BiConsumer<String, Throwable> onFailure) {
         int n = 0;
-        for (Map.Entry<String, Loaded> e : loaded.entrySet()) {
+        List<String> restartRequired = new ArrayList<>();
+        List<String> failed = new ArrayList<>();
+        for (Map.Entry<String, LcModule> entry : modules.entrySet()) {
             try {
-                e.getValue().module().onReload();
+                LcModule module = entry.getValue();
+                if (!module.supportsConfigReload()) {
+                    restartRequired.add(entry.getKey());
+                    continue;
+                }
+                module.onReload();
                 n++;
             } catch (Throwable t) {
-                plugin.getLogger().log(Level.SEVERE, "模块 " + e.getKey() + " 重载配置失败", t);
+                failed.add(entry.getKey());
+                onFailure.accept(entry.getKey(), t);
             }
         }
-        return n;
+        return new ConfigReloadResult(n, restartRequired, failed);
     }
 
     // ================================================================== 单个模块

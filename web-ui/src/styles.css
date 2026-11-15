@@ -68,7 +68,7 @@ html.dark {
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body, #app { margin: 0; height: 100%; background: var(--lc-bg); color: var(--el-text-color-primary); font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }
+html, body, #app { margin: 0; height: 100%; background: var(--lc-bg); color: var(--el-text-color-primary); font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif; font-size: 14px; letter-spacing: 0; -webkit-font-smoothing: antialiased; }
 body { line-height: 1.55; }
 a { color: var(--el-color-primary); text-underline-offset: 3px; }
 button, input, textarea, select { font: inherit; }
@@ -79,12 +79,12 @@ button, input, textarea, select { font: inherit; }
 .lc-icon { vertical-align: middle; flex-shrink: 0; }
 .page { padding: 24px 28px 36px; max-width: 1760px; margin: 0 auto; min-width: 0; }
 .page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
-.page-title { font-size: clamp(21px, 1.6vw, 25px); line-height: 1.3; letter-spacing: -.7px; font-weight: 650; display: flex; align-items: center; gap: 12px; margin: 0; }
+.page-title { font-size: 24px; line-height: 1.3; letter-spacing: 0; font-weight: 650; display: flex; align-items: center; gap: 12px; margin: 0; }
 .page-title > .lc-icon { color: var(--el-color-primary); width: 23px; height: 23px; }
 .page-sub { color: var(--lc-text-soft); font-size: 13px; margin-top: 7px; line-height: 1.6; }
 .card { background: var(--lc-surface); border: 1px solid var(--lc-sidebar-border); border-radius: 9px; box-shadow: none; padding: 20px; min-width: 0; }
 .card + .card { margin-top: 20px; }
-.card-title { font-weight: 600; font-size: 15px; margin: 0 0 20px; display: flex; align-items: center; gap: 9px; letter-spacing: -.15px; }
+.card-title { font-weight: 600; font-size: 15px; margin: 0 0 20px; display: flex; align-items: center; gap: 9px; letter-spacing: 0; }
 .card-title > .lc-icon { color: var(--lc-text-soft); }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 18px; }
 .toolbar .spacer { flex: 1; }
@@ -94,7 +94,7 @@ button, input, textarea, select { font: inherit; }
 .stat-icon { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--el-color-primary-light-9); color: var(--el-color-primary); }
 .stat-content { min-width: 0; flex: 1; }
 .stat-label { color: var(--lc-text-soft); font-size: 12px; overflow-wrap: anywhere; }
-.stat-value { font-size: 21px; letter-spacing: -.7px; font-weight: 650; margin-top: 4px; line-height: 1.25; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.stat-value { font-size: 21px; letter-spacing: 0; font-weight: 650; margin-top: 4px; line-height: 1.25; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .stat-hint { color: var(--lc-text-soft); font-size: 12px; margin-top: 6px; line-height: 1.5; overflow-wrap: anywhere; }
 .player-cell { display: inline-flex; align-items: center; gap: 9px; }
 .player-cell img { width: 26px; height: 26px; border-radius: 6px; image-rendering: pixelated; background: var(--el-fill-color); }
@@ -147,5 +147,5 @@ button, input, textarea, select { font: inherit; }
 .route-leave-to { opacity: 0; transform: translateY(-4px); }
 @media (max-width: 1100px) { .page { padding: 24px; } .card { padding: 20px; } }
 @media (max-width: 900px) { .section-grid > * { grid-column: span 24 !important; } .page { padding: 20px 16px 32px; } .page-header { margin-bottom: 20px; } }
-@media (max-width: 480px) { .card { padding: 16px; } .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .stat-card { padding: 14px; gap: 10px; } .stat-value { font-size: 24px; } .el-pagination { justify-content: flex-start; } }
+@media (max-width: 480px) { .card { padding: 16px; } .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .stat-card { padding: 14px; gap: 10px; } .el-pagination { justify-content: flex-start; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

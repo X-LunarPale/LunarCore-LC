@@ -2,6 +2,18 @@
 
 [简体中文](../zh-CN/VALIDATION.md) | [Release notes](RELEASE.md)
 
+## v0.0.9 Prerelease Checks
+
+Date: 2026-11-15. Environment: Windows, Java 25 and Edge; browser checks used the local WebUI.
+
+- Frontend: all 119 tests passed and the production build completed.
+- Chat module: all 60 tests in the latest Java run passed.
+- An earlier full Java test run had no failures. Later chat changes are covered by the focused run above; the earlier result is not a new full test run of the final code.
+- Browser checks used simulated APIs for modules, chat settings and previews. Chinese and English layouts at widths of 1440 and 390 pixels had no page errors or horizontal overflow. Retry, retention of the previous list, disabled controls during operations, confirmation cancellation and recovery after menu refresh failure passed.
+- Chat checks covered world labels and colors, chat and TAB title switches, separate overhead titles, complete configuration saving, disabled editing during saves and retry after an initial read failure.
+
+These browser checks did not write settings to a real game server. They do not establish successful deployment to the target server. Actual client rendering, QQ group connectivity and long-term load are outside their scope.
+
 ## v0.0.8 Prerelease Checks
 
 Date: 2026-11-14. Environment: Windows, Java 25, isolated Paper 26.3 and Multiverse-Core 5.8.1.

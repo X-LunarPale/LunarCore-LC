@@ -24,7 +24,7 @@ class AuthCommandsTest {
         installManager(calls, true);
         AuthCommands.execute(new QQAuthModule(), sender(true, replies), "qqauth", new String[]{"reload"});
         assertEquals(List.of("qqauth"), calls);
-        assertEquals(List.of("QQAuth 已重载，请重新连接服务器。"), replies);
+        assertEquals(List.of("[认证] QQAuth 已重载。请重新连接服务器。"), replies);
     }
 
     @Test void reloadReportsFailureAndHonorsPermission() {
@@ -33,7 +33,7 @@ class AuthCommandsTest {
         installManager(calls, false);
         AuthCommands.execute(new QQAuthModule(), sender(true, replies), "qqauth", new String[]{"reload"});
         assertEquals(List.of("qqauth"), calls);
-        assertEquals(List.of("QQAuth 重载失败，请查看控制台日志。"), replies);
+        assertEquals(List.of("[认证] QQAuth 重载失败。请查看控制台日志。"), replies);
         calls.clear();
         AuthCommands.execute(new QQAuthModule(), sender(false, replies), "qqauth", new String[]{"reload"});
         assertTrue(calls.isEmpty());
