@@ -5,7 +5,7 @@ line2: '<white>共赴冰澜之境 <aqua>｜ <aqua>{online}<white>/{max} 人在�
 maintenance:
   enabled: false
   allow-join: false
-  # 仅后台保存启用维护并开启此选项，或维护中从关闭切换为开启时，发起一次踢出。
+  # 进入维护或维护中开启此选项时，发起一次踢出。
   # 启动、重载以及修改提示/白名单不会踢出；后台另提供独立的手动踢出动作。
   kick-online: false
   # 每项为玩家名称或完整 UUID；名称忽略大小写，UUID 支持标准格式或 32 位十六进制。
@@ -15,3 +15,10 @@ maintenance:
   # 维护期间独立显示以下两行，不受正常 MOTD enabled 设置影响。
   line1: '<gold><bold>服务器维护中</bold></gold>'
   line2: '<white>服务器正在维护，请稍后重试。'
+  # 可选定时维护窗口。时间须带时区，例如 2026-11-15T20:00:00+08:00。
+  # 开启后由计划控制维护，手动 enabled 暂不生效；结束后恢复开放。
+  # 结束时间可留空。需要提前结束时，切回手动模式并关闭维护。
+  schedule:
+    enabled: false
+    start-at: ''
+    end-at: ''

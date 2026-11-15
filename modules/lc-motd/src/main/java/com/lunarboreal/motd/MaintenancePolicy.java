@@ -26,9 +26,4 @@ final class MaintenancePolicy {
     // Manual eviction is explicit and intentionally does not require the automatic kick option.
     boolean kickOnRequest(String name, UUID uuid) { return settings.enabled() && !exempt(name, uuid); }
 
-    static boolean kickAfterSave(MaintenanceSettings before, MaintenanceSettings after) {
-        return after.enabled() && after.kickOnline() && (!before.enabled() || !before.kickOnline());
-    }
-
-    static boolean displaysMotd(MotdSettings settings) { return settings.maintenance().enabled() || settings.enabled(); }
 }

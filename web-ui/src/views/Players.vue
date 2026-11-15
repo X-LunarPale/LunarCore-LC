@@ -6,6 +6,7 @@ import { useAuth } from '../stores/auth'
 import { useAutoRefresh } from '../utils/autoRefresh'
 import { formatDateTime, formatDuration, formatRelative } from '../utils/format'
 import PlayerCell from '../components/PlayerCell.vue'
+import { requireSuccess } from '../utils/panel'
 import { t } from '../i18n'
 
 const auth = useAuth()
@@ -13,86 +14,112 @@ const tab = ref('online')
 const online = ref([])
 const onlineLoading = ref(false)
 const onlineQuery = ref('')
+const onlineApplied = ref('')
+const onlineError = ref('')
+const historyQuery = ref('')
+const historyError = ref('')
+const playerBusy = ref('')
+let onlineRevision = 0
+let historyRevision = 0
 
 const hist = reactive({ items: [], total: 0, page: 1, size: 20, q: '', sort: 'lastJoin', order: 'desc', loading: false, loaded: false })
 
 const cmdDialog = reactive({ visible: false, player: null, command: '', asConsole: false })
 
 async function loadOnline() {
+  const revision = ++onlineRevision
   onlineLoading.value = true
   try {
-    const r = await api.get('/api/players/online', { q: onlineQuery.value })
+    const r = requireSuccess(await api.get('/api/players/online', { q: onlineApplied.value }))
+    if (revision !== onlineRevision) return
+    if (!Array.isArray(r?.items)) throw new Error(t('玩家列表返回格式错误'))
     online.value = r.items
+    onlineError.value = ''
   } catch (e) {
-    ElMessage.error(e.message)
+    if (revision === onlineRevision) onlineError.value = e.message
   } finally {
-    onlineLoading.value = false
+    if (revision === onlineRevision) onlineLoading.value = false
   }
 }
 
 async function loadHistory() {
+  const revision = ++historyRevision
   hist.loading = true
   try {
-    const r = await api.get('/api/players/history', { page: hist.page, size: hist.size, q: hist.q, sort: hist.sort, order: hist.order })
+    const r = requireSuccess(await api.get('/api/players/history', { page: hist.page, size: hist.size, q: hist.q, sort: hist.sort, order: hist.order }))
+    if (revision !== historyRevision) return
+    if (!Array.isArray(r?.items)) throw new Error(t('玩家列表返回格式错误'))
     hist.items = r.items
     hist.total = r.total
     hist.loaded = true
+    historyError.value = ''
   } catch (e) {
-    ElMessage.error(e.message)
+    if (revision === historyRevision) historyError.value = e.message
   } finally {
-    hist.loading = false
+    if (revision === historyRevision) hist.loading = false
   }
 }
+
+function searchOnline() { onlineApplied.value = onlineQuery.value.trim(); loadOnline() }
+function searchHistory() { hist.q = historyQuery.value.trim(); hist.page = 1; loadHistory() }
 
 function onSort({ prop, order }) {
   hist.sort = prop || 'lastJoin'
   hist.order = order === 'ascending' ? 'asc' : 'desc'
+  hist.page = 1
   loadHistory()
 }
 
 async function kick(p) {
-  const r = await ElMessageBox.prompt(t('踢出玩家 {name}，请输入原因（支持 MiniMessage）', { name: p.name }), t('踢出玩家'), {
-    inputPlaceholder: t('你已被管理员踢出服务器'), confirmButtonText: t('踢出'), type: 'warning'
-  }).catch(() => null)
-  if (!r) return
+  if (playerBusy.value) return
+  playerBusy.value = 'kick'
   try {
-    const res = await api.post(`/api/players/${p.uuid}/kick`, { reason: r.value })
+    const r = await ElMessageBox.prompt(t('踢出玩家 {name}，请输入原因（支持 MiniMessage）', { name: p.name }), t('踢出玩家'), {
+      inputPlaceholder: t('你已被管理员踢出服务器'), confirmButtonText: t('踢出'), type: 'warning'
+    }).catch(() => null)
+    if (!r) return
+    const res = requireSuccess(await api.post(`/api/players/${p.uuid}/kick`, { reason: r.value }))
     ElMessage.success(res.message)
-    loadOnline()
+    await loadOnline()
   } catch (e) {
     ElMessage.error(e.message)
-  }
+  } finally { playerBusy.value = '' }
 }
 
 async function message(p) {
-  const r = await ElMessageBox.prompt(t('发送私信给 {name}（支持 MiniMessage）', { name: p.name }), t('发送消息'), { inputPattern: /\S/, inputErrorMessage: t('消息不能为空') }).catch(() => null)
-  if (!r) return
+  if (playerBusy.value) return
+  playerBusy.value = 'message'
   try {
-    const res = await api.post(`/api/players/${p.uuid}/message`, { message: r.value })
+    const r = await ElMessageBox.prompt(t('发送私信给 {name}（支持 MiniMessage）', { name: p.name }), t('发送消息'), { inputPattern: /\S/, inputErrorMessage: t('消息不能为空') }).catch(() => null)
+    if (!r) return
+    const res = requireSuccess(await api.post(`/api/players/${p.uuid}/message`, { message: r.value }))
     ElMessage.success(res.message)
   } catch (e) {
     ElMessage.error(e.message)
-  }
+  } finally { playerBusy.value = '' }
 }
 
 function openCommand(p) {
+  if (playerBusy.value) return
   Object.assign(cmdDialog, { visible: true, player: p, command: '', asConsole: false })
 }
 
 async function runCommand() {
+  if (playerBusy.value || !cmdDialog.player) return
   if (!cmdDialog.command.trim()) return ElMessage.warning(t('请输入命令'))
+  playerBusy.value = 'command'
   try {
-    const res = await api.post(`/api/players/${cmdDialog.player.uuid}/command`, { command: cmdDialog.command, asConsole: cmdDialog.asConsole })
+    const res = requireSuccess(await api.post(`/api/players/${cmdDialog.player.uuid}/command`, { command: cmdDialog.command, asConsole: cmdDialog.asConsole }))
     ElMessage.success(res.message)
     cmdDialog.visible = false
   } catch (e) {
     ElMessage.error(e.message)
-  }
+  } finally { playerBusy.value = '' }
 }
 
 useAutoRefresh(() => { if (!onlineLoading.value) return loadOnline() }, {
   seconds: () => 15,
-  active: () => tab.value === 'online',
+  active: () => tab.value === 'online' && !playerBusy.value && !cmdDialog.visible,
   immediate: true
 })
 watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) loadHistory() })
@@ -101,18 +128,20 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
 <template>
   <div class="page players-page">
     <div class="page-header">
-      <div><p class="eyebrow">{{ t('玩家与访问') }}</p><h1 class="page-title">{{ t('玩家管理') }}</h1><p class="page-sub">{{ t('查看在线状态与历史记录，管理玩家会话。') }}</p></div>
+      <h1 class="page-title">{{ t('玩家管理') }}</h1>
       <span class="update-note"><i />{{ t('在线列表每 15 秒更新') }}</span>
     </div>
-    <div class="card">
-      <el-tabs v-model="tab">
+    <div class="player-list">
+      <el-tabs v-model="tab" class="workspace-tabs">
         <el-tab-pane :label="t('在线玩家（{count}）', { count: online.length })" name="online">
           <div class="toolbar">
-            <el-input v-model="onlineQuery" :placeholder="t('搜索玩家名')" clearable style="width: 220px" @keyup.enter="loadOnline" @clear="loadOnline">
+            <el-input v-model="onlineQuery" :placeholder="t('搜索玩家名')" :aria-label="t('搜索玩家名')" clearable style="width: 220px" @keyup.enter="searchOnline" @clear="searchOnline">
               <template #prefix><Icon name="search" :size="14" /></template>
             </el-input>
-            <el-button @click="loadOnline"><Icon name="refresh-cw" :size="14" />&nbsp;{{ t('刷新') }}</el-button>
+            <el-button type="primary" :loading="onlineLoading" @click="searchOnline"><Icon name="search" :size="14" />{{ t('搜索') }}</el-button>
+            <el-button :disabled="onlineLoading || !!playerBusy" @click="loadOnline"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
           </div>
+          <el-alert v-if="onlineError" :title="onlineError" type="error" show-icon :closable="false" />
           <el-table :data="online" v-loading="onlineLoading" stripe :empty-text="t('当前没有在线玩家')">
             <el-table-column :label="t('玩家')" min-width="170">
               <template #default="{ row }"><PlayerCell :name="row.name" :uuid="row.uuid" /> <el-tag v-if="row.op" size="small" type="warning">OP</el-tag></template>
@@ -133,20 +162,22 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
             </el-table-column>
             <el-table-column v-if="auth.can('core.players.manage')" :label="t('操作')" width="260" fixed="right">
               <template #default="{ row }">
-                <el-button size="small" @click="message(row)">{{ t('私信') }}</el-button>
-                <el-button v-if="auth.can('core.console.execute')" size="small" @click="openCommand(row)">{{ t('命令') }}</el-button>
-                <el-button size="small" type="danger" plain @click="kick(row)">{{ t('踢出') }}</el-button>
+                <el-button size="small" :disabled="!!playerBusy" @click="message(row)">{{ t('私信') }}</el-button>
+                <el-button v-if="auth.can('core.console.execute')" size="small" :disabled="!!playerBusy" @click="openCommand(row)">{{ t('命令') }}</el-button>
+                <el-button size="small" type="danger" plain :disabled="!!playerBusy" @click="kick(row)">{{ t('踢出') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
         <el-tab-pane :label="t('历史玩家（{count}）', { count: hist.total })" name="history">
           <div class="toolbar">
-            <el-input v-model="hist.q" :placeholder="t('搜索名字 / UUID / IP')" clearable style="width: 260px" @keyup.enter="(hist.page = 1), loadHistory()" @clear="(hist.page = 1), loadHistory()">
+            <el-input v-model="historyQuery" :placeholder="t('搜索名字 / UUID / IP')" :aria-label="t('搜索名字 / UUID / IP')" clearable style="width: 260px" @keyup.enter="searchHistory" @clear="searchHistory">
               <template #prefix><Icon name="search" :size="14" /></template>
             </el-input>
-            <el-button @click="loadHistory"><Icon name="refresh-cw" :size="14" />&nbsp;{{ t('刷新') }}</el-button>
+            <el-button type="primary" :loading="hist.loading" @click="searchHistory"><Icon name="search" :size="14" />{{ t('搜索') }}</el-button>
+            <el-button :disabled="hist.loading" @click="loadHistory"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
           </div>
+          <el-alert v-if="historyError" :title="historyError" type="error" show-icon :closable="false" />
           <el-table :data="hist.items" v-loading="hist.loading" stripe @sort-change="onSort" :default-sort="{ prop: 'lastJoin', order: 'descending' }">
             <el-table-column :label="t('玩家')" prop="name" sortable="custom" min-width="200">
               <template #default="{ row }"><PlayerCell :name="row.name" :uuid="row.uuid" /> <el-tag v-if="row.online" size="small" type="success">{{ t('在线') }}</el-tag></template>
@@ -162,8 +193,8 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
       </el-tabs>
     </div>
 
-    <el-dialog v-model="cmdDialog.visible" :title="t('对 {name} 执行命令', { name: cmdDialog.player?.name || '' })" width="480px" append-to-body>
-      <el-form label-width="90px">
+    <el-dialog v-model="cmdDialog.visible" :title="t('对 {name} 执行命令', { name: cmdDialog.player?.name || '' })" width="480px" :show-close="!playerBusy" :close-on-click-modal="!playerBusy" :close-on-press-escape="!playerBusy" append-to-body>
+      <el-form label-position="top" :disabled="!!playerBusy" @submit.prevent="runCommand">
         <el-form-item :label="t('命令')"><el-input v-model="cmdDialog.command" :placeholder="t('例如 spawn（无需斜杠）')" class="mono" @keyup.enter="runCommand" /></el-form-item>
         <el-form-item :label="t('执行身份')">
           <el-radio-group v-model="cmdDialog.asConsole">
@@ -171,16 +202,28 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
             <el-radio :value="true">{{ t('以控制台身份') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <div class="muted" style="font-size: 12px; padding-left: 90px" v-if="cmdDialog.asConsole">{{ t('控制台命令中可用 {player} 代表该玩家名。') }}</div>
+        <div class="muted command-note" v-if="cmdDialog.asConsole">{{ t('控制台命令中可用 {player} 代表该玩家名。') }}</div>
       </el-form>
       <template #footer>
-        <el-button @click="cmdDialog.visible = false">{{ t('取消') }}</el-button>
-        <el-button type="primary" @click="runCommand">{{ t('执行') }}</el-button>
+        <el-button :disabled="!!playerBusy" @click="cmdDialog.visible = false">{{ t('取消') }}</el-button>
+        <el-button type="primary" :loading="playerBusy === 'command'" :disabled="!cmdDialog.command.trim()" @click="runCommand">{{ t('执行') }}</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <style scoped>
-.players-page{color:var(--lc-text);min-width:0}.page-header{margin-bottom:20px;gap:12px}.eyebrow{font-size:11px;color:var(--lc-text-soft);margin:0 0 5px;letter-spacing:.08em}.page-title{font-size:25px;letter-spacing:-.5px}.page-sub{margin:6px 0 0}.update-note{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--lc-text-soft)}.update-note i{width:6px;height:6px;background:var(--el-color-success);border-radius:50%}.card{padding:0 18px 18px;border-radius:8px;overflow:hidden}.toolbar{margin:4px 0 14px;gap:8px}.toolbar :deep(.el-input){max-width:100%;min-width:0}.players-page :deep(.el-tabs__header){margin:0 0 16px}.players-page :deep(.el-tabs__item){height:48px;font-size:13px}.players-page :deep(.el-table){width:100%;font-size:13px}.players-page :deep(td.el-table__cell){padding:10px 0}.pager{margin-top:16px;justify-content:flex-end;gap:6px;flex-wrap:wrap}.players-page :deep(.el-radio-group){display:flex;flex-wrap:wrap;gap:8px}.players-page :deep(.el-radio){margin-right:10px}@media(max-width:600px){.page-title{font-size:23px}.card{padding:0 12px 12px}.toolbar{flex-wrap:nowrap}.toolbar :deep(.el-input){flex:1;width:auto!important}.pager{justify-content:center}.pager :deep(.el-pagination__sizes),.pager :deep(.el-pagination__jump),.pager :deep(.el-pagination__total){display:none}.players-page :deep(.el-table__cell.is-fixed-column--right){position:static!important}.players-page :deep(.el-table__cell.is-fixed-column--right::before){display:none}}
+.players-page, .player-list { min-width: 0; }
+.player-list { overflow: hidden; }
+.update-note { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--lc-text-soft); }
+.update-note i { width: 6px; height: 6px; background: var(--el-color-success); border-radius: 50%; }
+.toolbar { margin: 6px 0 18px; gap: 8px; }
+.toolbar .el-input { min-width: 0; max-width: 100%; }
+.toolbar .el-button { gap: 7px; margin-left: 0; }
+.el-alert { margin-bottom: 14px; }
+.pager { margin-top: 18px; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+.command-note { font-size: 12px; overflow-wrap: anywhere; }
+.players-page :deep(.el-radio-group) { display: flex; flex-wrap: wrap; gap: 8px; }
+.players-page :deep(.el-radio) { margin-right: 10px; }
+@media (max-width: 600px) { .toolbar { flex-wrap: wrap; }.toolbar .el-input { flex-basis: 100%; width: 100% !important; }.pager { justify-content: center; }.pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump), .pager :deep(.el-pagination__total) { display: none; }.players-page :deep(.el-table__cell.is-fixed-column--right) { position: static !important; }.players-page :deep(.el-table__cell.is-fixed-column--right::before) { display: none; } }
 </style>

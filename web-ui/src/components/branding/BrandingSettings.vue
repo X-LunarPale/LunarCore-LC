@@ -236,8 +236,8 @@ onBeforeUnmount(() => { selection++ })
 .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
 .section-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
 .section-head p, .setting-block p { margin: 5px 0 0; color: var(--lc-text-soft); font-size: 12px; line-height: 1.7; }
-.brand-preview { display: flex; align-items: center; gap: 14px; min-height: 86px; padding: 14px 18px; border: 1px solid var(--el-border-color-light); border-radius: 8px; background: var(--el-fill-color-extra-light); }
-.brand-mark { width: 56px; height: 56px; flex: 0 0 56px; display: grid; place-items: center; border: 1px solid var(--el-border-color-light); border-radius: 8px; background: var(--lc-surface); }
+.brand-preview { display:flex; align-items:center; gap:14px; min-height:86px; padding:14px 0; border-top:1px solid var(--el-border-color-light); border-bottom:1px solid var(--el-border-color-light); }
+.brand-mark { width:56px; height:56px; flex:0 0 56px; display:grid; place-items:center; }
 .brand-mark img { max-width: 46px; max-height: 46px; object-fit: contain; }
 .brand-preview > div { display: grid; gap: 3px; min-width: 0; }
 .brand-preview strong { font-size: 17px; font-weight: 650; overflow-wrap: anywhere; }

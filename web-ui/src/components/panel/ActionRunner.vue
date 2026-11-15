@@ -100,7 +100,7 @@ defineExpose({ run, busy })
 
 <template>
   <el-dialog v-model="dlg.visible" :title="t(dlg.action?.label)" class="panel-action-dialog" width="min(560px, 94vw)" :close-on-click-modal="!dlg.loading" :close-on-press-escape="!dlg.loading" :show-close="!dlg.loading" append-to-body destroy-on-close>
-    <template #header><div class="dialog-heading"><span><Icon :name="dlg.action?.style === 'danger' ? 'triangle-alert' : 'sliders-horizontal'" :size="20" /></span><div><h3>{{ t(dlg.action?.label) }}</h3><p>{{ t('请确认以下内容后提交操作。') }}</p></div></div></template>
+    <template #header><div class="dialog-heading" :class="{ danger: dlg.action?.style === 'danger' }"><Icon :name="dlg.action?.style === 'danger' ? 'triangle-alert' : 'sliders-horizontal'" :size="18" /><h3>{{ t(dlg.action?.label) }}</h3></div></template>
     <el-alert v-if="dlg.error" :title="dlg.error" type="error" show-icon :closable="false" style="margin-bottom: 16px" />
     <el-form :disabled="dlg.loading" v-if="dlg.action" label-position="top" class="action-form" @submit.prevent="submit">
       <el-form-item v-for="f in dlg.action.fields" :key="f.key" :label="t(f.label)" :required="f.required" :class="{ 'field-wide': ['textarea', 'code'].includes(f.type) }">
@@ -116,9 +116,10 @@ defineExpose({ run, busy })
 </template>
 
 <style scoped>
-:global(.panel-action-dialog) { padding: 20px; border: 1px solid var(--el-border-color-light); border-radius: 9px; background: var(--lc-surface); --el-dialog-padding-primary: 0px; --el-dialog-border-radius: 9px; }
-.dialog-heading { display: flex; align-items: flex-start; gap: 9px; padding-bottom: 14px; color: var(--lc-text); }
-.dialog-heading > span { display: flex; padding-top: 1px; color: var(--el-color-primary); }
+:global(.panel-action-dialog) { padding:20px; border:1px solid var(--el-border-color-light); border-radius:8px; background:var(--lc-surface); --el-dialog-padding-primary:0px; --el-dialog-border-radius:8px; }
+.dialog-heading { display:flex; align-items:center; gap:9px; padding-bottom:8px; color:var(--lc-text); }
+.dialog-heading > :deep(svg) { color:var(--el-color-primary); }
+.dialog-heading.danger > :deep(svg) { color:var(--el-color-danger); }
 .dialog-heading h3 { margin: 0; font-size: 15px; font-weight: 650; line-height: 1.5; }
 .dialog-heading p { margin: 2px 0 0; font-size: 11px; color: var(--lc-text-soft); }
 .action-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }

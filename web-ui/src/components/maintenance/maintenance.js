@@ -1,6 +1,9 @@
 export const normalKeys = ['enabled', 'line1', 'line2']
-export const controlKeys = ['enabled', 'allowJoin', 'kickOnline', 'whitelist', 'joinMessage', 'kickMessage']
+export const controlKeys = ['enabled', 'allowJoin', 'kickOnline', 'scheduleEnabled', 'scheduleStart', 'scheduleEnd']
+export const whitelistKeys = ['whitelist']
+export const messageKeys = ['joinMessage', 'kickMessage']
 export const motdKeys = ['line1', 'line2']
+export const maintenanceKeys = [...controlKeys, ...whitelistKeys, ...messageKeys, ...motdKeys]
 export const pick = (value, keys) => Object.fromEntries(keys.map(key => [key, value[key]]))
 export const same = (left, right, keys) => !!left && !!right && keys.every(key => left[key] === right[key])
 
@@ -26,13 +29,46 @@ export function normalizeWhitelist(text, translate = defaultText) {
 }
 
 export function checkSettings(value, maintenance = false) {
-  const keys = maintenance ? [...controlKeys, ...motdKeys] : normalKeys
-  if (!value || keys.some(key => typeof value[key] !== (['enabled', 'allowJoin', 'kickOnline'].includes(key) ? 'boolean' : 'string'))) throw new Error('设置数据格式异常，请重新加载')
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('设置数据格式异常，请重新加载')
+  if (maintenance) value = { scheduleEnabled: false, scheduleStart: '', scheduleEnd: '', ...value }
+  const keys = maintenance ? maintenanceKeys : normalKeys
+  if (!value || keys.some(key => typeof value[key] !== (['enabled', 'allowJoin', 'kickOnline', 'scheduleEnabled'].includes(key) ? 'boolean' : 'string'))) throw new Error('设置数据格式异常，请重新加载')
   return pick(value, keys)
 }
 
 export function checkStatus(value) {
-  const row = Array.isArray(value) && value.length === 1 ? value[0] : null
-  if (!row || ['enabled', 'allowJoin', 'kickOnline'].some(key => typeof row[key] !== 'boolean') || ['online', 'eligible'].some(key => !Number.isFinite(row[key]) || row[key] < 0)) throw new Error('维护状态数据格式异常')
+  const row = Array.isArray(value) && value.length === 1
+    ? { scheduleEnabled: false, scheduleActive: false, scheduleStart: '', scheduleEnd: '', nextTransitionAt: '', ...value[0] }
+    : null
+  if (!row || ['enabled', 'allowJoin', 'kickOnline', 'scheduleEnabled', 'scheduleActive'].some(key => typeof row[key] !== 'boolean') || ['online', 'eligible'].some(key => !Number.isFinite(row[key]) || row[key] < 0)) throw new Error('维护状态数据格式异常')
   return row
+}
+
+export function effectiveEnabled(settings, now = Date.now()) {
+  if (!settings.scheduleEnabled) return settings.enabled
+  const start = Date.parse(settings.scheduleStart)
+  const end = settings.scheduleEnd ? Date.parse(settings.scheduleEnd) : Infinity
+  return Number.isFinite(start) && now >= start && now < end
+}
+
+export function validateSchedule(settings, translate = defaultText) {
+  const start = settings.scheduleStart ? Date.parse(settings.scheduleStart) : null
+  const end = settings.scheduleEnd ? Date.parse(settings.scheduleEnd) : null
+  if (settings.scheduleEnabled && start === null) throw new Error(translate('请选择维护开始时间'))
+  if (start !== null && !Number.isFinite(start) || end !== null && !Number.isFinite(end)) throw new Error(translate('维护时间无效，请重新选择'))
+  if (end !== null && (start === null || end <= start)) throw new Error(translate('维护结束时间必须晚于开始时间'))
+}
+
+export function toLocalTime(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (!Number.isFinite(date.getTime())) return ''
+  const pad = part => String(part).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+export function fromLocalTime(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  return Number.isFinite(date.getTime()) ? date.toISOString() : value
 }

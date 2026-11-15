@@ -22,8 +22,10 @@ const pendingReload = ref(false)
 const selectedMessage = ref('login.bind-required')
 const filter = ref('')
 const plain = ref('')
+const previewPending = ref(false)
 const quotas = ref([])
 const baseline = ref('')
+let disposed = false
 const snapshot = () => JSON.stringify([values.value, messages.value, quotas.value, clearSecrets.value])
 const dirty = computed(() => loaded.value && snapshot() !== baseline.value)
 const bounds = {
@@ -60,6 +62,9 @@ const groups = [
   { title: 'QQ 桥接', prefix: 'integration.' }, { title: '验证码与绑定', prefix: 'binding.' },
   { title: '密码与会话', prefix: 'auth.' }
 ]
+const activeSection = ref('integration.')
+const sections = [...groups.map(group => ({ id: group.prefix, title: group.title })),
+  { id: 'quotas', title: '绑定配额' }, { id: 'messages', title: '提示消息' }]
 const previewVariables = { player: 'Steve', code: '123456', group: '示例群', ttl: '600', command: '验证', status: '成功', count: '3', ready: 'true', error: '示例错误' }
 const messageKeys = computed(() => Object.keys(messages.value).filter(key => !filter.value || `${key} ${messages.value[key]}`.includes(filter.value)))
 function activeField(key) {
@@ -94,6 +99,14 @@ function numericBounds(key) {
   return [min, max]
 }
 function accept(result) {
+  if (!result || typeof result !== 'object' || Array.isArray(result)
+      || !result.values || typeof result.values !== 'object' || Array.isArray(result.values)
+      || !result.messages || typeof result.messages !== 'object' || Array.isArray(result.messages)
+      || Object.values(result.messages).some(message => typeof message !== 'string')
+      || typeof result.revision !== 'string'
+      || !result.configuredSecrets || typeof result.configuredSecrets !== 'object' || Array.isArray(result.configuredSecrets)) {
+    throw new Error(t('认证配置接口返回格式错误'))
+  }
   values.value = result.values
   messages.value = result.messages
   revision.value = result.revision
@@ -102,6 +115,7 @@ function accept(result) {
   clearSecrets.value = []
   quotas.value = Object.entries(result.values['binding.per-qq-limits'] || {}).map(([qq, limit]) => ({ qq, limit }))
   loaded.value = true
+  if (!Object.hasOwn(messages.value, selectedMessage.value)) selectedMessage.value = Object.keys(messages.value)[0] || ''
   plain.value = ''
   baseline.value = snapshot()
 }
@@ -112,11 +126,14 @@ async function confirmDiscard() {
     { type: 'warning' }).then(() => true).catch(() => false)
 }
 async function load(force = false) {
+  if (disposed || busy.value && !force) return false
   if (!force && !await confirmDiscard()) return
   busy.value = true
   error.value = ''
   try {
-    accept(requireSuccess(await api.get('/api/ext/qqauth/config')))
+    const result = requireSuccess(await api.get('/api/ext/qqauth/config'))
+    if (disposed) return false
+    accept(result)
     saved.value = false
     return true
   }
@@ -136,7 +153,9 @@ async function save() {
         throw new Error(t('{field}须为 {min} 至 {max} 的整数', { field: t('绑定上限'), min: 1, max: 10000 }))
       limits[row.qq] = row.limit
     }
-    accept(requireSuccess(await api.post('/api/ext/qqauth/config', { revision: revision.value, values: { ...values.value, 'binding.per-qq-limits': limits }, messages: messages.value, clearSecrets: clearSecrets.value })))
+    const result = requireSuccess(await api.post('/api/ext/qqauth/config', { revision: revision.value, values: { ...values.value, 'binding.per-qq-limits': limits }, messages: messages.value, clearSecrets: clearSecrets.value }))
+    if (disposed) return
+    accept(result)
     saved.value = true
     ElMessage.success(t(pendingReload.value ? '已保存，重载模块后生效' : '提示消息已生效'))
   } catch (cause) { ElMessage.error(cause.message) }
@@ -158,8 +177,17 @@ async function applyConfig() {
   finally { busy.value = false }
 }
 async function preview() {
-  try { plain.value = (await api.post('/api/ext/qqauth/messages/preview', { text: messages.value[selectedMessage.value] })).plain }
+  if (previewPending.value || busy.value || !Object.hasOwn(messages.value, selectedMessage.value)) return
+  const key = selectedMessage.value
+  const text = messages.value[key]
+  previewPending.value = true
+  try {
+    const result = requireSuccess(await api.post('/api/ext/qqauth/messages/preview', { text }))
+    if (typeof result?.plain !== 'string') throw new Error(t('认证配置接口返回格式错误'))
+    if (!disposed && selectedMessage.value === key && messages.value[key] === text) plain.value = result.plain
+  }
   catch (cause) { ElMessage.error(cause.message) }
+  finally { previewPending.value = false }
 }
 function beforeUnload(event) {
   if (!dirty.value && !busy.value) return
@@ -167,7 +195,7 @@ function beforeUnload(event) {
   event.returnValue = ''
 }
 onMounted(() => { load(true); window.addEventListener('beforeunload', beforeUnload) })
-onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
+onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunload', beforeUnload) })
 onBeforeRouteLeave(confirmDiscard)
 onBeforeRouteUpdate(confirmDiscard)
 </script>
@@ -178,13 +206,15 @@ onBeforeRouteUpdate(confirmDiscard)
     <el-alert v-if="error || validationError" :title="error || validationError" type="error" :closable="false" />
     <el-alert v-if="saved || pendingReload" :title="t(pendingReload ? '已保存，重载模块后生效' : '提示消息已生效')" :description="pendingReload ? t('重载 QQauth 会撤销在线玩家认证并断开连接。') : undefined" :type="pendingReload ? 'warning' : 'success'" :closable="false" />
     <template v-if="loaded">
-      <section v-for="group in groups" :key="group.prefix" class="config-section">
-        <h3>{{ t(group.title) }}</h3>
+      <nav class="config-tabs" :aria-label="t('认证配置分组')">
+        <button v-for="section in sections" :key="section.id" type="button" :class="{ selected: activeSection === section.id }" :aria-pressed="activeSection === section.id" @click="activeSection = section.id">{{ t(section.title) }}</button>
+      </nav>
+      <section v-for="group in groups" v-show="activeSection === group.prefix" :key="group.prefix" class="config-section">
         <el-alert v-if="group.prefix === 'integration.' && values['integration.mode'] === 'astrbot'"
           :title="t('QQAuth 桥接端口独立于 Web 和 RCON 端口。')"
           :description="t('AstrBot 在 Docker 或其他机器运行时，127.0.0.1 指向机器人自身。QQAuth 监听地址可设为 0.0.0.0，机器人须填写游戏服可达的地址，并放行桥接端口。')"
           type="info" :closable="false" class="bridge-note" />
-        <el-form label-position="top" class="field-grid">
+        <el-form :disabled="busy" label-position="top" class="field-grid">
           <el-form-item v-for="key in visibleFields(group.prefix)" :key="key" :for="`qq-${key}`" :label="t(labels[key])">
             <el-select v-if="key === 'integration.mode'" :id="`qq-${key}`" v-model="values[key]"><el-option v-for="mode in ['astrbot', 'onebot', 'disabled']" :key="mode" :label="mode" :value="mode" /></el-select>
             <template v-else-if="key === 'auth.identity-mode'">
@@ -202,7 +232,7 @@ onBeforeRouteUpdate(confirmDiscard)
           </el-form-item>
         </el-form>
       </section>
-      <section class="config-section">
+      <section v-show="activeSection === 'quotas'" class="config-section">
         <header><h3>{{ t('每 QQ 自定义配额') }}</h3><el-button @click="quotas.push({ qq: '', limit: 1 })"><Icon name="plus" :size="15" />{{ t('添加') }}</el-button></header>
         <div v-for="(quota, index) in quotas" :key="index" class="quota-row">
           <el-input v-model="quota.qq" :aria-label="t('QQ 号码')" :placeholder="t('QQ 号码')" maxlength="20" />
@@ -210,14 +240,14 @@ onBeforeRouteUpdate(confirmDiscard)
           <el-button :aria-label="t('移除')" :title="t('移除')" @click="quotas.splice(index, 1)"><Icon name="trash-2" :size="16" /></el-button>
         </div>
       </section>
-      <section class="config-section">
+      <section v-show="activeSection === 'messages'" class="config-section">
         <h3>{{ t('自定义提示消息') }}</h3>
         <div class="message-editor">
           <aside><el-input v-model="filter" :placeholder="t('搜索提示消息')" clearable /><el-select v-model="selectedMessage" filterable @change="plain = ''"><el-option v-for="key in messageKeys" :key="key" :value="key" :label="`${key} · ${messages[key].slice(0, 36)}`" /></el-select></aside>
           <div v-if="selectedMessage in messages" class="message-body">
             <el-input v-model="messages[selectedMessage]" type="textarea" :rows="4" maxlength="4096" :aria-label="t('提示消息内容')" @input="plain = ''" />
-            <MinecraftTextPreview :text="messages[selectedMessage]" :variables="previewVariables" atomic-variables :placeholder-api="false" :label="t('游戏内提示预览')" />
-            <el-button @click="preview">{{ t('预览 QQ 纯文本') }}</el-button>
+            <MinecraftTextPreview :text="messages[selectedMessage]" :variables="previewVariables" atomic-variables :show-help="false" :placeholder-api="false" :label="t('游戏内提示预览')" />
+            <el-button :loading="previewPending" :disabled="busy" @click="preview"><Icon name="eye" :size="14" />{{ t('预览 QQ 纯文本') }}</el-button>
             <pre v-if="plain">{{ plain }}</pre>
           </div>
         </div>
@@ -231,15 +261,19 @@ onBeforeRouteUpdate(confirmDiscard)
 </template>
 
 <style scoped>
-.qq-config{margin-top:28px;border-top:1px solid var(--el-border-color);padding-top:20px;min-height:100px;min-width:0}
+.qq-config{margin-top:0;padding-top:0;min-height:100px;min-width:0}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px}h2{font-size:17px;margin:0}h3{font-size:14px;margin:0 0 16px}
-.config-section{padding:22px 0;border-bottom:1px solid var(--el-border-color-light)}
+.config-section{padding:20px 0;min-width:0}
+.config-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-top:18px}
+.config-tabs button{padding:7px 11px;min-height:34px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--el-text-color-regular);font:inherit;font-size:12px;cursor:pointer}
+.config-tabs button.selected{border-color:var(--el-border-color);background:var(--lc-surface);color:var(--el-color-primary);font-weight:600}
+.config-tabs button:focus-visible{outline:2px solid var(--el-color-primary);outline-offset:2px}
 .bridge-note{margin:0 0 18px}
 .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px}.field-grid :deep(.el-select),.field-grid :deep(.el-input-number){width:100%}
 .field-help{margin:6px 0 0;font-size:12px;line-height:1.6;color:var(--el-text-color-secondary);overflow-wrap:anywhere}
 .quota-row{display:flex;gap:10px;max-width:580px;margin-bottom:10px}.quota-row>.el-input{min-width:0}
 .message-editor{display:grid;grid-template-columns:minmax(180px,300px) minmax(0,1fr);gap:20px}.message-editor aside{display:flex;flex-direction:column;gap:10px}
 .message-body{min-width:0}.message-body pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:var(--el-fill-color-light);font:inherit}
-footer{padding-top:20px}.el-alert{margin-top:16px}
+footer{padding:16px 0;border-top:1px solid var(--el-border-color-light);display:flex;gap:8px;position:sticky;bottom:0;background:var(--lc-surface);z-index:3}footer :deep(.el-button + .el-button){margin-left:0}.el-alert{margin-top:16px}
 @media(max-width:760px){.field-grid,.message-editor{grid-template-columns:minmax(0,1fr)}.quota-row{flex-wrap:wrap}}
 </style>

@@ -75,7 +75,6 @@ const textValue = computed({
       <input class="number-slider" type="range" :disabled="formDisabled" :value="sliderValue" :min="numeric.min" :max="numeric.max" :step="numeric.step" :aria-label="t('{label}滑块', { label: t(field.label || '数值') })" @input="value = Number($event.target.value)" />
       <input class="exact-number" type="number" :disabled="formDisabled" :value="value ?? ''" :min="numeric.min" :max="numeric.max" :step="numeric.step" :placeholder="t(field.placeholder)" :aria-label="t(field.label || '精确数值')" @input="setExactNumber" />
     </div>
-    <div class="hint">{{ t('范围 {min}–{max} · 步长 {step}；空值或越界输入不会自动修改。', { min: numeric.min, max: numeric.max, step: numeric.step }) }}</div>
   </div>
   <el-input-number v-else-if="type === 'number'" v-model="numberValue" :step="numeric.step" :placeholder="t(field.placeholder)" controls-position="right" style="width: 100%" />
   <el-switch v-else-if="type === 'bool' || type === 'boolean'" v-model="boolValue" :aria-label="t(field.label)" />
@@ -84,7 +83,7 @@ const textValue = computed({
   </el-select>
   <div v-else-if="type === 'textarea'" class="text-field">
     <el-input v-model="textValue" type="textarea" :rows="4" :placeholder="t(field.placeholder)" :aria-label="t(field.label)" />
-    <MinecraftTextPreview v-if="showTextPreview" :text="textValue" :variables="previewVariables" />
+    <MinecraftTextPreview v-if="showTextPreview" :text="textValue" :variables="previewVariables" :show-help="false" />
   </div>
   <el-input v-else-if="type === 'password'" v-model="textValue" type="password" show-password :placeholder="t(field.placeholder)" autocomplete="new-password" />
   <el-input v-else-if="type === 'player'" v-model="textValue" :placeholder="t(field.placeholder || '玩家名或 UUID')">
@@ -103,7 +102,7 @@ const textValue = computed({
   <CodeEditor v-else-if="type === 'code'" v-model="textValue" :readonly="formDisabled" :height="260" :placeholder="t(field.placeholder)" style="width: 100%" />
   <div v-else class="text-field">
     <el-input v-model="textValue" :placeholder="t(field.placeholder)" :aria-label="t(field.label)" />
-    <MinecraftTextPreview v-if="showTextPreview" :text="textValue" :variables="previewVariables" />
+    <MinecraftTextPreview v-if="showTextPreview" :text="textValue" :variables="previewVariables" :show-help="false" />
   </div>
 </template>
 

@@ -78,13 +78,39 @@ INITIAL = {
 def no_overflow(page):
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 2"), page.viewport_size
     for selector in ("#main-content", ".form-surface", ".chat-appearance", ".preview-surface"):
-        assert all(page.locator(selector).evaluate_all(
+        fits = all(page.locator(selector).evaluate_all(
             "elements => elements.map(element => element.scrollWidth <= element.clientWidth + 2)"
-        )), selector
+        ))
+        if not fits:
+            page.screenshot(path=str(OUTPUT / "chat-overflow.png"), animations="disabled")
+            details = page.locator(selector).evaluate_all("""elements => elements.map(element => ({
+                class: element.className, width: element.clientWidth, scroll: element.scrollWidth,
+                overflow: [...element.querySelectorAll('*')].filter(child => {
+                    const rect = child.getBoundingClientRect()
+                    return rect.width && rect.right > element.getBoundingClientRect().right + 2
+                }).slice(0, 12).map(child => ({ tag: child.tagName, class: child.className,
+                    right: child.getBoundingClientRect().right, width: child.getBoundingClientRect().width }))
+            }))""")
+            raise AssertionError((page.viewport_size, selector, details))
 
 
 def control(page, key):
+    metadata = next((entry for entry in FIELDS if entry["key"] == key), None)
+    if metadata and metadata.get("group"):
+        open_group(page, metadata["group"])
     return page.locator(f'[data-field-key="{key}"]')
+
+
+GROUPS_EN = {
+    "聊天过滤": "Chat filtering", "公告与欢迎": "Announcements and welcome",
+    "聊天外观": "Chat appearance", "头顶称号": "Overhead titles",
+    "玩家列表": "Player list", "世界与预览": "Worlds and preview",
+}
+
+
+def open_group(page, name):
+    label = GROUPS_EN[name] if page.locator("html").get_attribute("lang") == "en" else name
+    page.locator(".form-groups").get_by_role("button", name=label, exact=True).click()
 
 
 def switch(page, key):
@@ -96,6 +122,7 @@ def toggle(page, key):
 
 
 def preview(page, label):
+    open_group(page, "世界与预览")
     return page.locator(".chat-appearance").get_by_role("group", name=label, exact=True).locator(".preview-surface")
 
 
@@ -171,8 +198,8 @@ with sync_playwright() as playwright:
         form = page.locator(".panel-form")
         expect(form).to_be_visible()
         expect(page.locator(".world-row")).to_have_count(2)
-        expect(page.locator(".group-heading")).to_have_text(
-            ["聊天过滤", "公告与欢迎", "聊天外观", "头顶称号", "玩家列表"])
+        expect(page.locator(".form-groups button")).to_have_text(
+            ["聊天过滤", "公告与欢迎", "聊天外观", "头顶称号", "玩家列表", "世界与预览"])
         expect(switch(page, "chatShowTitle")).not_to_be_checked()
         expect(switch(page, "tabShowTitle")).not_to_be_checked()
         expect(switch(page, "nameplateEnabled")).to_be_checked()
@@ -191,6 +218,7 @@ with sync_playwright() as playwright:
         expect(preview(page, "TAB 玩家名称预览")).to_contain_text("旅行者")
         toggle(page, "tabShowTitle")
         toggle(page, "nameplateEnabled")
+        open_group(page, "世界与预览")
         expect(page.get_by_text("头顶称号已关闭", exact=True)).to_be_visible()
         expect(page.locator(".nameplate-preview")).to_have_count(0)
         toggle(page, "nameplateEnabled")
@@ -198,6 +226,7 @@ with sync_playwright() as playwright:
         check_world_color(preview(page, "聊天预览"), "梦幻生存", "rgb(85, 255, 85)")
         toggle(page, "worldBrackets")
 
+        open_group(page, "世界与预览")
         row = page.locator(".world-row").first
         row.get_by_role("textbox", name="显示名称", exact=True).fill("梦幻家园")
         row.get_by_role("textbox", name="颜色值", exact=True).fill("#12ab34")
@@ -210,6 +239,7 @@ with sync_playwright() as playwright:
         page.get_by_role("button", name="保存设置", exact=True).click()
         expect(control(page, "nameplateHeight").locator("input[type=number]")).to_be_disabled()
         expect(control(page, "nameplateViewRange").locator("input[type=range]")).to_be_disabled()
+        open_group(page, "世界与预览")
         expect(row.get_by_role("textbox", name="显示名称", exact=True)).to_be_disabled()
         expect(switch(page, "worldBrackets")).to_be_disabled()
         assert state["pending_save"] is not None
@@ -226,6 +256,7 @@ with sync_playwright() as playwright:
         state["pending_save"] = None
         expect(page.get_by_role("button", name="保存设置", exact=True)).to_be_disabled()
         expect(control(page, "nameplateHeight").locator("input[type=number]")).to_be_enabled()
+        open_group(page, "世界与预览")
         expect(row.get_by_role("textbox", name="显示名称", exact=True)).to_have_value("梦幻家园")
         expect(control(page, "antiSpam").get_by_role("switch")).to_be_checked()
         expect(page.locator(".el-message")).to_have_count(0, timeout=6000)
@@ -238,8 +269,8 @@ with sync_playwright() as playwright:
             if language == "en":
                 page.get_by_role("button", name="语言", exact=True).click()
                 page.get_by_role("menuitem", name="English", exact=True).click()
-                expect(page.locator(".group-heading")).to_have_text(
-                    ["Chat filtering", "Announcements and welcome", "Chat appearance", "Overhead titles", "Player list"])
+                expect(page.locator(".form-groups button")).to_have_text(
+                    ["Chat filtering", "Announcements and welcome", "Chat appearance", "Overhead titles", "Player list", "Worlds and preview"])
             for width, name in [(1440, "desktop"), (390, "mobile")]:
                 page.set_viewport_size({"width": width, "height": 1040 if width == 1440 else 844})
                 no_overflow(page)
@@ -247,9 +278,11 @@ with sync_playwright() as playwright:
                 expect(preview(page, labels[1])).not_to_contain_text("旅行者")
                 expect(preview(page, labels[2])).to_contain_text("旅行者")
                 page.mouse.move(width - 8, 8)
+                open_group(page, "聊天外观")
                 page.get_by_role("group", name="聊天外观" if language == "zh" else "Chat appearance", exact=True).evaluate(
                     "element => element.scrollIntoView({block:'start'})")
                 page.screenshot(path=str(OUTPUT / f"chat-{name}-settings-{language}.png"), animations="disabled")
+                open_group(page, "世界与预览")
                 page.locator(".chat-appearance" if width == 1440 else ".format-preview").evaluate(
                     "element => element.scrollIntoView({block:'start'})")
                 page.screenshot(path=str(OUTPUT / f"chat-{name}-{language}.png"), animations="disabled")

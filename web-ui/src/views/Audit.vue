@@ -1,34 +1,42 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useAutoRefresh } from '../utils/autoRefresh'
-import { ElMessage } from 'element-plus'
 import { api } from '../api'
+import { requireSuccess } from '../utils/panel'
 import { formatDateTime } from '../utils/format'
 import { t } from '../i18n'
 
 const s = reactive({ items: [], total: 0, page: 1, size: 20, q: '', module: '', modules: [], loading: false })
+const query = ref('')
+const error = ref('')
+let revision = 0
 
 async function load() {
+  const current = ++revision
   s.loading = true
   try {
-    const r = await api.get('/api/audit', { page: s.page, size: s.size, q: s.q, module: s.module })
+    const r = requireSuccess(await api.get('/api/audit', { page: s.page, size: s.size, q: s.q, module: s.module }))
+    if (current !== revision) return
+    if (!Array.isArray(r?.items)) throw new Error(t('操作日志返回格式错误'))
     s.items = r.items
     s.total = r.total
     s.modules = (r.modules || []).filter(Boolean).sort()
+    error.value = ''
   } catch (e) {
-    ElMessage.error(e.message)
+    if (current === revision) error.value = e.message
   } finally {
-    s.loading = false
+    if (current === revision) s.loading = false
   }
 }
 
 function search() {
+  s.q = query.value.trim()
   s.page = 1
   load()
 }
 
 const selected = ref(null)
-const moduleNames = { web: '管理后台', performance: '性能优化', playertitle: '称号管理', permissions: '权限管理', chat: '聊天社交', economy: '经济系统', signin: '每日签到', land: '领地系统', anticheat: '反作弊', antixray: '反矿透', core: '核心服务', ban: '封禁管理', teleport: '传送系统', vote: '玩法投票', scoreboard: '计分板', world: '世界管理', essentials: '基础命令', qqauth: '账号认证' }
+const moduleNames = { motd: '维护与简介', web: '管理后台', performance: '性能优化', playertitle: '称号管理', permissions: '权限管理', chat: '聊天社交', economy: '经济系统', signin: '每日签到', land: '领地系统', anticheat: '反作弊', antixray: '反矿透', core: '核心服务', ban: '封禁管理', teleport: '传送系统', vote: '玩法投票', scoreboard: '计分板', world: '世界管理', essentials: '基础命令', qqauth: '账号认证' }
 const actionNames = { 'console.exec': '执行控制台指令', 'embedded.switches': '更新优化开关', permissions: '调整权限', create: '创建记录', delete: '删除记录', update: '更新记录', enable: '启用模块', disable: '禁用模块', reload: '重载配置', 'config.save': '保存配置' }
 const moduleLabel = value => t(moduleNames[value] || value || '系统')
 const actionLabel = value => t(actionNames[value] || value || '管理操作')
@@ -41,22 +49,22 @@ useAutoRefresh(() => { if (!s.loading && s.page === 1 && !selected.value) return
   <div class="page audit-page">
     <div class="page-header">
       <div>
-        <p class="eyebrow">{{ t('安全与追踪') }}</p><h1 class="page-title">{{ t('操作日志') }}</h1>
-        <div class="page-sub">{{ t('查询游戏内、服务器控制台与管理后台的操作记录。') }}</div>
+        <h1 class="page-title">{{ t('操作日志') }}</h1>
       </div>
       <span class="live-status"><i />{{ t(selected ? '查看记录详情' : s.page === 1 ? '自动更新' : '历史记录') }}</span>
     </div>
-    <div class="card audit-surface">
+    <el-alert v-if="error" :title="error" type="error" show-icon :closable="false" />
+    <div class="audit-surface">
       <div class="toolbar">
         <el-select v-model="s.module" :placeholder="t('全部模块')" clearable style="width: 160px" @change="search">
           <el-option v-for="m in s.modules" :key="m" :label="moduleLabel(m)" :value="m" />
         </el-select>
-        <el-input v-model="s.q" :placeholder="t('搜索操作者 / 动作 / 详情')" clearable style="width: 280px" @keyup.enter="search" @clear="search">
+        <el-input v-model="query" :placeholder="t('搜索操作者 / 动作 / 详情')" :aria-label="t('搜索操作者 / 动作 / 详情')" clearable style="width: 280px" @keyup.enter="search" @clear="search">
           <template #prefix><Icon name="search" :size="14" /></template>
         </el-input>
-        <el-button type="primary" @click="search">{{ t('搜索') }}</el-button>
+        <el-button type="primary" :loading="s.loading" @click="search"><Icon name="search" :size="14" />{{ t('搜索') }}</el-button>
         <div class="spacer" />
-        <el-button @click="load"><Icon name="refresh-cw" :size="14" />&nbsp;{{ t('刷新') }}</el-button>
+        <el-button :disabled="s.loading" @click="load"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
       </div>
       <div class="list-caption"><span>{{ t('管理操作记录') }} <strong>{{ s.total }}</strong></span><span>{{ t('按时间倒序排列') }}</span></div>
       <el-table :data="s.items" v-loading="s.loading && !s.items.length" class="audit-table" @row-click="selected = $event">
@@ -76,10 +84,10 @@ useAutoRefresh(() => { if (!s.loading && s.page === 1 && !selected.value) return
 </template>
 
 <style scoped>
-.audit-page{color:var(--lc-text);min-width:0}.page-header{margin-bottom:20px;gap:12px}.page-title{font-size:25px;letter-spacing:-.5px}.page-sub{margin:6px 0 0}.eyebrow { margin: 0 0 5px; font-size: 11px; color: var(--lc-text-soft);letter-spacing:.08em; }
+.audit-page { min-width: 0; }.audit-page > .el-alert { margin-bottom: 16px; }.toolbar .el-button { gap: 7px; margin-left: 0; }
 .live-status { display: flex; align-items: center; gap: 7px; color: var(--lc-text-soft); font-size: 12px; }
 .live-status i { width: 6px; height: 6px; background: var(--el-color-success); border-radius: 50%; }
-.audit-surface { padding: 16px 18px; border-radius:8px; overflow:hidden; }
+.audit-surface { min-width: 0; overflow: hidden; }
 .toolbar { padding-bottom: 20px; border-bottom: 1px solid var(--el-border-color-light); }
 .list-caption { display: flex; justify-content: space-between; color: var(--lc-text-soft); font-size: 12px; padding: 4px 0 18px; }
 .list-caption strong { color: var(--lc-text); font-weight: 500; margin-left: 8px; }
@@ -105,5 +113,5 @@ useAutoRefresh(() => { if (!s.loading && s.page === 1 && !selected.value) return
 .detail-label { font-size: 12px; color: var(--lc-text-soft); margin-bottom: 8px; }
 .record-detail { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 45vh; overflow: auto; padding: 16px; border: 1px solid var(--el-border-color-light); border-radius: 8px; background: var(--el-fill-color-light); line-height: 1.8; font-size: 12px; }
 .pager { padding-top: 18px; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
-@media (max-width: 700px) { .page-title{font-size:23px}.audit-surface { padding: 12px; }.toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding-bottom:14px;margin-bottom:12px}.toolbar > .el-select{width:100%!important;grid-column:1/-1}.toolbar > .el-input { width: 100% !important;min-width:0; }.toolbar>.spacer{display:none}.toolbar>.el-button:last-child{grid-column:1/-1;margin:0}.list-caption{padding-bottom:12px}.list-caption > span:last-child { display: none; }.pager{justify-content:center}.pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump),.pager :deep(.el-pagination__total) { display: none; }.record-meta>div{gap:10px}.record-meta dt{width:48px}.record-detail{padding:10px}.operation{gap:8px} }
+@media (max-width: 700px) { .toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding-bottom:14px;margin-bottom:12px}.toolbar > .el-select{width:100%!important;grid-column:1/-1}.toolbar > .el-input { width: 100% !important;min-width:0; }.toolbar>.spacer{display:none}.toolbar>.el-button:last-child{grid-column:1/-1;margin:0}.list-caption{padding-bottom:12px}.list-caption > span:last-child { display: none; }.pager{justify-content:center}.pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump),.pager :deep(.el-pagination__total) { display: none; }.record-meta>div{gap:10px}.record-meta dt{width:48px}.record-detail{padding:10px}.operation{gap:8px} }
 </style>

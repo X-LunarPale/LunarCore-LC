@@ -22,6 +22,14 @@ Save or reset the name and logo separately under **Server settings → Branding*
 
 Switch Chinese and English on the login page or panel toolbar. Player input, configuration contents and console logs keep their original text.
 
+## Maintenance Scheduling
+
+Choose manual or scheduled control under **Server Display & Maintenance**. Manual mode follows the maintenance switch. Scheduled mode runs one maintenance window and reopens the server at the end. An empty end time keeps maintenance active. To end it early, switch to manual control and turn maintenance off.
+
+Dates and times use the current device's time zone. A server restart restores the schedule without disconnecting players again. Automatic disconnection runs once when maintenance starts or when that option is enabled during maintenance. Whitelisted players are exempt.
+
+Controls, whitelist, messages and server descriptions are edited and saved separately. Automatic status refresh preserves drafts. Manual disconnection uses the saved whitelist and message.
+
 ## Chat Appearance and Announcements
 
 Set world display names and colors in chat settings without renaming English world folders. When matching world brackets are enabled, `{world}` already includes them; do not add another pair to the format.

@@ -6,6 +6,7 @@ import { api } from '../../api'
 import { useAuth } from '../../stores/auth'
 import { requireSuccess } from '../../utils/panel'
 import { t, locale } from '../../i18n'
+import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
 
 const auth = useAuth()
 const pageSize = 20
@@ -26,13 +27,19 @@ const error = ref('')
 const notice = ref('')
 const uncertain = ref(false)
 const playerName = ref('')
+const confirming = ref(false)
+const editorTab = ref('config')
+const editorTabs = [
+  { id: 'config', label: '世界配置', icon: 'sliders-horizontal' },
+  { id: 'operations', label: '世界操作', icon: 'wrench' }
+]
 const draft = reactive({ alias: '', pvp: false, allowWeather: false, autoLoad: false })
 let disposed = false
 
 const canConfigure = computed(() => auth.can('multiverse.configure'))
 const canManageLifecycle = computed(() => auth.can('multiverse.lifecycle'))
 const canTeleport = computed(() => auth.can('multiverse.teleport'))
-const busy = computed(() => loading.value || !!pending.value)
+const busy = computed(() => loading.value || !!pending.value || confirming.value)
 const dirty = computed(() => !!saved.value && configKeys.some(key => draft[key] !== saved.value[key]))
 const configReady = computed(() => !!selected.value &&
   typeof selected.value.alias === 'string' &&
@@ -85,6 +92,8 @@ async function fetchSnapshot() {
 
 async function confirmDiscard(message = t('重新读取将放弃当前未保存的配置修改。是否继续？')) {
   if (!dirty.value && !uncertain.value) return true
+  if (confirming.value) return false
+  confirming.value = true
   try {
     await ElMessageBox.confirm(message, t(uncertain.value ? '核对操作结果' : '放弃未保存修改'), {
       confirmButtonText: t(uncertain.value ? '重新读取' : '放弃修改'),
@@ -94,6 +103,7 @@ async function confirmDiscard(message = t('重新读取将放弃当前未保存�
     })
     return true
   } catch { return false }
+  finally { confirming.value = false }
 }
 
 function applySnapshot(snapshot, chooseFirst = false) {
@@ -131,6 +141,7 @@ async function load({ force = false, chooseFirst = false } = {}) {
 }
 
 async function selectWorld(world) {
+  if (busy.value) return
   if (worldId(world) === worldId(selected.value)) return
   if (uncertain.value) {
     if (!await confirmDiscard(t('保存结果尚未核对。请先重新读取服务器状态，再切换世界。'))) return
@@ -208,6 +219,11 @@ async function saveConfig() {
 
 async function runWorldAction(operation) {
   if (busy.value || dirty.value || uncertain.value || !selected.value) return
+  confirming.value = true
+  try { await executeWorldAction(operation) }
+  finally { confirming.value = false }
+}
+async function executeWorldAction(operation) {
   if (operation === 'load' && !canManageLifecycle.value) return
   if (operation === 'unload' && (!canManageLifecycle.value || selected.value.players > 0)) return
   if (operation === 'teleport' && (!canTeleport.value || !selected.value.loaded || !playerName.value.trim())) return
@@ -327,7 +343,7 @@ onBeforeUnmount(() => {
         <div v-else-if="!worlds.length" class="roster-state">{{ t(query ? '没有匹配的世界。' : '没有已注册的世界。') }}</div>
         <ul v-else class="world-list">
           <li v-for="world in worlds" :key="worldId(world)">
-            <button type="button" class="world-option" :class="{ selected: worldId(selected) === worldId(world) }" :aria-current="worldId(selected) === worldId(world) ? 'true' : undefined" @click="selectWorld(world)">
+            <button type="button" class="world-option" :disabled="busy" :class="{ selected: worldId(selected) === worldId(world) }" :aria-current="worldId(selected) === worldId(world) ? 'true' : undefined" @click="selectWorld(world)">
               <span class="world-state-dot" :class="{ loaded: world.loaded }" />
               <span class="world-option-copy"><strong>{{ world.alias || world.name }}</strong><small>{{ world.name }}<span v-if="world.players"> · {{ t('{count} 名玩家', { count: world.players }) }}</span></small></span>
               <span class="world-option-status">{{ t(world.loaded ? '已加载' : '未加载') }}</span>
@@ -356,7 +372,8 @@ onBeforeUnmount(() => {
             </div>
           </header>
 
-          <section class="config-section" aria-labelledby="world-config-title">
+          <WorkspaceTabs v-model="editorTab" :items="editorTabs" label="世界管理分区" id="multiverse-world" />
+          <section v-show="editorTab === 'config'" class="config-section" aria-labelledby="world-config-title">
             <header class="section-heading">
               <h3 id="world-config-title">{{ t('世界配置') }}</h3>
               <span class="save-state" :class="{ unsaved: dirty || uncertain, verified: configReady && !dirty && !uncertain, unavailable: !configReady }">{{ configStatus }}</span>
@@ -395,7 +412,7 @@ onBeforeUnmount(() => {
             </footer>
           </section>
 
-          <section class="operations-section" aria-labelledby="world-actions-title">
+          <section v-show="editorTab === 'operations'" class="operations-section" aria-labelledby="world-actions-title">
             <header class="section-heading"><h3 id="world-actions-title">{{ t('世界操作') }}</h3></header>
             <div class="operation-grid">
               <div v-if="canManageLifecycle" class="operation-row">
@@ -424,7 +441,7 @@ onBeforeUnmount(() => {
 .multiverse-workspace { width:100%; max-width:1320px; min-width:0; color:var(--lc-text); }
 .workspace-heading,.world-heading,.section-heading,.config-actions,.operation-row { display:flex; justify-content:space-between; align-items:center; gap:16px; }
 .workspace-heading { margin-bottom:16px; }
-.workspace-heading h1 { display:flex; align-items:center; gap:10px; margin:0; font-size:24px; line-height:1.3; }
+.workspace-heading h1 { display:flex; align-items:center; gap:10px; margin:0; font-size:22px; line-height:1.3; }
 .workspace-heading h1 :deep(svg) { color:var(--el-color-primary); }
 .workspace-heading p,.section-heading p { margin:0; color:var(--lc-text-soft); font-size:12px; line-height:1.7; }
 .workspace-heading :deep(.el-button) { flex-shrink:0; }
@@ -441,8 +458,8 @@ onBeforeUnmount(() => {
 .feedback.error { border-color:var(--el-color-danger-light-5); color:var(--el-color-danger); }
 .feedback.warning { border-color:var(--el-color-warning-light-7); background:var(--el-color-warning-light-9); color:var(--el-color-warning); }
 .feedback.success { border-color:var(--el-color-success-light-7); color:var(--el-color-success); }
-.workspace-layout { display:grid; grid-template-columns:240px minmax(0,1fr); align-items:stretch; min-width:0; border:1px solid var(--el-border-color-light); border-radius:8px; background:var(--lc-surface); overflow:hidden; }
-.world-roster { min-width:0; padding:18px 14px; border-right:1px solid var(--el-border-color-light); background:var(--el-fill-color-extra-light); }
+.workspace-layout { display:grid; grid-template-columns:228px minmax(0,1fr); align-items:stretch; min-width:0; border-top:1px solid var(--el-border-color-light); }
+.world-roster { min-width:0; padding:18px 16px 18px 0; border-right:1px solid var(--el-border-color-light); }
 .roster-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
 .roster-heading h2 { margin:0; font-size:13px; font-weight:650; }
 .roster-heading > span { color:var(--lc-text-soft); font-size:11px; font-variant-numeric:tabular-nums; }
@@ -453,6 +470,7 @@ onBeforeUnmount(() => {
 .world-list { display:grid; gap:3px; padding:0; margin:0; list-style:none; max-height:min(58vh,620px); overflow:auto; }
 .world-option { display:flex; align-items:center; gap:8px; width:100%; min-height:54px; padding:9px 8px; border:1px solid transparent; border-radius:5px; background:transparent; color:var(--lc-text); text-align:left; cursor:pointer; transition:background-color 160ms, border-color 160ms, transform 320ms var(--motion-spring); }
 .world-option:active { transform:scale(.98); }
+.world-option:disabled { cursor:default; opacity:.65; }
 .world-option:hover { background:var(--el-fill-color-light); }
 .world-option.selected { border-color:var(--el-color-primary-light-8); background:var(--el-color-primary-light-9); }
 .world-option .world-state-dot.loaded,.load-state .world-state-dot.loaded { background:var(--el-color-success); }
@@ -464,7 +482,7 @@ onBeforeUnmount(() => {
 .roster-state { padding:22px 8px; color:var(--lc-text-soft); font-size:12px; text-align:center; }
 .roster-pagination { justify-content:center; margin-top:12px; }
 .roster-summary { margin-top:12px; padding-top:10px; border-top:1px solid var(--el-border-color-lighter); color:var(--lc-text-soft); font-size:10px; }
-.world-editor { min-width:0; padding:20px 24px; }
+.world-editor { min-width:0; padding:18px 0 18px 24px; }
 .editor-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:260px; gap:9px; color:var(--lc-text-soft); text-align:center; }
 .editor-empty strong { color:var(--lc-text); font-size:14px; }
 .editor-empty span { font-size:12px; }
@@ -514,7 +532,7 @@ onBeforeUnmount(() => {
 button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
 @media (min-width:901px) and (max-width:1180px) {
   .workspace-layout { grid-template-columns:210px minmax(0,1fr); }
-  .world-editor { padding:18px; }
+  .world-editor { padding:18px 0 18px 18px; }
   .config-fields { grid-template-columns:minmax(0,1fr); }
   .setting-row { align-items:center; }
   .setting-row :deep(.el-switch) { margin-top:0; }
@@ -523,9 +541,9 @@ button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset
 }
 @media (max-width:900px) {
   .workspace-layout { grid-template-columns:minmax(0,1fr); }
-  .world-roster { padding:14px 16px; border-right:0; border-bottom:1px solid var(--el-border-color-light); }
+  .world-roster { padding:14px 0; border-right:0; border-bottom:1px solid var(--el-border-color-light); }
   .world-list { max-height:164px; }
-  .world-editor { padding:18px; }
+  .world-editor { padding:18px 0; }
 }
 @media (max-width:620px) {
   .workspace-heading h1 { font-size:21px; }

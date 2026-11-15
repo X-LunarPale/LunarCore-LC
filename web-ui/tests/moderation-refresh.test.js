@@ -239,6 +239,23 @@ test('confirmation resolving after unmount cannot submit a command', async conte
   assert.equal(env.timers.size, 0)
 })
 
+test('a pending management confirmation cannot be submitted twice', async context => {
+  const env = await environment(context)
+  const confirmation = deferred()
+  let confirmations = 0, submissions = 0
+  env.messageBox.confirm = () => { confirmations++; return confirmation.promise }
+  env.api.post = async () => { submissions++; return { executionId: 'manage-run', output: [] } }
+  env.state.chooseCommand({ ...command('manage'), permission: 'anticheat.manage' })
+  const running = env.state.runCommand()
+  await env.state.runCommand()
+  assert.equal(confirmations, 1)
+  assert.equal(submissions, 0)
+  confirmation.resolve(true)
+  await running
+  assert.equal(submissions, 1)
+  assert.equal(env.state.commandConfirming, false)
+})
+
 test('output failures release the request slot and retain manual retry', async context => {
   const env = await environment(context)
   env.api.get = async () => { throw new Error('output unavailable') }

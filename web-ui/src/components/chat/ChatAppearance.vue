@@ -56,7 +56,7 @@ const duplicateBrackets = computed(() => props.model.worldBrackets === true &&
 </template>
 
 <style scoped>
-.chat-appearance{margin-top:24px;padding-top:24px;border-top:1px solid var(--el-border-color-light);min-width:0}
+.chat-appearance{margin-top:0;padding-top:0;min-width:0}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 h4{font-size:13px;margin:0;font-weight:600}
 .column-labels,.world-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(145px,.8fr) 36px;gap:12px;align-items:center}

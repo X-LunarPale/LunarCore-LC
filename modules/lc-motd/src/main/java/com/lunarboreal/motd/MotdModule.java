@@ -18,18 +18,29 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 
 public final class MotdModule extends LcModule implements Listener {
     private record Snapshot(MotdSettings settings, MotdTemplate normal, MotdTemplate maintenance,
-                            MotdTemplate joinMessage, MotdTemplate kickMessage, MaintenancePolicy policy, String version) {
-        MotdTemplate activeTemplate() { return settings.maintenance().enabled() ? maintenance : normal; }
+                            MotdTemplate joinMessage, MotdTemplate kickMessage, MaintenancePolicy policy,
+                            MaintenanceState state, String version) {
+        MotdTemplate activeTemplate() { return state.active() ? maintenance : normal; }
+        boolean displaysMotd() { return state.active() || settings.enabled(); }
+        Snapshot withState(MaintenanceState replacement) {
+            return new Snapshot(settings, normal, maintenance, joinMessage, kickMessage,
+                    new MaintenancePolicy(settings.maintenance().withEnabled(replacement.active())), replacement, version);
+        }
     }
     private record PingCache(Snapshot owner, MotdTemplate template) {}
     private volatile Snapshot snapshot;
     private volatile PingCache pingCache;
     private boolean closing;
+    private final Clock clock;
+
+    public MotdModule() { this(Clock.systemUTC()); }
+    MotdModule(Clock clock) { this.clock = java.util.Objects.requireNonNull(clock); }
 
     /** Main-thread refresh only; no Bukkit or expansion access from asynchronous ping handlers. */
     private void refreshPingCache() {
@@ -57,16 +68,17 @@ public final class MotdModule extends LcModule implements Listener {
         closing = false;
         snapshot = createSnapshot(MotdSettings.load(config()));
         refreshPingCache();
-        runTaskTimer(this::refreshPingCache, 20L, 20L);
+        runTaskTimer(() -> { refreshSchedule(); refreshPingCache(); }, 20L, 20L);
         registerListener(this);
         registerWeb();
     }
 
     private Snapshot createSnapshot(MotdSettings settings) {
         MaintenanceSettings maintenance = settings.maintenance();
+        MaintenanceState state = MaintenanceState.at(maintenance, clock.instant());
         return new Snapshot(settings, new MotdTemplate(settings), new MotdTemplate(maintenance.line1(), maintenance.line2()),
                 new MotdTemplate(maintenance.joinMessage()), new MotdTemplate(maintenance.kickMessage()),
-                new MaintenancePolicy(maintenance), Bukkit.getMinecraftVersion());
+                new MaintenancePolicy(maintenance.withEnabled(state.active())), state, Bukkit.getMinecraftVersion());
     }
 
     @Override public void onReload() {
@@ -81,7 +93,7 @@ public final class MotdModule extends LcModule implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPing(ServerListPingEvent event) {
         Snapshot current = snapshot;
-        if (current == null || !MaintenancePolicy.displaysMotd(current.settings())) return;
+        if (current == null || !current.displaysMotd()) return;
         event.motd(pingTemplate(current).render(event.getNumPlayers(), event.getMaxPlayers(), current.version()));
     }
 
@@ -100,8 +112,9 @@ public final class MotdModule extends LcModule implements Listener {
     }
 
     /** Called only through ctx.sync. Persist before publishing the replacement or executing any eviction. */
-    private void save(MotdSettings settings) throws Exception {
+    private int save(MotdSettings settings) throws Exception {
         if (closing) throw new IllegalStateException("模块正在关闭");
+        Snapshot before = snapshot;
         Snapshot replacement = createSnapshot(settings);
         YamlConfiguration yaml = new YamlConfiguration();
         // Retain unrelated/future configuration keys rather than rewriting only known fields.
@@ -119,6 +132,8 @@ public final class MotdModule extends LcModule implements Listener {
         settings.apply(config());
         snapshot = replacement;
         refreshPingCache();
+        return replacement.state().shouldKickAfter(before.state(), before.settings().maintenance().kickOnline(),
+                replacement.settings().maintenance().kickOnline()) ? kickOnline(replacement) : 0;
     }
 
     /** One-shot action, not a repeating enforcement task. Other plugins may cancel PlayerKickEvent. */
@@ -138,10 +153,43 @@ public final class MotdModule extends LcModule implements Listener {
 
     private Map<String, Object> maintenanceStatus() {
         Snapshot current = snapshot;
-        return Map.of("id", "maintenance", "enabled", current.settings().maintenance().enabled(),
-                "allowJoin", current.settings().maintenance().allowJoin(), "kickOnline", current.settings().maintenance().kickOnline(),
-                "online", Bukkit.getOnlinePlayers().size(), "eligible", Bukkit.getOnlinePlayers().stream()
+        MaintenanceSchedule schedule = current.settings().maintenance().schedule();
+        Map<String, Object> status = new java.util.LinkedHashMap<>();
+        status.put("id", "maintenance");
+        status.put("enabled", current.state().active());
+        status.put("manualEnabled", current.settings().maintenance().enabled());
+        status.put("controlMode", current.state().scheduled() ? "scheduled" : "manual");
+        status.put("scheduleEnabled", schedule.enabled());
+        status.put("scheduleActive", current.state().scheduled() && current.state().active());
+        status.put("schedulePhase", current.state().phase());
+        status.put("scheduleStart", schedule.startAt());
+        status.put("scheduleEnd", schedule.endAt());
+        status.put("nextTransitionAt", current.state().nextTransitionAt());
+        status.put("serverTime", clock.instant().toString());
+        status.put("allowJoin", current.settings().maintenance().allowJoin());
+        status.put("kickOnline", current.settings().maintenance().kickOnline());
+        status.put("online", Bukkit.getOnlinePlayers().size());
+        status.put("max", Bukkit.getMaxPlayers());
+        status.put("version", current.version());
+        status.put("eligible", Bukkit.getOnlinePlayers().stream()
                         .filter(p -> current.policy().kickOnRequest(p.getName(), p.getUniqueId())).count());
+        return status;
+    }
+
+    private void refreshSchedule() {
+        Snapshot current = snapshot;
+        if (current == null || closing) return;
+        MaintenanceState next = MaintenanceState.at(current.settings().maintenance(), clock.instant());
+        if (next.equals(current.state())) return;
+        Snapshot replacement = current.withState(next);
+        snapshot = replacement;
+        if (next.active() != current.state().active()) {
+            int requested = next.shouldKickAfter(current.state(), current.settings().maintenance().kickOnline(),
+                    current.settings().maintenance().kickOnline()) ? kickOnline(replacement) : 0;
+            audit("schedule", next.active() ? "maintenance-start" : "maintenance-end",
+                    "start=" + current.settings().maintenance().schedule().startAt()
+                            + "; end=" + current.settings().maintenance().schedule().endAt() + "; kickRequested=" + requested);
+        }
     }
 
     private void registerWeb() {
@@ -155,8 +203,8 @@ public final class MotdModule extends LcModule implements Listener {
                 Snapshot current = snapshot;
                 String text = PlainTextComponentSerializer.plainText().serialize(pingTemplate(current)
                         .render(Bukkit.getOnlinePlayers().size(), Bukkit.getMaxPlayers(), current.version()));
-                return Map.of("enabled", MaintenancePolicy.displaysMotd(current.settings()),
-                        "maintenance", current.settings().maintenance().enabled(), "text", text);
+                return Map.of("enabled", current.displaysMotd(),
+                        "maintenance", current.state().active(), "text", text);
             })));
             routes.post("/settings", "motd.manage", ctx -> {
                 MotdSettings replacement;
@@ -172,17 +220,16 @@ public final class MotdModule extends LcModule implements Listener {
                 ctx.ok("正常服务器展示设置已保存");
             });
             routes.post("/maintenance", "motd.manage", ctx -> {
-                MaintenanceSettings replacement;
-                try { replacement = MaintenanceSettings.from(ctx.bodyMap()); }
-                catch (IllegalArgumentException ex) { throw HttpException.badRequest(ex.getMessage()); }
+                Map<String, Object> body = ctx.bodyMap();
                 String actor = ctx.user().username();
                 int requested = ctx.sync(() -> {
                     MaintenanceSettings before = snapshot.settings().maintenance();
-                    save(snapshot.settings().withMaintenance(replacement));
-                    boolean kick = MaintenancePolicy.kickAfterSave(before, replacement);
-                    int count = kick ? kickOnline(snapshot) : 0;
+                    MaintenanceSettings replacement;
+                    try { replacement = MaintenanceSettings.from(body, before.schedule()); }
+                    catch (IllegalArgumentException ex) { throw HttpException.badRequest(ex.getMessage()); }
+                    int count = save(snapshot.settings().withMaintenance(replacement));
                     audit("web:" + actor, "maintenance-settings", "before=" + before.webValues()
-                            + "; after=" + replacement.webValues() + "; kickTriggered=" + kick + "; kickRequested=" + count);
+                            + "; after=" + replacement.webValues() + "; kickRequested=" + count);
                     return count;
                 });
                 ctx.ok("维护设置已保存；本次已向 " + requested + " 名非白名单在线玩家发起踢出请求");
@@ -193,7 +240,7 @@ public final class MotdModule extends LcModule implements Listener {
                 String actor = ctx.user().username();
                 int requested = ctx.sync(() -> {
                     Snapshot current = snapshot;
-                    if (!current.settings().maintenance().enabled()) throw HttpException.badRequest("请先启用维护模式");
+                    if (!current.state().active()) throw HttpException.badRequest("请先启用维护模式");
                     int count = kickOnline(current);
                     audit("web:" + actor, "maintenance-kick", "kickRequested=" + count);
                     return count;
@@ -207,11 +254,14 @@ public final class MotdModule extends LcModule implements Listener {
                         .field(new WebPanel.Field("enabled", "启用正常服务器展示", "bool").help("关闭后，非维护期间使用服务器原有简介"))
                         .field(new WebPanel.Field("line1", "正常简介第一行", "text"))
                         .field(new WebPanel.Field("line2", "正常简介第二行", "text")))
-                .section(new WebPanel.Text("维护执行规则", "允许加入与踢出在线玩家为独立选项。白名单玩家可通过维护入服检查，且不受维护踢出影响；其他服务器规则和插件限制仍然有效。保存时，仅在启用维护且勾选自动踢出，或维护期间首次开启自动踢出时执行一次踢出。修改简介、提示或白名单不会重复踢出；启动、重载也不会执行踢出。手动动作使用已保存的提示与白名单，在维护开启时可独立执行，不受自动踢出选项限制。踢出请求可能被其他插件取消。"))
+                .section(new WebPanel.Text("维护执行规则", "手动模式由维护开关控制；定时模式只在指定时间内生效，结束后恢复开放。开始时间已过且未到结束时间时立即生效。白名单玩家可加入且不会被维护踢出。自动踢出仅在进入维护或维护中开启该选项时执行一次，启动与重载不踢人。"))
                 .section(new WebPanel.Form("维护模式设置", "maintenance", "maintenance").savePermission("motd.manage").submitLabel("保存维护设置")
                         .field(new WebPanel.Field("enabled", "启用维护模式", "bool"))
                         .field(new WebPanel.Field("allowJoin", "维护期间允许非白名单玩家加入", "bool"))
                         .field(new WebPanel.Field("kickOnline", "启用维护时踢出非白名单在线玩家", "bool").help("仅按维护执行规则发起一次踢出，不持续限制在线玩家"))
+                        .field(new WebPanel.Field("scheduleEnabled", "启用定时维护", "bool").help("启用后由计划控制维护状态，手动维护开关暂不生效"))
+                        .field(new WebPanel.Field("scheduleStart", "维护开始时间（ISO-8601）", "text").help("例如 2026-11-15T20:00:00+08:00"))
+                        .field(new WebPanel.Field("scheduleEnd", "维护结束时间（ISO-8601，可留空）", "text").help("留空表示持续维护；退出时切回手动模式并关闭维护"))
                         .field(new WebPanel.Field("whitelist", "维护白名单", "textarea").help("每行一个名称或 UUID，最多 500 项。名称为 3–16 位英文字母、数字或下划线，忽略大小写；UUID 可使用标准带连字符格式或 32 位十六进制格式。按服务器实际身份匹配，不查询外部账号。"))
                         .field(new WebPanel.Field("joinMessage", "维护入服拒绝提示", "text"))
                         .field(new WebPanel.Field("kickMessage", "维护踢出提示", "text"))

@@ -5,6 +5,7 @@ import com.lunarboreal.api.LC;
 import com.lunarboreal.api.LunarBorealAPI;
 import com.lunarboreal.api.command.CommandRegistry;
 import com.lunarboreal.api.command.LcCommand;
+import com.lunarboreal.api.database.Database;
 import com.lunarboreal.api.message.MessageService;
 import com.lunarboreal.api.module.LcModule;
 import com.lunarboreal.api.module.ModuleDescription;
@@ -51,6 +52,7 @@ class TeleportSpawnTest {
     private final UUID uuid = UUID.randomUUID();
     private final World survival = world("survival");
     private final World hub = world("hub");
+    private final World terrain = world("jixian");
     private final Location saved = new Location(survival, 83, 72, -45);
     private final Location hubSpawn = new Location(hub, 4.5, 80, 8.5);
     private final Map<NamespacedKey, Object> playerData = new HashMap<>();
@@ -62,6 +64,8 @@ class TeleportSpawnTest {
     private LunarBorealAPI oldApi;
     private SpawnManager spawns;
     private TeleportListener listener;
+    private World deathWorld = survival;
+    private Location personalRespawn;
 
     @BeforeEach void setup() throws Exception {
         oldServer = Bukkit.getServer();
@@ -75,7 +79,12 @@ class TeleportSpawnTest {
         });
         set(Bukkit.class, null, "server", proxy(Server.class, (name, args) -> switch (name) {
             case "getScheduler" -> scheduler;
-            case "getWorld" -> args[0].equals("hub") ? hub : survival;
+            case "getWorld" -> switch (String.valueOf(args[0])) {
+                case "hub" -> hub;
+                case "jixian" -> terrain;
+                default -> survival;
+            };
+            case "getWorlds" -> List.of(survival, hub, terrain);
             default -> null;
         }));
         var players = proxy(PlayerCache.class, (name, args) -> name.equals("get")
@@ -89,10 +98,12 @@ class TeleportSpawnTest {
             if (name.equals("register")) commands.put(((LcCommand) args[1]).name(), (LcCommand) args[1]);
             return null;
         });
+        var database = proxy(Database.class, (name, args) -> name.equals("table") ? args[0] : null);
         LC.setInstance(proxy(LunarBorealAPI.class, (name, args) -> switch (name) {
             case "players" -> players;
             case "messages" -> service;
             case "commands" -> registry;
+            case "database" -> database;
             case "plugin" -> proxy(Plugin.class, (n, a) -> null);
             default -> null;
         }));
@@ -103,6 +114,7 @@ class TeleportSpawnTest {
         spawns = new SpawnManager(module);
         set(SpawnManager.class, spawns, "configuredSpawn", hubSpawn);
         set(TeleportModule.class, module, "spawns", spawns);
+        set(TeleportModule.class, module, "homes", new HomeManager(module));
         listener = new TeleportListener(module);
         SpawnCommands.register(module);
     }
@@ -192,6 +204,116 @@ class TeleportSpawnTest {
         assertTrue(tasks.isEmpty());
     }
 
+    @Test void disabledHubReturnUsesTheDeathWorldInsteadOfPapersMainWorldFallback() {
+        deathWorld = terrain;
+        commands.get("spawn").execute(player(), "spawn", new String[]{"ondeath", "off"});
+        var event = respawn(player(), false);
+        fireRespawn(event);
+        assertEquals(terrain.getSpawnLocation(), event.getRespawnLocation());
+        assertTrue(tasks.isEmpty());
+        assertFalse(messages.contains("teleport.spawn.death-hint"));
+    }
+
+    @Test void defaultOffAndMasterOffAlsoKeepExtraOverworldsLocal() {
+        deathWorld = terrain;
+        config.set("spawn.respawn-default-enabled", false);
+        var defaultOff = respawn(player(), false);
+        fireRespawn(defaultOff);
+        assertEquals(terrain.getSpawnLocation(), defaultOff.getRespawnLocation());
+
+        config.set("spawn.respawn-default-enabled", true);
+        config.set("spawn.on-respawn", false);
+        var masterOff = respawn(player(), false);
+        fireRespawn(masterOff);
+        assertEquals(terrain.getSpawnLocation(), masterOff.getRespawnLocation());
+    }
+
+    @Test void enabledHubReturnKeepsItsExistingPriorityInTerrainWorlds() {
+        deathWorld = terrain;
+        var event = respawn(player(), false);
+        fireRespawn(event);
+        assertEquals(hubSpawn, event.getRespawnLocation());
+        tasks.forEach(Runnable::run);
+        assertEquals(List.of("teleport.spawn.death-hint"), messages);
+    }
+
+    @Test void disabledHubReturnPreservesBedsAnchorsAndValidPersonalRespawnPoints() {
+        deathWorld = terrain;
+        SpawnPreferences.setReturnsOnDeath(player(), false);
+        for (boolean anchor : List.of(false, true)) {
+            var event = new PlayerRespawnEvent(player(), saved.clone(), !anchor, anchor, false,
+                    PlayerRespawnEvent.RespawnReason.DEATH);
+            fireRespawn(event);
+            assertEquals(saved, event.getRespawnLocation());
+        }
+        personalRespawn = saved.clone();
+        var forced = respawn(player(), false);
+        fireRespawn(forced);
+        assertEquals(saved, forced.getRespawnLocation());
+    }
+
+    @Test void invalidPersonalRespawnFallsBackToTheDeathWorld() {
+        deathWorld = terrain;
+        SpawnPreferences.setReturnsOnDeath(player(), false);
+        var missingBed = new PlayerRespawnEvent(player(), saved.clone(), false, false, true,
+                PlayerRespawnEvent.RespawnReason.DEATH);
+        fireRespawn(missingBed);
+        assertEquals(terrain.getSpawnLocation(), missingBed.getRespawnLocation());
+    }
+
+    @Test void configuredHomeStillTakesPriorityAfterTheDefaultFallbackIsCorrected() throws Exception {
+        deathWorld = terrain;
+        SpawnPreferences.setReturnsOnDeath(player(), false);
+        config.set("homes.respawn-at-home", true);
+        HomeManager.Home home = new HomeManager.Home(uuid, "home", StoredLoc.of(saved), 0);
+        set(HomeManager.class, module.homes(), "cache", new HashMap<>(Map.of(uuid, Map.of("home", home))));
+        var event = respawn(player(), false);
+        fireRespawn(event);
+        assertEquals(saved, event.getRespawnLocation());
+    }
+
+    @Test void aLaterPluginCanChooseALegalRespawnLocation() {
+        deathWorld = terrain;
+        SpawnPreferences.setReturnsOnDeath(player(), false);
+        var event = respawn(player(), false);
+        listener.onRespawnFallback(event);
+        assertEquals(terrain.getSpawnLocation(), event.getRespawnLocation());
+        event.setRespawnLocation(saved);
+        listener.onRespawn(event);
+        assertEquals(saved, event.getRespawnLocation());
+    }
+
+    @Test void sameWorldPluginLocationsAndOtherDimensionRespawnsStayUntouched() {
+        deathWorld = terrain;
+        SpawnPreferences.setReturnsOnDeath(player(), false);
+        Location chosen = new Location(terrain, 12, 150, -92);
+        var sameWorld = new PlayerRespawnEvent(player(), chosen.clone(), false, false, false,
+                PlayerRespawnEvent.RespawnReason.DEATH);
+        fireRespawn(sameWorld);
+        assertEquals(chosen, sameWorld.getRespawnLocation());
+        for (World.Environment environment : List.of(World.Environment.NETHER, World.Environment.THE_END)) {
+            deathWorld = world(environment.name(), environment);
+            var event = respawn(player(), false);
+            fireRespawn(event);
+            assertEquals(saved, event.getRespawnLocation());
+        }
+    }
+
+    @Test void endPortalReturnNeverUsesTheDeathWorldFallback() {
+        deathWorld = terrain;
+        SpawnPreferences.setReturnsOnDeath(player(), false);
+        var event = new PlayerRespawnEvent(player(), saved.clone(), false, false, false,
+                PlayerRespawnEvent.RespawnReason.END_PORTAL);
+        fireRespawn(event);
+        assertEquals(saved, event.getRespawnLocation());
+        assertTrue(tasks.isEmpty());
+    }
+
+    private void fireRespawn(PlayerRespawnEvent event) {
+        listener.onRespawnFallback(event);
+        listener.onRespawn(event);
+    }
+
     private AsyncPlayerSpawnLocationEvent initial(boolean fresh) {
         var profile = proxy(PlayerProfile.class, (name, args) -> name.equals("getId") ? uuid : null);
         var connection = proxy(PlayerConfigurationConnection.class, (name, args) -> name.equals("getProfile") ? profile : null);
@@ -212,17 +334,27 @@ class TeleportSpawnTest {
             case "getUniqueId" -> uuid;
             case "isOnline" -> true;
             case "getPersistentDataContainer" -> pdc;
+            case "getWorld" -> deathWorld;
+            case "getRespawnLocation" -> personalRespawn;
             default -> null;
         });
     }
 
     private static World world(String name) {
+        return world(name, World.Environment.NORMAL);
+    }
+
+    private static World world(String name, World.Environment environment) {
         UUID id = UUID.randomUUID();
-        return proxy(World.class, (method, args) -> switch (method) {
+        World[] world = new World[1];
+        world[0] = proxy(World.class, (method, args) -> switch (method) {
             case "getUID" -> id;
             case "getName" -> name;
+            case "getEnvironment" -> environment;
+            case "getSpawnLocation" -> new Location(world[0], 0.5, 80, 0.5);
             default -> null;
         });
+        return world[0];
     }
 
     private static void set(Class<?> owner, Object target, String name, Object value) throws Exception {

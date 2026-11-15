@@ -273,7 +273,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="grim-config-workspace">
-    <div class="config-intro"><div><h2>{{ t('GrimAC 配置') }}</h2><p>{{ t('反作弊检测、处罚规则与消息设置') }}</p></div><span v-if="dirty" class="unsaved" role="status">{{ t('{count} 项未保存', { count: changedCount }) }}</span></div>
+    <div v-if="dirty" class="change-notice" role="status"><Icon name="circle" :size="9" />{{ t('{count} 项未保存', { count: changedCount }) }}</div>
     <el-alert v-if="!canManage" :title="t('当前账号没有管理 GrimAC 配置的权限')" type="info" :closable="false" />
     <template v-else>
       <div class="config-layout">
@@ -300,7 +300,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.grim-config-workspace { min-width: 0; }.config-intro { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }h2 { margin: 0 0 5px; font-size: 18px; line-height: 1.4; }.config-intro p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--lc-text-soft); }.unsaved { color: var(--el-color-warning); font-size: 12px; white-space: nowrap; }
+.grim-config-workspace { min-width:0; }.change-notice { display:flex; align-items:center; gap:7px; margin-bottom:16px; color:var(--el-color-warning); font-size:12px; }
 .config-layout { display: grid; grid-template-columns: 202px minmax(0, 1fr); gap: 25px; align-items: start; }.config-files { display: grid; gap: 4px; position: sticky; top: 12px; }.config-files button { display: flex; align-items: center; gap: 10px; min-width: 0; width: 100%; border: 0; border-left: 2px solid transparent; border-radius: 5px; padding: 12px 10px; text-align: left; background: transparent; color: var(--lc-text); cursor: pointer; transition: background-color 150ms, color 150ms; }.config-files button:disabled { opacity: .55; cursor: default; }.config-files button.selected { border-left-color: var(--el-color-primary); background: var(--el-color-primary-light-9); color: var(--el-color-primary); }.config-files button:hover:not(:disabled) { background: var(--el-fill-color-light); }.config-files button.selected:hover { background: var(--el-color-primary-light-9); }.config-files button > :deep(svg) { flex-shrink: 0; }.config-files button > span { min-width: 0; }.config-files strong { display: block; font-size: 13px; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; }.config-files small { display: block; margin-top: 4px; color: var(--lc-text-soft); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }.file-pending { width: 6px; height: 6px; border-radius: 50%; margin-left: auto; background: var(--el-color-warning); flex-shrink: 0; }
 .config-main { min-width: 0; }.config-alert { margin-bottom: 14px; }.file-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 17px; border-bottom: 1px solid var(--el-border-color); }h3 { margin: 0 0 4px; font-size: 16px; line-height: 1.5; }.file-heading span { display: block; color: var(--lc-text-soft); font-size: 11px; overflow-wrap: anywhere; }.icon-button { width: 34px; height: 34px; flex-shrink: 0; padding: 0; }
 .config-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding-block: 17px; }.config-toolbar > :deep(.el-input) { flex: 1; min-width: 180px; }.config-toolbar > :deep(.el-select) { width: 170px; }.result-count { color: var(--lc-text-soft); font-size: 11px; white-space: nowrap; }

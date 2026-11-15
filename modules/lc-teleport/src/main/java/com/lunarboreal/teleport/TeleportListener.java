@@ -1,7 +1,9 @@
 package com.lunarboreal.teleport;
 
 import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -43,6 +45,23 @@ public final class TeleportListener implements Listener {
             m.teleports().setBack(p.getUniqueId(), p.getLocation());
             m.runTaskLater(() -> { if (p.isOnline()) m.msg(p, "back.death-hint"); }, 20L);
         }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onRespawnFallback(PlayerRespawnEvent e) {
+        if (e.getRespawnReason() != PlayerRespawnEvent.RespawnReason.DEATH
+                || e.isBedSpawn() || e.isAnchorSpawn()) return;
+        Player p = e.getPlayer();
+        if (m.config().getBoolean("spawn.on-respawn", true)
+                && SpawnPreferences.returnsOnDeath(p, m.config().getBoolean("spawn.respawn-default-enabled", true))) return;
+        World deathWorld = p.getWorld();
+        World destination = e.getRespawnLocation().getWorld();
+        if (deathWorld.getEnvironment() != World.Environment.NORMAL
+                || deathWorld.equals(destination) || p.getRespawnLocation() != null) return;
+        var worlds = Bukkit.getWorlds();
+        if (worlds.isEmpty() || !worlds.getFirst().equals(destination)) return;
+        // 先纠正 Paper 对扩展世界的主世界回落，后续插件仍可设置自己的重生点。
+        e.setRespawnLocation(deathWorld.getSpawnLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGH)

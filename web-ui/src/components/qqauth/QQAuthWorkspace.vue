@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { Ellipsis } from 'lucide-vue-next'
 import { api } from '../../api'
 import { t } from '../../i18n'
@@ -9,6 +9,7 @@ import { useAutoRefresh } from '../../utils/autoRefresh'
 import { latestRequest, panelText, requireSuccess } from '../../utils/panel'
 import ActionRunner from '../panel/ActionRunner.vue'
 import QQAuthConfig from './QQAuthConfig.vue'
+import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
 
 const props = defineProps({ panel: { type: Object, required: true } })
 const auth = useAuth()
@@ -24,6 +25,13 @@ const table = computed(() => props.panel.sections?.find(section => section.type 
 const actions = computed(() => Object.fromEntries((table.value?.rowActions || []).map(action => [action.id, action])))
 const configuration = computed(() => props.panel.sections?.find(section => section.type === 'text'))
 const moduleReady = computed(() => !state.error && state.loaded)
+const tab = ref('accounts')
+const configVisited = ref(false)
+const tabs = computed(() => [
+  { id: 'accounts', label: '认证账号', icon: 'users' },
+  ...(canManage.value ? [{ id: 'config', label: '认证设置', icon: 'sliders-horizontal' }] : [])
+])
+watch(tab, value => { if (value === 'config') configVisited.value = true })
 
 async function loadStats() {
   const current = beginStats()
@@ -83,12 +91,11 @@ function runAction(id, row) {
 
 function actionDone() {
   if (state.items.length === 1 && state.page > 1) state.page--
-  refresh()
   window.dispatchEvent(new CustomEvent('lc:panel-changed', { detail: { namespace: 'qqauth' } }))
 }
 
 useAutoRefresh(() => { if (!state.loading && !runner.value?.busy) return refresh() }, {
-  seconds: () => 10, namespace: 'qqauth', immediate: true
+  seconds: () => 10, namespace: 'qqauth', active: () => tab.value === 'accounts' && !runner.value?.busy, immediate: true
 })
 onBeforeUnmount(() => { beginAccounts(); beginStats() })
 </script>
@@ -98,9 +105,8 @@ onBeforeUnmount(() => { beginAccounts(); beginStats() })
     <header class="qq-heading">
       <div>
         <h1><Icon name="shield" :size="22" />{{ t(panel.title || 'QQ验证与账号认证') }}</h1>
-        <p>{{ t('查看游戏账号的登录状态，并处理锁定、密码恢复与 QQ 解绑。') }}</p>
       </div>
-      <el-button :loading="state.loading" @click="refresh"><Icon name="refresh-cw" :size="15" />{{ t('刷新列表') }}</el-button>
+      <el-button v-if="tab === 'accounts'" :loading="state.loading" :disabled="runner?.busy" @click="refresh"><Icon name="refresh-cw" :size="15" />{{ t('刷新列表') }}</el-button>
     </header>
 
     <div class="qq-status" role="status">
@@ -113,7 +119,8 @@ onBeforeUnmount(() => { beginAccounts(); beginStats() })
       <span v-if="!canManage" class="view-only">{{ t('当前账号仅可查看认证状态') }}</span>
     </div>
 
-    <section class="account-section" aria-labelledby="account-title">
+    <WorkspaceTabs v-model="tab" :items="tabs" label="认证管理分区" id="qqauth" />
+    <section v-show="tab === 'accounts'" class="account-section" aria-labelledby="account-title">
       <div class="section-heading">
         <div><h2 id="account-title">{{ t('游戏认证账号') }}</h2><span v-if="state.loaded" class="count">{{ t('共 {count} 个账号', { count: state.total }) }}</span></div>
         <div class="search-tools">
@@ -150,8 +157,8 @@ onBeforeUnmount(() => { beginAccounts(); beginStats() })
       <el-pagination v-if="!state.error && state.total > state.size" v-model:current-page="state.page" class="qq-pager" :page-size="state.size" :total="state.total" :pager-count="5" layout="prev, pager, next" @current-change="loadAccounts" />
     </section>
 
-    <QQAuthConfig v-if="canManage" />
-    <details v-if="configuration" class="configuration-note">
+    <QQAuthConfig v-if="canManage && configVisited" v-show="tab === 'config'" />
+    <details v-if="configuration" v-show="tab === 'config'" class="configuration-note">
       <summary>{{ t(configuration.title || '配置与迁移') }}</summary>
       <p>{{ panelText(configuration.markdown, configuration.markdownKey) }}</p>
     </details>
@@ -172,7 +179,7 @@ onBeforeUnmount(() => { beginAccounts(); beginStats() })
 .status-label, .count { color: var(--lc-text-soft); }.qq-status strong { font-weight: 650; }
 .status-divider { height: 14px; width: 1px; background: var(--el-border-color); margin: 0 8px; }
 .view-only { margin-left: auto; color: var(--lc-text-soft); }
-.account-section { margin-top: 25px; }
+.account-section { margin-top:0; }
 .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 14px; }
 .section-heading > div:first-child { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .section-heading h2 { margin: 0; font-size: 16px; font-weight: 650; }

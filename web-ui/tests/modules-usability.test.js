@@ -119,9 +119,12 @@ test('disable confirmation locks other module actions and cancellation releases 
   let posts = 0
   env.messageBox.confirm = () => confirmation.promise
   env.api.post = async () => { posts++; return { ok: true } }
+  let reads = 0
+  env.api.get = async () => { reads++; return { items: [] } }
   const pending = env.state.op(moduleRecord, 'disable')
   assert.equal(env.state.busy, 'chatdisable')
-  assert.equal(env.refresh.options.active(), false)
+  await env.refresh.callback()
+  assert.equal(reads, 0)
   await env.state.op({ id: 'economy' }, 'enable')
   assert.equal(posts, 0)
   confirmation.reject(new Error('cancel'))

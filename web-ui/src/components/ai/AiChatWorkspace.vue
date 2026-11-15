@@ -6,6 +6,7 @@ import { api } from '../../api'
 import { t } from '../../i18n'
 import { requireSuccess } from '../../utils/panel'
 import { useAutoRefresh } from '../../utils/autoRefresh'
+import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
 
 const endpoint = '/api/ext/chat/ai/settings'
 const form = reactive({
@@ -47,9 +48,19 @@ const baseline = ref('')
 const error = ref('')
 const notice = ref('')
 const uncertain = ref(false)
+const tab = ref('identity')
+const savedIdentity = ref({ enabled: false, name: '', model: '' })
+const memoryClearing = ref(false)
+const tabs = [
+  { id: 'identity', label: '角色设置', icon: 'bot' },
+  { id: 'connection', label: '模型连接', icon: 'link' },
+  { id: 'bots', label: '附加角色', icon: 'users' },
+  { id: 'memory', label: '语义记忆', icon: 'brain' },
+  { id: 'messages', label: '回复与预览', icon: 'message-circle' }
+]
 let disposed = false
 
-const busy = computed(() => loading.value || saving.value)
+const busy = computed(() => loading.value || saving.value || memoryClearing.value || !!upstreamBusy.value)
 const dirty = computed(() => loaded.value &&
   (JSON.stringify(form) !== baseline.value || !!apiKey.value || clearApiKey.value ||
     !!embeddingApiKey.value || clearEmbeddingApiKey.value))
@@ -131,11 +142,13 @@ function applySettings(data) {
   models.value = {}
   balances.value = {}
   baseline.value = JSON.stringify(form)
+  savedIdentity.value = { enabled: form.enabled, name: form.name, model: form.model }
   loaded.value = true
   uncertain.value = false
 }
 
 async function confirmDiscard() {
+  if (busy.value) return false
   if (!dirty.value) return true
   try {
     await ElMessageBox.confirm(t('有未保存的 AI 配置，确定放弃吗？'), t('修改尚未保存'), {
@@ -220,7 +233,7 @@ function selectProvider(target, value) {
     target.baseUrl = 'https://api.deepseek.com/v1'
 }
 async function queryUpstream(kind, bot) {
-  if (dirty.value || upstreamBusy.value) return
+  if (dirty.value || busy.value) return
   upstreamBusy.value = `${kind}:${bot.id}`
   error.value = ''
   try {
@@ -238,14 +251,15 @@ useAutoRefresh(async () => {
 }, { seconds: () => 60, active: () => liveBalance.value && loaded.value && !dirty.value && !busy.value })
 async function clearMemory() {
   if (busy.value || dirty.value) return
+  memoryClearing.value = true
   try {
-    await ElMessageBox.confirm(t(memoryPlayer.value ? '确定清除该玩家的所有 AI 记忆？' : '确定清空全部玩家的 AI 记忆？'), t('清理 AI 记忆'), { type: 'warning' })
-  } catch { return }
-  try {
+    const confirmed = await ElMessageBox.confirm(t(memoryPlayer.value ? '确定清除该玩家的所有 AI 记忆？' : '确定清空全部玩家的 AI 记忆？'), t('清理 AI 记忆'), { type: 'warning' }).then(() => true, () => false)
+    if (!confirmed || disposed) return
     const body = memoryPlayer.value.trim() ? { playerUuid: memoryPlayer.value.trim() } : {}
     const result = requireSuccess(await api.post('/api/ext/chat/ai/memory/clear', body))
-    notice.value = t('已删除 {count} 条记忆', { count: result.removed })
-  } catch (cause) { error.value = cause.message || t('清理 AI 记忆失败') }
+    if (!disposed) notice.value = t('已删除 {count} 条记忆', { count: result.removed })
+  } catch (cause) { if (!disposed) error.value = cause.message || t('清理 AI 记忆失败') }
+  finally { memoryClearing.value = false }
 }
 
 function beforeUnload(event) {
@@ -274,15 +288,14 @@ onBeforeUnmount(() => {
     <header class="ai-heading">
       <div>
         <h1><Icon name="bot" :size="23" />{{ t('AI 聊天') }}</h1>
-        <p>{{ t('让 AI 以服务器角色身份回应玩家。只在游戏聊天内发言，不会伪装成在线玩家。') }}</p>
       </div>
       <el-button :disabled="busy" @click="load()"><Icon name="refresh-cw" :size="15" />{{ t('读取配置') }}</el-button>
     </header>
 
     <div class="ai-status" role="status">
-      <span class="status-dot" :class="{ active: loaded && form.enabled }" />
-      <strong>{{ t(!loaded ? loading ? '读取配置中…' : '配置未读取' : form.enabled ? '对话已开启' : '对话已关闭') }}</strong>
-      <span v-if="loaded" class="status-detail">{{ form.name }}<span class="status-separator">/</span>{{ form.model || t('模型 ID') }}</span>
+      <span class="status-dot" :class="{ active: loaded && savedIdentity.enabled }" />
+      <strong>{{ t(!loaded ? loading ? '读取配置中…' : '配置未读取' : savedIdentity.enabled ? '对话已开启' : '对话已关闭') }}</strong>
+      <span v-if="loaded" class="status-detail">{{ savedIdentity.name }}<span class="status-separator">/</span>{{ savedIdentity.model || t('模型 ID') }}</span>
       <span v-if="dirty" class="unsaved">{{ t('修改尚未保存') }}</span>
     </div>
 
@@ -292,8 +305,9 @@ onBeforeUnmount(() => {
     <el-button v-if="error && !loaded" :disabled="busy" @click="load(true)">{{ t('读取配置') }}</el-button>
 
     <form v-if="loaded" @submit.prevent="save">
+      <WorkspaceTabs v-model="tab" :items="tabs" label="AI 聊天分区" id="ai-chat" />
       <div class="settings-grid">
-        <section class="settings-block" aria-labelledby="ai-identity-title">
+        <section v-show="tab === 'identity'" class="settings-block" aria-labelledby="ai-identity-title">
           <h2 id="ai-identity-title"><Icon name="message-circle" :size="17" />{{ t('身份与触发') }}</h2>
           <div class="toggle-line"><label for="ai-enabled">{{ t('启用 AI 对话') }}</label><el-switch id="ai-enabled" v-model="form.enabled" :disabled="busy" :aria-label="t('启用 AI 对话')" /></div>
           <div class="field"><label for="ai-name">{{ t('角色名称') }}</label><el-input id="ai-name" v-model="form.name" maxlength="24" show-word-limit :disabled="busy" /><small>{{ t('玩家可在聊天中用 @名称 呼叫它。') }}</small></div>
@@ -303,7 +317,7 @@ onBeforeUnmount(() => {
           <p class="activation-note">{{ t('保存后立即生效；首次安装新版插件需重启服务器。') }}</p>
         </section>
 
-        <section class="settings-block" aria-labelledby="ai-connection-title">
+        <section v-show="tab === 'connection'" class="settings-block" aria-labelledby="ai-connection-title">
           <h2 id="ai-connection-title"><Icon name="link" :size="17" />{{ t('模型连接') }}</h2>
           <div class="field"><label for="ai-provider">{{ t('上游供应商') }}</label><el-select id="ai-provider" :model-value="form.providerType" :disabled="busy" @update:model-value="selectProvider(form, $event)"><el-option v-for="item in providers" :key="item.value" :value="item.value" :label="t(item.label)" /></el-select><small>{{ t('选择类型后可查询 DeepSeek 或 sub2API 的余额；其他兼容接口仍可正常聊天。') }}</small></div>
           <div class="field"><label for="ai-base-url">{{ t('Base URL') }}</label><el-input id="ai-base-url" v-model="form.baseUrl" maxlength="2048" placeholder="https://api.openai.com/v1" :disabled="busy" /><small>{{ t('输入兼容聊天补全接口的服务根地址，例如 https://api.openai.com/v1。') }}</small></div>
@@ -318,12 +332,12 @@ onBeforeUnmount(() => {
         </section>
       </div>
 
-      <section class="persona-block" aria-labelledby="ai-persona-title">
+      <section v-show="tab === 'identity'" class="persona-block" aria-labelledby="ai-persona-title">
         <div><h2 id="ai-persona-title"><Icon name="file-pen-line" :size="17" />{{ t('人格设定') }}</h2><p>{{ t('描述语气、身份与回答边界。玩家聊天会发送给选定的外部服务。') }}</p></div>
         <el-input v-model="form.persona" type="textarea" :rows="6" maxlength="4000" show-word-limit :disabled="busy" :aria-label="t('人格设定')" />
       </section>
 
-      <section class="additional-bots" aria-labelledby="ai-bots-title">
+      <section v-show="tab === 'bots'" class="additional-bots" aria-labelledby="ai-bots-title">
         <div class="section-heading"><div><h2 id="ai-bots-title"><Icon name="users" :size="17" />{{ t('附加 AI 角色') }}</h2><p>{{ t('每个角色有独立的名称、人格、上游与模型。点名时选择对应角色；主动聊天在已启用角色间轮换。') }}</p></div><el-button :disabled="busy || form.bots.length >= 4" @click="addBot"><Icon name="plus" :size="14" />{{ t('添加角色') }}</el-button></div>
         <div v-for="(bot, index) in form.bots" :key="bot.id" class="bot-editor">
           <div class="bot-title"><strong>{{ bot.name || t('新角色') }}</strong><el-switch v-model="bot.enabled" :disabled="busy" :aria-label="t('启用角色')" /><el-button text type="danger" :disabled="busy" @click="form.bots.splice(index, 1)">{{ t('移除') }}</el-button></div>
@@ -342,12 +356,12 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <div class="advanced-grid">
-        <section aria-labelledby="ai-memory-title"><h2 id="ai-memory-title"><Icon name="brain" :size="17" />{{ t('语义记忆') }}</h2><div class="toggle-line"><label for="ai-memory">{{ t('启用玩家记忆') }}</label><el-switch id="ai-memory" v-model="form.memoryEnabled" :disabled="busy" /></div><p class="section-note">{{ t('默认关闭。只保留明确偏好，过滤敏感信息并去重；每个玩家与角色最多 24 条，保留 30 天。检索和新记忆分别调用嵌入接口。') }}</p><div class="field"><label for="ai-embedding-url">{{ t('嵌入 Base URL') }}</label><el-input id="ai-embedding-url" v-model="form.embeddingBaseUrl" maxlength="2048" :disabled="busy" /></div><div class="field"><label for="ai-embedding-model">{{ t('嵌入模型 ID') }}</label><el-input id="ai-embedding-model" v-model="form.embeddingModel" maxlength="128" :disabled="busy" /></div><div class="field"><label for="ai-embedding-key">{{ t('嵌入 API Key') }}</label><el-input id="ai-embedding-key" v-model="embeddingApiKey" type="password" show-password autocomplete="new-password" maxlength="512" :disabled="busy || clearEmbeddingApiKey" /><small>{{ t(embeddingKeyConfigured ? '已保存密钥（不会返回浏览器）' : '尚未保存密钥') }}</small></div><label v-if="embeddingKeyConfigured" class="clear-key"><el-checkbox v-model="clearEmbeddingApiKey" :disabled="busy || !!embeddingApiKey" />{{ t('清除嵌入密钥') }}</label><div class="memory-clear"><el-input v-model="memoryPlayer" :placeholder="t('玩家 UUID；留空表示全部玩家')" :aria-label="t('玩家 UUID；留空表示全部玩家')" :disabled="busy" /><el-button type="danger" plain :disabled="busy || dirty" @click="clearMemory">{{ t('清理记忆') }}</el-button></div></section>
-        <section aria-labelledby="ai-error-title"><h2 id="ai-error-title"><Icon name="message-square-warning" :size="17" />{{ t('失败时的回复') }}</h2><div class="toggle-line"><label for="ai-error-reply">{{ t('请求失败时发消息') }}</label><el-switch id="ai-error-reply" v-model="form.replyOnError" :disabled="busy" /></div><div v-if="form.replyOnError" class="field"><label for="ai-error-message">{{ t('自定义失败消息') }}</label><el-input id="ai-error-message" v-model="form.errorMessage" maxlength="200" :disabled="busy" /><small>{{ t('会以当前 AI 角色的聊天格式发送；关闭后失败时保持沉默。') }}</small></div></section>
+      <div v-show="tab === 'memory' || tab === 'messages'" class="advanced-grid">
+        <section v-show="tab === 'memory'" aria-labelledby="ai-memory-title"><h2 id="ai-memory-title"><Icon name="brain" :size="17" />{{ t('语义记忆') }}</h2><div class="toggle-line"><label for="ai-memory">{{ t('启用玩家记忆') }}</label><el-switch id="ai-memory" v-model="form.memoryEnabled" :disabled="busy" /></div><p class="section-note">{{ t('默认关闭。只保留明确偏好，过滤敏感信息并去重；每个玩家与角色最多 24 条，保留 30 天。检索和新记忆分别调用嵌入接口。') }}</p><div class="field"><label for="ai-embedding-url">{{ t('嵌入 Base URL') }}</label><el-input id="ai-embedding-url" v-model="form.embeddingBaseUrl" maxlength="2048" :disabled="busy" /></div><div class="field"><label for="ai-embedding-model">{{ t('嵌入模型 ID') }}</label><el-input id="ai-embedding-model" v-model="form.embeddingModel" maxlength="128" :disabled="busy" /></div><div class="field"><label for="ai-embedding-key">{{ t('嵌入 API Key') }}</label><el-input id="ai-embedding-key" v-model="embeddingApiKey" type="password" show-password autocomplete="new-password" maxlength="512" :disabled="busy || clearEmbeddingApiKey" /><small>{{ t(embeddingKeyConfigured ? '已保存密钥（不会返回浏览器）' : '尚未保存密钥') }}</small></div><label v-if="embeddingKeyConfigured" class="clear-key"><el-checkbox v-model="clearEmbeddingApiKey" :disabled="busy || !!embeddingApiKey" />{{ t('清除嵌入密钥') }}</label><div class="memory-clear"><el-input v-model="memoryPlayer" :placeholder="t('玩家 UUID；留空表示全部玩家')" :aria-label="t('玩家 UUID；留空表示全部玩家')" :disabled="busy" /><el-button type="danger" plain :loading="memoryClearing" :disabled="busy || dirty" @click="clearMemory"><Icon name="trash-2" :size="14" />{{ t('清理记忆') }}</el-button></div></section>
+        <section v-show="tab === 'messages'" aria-labelledby="ai-error-title"><h2 id="ai-error-title"><Icon name="message-square-warning" :size="17" />{{ t('失败时的回复') }}</h2><div class="toggle-line"><label for="ai-error-reply">{{ t('请求失败时发消息') }}</label><el-switch id="ai-error-reply" v-model="form.replyOnError" :disabled="busy" /></div><div v-if="form.replyOnError" class="field"><label for="ai-error-message">{{ t('自定义失败消息') }}</label><el-input id="ai-error-message" v-model="form.errorMessage" maxlength="200" :disabled="busy" /><small>{{ t('会以当前 AI 角色的聊天格式发送；关闭后失败时保持沉默。') }}</small></div></section>
       </div>
 
-      <div class="chat-example" aria-label="聊天示意">
+      <div v-show="tab === 'messages'" class="chat-example" :aria-label="t('聊天示意')">
         <div><Icon name="message-circle" :size="15" /><strong>{{ t('聊天示意') }}</strong><small>{{ t('实际外观使用玩家的默认聊天格式。') }}</small></div>
         <p>{{ t('有人在游戏聊天中说：@{name} 你好', { name: form.name || 'AI' }) }}</p>
         <p class="example-reply"><strong>{{ form.name || 'AI' }}</strong><span>{{ t('你好！今天在服务器里想做些什么？') }}</span></p>
@@ -380,9 +394,9 @@ onBeforeUnmount(() => {
 .feedback.error, .validation { color: var(--el-color-danger); }
 .feedback.warning { color: var(--el-color-warning); }
 .feedback.success { color: var(--el-color-success); }
-.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; margin-top: 26px; }
-.settings-block { min-width: 0; }
-.settings-block + .settings-block { padding-left: 30px; border-left: 1px solid var(--el-border-color-light); }
+.settings-grid { display:block; margin-top:0; }
+.settings-block { min-width:0; max-width:760px; }
+.settings-block + .settings-block { padding:0; border:0; }
 h2 { display: flex; align-items: center; gap: 9px; margin: 0 0 20px; font-size: 15px; font-weight: 600; }
 h2 :deep(svg) { color: var(--el-color-primary); }
 .field { margin-bottom: 18px; min-width: 0; }
@@ -403,10 +417,10 @@ h2 :deep(svg) { color: var(--el-color-primary); }
 .upstream-actions { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
 .upstream-actions :deep(.el-button + .el-button) { margin-left:0; }
 .balance-line { font-size:11px; line-height:1.6; color:var(--lc-text-soft); overflow-wrap:anywhere; }
-.persona-block { display: grid; grid-template-columns: minmax(200px, .55fr) minmax(0, 1.45fr); align-items: start; gap: 24px; margin-top: 7px; padding: 24px 0; border-top: 1px solid var(--el-border-color-light); border-bottom: 1px solid var(--el-border-color-light); }
+.persona-block { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:12px; max-width:760px; margin-top:4px; padding:22px 0; border-top:1px solid var(--el-border-color-light); }
 .persona-block h2 { margin-bottom: 5px; }
 .persona-block :deep(textarea) { font-size: 13px; line-height: 1.6; }
-.additional-bots { border-bottom:1px solid var(--el-border-color-light); padding:22px 0; }
+.additional-bots { padding:0; }
 .section-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; }
 .section-heading h2 { margin-bottom:4px; }
 .section-heading p,.section-note { color:var(--lc-text-soft); font-size:11px; line-height:1.6; margin:0 0 16px; }
@@ -415,9 +429,9 @@ h2 :deep(svg) { color: var(--el-color-primary); }
 .bot-title strong { margin-right:auto; font-size:13px; }
 .bot-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 20px; }
 .bot-persona { margin:8px 0 0; }
-.advanced-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:30px; border-bottom:1px solid var(--el-border-color-light); padding:24px 0; }
+.advanced-grid { max-width:760px; display:block; padding:0; }
 .advanced-grid > section { min-width:0; }
-.advanced-grid > section + section { border-left:1px solid var(--el-border-color-light); padding-left:30px; }
+.advanced-grid > section + section { border:0; padding:0; }
 .advanced-grid h2 { margin-bottom:15px; }
 .memory-clear { display:flex; gap:8px; margin-top:16px; }
 .memory-clear :deep(.el-input) { min-width:0; }
@@ -429,9 +443,9 @@ h2 :deep(svg) { color: var(--el-color-primary); }
 .chat-example p { margin: 8px 0; color: var(--lc-text-soft); }
 .chat-example .example-reply { display: flex; gap: 12px; align-items: baseline; max-width: 560px; padding: 10px 12px; border-left: 2px solid var(--el-color-primary); background: var(--el-color-primary-light-9); color: var(--lc-text); }
 .example-reply strong { color: var(--el-color-primary); }
-.settings-actions { display: flex; justify-content: flex-end; align-items: center; gap: 16px; border-top: 1px solid var(--el-border-color-light); padding-top: 18px; }
+.settings-actions { display:flex; justify-content:flex-end; align-items:center; gap:16px; border-top:1px solid var(--el-border-color-light); padding:16px 0; margin-top:24px; position:sticky; bottom:0; z-index:3; background:var(--lc-surface); }
 .settings-actions > span { margin-right: auto; font-size: 12px; }
 .action-hint { color: var(--lc-text-soft); }
-@media (max-width: 850px) { .settings-grid,.advanced-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }.settings-block + .settings-block,.advanced-grid > section + section { padding: 20px 0 0; border-left: 0; border-top: 1px solid var(--el-border-color-light); }.persona-block { grid-template-columns: minmax(0, 1fr); gap: 12px; } }
+@media (max-width:850px) { .persona-block { grid-template-columns:minmax(0,1fr); gap:12px; } }
 @media (max-width: 560px) { .ai-heading { gap: 12px; flex-wrap: wrap; }.ai-status { flex-wrap: wrap; }.unsaved { margin-left: 0; }.chat-example > div,.section-heading { flex-wrap: wrap; }.bot-fields { grid-template-columns:minmax(0,1fr); }.settings-actions { flex-wrap: wrap; }.settings-actions :deep(.el-button) { margin-left: auto; }.memory-clear { flex-wrap:wrap; } }
 </style>

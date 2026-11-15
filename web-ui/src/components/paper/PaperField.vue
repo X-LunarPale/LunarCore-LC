@@ -32,9 +32,12 @@ function numberInput(event) {
     <div class="field-copy">
       <div class="field-title"><label :for="fieldId">{{ field.label || field.name || field.key }}</label><el-tag v-if="changed" type="warning" size="small">{{ t('未保存') }}</el-tag><el-tag v-if="field.present === false || field.editable === false" type="info" size="small">{{ t('只读') }}</el-tag></div>
       <p class="field-help">{{ field.help || field.description }}</p>
-      <code>{{ field.key }}</code>
-      <div class="field-meta">{{ t('已保存：{value}', { value: t(formatValue(savedValue)) }) }}<span>{{ t('参考默认值：{value}', { value: t(formatValue(field.default ?? field.defaultValue)) }) }}</span><span v-if="field.unit">{{ t('单位：{unit}', { unit: field.unit }) }}</span></div>
-      <p v-if="field.present === false" class="field-note">{{ t('配置文件未声明此项，参考默认值不代表当前运行值。') }}</p>
+      <details class="field-details">
+        <summary>{{ t('配置详情') }}</summary>
+        <code>{{ field.key }}</code>
+        <div class="field-meta">{{ t('已保存：{value}', { value: t(formatValue(savedValue)) }) }}<span>{{ t('参考默认值：{value}', { value: t(formatValue(field.default ?? field.defaultValue)) }) }}</span><span v-if="field.unit">{{ t('单位：{unit}', { unit: field.unit }) }}</span></div>
+        <p v-if="field.present === false" class="field-note">{{ t('配置文件未声明此项，参考默认值不代表当前运行值。') }}</p>
+      </details>
     </div>
     <div class="field-control">
       <el-switch v-if="field.type === 'boolean' && typeof modelValue === 'boolean'" :id="fieldId" :model-value="modelValue" :disabled="readonly" :active-text="t('开启')" :inactive-text="t('关闭')" :aria-label="field.label || field.name" @update:model-value="emit('update:modelValue', $event)" />
@@ -52,13 +55,17 @@ function numberInput(event) {
 </template>
 
 <style scoped>
-.paper-field { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(250px, 1fr); gap: 28px; padding: 22px 24px; border-bottom: 1px solid var(--el-border-color-lighter); }
+.paper-field { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(250px,1fr); gap:28px; padding:20px 0; border-bottom:1px solid var(--el-border-color-lighter); }
 .paper-field:last-child { border-bottom: 0; }
 .paper-field.changed { box-shadow: inset 3px 0 var(--el-color-warning); background: var(--el-color-warning-light-9); }
 .field-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 14px; }
 .field-help { margin: 8px 0 7px; color: var(--lc-text-soft); font-size: 13px; line-height: 1.7; }
 code { font-size: 11px; color: var(--el-text-color-secondary); overflow-wrap: anywhere; }
 .field-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 11px; color: var(--lc-text-soft); }
+.field-details { margin-top:8px; color:var(--lc-text-soft); font-size:12px; }
+.field-details summary { cursor:pointer; width:fit-content; }
+.field-details summary:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
+.field-details code { display:block; margin-top:8px; }
 .field-control { align-self: center; min-width: 0; }
 .numeric-control { display: flex; align-items: center; gap: 22px; }
 .numeric-control :deep(.el-slider) { flex: 1; min-width: 80px; margin-left: 8px; }
@@ -71,5 +78,5 @@ code { font-size: 11px; color: var(--el-text-color-secondary); overflow-wrap: an
 .sentinel-options :deep(.el-button) { margin: 0; height: auto; white-space: normal; line-height: 1.6; }
 .field-error { color: var(--el-color-danger); font-size: 12px; margin: 8px 0 0; }
 .readonly-value { font-size: 13px; color: var(--lc-text-soft); }
-@media (max-width: 780px) { .paper-field { grid-template-columns: 1fr; gap: 16px; padding: 18px 16px; } }
+@media (max-width:780px) { .paper-field { grid-template-columns:1fr; gap:14px; padding:18px 0; } }
 </style>

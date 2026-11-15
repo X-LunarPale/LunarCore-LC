@@ -153,3 +153,28 @@ test('code fields follow the disabled state of the surrounding form', async cont
   await settle()
   assert.equal(control().props.readonly, false)
 })
+
+test('failed list and metric refreshes retain the last successful data', async context => {
+  let fail = false, refresh
+  context.mock.method(api, 'get', async path => {
+    if (fail) throw new Error('Temporary failure')
+    return path.endsWith('stats') ? [{ label: 'Online', value: 8 }] : { items: [{ id: 'player-1' }], total: 1 }
+  })
+  const table = await component('TableSection')
+  const metrics = await component('StatsSection', {
+    useAutoRefresh(callback, options) { refresh = { callback, options } }
+  })
+  const list = mount(context, table, { namespace: 'demo', section: { endpoint: 'players' } }).state
+  const stats = mount(context, metrics, { namespace: 'demo', section: { endpoint: 'stats', refreshSeconds: 0 } }).state
+  assert.equal(refresh.options.seconds(), 0)
+  await list.load()
+  await refresh.callback()
+  fail = true
+  await list.load()
+  await refresh.callback()
+  assert.deepEqual(list.s.items, [{ id: 'player-1' }])
+  assert.equal(list.s.total, 1)
+  assert.equal(list.s.error.message, 'Temporary failure')
+  assert.deepEqual(stats.items, [{ label: 'Online', value: 8 }])
+  assert.equal(stats.error.message, 'Temporary failure')
+})

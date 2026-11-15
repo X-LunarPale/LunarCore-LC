@@ -129,11 +129,12 @@ def assert_layout(page):
         """root => {
           const failures = [];
           if (document.documentElement.scrollWidth > innerWidth + 2) failures.push('document overflow');
-          const main = document.querySelector('.main');
+          const main = document.getElementById('main-content');
           if (main.scrollWidth > main.clientWidth + 2) failures.push('main overflow');
           for (const row of root.querySelectorAll('.mod')) {
             const bounds = row.getBoundingClientRect();
             for (const element of row.querySelectorAll('.mod-head,.mod-name,.mod-label,h2,.id,.details,.desc,.meta,.ops,.el-tag')) {
+              if (!element.getClientRects().length) continue;
               const rect = element.getBoundingClientRect();
               if (rect.left < bounds.left - 2 || rect.right > bounds.right + 2)
                 failures.push(element.className + ': outside row');
@@ -198,7 +199,7 @@ with sync_playwright() as driver:
     screenshot(page, "mobile-zh")
     page.locator(".mod").last.scroll_into_view_if_needed()
     screenshot(page, "mobile-zh-bottom")
-    page.locator(".modules-page").evaluate("element => element.closest('.main').scrollTop = 0")
+    page.locator(".modules-page").evaluate("element => element.closest('#main-content').scrollTop = 0")
 
     state["read_error"] = "Fixture refresh failure"
     page.get_by_role("button", name="刷新", exact=True).click()

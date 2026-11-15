@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -63,17 +64,18 @@ class MaintenanceTest {
         assertTrue(allow.kickOnRequest("visitor", UUID.randomUUID()));
     }
 
-    @Test void automaticKickIsTransitionTriggeredAndMotdIsIndependentFromNormalToggle() {
+    @Test void automaticKickUsesEffectiveTransitionsAndDoesNotRepeatForContentEdits() {
         var off = MaintenanceSettings.from(body(false, false, true, ""));
         var active = MaintenanceSettings.from(body(true, false, true, ""));
         var activeNoKick = MaintenanceSettings.from(body(true, false, false, ""));
-        assertTrue(MaintenancePolicy.kickAfterSave(off, active));
-        assertFalse(MaintenancePolicy.kickAfterSave(active, active));
-        assertFalse(MaintenancePolicy.kickAfterSave(active, activeNoKick));
-        assertFalse(MaintenancePolicy.kickAfterSave(activeNoKick, activeNoKick));
-        assertTrue(MaintenancePolicy.kickAfterSave(activeNoKick, active));
-        assertTrue(MaintenancePolicy.displaysMotd(new MotdSettings(false, "", "", active)));
-        assertFalse(MaintenancePolicy.displaysMotd(new MotdSettings(false, "", "", off)));
+        var offState = MaintenanceState.at(off, Instant.EPOCH);
+        var activeState = MaintenanceState.at(active, Instant.EPOCH);
+        assertTrue(activeState.shouldKickAfter(offState, true, true));
+        assertFalse(activeState.shouldKickAfter(activeState, true, true));
+        assertFalse(activeState.shouldKickAfter(activeState, true, activeNoKick.kickOnline()));
+        assertFalse(activeState.shouldKickAfter(activeState, false, false));
+        assertTrue(activeState.shouldKickAfter(activeState, false, true));
+        assertFalse(offState.shouldKickAfter(activeState, true, true));
     }
 
     @Test void rejectsMalformedIdentitiesAndUnsafeConfiguration() {
@@ -94,4 +96,42 @@ class MaintenanceTest {
         MotdModule.validateKickBody(Map.of("row", Map.of()));
         assertThrows(IllegalArgumentException.class, () -> MotdModule.validateKickBody(Map.of("confirmation", true)));
     }
+
+    @Test void scheduleValidatesWindowAndReportsActiveTransition() {
+        var schedule = new MaintenanceSchedule(true,
+                "2026-11-15T20:00:00+08:00", "2026-11-15T22:00:00+08:00");
+        assertFalse(schedule.activeAt(Instant.parse("2026-11-15T11:59:59Z")));
+        assertTrue(schedule.activeAt(Instant.parse("2026-11-15T12:00:00Z")));
+        assertTrue(schedule.activeAt(Instant.parse("2026-11-15T13:59:59Z")));
+        assertFalse(schedule.activeAt(Instant.parse("2026-11-15T14:00:00Z")));
+        assertEquals("2026-11-15T20:00+08:00", schedule.nextTransitionAt(Instant.parse("2026-11-15T11:00:00Z")));
+        assertEquals("2026-11-15T22:00+08:00", schedule.nextTransitionAt(Instant.parse("2026-11-15T12:00:00Z")));
+        assertThrows(IllegalArgumentException.class, () -> new MaintenanceSchedule(true, "", ""));
+        assertThrows(IllegalArgumentException.class, () -> new MaintenanceSchedule(true,
+                "2026-11-15T22:00:00+08:00", "2026-11-15T20:00:00+08:00"));
+    }
+
+    @Test void scheduledMaintenanceSettingsRoundTripThroughWebValues() {
+        Map<String, Object> configured = new HashMap<>(body(false, false, false, ""));
+        configured.put("scheduleEnabled", true);
+        configured.put("scheduleStart", "2026-11-15T20:00:00+08:00");
+        configured.put("scheduleEnd", "2026-11-15T22:00:00+08:00");
+        MaintenanceSettings settings = MaintenanceSettings.from(configured);
+        assertEquals("2026-11-15T20:00+08:00", settings.schedule().startAt());
+        assertEquals("2026-11-15T22:00+08:00", settings.schedule().endAt());
+        assertEquals(settings.webValues(), MaintenanceSettings.from(settings.webValues()).webValues());
+    }
+
+    @Test void openEndedScheduleAndDisabledModeHaveUnambiguousPhases() {
+        var ongoing = new MaintenanceSchedule(true, "2026-11-15T20:00:00+08:00", "");
+        assertEquals("pending", ongoing.phaseAt(Instant.parse("2026-11-15T11:00:00Z")));
+        assertEquals("active", ongoing.phaseAt(Instant.parse("2027-01-01T00:00:00Z")));
+        assertEquals("", ongoing.nextTransitionAt(Instant.parse("2027-01-01T00:00:00Z")));
+        assertEquals("disabled", MaintenanceSchedule.defaults().phaseAt(Instant.EPOCH));
+        assertThrows(IllegalArgumentException.class, () -> new MaintenanceSchedule(false, "", "2026-11-15T20:00:00+08:00"));
+        YamlConfiguration malformed = new YamlConfiguration();
+        malformed.set("maintenance.schedule.enabled", "true");
+        assertThrows(IllegalArgumentException.class, () -> MaintenanceSchedule.load(malformed));
+    }
+
 }

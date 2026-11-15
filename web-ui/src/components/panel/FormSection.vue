@@ -1,6 +1,6 @@
 <script setup>
 import SectionError from './SectionError.vue'
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuth } from '../../stores/auth'
@@ -24,7 +24,15 @@ const baseline = ref('{}')
 const dirty = computed(() => loaded.value && JSON.stringify(model) !== baseline.value)
 const canSave = computed(() => auth.can(props.section.savePermission))
 const fieldGroups = computed(() => groupFields((props.section.fields || []).filter(field => field.type !== 'world-aliases')))
-const grouped = computed(() => fieldGroups.value.some(group => group.title))
+const activeGroup = ref('')
+const hasAppearance = computed(() => props.namespace === 'chat' && Array.isArray(model.worldAliases))
+const editorGroups = computed(() => [
+  ...fieldGroups.value.map((group, index) => ({ id: `fields-${index}`, title: group.title || '基本设置', fields: group.fields })),
+  ...(hasAppearance.value ? [{ id: 'appearance', title: '世界与预览' }] : [])
+])
+watch(editorGroups, groups => {
+  if (!groups.some(group => group.id === activeGroup.value)) activeGroup.value = groups[0]?.id || ''
+}, { immediate: true })
 let discardPrompt
 let refreshing = false
 
@@ -80,7 +88,10 @@ async function load(background = false) {
 async function save() {
   if (saving.value || loading.value || !loaded.value || !props.section.saveEndpoint || !canSave.value) return
   const missing = missingRequired(props.section.fields, model)
-  if (missing) return ElMessage.warning(t('请填写「{label}」', { label: t(missing.label) }))
+  if (missing) {
+    activeGroup.value = editorGroups.value.find(group => group.fields?.some(field => field.key === missing.key))?.id || activeGroup.value
+    return ElMessage.warning(t('请填写「{label}」', { label: t(missing.label) }))
+  }
   saving.value = true
   saveError.value = null
   try {
@@ -114,18 +125,19 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="card form-surface" v-loading="loading" :aria-busy="loading || saving">
+  <section class="form-surface" v-loading="loading" :aria-busy="loading || saving">
     <header class="surface-header">
       <div class="heading-block"><Icon class="heading-mark" name="sliders-horizontal" :size="16" /><h3>{{ t(section.title || '设置') }}</h3></div>
       <span v-if="dirty" class="dirty-state" role="status"><span />{{ t('尚未保存') }}</span>
-      <span v-else-if="loaded" class="saved-state">{{ t('已加载当前配置') }}</span>
     </header>
     <div v-if="section.saveEndpoint && !canSave" class="read-only"><Icon name="lock-keyhole" :size="14" />{{ t('当前账号仅可查看此配置。') }}</div>
     <SectionError :error="error || saveError" />
     <el-button v-if="error" @click="load" :disabled="loading">{{ t('重新加载') }}</el-button>
     <el-form v-if="loaded" :disabled="saving || loading" label-position="top" @submit.prevent="save" class="panel-form">
-      <div v-for="group in fieldGroups" :key="group.title" class="field-group" :class="{ 'field-group--named': grouped }" role="group" :aria-label="grouped ? t(group.title || '其他设置') : undefined">
-        <h4 v-if="grouped" class="group-heading">{{ t(group.title || '其他设置') }}</h4>
+      <div v-if="editorGroups.length > 1" class="form-groups" :aria-label="t('设置分组')">
+        <button v-for="group in editorGroups" :key="group.id" type="button" :class="{ selected: activeGroup === group.id }" :aria-pressed="activeGroup === group.id" @click="activeGroup = group.id">{{ t(group.title) }}</button>
+      </div>
+      <div v-for="group in editorGroups.filter(item => item.fields)" v-show="activeGroup === group.id" :key="group.id" class="field-group" role="group" :aria-label="t(group.title)">
         <div class="fields-grid">
           <el-form-item v-for="f in group.fields" :key="f.key" :data-field-key="f.key" :label="t(f.label)" :required="f.required" :class="{ 'field-wide': ['textarea', 'code'].includes(f.type), 'field-switch': ['bool', 'boolean'].includes(f.type) }">
             <FieldInput v-if="canSave" v-model="model[f.key]" :field="f" />
@@ -134,9 +146,9 @@ onBeforeUnmount(() => {
           </el-form-item>
         </div>
       </div>
-      <ChatAppearance v-if="namespace === 'chat' && Array.isArray(model.worldAliases)" :model="model" :disabled="!canSave || saving || loading" />
+      <ChatAppearance v-if="hasAppearance" v-show="activeGroup === 'appearance'" :model="model" :disabled="!canSave || saving || loading" />
       <footer v-if="section.saveEndpoint" class="form-actions">
-        <div class="action-note" role="status">{{ saving ? t('正在保存，请稍候…') : dirty ? t('修改尚未生效') : t('配置与当前加载内容一致') }}</div>
+        <div class="action-note" role="status">{{ saving ? t('正在保存，请稍候…') : dirty ? t('修改尚未生效') : '' }}</div>
         <div class="action-buttons"><el-button @click="load" :disabled="saving"><Icon name="rotate-ccw" :size="14" />&nbsp;{{ t('重新加载') }}</el-button>
         <el-button v-if="canSave" type="primary" native-type="submit" :loading="saving" :disabled="!dirty || loading"><Icon name="save" :size="14" />&nbsp;{{ t(section.submitLabel || '保存设置') }}</el-button></div>
       </footer>
@@ -146,12 +158,12 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.form-surface { padding: 20px 24px 12px; background: var(--lc-surface); border: 1px solid var(--el-border-color-light); border-radius: 8px; color: var(--lc-text); box-shadow: none; container-type: inline-size; }
-.surface-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid var(--el-border-color-lighter); }
+.form-surface { padding:0; color:var(--lc-text); min-width:0; container-type:inline-size; }
+.surface-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom:14px; margin-bottom:20px; border-bottom:1px solid var(--el-border-color-light); }
 .heading-block { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .heading-mark { color: var(--el-color-primary); flex-shrink: 0; }
 h3 { font-size: 15px; font-weight: 600; line-height: 1.5; margin: 0; }
-.dirty-state, .saved-state { font-size: 12px; flex-shrink: 0; color: var(--lc-text-soft); }
+.dirty-state { font-size: 12px; flex-shrink: 0; color: var(--lc-text-soft); }
 .dirty-state { display: flex; gap: 6px; align-items: center; color: var(--el-color-warning); padding: 3px 7px; border-radius: 4px; background: var(--el-color-warning-light-9); }
 .dirty-state span { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .read-only { display: flex; align-items: center; gap: 7px; padding: 8px 10px; background: var(--el-fill-color-light); border-radius: 6px; font-size: 12px; margin-bottom: 12px; color: var(--lc-text-soft); }
@@ -164,10 +176,12 @@ h3 { font-size: 15px; font-weight: 600; line-height: 1.5; margin: 0; }
 .form-surface :deep(.el-button) { border-radius: 5px; font-size: 13px; transition: background-color 180ms, border-color 180ms, transform 320ms var(--motion-spring); }
 .form-surface :deep(.el-button:focus-visible) { outline: 2px solid var(--el-color-primary); outline-offset: 3px; }
 .panel-form { width: 100%; min-width: 0; }
-.field-group--named { display: grid; grid-template-columns: 144px minmax(0, 1fr); gap: 24px; }
-.field-group + .field-group { border-top: 1px solid var(--el-border-color-lighter); padding-top: 24px; margin-top: 24px; }
-.group-heading { font-size: 13px; font-weight: 600; margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
-.fields-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; min-width: 0; }
+.form-groups { display:flex; flex-wrap:wrap; gap:5px; margin:0 0 24px; }
+.form-groups button { min-height:34px; padding:6px 11px; border:1px solid transparent; border-radius:5px; background:transparent; color:var(--el-text-color-regular); font:inherit; font-size:12px; cursor:pointer; }
+.form-groups button.selected { border-color:var(--el-border-color); background:var(--lc-surface); color:var(--el-color-primary); font-weight:600; }
+.form-groups button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
+.field-group { min-width:0; }
+.fields-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 28px; min-width: 0; max-width:1080px; }
 .panel-form :deep(.el-form-item) { min-width: 0; margin-bottom: 0; align-self: start; }
 .panel-form :deep(.el-form-item__label) { height: auto; font-size: 13px; line-height: 1.6; padding: 0 0 7px; margin: 0; white-space: normal; overflow-wrap: anywhere; }
 .panel-form :deep(.el-form-item__content) { min-width: 0; line-height: 1.6; gap: 6px; }
@@ -176,9 +190,8 @@ h3 { font-size: 15px; font-weight: 600; line-height: 1.5; margin: 0; }
 .panel-form :deep(.el-input-number .el-input__inner) { text-align: left; }
 .field-switch :deep(.el-switch) { height: 36px; margin: 0; }
 .field-wide { grid-column: 1 / -1; }
-.form-actions { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px 0 8px; margin-top: 24px; background: var(--lc-surface); border-top: 1px solid var(--el-border-color-light); box-shadow: 0 -8px 16px -16px #19283b66; }
-@container (max-width: 820px) { .field-group--named { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+.form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding:16px 0; margin-top:28px; border-top:1px solid var(--el-border-color-light); }
 @container (max-width: 520px) { .fields-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; } .action-note { width: 100%; } .action-buttons { width: 100%; } .action-buttons .el-button { flex: 1; min-width: 0; } }
-@media (max-width: 760px) { .form-surface { padding: 16px 16px 8px; } .surface-header { align-items: flex-start; flex-wrap: wrap; margin-bottom: 20px; } .saved-state { display: none; } }
+@media (max-width: 760px) { .surface-header { align-items: flex-start; flex-wrap: wrap; margin-bottom:18px; } .form-groups { margin-bottom:20px; } }
 @media (prefers-reduced-motion: reduce) { .form-surface :deep(*) { transition: none !important; animation: none !important; } }
 </style>

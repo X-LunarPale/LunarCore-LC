@@ -4,9 +4,11 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { api } from '../../api'
 import MinecraftTextPreview from '../text-preview/MinecraftTextPreview.vue'
+import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
 import { useAuth } from '../../stores/auth'
 import { requireSuccess } from '../../utils/panel'
-import { checkSettings, checkStatus, controlKeys, motdKeys, normalKeys, normalizeWhitelist, pick, same, validateText } from './maintenance'
+import { useAutoRefresh } from '../../utils/autoRefresh'
+import { checkSettings, checkStatus, controlKeys, whitelistKeys, messageKeys, maintenanceKeys, motdKeys, normalKeys, normalizeWhitelist, pick, same, validateText, validateSchedule, effectiveEnabled, toLocalTime, fromLocalTime } from './maintenance'
 import { t, locale } from '../../i18n'
 
 defineProps({ panel: { type: Object, required: true } })
@@ -14,9 +16,12 @@ const auth = useAuth()
 const canManage = computed(() => auth.can('motd.manage'))
 const savedNormal = ref(null)
 const savedMaintenance = ref(null)
+const scheduleSupported = ref(true)
 const normal = reactive({ enabled: false, line1: '', line2: '' })
-const maintenance = reactive({ enabled: false, allowJoin: false, kickOnline: false, whitelist: '', joinMessage: '', kickMessage: '', line1: '', line2: '' })
+const maintenance = reactive({ enabled: false, allowJoin: false, kickOnline: false, scheduleEnabled: false, scheduleStart: '', scheduleEnd: '', whitelist: '', joinMessage: '', kickMessage: '', line1: '', line2: '' })
 const status = ref(null)
+const activeTab = ref('control')
+const motdMode = ref('normal')
 const loading = ref(false)
 const pending = ref('')
 const error = ref('')
@@ -25,25 +30,43 @@ const notice = ref('')
 const uncertain = ref(false)
 const updatedAt = ref('')
 let disposed = false
+let refreshingStatus = false
+let statusReadAt = 0
 const ready = computed(() => !!savedNormal.value && !!savedMaintenance.value)
 const busy = computed(() => loading.value || !!pending.value)
 const locked = computed(() => busy.value || !canManage.value || uncertain.value || !ready.value)
 const normalDirty = computed(() => ready.value && !same(normal, savedNormal.value, normalKeys))
 const controlDirty = computed(() => ready.value && !same(maintenance, savedMaintenance.value, controlKeys))
+const whitelistDirty = computed(() => ready.value && !same(maintenance, savedMaintenance.value, whitelistKeys))
+const messagesDirty = computed(() => ready.value && !same(maintenance, savedMaintenance.value, messageKeys))
 const motdDirty = computed(() => ready.value && !same(maintenance, savedMaintenance.value, motdKeys))
-const dirty = computed(() => normalDirty.value || controlDirty.value || motdDirty.value)
+const dirty = computed(() => normalDirty.value || controlDirty.value || whitelistDirty.value || messagesDirty.value || motdDirty.value)
+const tabs = computed(() => [
+  { id: 'control', label: t('维护控制'), panelId: 'maintenance-control', dirty: controlDirty.value },
+  { id: 'whitelist', label: t('白名单'), panelId: 'maintenance-whitelist-panel', dirty: whitelistDirty.value },
+  { id: 'messages', label: t('提示消息'), panelId: 'maintenance-messages', dirty: messagesDirty.value },
+  { id: 'motd', label: t('服务器简介'), panelId: 'maintenance-motd', dirty: normalDirty.value || motdDirty.value }
+])
+const keysByKind = { normal: normalKeys, control: controlKeys, whitelist: whitelistKeys, messages: messageKeys, motd: motdKeys }
+const saveKind = computed(() => activeTab.value === 'motd' ? motdMode.value === 'normal' ? 'normal' : 'motd' : activeTab.value)
+const currentDirty = computed(() => ({ normal: normalDirty.value, control: controlDirty.value, whitelist: whitelistDirty.value, messages: messagesDirty.value, motd: motdDirty.value }[saveKind.value]))
 const whitelistCount = computed(() => maintenance.whitelist.split(/\r\n|\n|\r/).filter(line => line.trim()).length)
-const activeMotd = computed(() => savedMaintenance.value?.enabled ? savedMaintenance.value : savedNormal.value?.enabled ? savedNormal.value : null)
-const previewVariables = computed(() => {
-  if (!status.value || statusError.value) return {}
-  const row = status.value
-  return Object.fromEntries(['online', 'max', 'version'].filter(key =>
-    (typeof row[key] === 'number' && Number.isFinite(row[key])) || (typeof row[key] === 'string' && row[key].length > 0)
-  ).map(key => [key, row[key]]))
-})
-const allMaintenanceKeys = [...controlKeys, ...motdKeys]
+const liveActive = computed(() => status.value?.enabled ?? effectiveEnabled(savedMaintenance.value || maintenance))
+const localStart = computed({ get: () => toLocalTime(maintenance.scheduleStart), set: value => { maintenance.scheduleStart = fromLocalTime(value) } })
+const localEnd = computed({ get: () => toLocalTime(maintenance.scheduleEnd), set: value => { maintenance.scheduleEnd = fromLocalTime(value) } })
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+const scheduleExpired = computed(() => maintenance.scheduleEnabled && maintenance.scheduleEnd && Date.parse(maintenance.scheduleEnd) <= Date.now())
+const previewVariables = computed(() => statusError.value ? {} : pick(status.value || {}, ['online', 'max', 'version']))
+const scheduleLabel = computed(() => t({
+  disabled: '手动控制', pending: '等待开始', active: '计划进行中', completed: '计划已结束'
+}[status.value?.schedulePhase] || (savedMaintenance.value?.scheduleEnabled ? '等待更新' : '手动控制')))
+const formatTime = value => {
+  const date = new Date(value)
+  return !value || Number.isNaN(date.getTime()) ? t('未设置') : date.toLocaleString(locale.value === 'en_US' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' })
+}
 const endpoint = name => `/api/ext/motd/${name}`
-const message = cause => cause.status === 403 ? t('当前账号无权执行此操作。请联系管理员。') : cause.message || t('操作失败，请稍后重试')
+const message = cause => cause.status === 403 ? t('当前账号无权执行此操作。请联系管理员。') : t(cause.message || '操作失败，请稍后重试')
+
 async function confirm(text, title = t('确认操作'), danger = false) {
   try {
     await ElMessageBox.confirm(text, title, { confirmButtonText: t('确认执行'), cancelButtonText: t('取消'), type: danger ? 'warning' : 'info', closeOnClickModal: false, confirmButtonClass: danger ? 'el-button--danger' : '' })
@@ -51,15 +74,18 @@ async function confirm(text, title = t('确认操作'), danger = false) {
   } catch { return false }
 }
 async function refreshStatus() {
+  if (refreshingStatus || disposed) return
+  refreshingStatus = true
   try {
     const row = checkStatus(requireSuccess(await api.get(endpoint('maintenance/status'))))
     if (disposed) return
     status.value = row
     statusError.value = ''
+    statusReadAt = Date.now()
     updatedAt.value = new Date().toLocaleTimeString(locale.value === 'en_US' ? 'en-US' : 'zh-CN')
   } catch (cause) {
     if (!disposed) statusError.value = message(cause)
-  }
+  } finally { refreshingStatus = false }
 }
 async function load() {
   if (busy.value) return
@@ -72,6 +98,7 @@ async function load() {
     if (disposed) return
     savedNormal.value = nextNormal
     savedMaintenance.value = nextMaintenance
+    scheduleSupported.value = typeof m?.scheduleEnabled === 'boolean'
     Object.assign(normal, nextNormal)
     Object.assign(maintenance, nextMaintenance)
     uncertain.value = false
@@ -82,8 +109,12 @@ async function load() {
   finally { if (!disposed) loading.value = false }
 }
 function validate(body, isMaintenance) {
-  for (const key of isMaintenance ? ['joinMessage', 'kickMessage', 'line1', 'line2'] : motdKeys) validateText(body[key], t({ joinMessage: '入服拒绝提示', kickMessage: '踢出提示', line1: '简介第一行', line2: '简介第二行' }[key]), t)
-  if (isMaintenance) body.whitelist = normalizeWhitelist(body.whitelist, t)
+  for (const key of isMaintenance ? ['joinMessage', 'kickMessage', 'line1', 'line2'] : motdKeys)
+    validateText(body[key], t({ joinMessage: '入服拒绝提示', kickMessage: '踢出提示', line1: '简介第一行', line2: '简介第二行' }[key]), t)
+  if (isMaintenance) {
+    body.whitelist = normalizeWhitelist(body.whitelist, t)
+    validateSchedule(body, t)
+  }
 }
 async function save(kind) {
   if (locked.value) return
@@ -93,24 +124,31 @@ async function save(kind) {
   let submitted = false
   try {
     const isNormal = kind === 'normal'
-    const keys = isNormal ? normalKeys : kind === 'control' ? controlKeys : motdKeys
+    const keys = keysByKind[kind]
+    if (!keys) throw new Error(t('无效的保存分区'))
     const baseline = isNormal ? savedNormal.value : savedMaintenance.value
     const body = isNormal ? pick(normal, normalKeys) : { ...savedMaintenance.value, ...pick(maintenance, keys) }
     validate(body, !isNormal)
     const current = checkSettings(requireSuccess(await api.get(endpoint(isNormal ? 'settings' : 'maintenance'))), !isNormal)
-    if (!same(current, baseline, isNormal ? normalKeys : allMaintenanceKeys)) {
+    if (!same(current, baseline, isNormal ? normalKeys : maintenanceKeys)) {
       uncertain.value = true
       throw new Error(t('服务器设置已被其他操作修改。请重新加载后再保存。'))
     }
     if (!isNormal) {
-      const enabling = !current.enabled && body.enabled
-      const kicking = body.enabled && body.kickOnline && (!current.enabled || !current.kickOnline)
+      const now = status.value?.serverTime ? Date.parse(status.value.serverTime) + Date.now() - statusReadAt : Date.now()
+      const activeBefore = effectiveEnabled(current, now)
+      const activeAfter = effectiveEnabled(body, now)
+      const enabling = !activeBefore && activeAfter
+      const kicking = activeAfter && body.kickOnline && (!activeBefore || !current.kickOnline)
       if (enabling || kicking) {
         const text = `${enabling ? t('将启用维护模式，服务器列表立即显示维护简介。') : ''}${t(body.allowJoin ? '非白名单玩家仍可加入。' : '非白名单玩家将无法加入。')}${t(kicking ? '保存后将立即向非白名单在线玩家发起一次踢出请求，使用本次保存的白名单及踢出提示。' : '本次不会自动踢出在线玩家。')}`
         if (!await confirm(text, t(kicking ? '保存并踢出在线玩家' : '启用维护模式'), kicking)) return
       }
     }
     if (!canManage.value) throw new Error(t('当前账号已无管理权限'))
+    if (!isNormal && !scheduleSupported.value) {
+      for (const key of ['scheduleEnabled', 'scheduleStart', 'scheduleEnd']) delete body[key]
+    }
     submitted = true
     const result = requireSuccess(await api.post(endpoint(isNormal ? 'settings' : 'maintenance'), body))
     const verified = checkSettings(requireSuccess(await api.get(endpoint(isNormal ? 'settings' : 'maintenance'))), !isNormal)
@@ -125,15 +163,21 @@ async function save(kind) {
     if (submitted) { uncertain.value = true; error.value += t(' 请重新加载核对实际生效设置后再继续操作。') }
   } finally { if (!disposed) pending.value = '' }
 }
+function resetCurrent() {
+  if (locked.value) return
+  const isNormal = saveKind.value === 'normal'
+  Object.assign(isNormal ? normal : maintenance, pick(isNormal ? savedNormal.value : savedMaintenance.value, keysByKind[saveKind.value]))
+  notice.value = ''
+}
 async function kick() {
-  if (locked.value || !savedMaintenance.value.enabled) return
+  if (locked.value || !liveActive.value || statusError.value) return
   pending.value = 'kick'
   error.value = ''
   notice.value = ''
   let submitted = false
   try {
     const current = checkSettings(requireSuccess(await api.get(endpoint('maintenance'))), true)
-    if (!same(current, savedMaintenance.value, allMaintenanceKeys)) {
+    if (!same(current, savedMaintenance.value, maintenanceKeys)) {
       uncertain.value = true
       throw new Error(t('服务器维护设置已变化。请重新加载核对后再执行踢出。'))
     }
@@ -158,86 +202,162 @@ function beforeUnload(event) {
 }
 onBeforeRouteLeave(leave)
 onBeforeRouteUpdate(leave)
+useAutoRefresh(refreshStatus, { seconds: () => 5, namespace: 'motd', active: () => ready.value && !busy.value })
 onMounted(() => { window.addEventListener('beforeunload', beforeUnload); load() })
 onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunload', beforeUnload) })
 </script>
 
 <template>
   <div class="maintenance-workspace" :aria-busy="busy">
-    <header class="workspace-heading">
-      <div><span class="eyebrow">{{ t('服务器管理') }}</span><h1><Icon name="server" :size="23" />{{ t('服务器展示与维护') }}</h1><p>{{ t('管理维护期间的加入规则、在线玩家与服务器列表简介。') }}</p></div>
-      <el-button :loading="loading" :disabled="busy" @click="load"><Icon name="refresh-cw" :size="14" />{{ t('重新加载') }}</el-button>
+    <header class="page-header">
+      <h1 class="page-title"><Icon name="server" :size="22" />{{ t('服务器展示与维护') }}</h1>
+      <el-button :loading="loading" :disabled="busy" @click="load"><Icon name="refresh-cw" :size="15" />{{ t('重新加载') }}</el-button>
     </header>
-    <div v-if="error" class="feedback danger" role="alert">{{ error }}</div>
-    <div v-if="notice" class="feedback success" role="status">{{ notice }}</div>
-    <div v-if="!canManage" class="feedback" role="note">{{ t('当前账号仅可查看，无权保存设置或踢出玩家。') }}</div>
-    <div v-if="uncertain" class="feedback warning" role="alert">{{ t('设置或执行结果需要核对。请先重新加载，再继续操作。') }}</div>
+    <p v-if="error" class="feedback danger" role="alert">{{ error }}</p>
+    <p v-if="notice" class="feedback success" role="status">{{ notice }}</p>
+    <p v-if="!canManage" class="feedback" role="note">{{ t('当前账号仅可查看，无权保存设置或踢出玩家。') }}</p>
+    <p v-if="uncertain" class="feedback warning" role="alert">{{ t('设置或执行结果需要核对。请先重新加载，再继续操作。') }}</p>
     <div v-if="!ready" class="loading-state" role="status">{{ t(loading ? '正在读取服务器设置…' : '设置尚未加载，请重新加载。') }}</div>
     <template v-else>
-      <section class="live-state" :aria-label="t('当前生效状态')">
-        <div class="live-heading"><span class="eyebrow">{{ t('当前生效 · 已保存设置') }}</span><span class="mode-badge" :class="{ maintaining: savedMaintenance.enabled }">{{ t(savedMaintenance.enabled ? '维护中' : '正常运行') }}</span></div>
-        <div class="live-layout">
-          <div><h2>{{ t(savedMaintenance.enabled ? (savedMaintenance.allowJoin ? '维护期间允许玩家加入' : '仅维护白名单可加入') : '服务器正常开放') }}</h2><p>{{ t(savedMaintenance.enabled ? '维护白名单不受维护入服限制与维护踢出影响。' : '维护入服限制与维护踢出均未启用。') }}</p><p>{{ t('自动踢出选项：{state} · 已保存白名单 {count} 项', { state: t(savedMaintenance.kickOnline ? '已开启' : '已关闭'), count: savedMaintenance.whitelist.split('\n').filter(Boolean).length }) }}</p></div>
-          <dl class="player-counts"><div><dt>{{ t('在线玩家') }}</dt><dd>{{ status && !statusError ? status.online : '—' }}</dd></div><div><dt>{{ t('可发起维护踢出') }}</dt><dd>{{ status && !statusError ? status.eligible : '—' }}</dd></div></dl>
-        </div>
-        <MinecraftTextPreview :legacy="false" atomic-variables v-if="activeMotd" :lines="[activeMotd.line1, activeMotd.line2]" :variables="previewVariables" :label="t('{mode}简介 · 已保存设置预览', { mode: t(savedMaintenance.enabled ? '维护' : '正常') })" />
-        <p v-else>{{ t('正常简介未启用，当前使用服务器原有简介。') }}</p>
-        <p v-if="statusError" class="error-text" role="alert">{{ t('在线状态读取失败：{error}。请重新加载。', { error: statusError }) }}</p><p v-else class="timestamp">{{ t('人数更新于 {time}，执行时以实时在线玩家为准。', { time: updatedAt || '—' }) }}</p>
+      <section class="live-bar" :aria-label="t('当前生效状态')">
+        <div class="live-status" :class="{ maintaining: liveActive, unknown: statusError }"><span class="status-dot" /><strong>{{ t(statusError ? '状态读取失败' : liveActive ? '维护中' : '正常开放') }}</strong></div>
+        <div class="live-detail">{{ scheduleLabel }}<span v-if="status?.nextTransitionAt"> · {{ formatTime(status.nextTransitionAt) }}</span></div>
+        <div class="live-count"><span>{{ t('在线玩家') }}</span><strong>{{ status && !statusError ? status.online : '—' }}</strong></div>
       </section>
-      <div class="workspace-grid">
-        <section class="workspace-card controls">
-          <header class="card-heading"><div><span class="eyebrow">{{ t('维护控制') }}</span><h2>{{ t('维护与加入规则') }}</h2></div><span class="save-badge" :class="{ unsaved: controlDirty }">{{ t(controlDirty ? '未保存' : '已保存') }}</span></header>
-          <fieldset :disabled="locked">
-            <label class="switch-row"><span><strong>{{ t('启用维护模式') }}</strong><small>{{ t('保存后立即切换服务器列表简介与加入规则。') }}</small></span><input v-model="maintenance.enabled" type="checkbox" role="switch" /></label>
-            <label class="switch-row"><span><strong>{{ t('允许非白名单玩家加入') }}</strong><small>{{ t('与踢出在线玩家独立控制，仅在维护期间生效。') }}</small></span><input v-model="maintenance.allowJoin" type="checkbox" role="switch" /></label>
-            <label class="switch-row"><span><strong>{{ t('自动踢出非白名单在线玩家') }}</strong><small>{{ t('启用维护或维护中首次开启此选项时，执行一次踢出。') }}</small></span><input v-model="maintenance.kickOnline" type="checkbox" role="switch" /></label>
-            <label class="field-label" for="maintenance-whitelist">{{ t('维护白名单') }} <span>{{ t('{count} / 500 项', { count: whitelistCount }) }}</span></label>
-            <textarea id="maintenance-whitelist" v-model="maintenance.whitelist" rows="7" maxlength="20000" :placeholder="t('每行一个玩家名称或 UUID')" spellcheck="false" />
-            <p class="field-help">{{ t('名称支持 3–16 位英文字母、数字和下划线，忽略大小写。支持完整 UUID；白名单玩家不会被维护踢出。') }}</p>
-            <label class="field-label" for="maintenance-join-message">{{ t('入服拒绝提示') }}</label><input id="maintenance-join-message" v-model="maintenance.joinMessage" type="text" maxlength="512" />
-            <MinecraftTextPreview :legacy="false" atomic-variables :text="maintenance.joinMessage" :variables="previewVariables" :label="t('入服拒绝提示 · 草稿预览')" />
-            <label class="field-label" for="maintenance-kick-message">{{ t('踢出提示') }}</label><input id="maintenance-kick-message" v-model="maintenance.kickMessage" type="text" maxlength="512" />
-            <MinecraftTextPreview :legacy="false" atomic-variables :text="maintenance.kickMessage" :variables="previewVariables" :label="t('踢出提示 · 草稿预览')" />
-          </fieldset>
-          <footer class="card-actions"><span>{{ t('仅保存维护控制与提示') }}</span><el-button type="primary" :loading="pending === 'control'" :disabled="locked || !controlDirty" @click="save('control')">{{ t('保存维护设置') }}</el-button></footer>
-          <div class="manual-action"><div><h3>{{ t('立即踢出非白名单在线玩家') }}</h3><p>{{ t('使用已保存白名单及踢出提示，执行前需确认。') }}</p><p v-if="!savedMaintenance.enabled">{{ t('请先保存并启用维护模式。') }}</p><p v-else-if="dirty" class="warning-text">{{ t('此次操作不会使用未保存修改。') }}</p></div><el-button type="danger" plain :loading="pending === 'kick'" :disabled="locked || !savedMaintenance.enabled" @click="kick">{{ t('立即踢出') }}</el-button></div>
+      <p v-if="statusError" class="status-error" role="alert">{{ statusError }} <button type="button" @click="refreshStatus">{{ t('重试') }}</button></p>
+      <WorkspaceTabs id="maintenance" v-model="activeTab" :items="tabs" label="维护设置分区" />
+      <div class="maintenance-main">
+        <section v-show="activeTab === 'control'" id="maintenance-control" role="tabpanel" aria-labelledby="maintenance-tab-control">
+          <div class="control-layout">
+            <fieldset :disabled="locked">
+              <h2>{{ t('维护控制') }}</h2>
+              <div class="mode-selector" role="radiogroup" :aria-label="t('控制方式')">
+                <label><input v-model="maintenance.scheduleEnabled" type="radio" :value="false" />{{ t('手动控制') }}</label>
+                <label v-if="scheduleSupported"><input v-model="maintenance.scheduleEnabled" type="radio" :value="true" />{{ t('定时维护') }}</label>
+              </div>
+              <p v-if="!scheduleSupported" class="field-help">{{ t('更新维护模块后可使用定时维护。') }}</p>
+              <template v-if="!maintenance.scheduleEnabled">
+                <div class="setting-row"><div><label for="manual-enabled">{{ t('启用维护模式') }}</label><p>{{ t('保存后立即生效。') }}</p></div><el-switch id="manual-enabled" v-model="maintenance.enabled" :disabled="locked" :aria-label="t('启用维护模式')" /></div>
+              </template>
+              <div v-else class="schedule-fields">
+                <p class="field-help">{{ t('计划期间启用维护，结束后自动开放。') }}</p>
+                <label class="field-label" for="maintenance-schedule-start">{{ t('开始时间') }}</label>
+                <input id="maintenance-schedule-start" v-model="localStart" type="datetime-local" />
+                <label class="field-label" for="maintenance-schedule-end">{{ t('结束时间') }}<span>{{ t('可选') }}</span></label>
+                <input id="maintenance-schedule-end" v-model="localEnd" type="datetime-local" :min="localStart || undefined" />
+                <p class="field-help">{{ t('时区：{zone}。不设结束时间则持续维护。', { zone: timeZone }) }}</p>
+                <p v-if="scheduleExpired" class="warning-text" role="note">{{ t('此计划已结束，保存后不会进入维护。') }}</p>
+              </div>
+              <div class="setting-row"><div><label for="maintenance-allow">{{ t('允许非白名单玩家加入') }}</label></div><el-switch id="maintenance-allow" v-model="maintenance.allowJoin" :disabled="locked" :aria-label="t('允许非白名单玩家加入')" /></div>
+              <div class="setting-row"><div><label for="maintenance-auto-kick">{{ t('进入维护时踢出在线玩家') }}</label><p>{{ t('仅执行一次，白名单除外；启动和重载不踢人。') }}</p></div><el-switch id="maintenance-auto-kick" v-model="maintenance.kickOnline" :disabled="locked" :aria-label="t('进入维护时踢出在线玩家')" /></div>
+            </fieldset>
+            <aside class="maintenance-actions">
+              <h2>{{ t('在线玩家操作') }}</h2>
+              <dl><div><dt>{{ t('可踢出人数') }}</dt><dd>{{ status && !statusError ? status.eligible : '—' }}</dd></div><div><dt>{{ t('已保存白名单') }}</dt><dd>{{ savedMaintenance.whitelist.split('\n').filter(Boolean).length }}</dd></div></dl>
+              <el-button type="danger" plain :loading="pending === 'kick'" :disabled="locked || !liveActive || !!statusError" @click="kick"><Icon name="log-out" :size="15" />{{ t('立即踢出') }}</el-button>
+              <p class="field-help">{{ t('使用已保存的白名单与踢出提示。') }}</p>
+              <p v-if="!liveActive" class="field-help">{{ t('维护开启后可执行。') }}</p>
+              <p v-else-if="dirty" class="warning-text">{{ t('此次操作不会使用未保存修改。') }}</p>
+              <p class="timestamp">{{ t('更新于 {time}', { time: updatedAt || '—' }) }}</p>
+            </aside>
+          </div>
         </section>
-        <div class="motd-stack">
-          <section class="workspace-card">
-            <header class="card-heading"><div><span class="eyebrow">{{ t('正常运行时显示') }}</span><h2>{{ t('正常 MOTD') }}</h2></div><span class="save-badge" :class="{ unsaved: normalDirty }">{{ t(normalDirty ? '未保存' : '已保存') }}</span></header>
-            <fieldset :disabled="locked"><label class="switch-row"><span><strong>{{ t('启用正常简介') }}</strong><small>{{ t('关闭后使用服务器原有简介。') }}</small></span><input v-model="normal.enabled" type="checkbox" role="switch" /></label><label class="field-label" for="normal-line1">{{ t('第一行') }}</label><input id="normal-line1" v-model="normal.line1" maxlength="512" type="text" /><label class="field-label" for="normal-line2">{{ t('第二行') }}</label><input id="normal-line2" v-model="normal.line2" maxlength="512" type="text" /></fieldset>
-            <p class="field-help">{{ t('支持 MiniMessage 样式与 {online}、{max}、{version} 变量，每行最多 512 字符。') }}</p>
-            <MinecraftTextPreview :legacy="false" atomic-variables :lines="[normal.line1, normal.line2]" :variables="previewVariables" :label="t('正常 MOTD · 双行草稿预览')" />
-            <footer class="card-actions"><span>{{ t(savedMaintenance.enabled ? '保存后将在退出维护时显示' : '保存后即时生效') }}</span><el-button type="primary" :loading="pending === 'normal'" :disabled="locked || !normalDirty" @click="save('normal')">{{ t('保存正常 MOTD') }}</el-button></footer>
-          </section>
-          <section class="workspace-card">
-            <header class="card-heading"><div><span class="eyebrow">{{ t('维护期间始终显示') }}</span><h2>{{ t('维护 MOTD') }}</h2></div><span class="save-badge" :class="{ unsaved: motdDirty }">{{ t(motdDirty ? '未保存' : '已保存') }}</span></header>
-            <fieldset :disabled="locked"><label class="field-label" for="maintenance-line1">{{ t('第一行') }}</label><input id="maintenance-line1" v-model="maintenance.line1" maxlength="512" type="text" /><label class="field-label" for="maintenance-line2">{{ t('第二行') }}</label><input id="maintenance-line2" v-model="maintenance.line2" maxlength="512" type="text" /></fieldset>
-            <p class="field-help">{{ t('支持 MiniMessage 样式与 {online}、{max}、{version} 变量，每行最多 512 字符。') }}</p>
-            <MinecraftTextPreview :legacy="false" atomic-variables :lines="[maintenance.line1, maintenance.line2]" :variables="previewVariables" :label="t('维护 MOTD · 双行草稿预览')" />
-            <footer class="card-actions"><span>{{ t('独立保存，不应用维护控制草稿') }}</span><el-button type="primary" :loading="pending === 'motd'" :disabled="locked || !motdDirty" @click="save('motd')">{{ t('保存维护 MOTD') }}</el-button></footer>
-          </section>
-          <div v-if="dirty" class="draft-note" role="status"><Icon name="circle-alert" :size="16" />{{ t('存在未保存修改；当前生效状态仍以已保存设置为准。') }}</div>
-        </div>
+        <section v-show="activeTab === 'whitelist'" id="maintenance-whitelist-panel" role="tabpanel" aria-labelledby="maintenance-tab-whitelist" class="editor-section">
+          <fieldset :disabled="locked">
+            <div class="section-heading"><h2>{{ t('维护白名单') }}</h2><span class="field-help">{{ t('{count} / 500 项', { count: whitelistCount }) }}</span></div>
+            <label class="field-label" for="maintenance-whitelist">{{ t('玩家名称或 UUID') }}</label>
+            <textarea id="maintenance-whitelist" v-model="maintenance.whitelist" rows="10" maxlength="20000" :placeholder="t('每行一个玩家名称或 UUID')" spellcheck="false" />
+            <p class="field-help">{{ t('白名单玩家可在维护期间加入，且不会被维护踢出。每行一项，名称忽略大小写。') }}</p>
+          </fieldset>
+        </section>
+        <section v-show="activeTab === 'messages'" id="maintenance-messages" role="tabpanel" aria-labelledby="maintenance-tab-messages" class="editor-section">
+          <fieldset :disabled="locked">
+            <h2>{{ t('提示消息') }}</h2>
+            <label class="field-label" for="maintenance-join-message">{{ t('入服拒绝提示') }}</label>
+            <input id="maintenance-join-message" v-model="maintenance.joinMessage" type="text" maxlength="512" />
+            <MinecraftTextPreview :legacy="false" :show-help="false" atomic-variables :text="maintenance.joinMessage" :variables="previewVariables" :label="t('入服拒绝提示预览')" />
+            <label class="field-label" for="maintenance-kick-message">{{ t('踢出提示') }}</label>
+            <input id="maintenance-kick-message" v-model="maintenance.kickMessage" type="text" maxlength="512" />
+            <MinecraftTextPreview :legacy="false" :show-help="false" atomic-variables :text="maintenance.kickMessage" :variables="previewVariables" :label="t('踢出提示预览')" />
+          </fieldset>
+        </section>
+        <section v-show="activeTab === 'motd'" id="maintenance-motd" role="tabpanel" aria-labelledby="maintenance-tab-motd" class="editor-section">
+          <h2>{{ t('服务器简介') }}</h2>
+          <el-radio-group v-model="motdMode" :aria-label="t('简介类型')" class="motd-selector"><el-radio-button value="normal">{{ t('正常运行') }}</el-radio-button><el-radio-button value="maintenance">{{ t('维护期间') }}</el-radio-button></el-radio-group>
+          <fieldset v-if="motdMode === 'normal'" :disabled="locked">
+            <div class="setting-row"><div><label for="normal-enabled">{{ t('启用正常简介') }}</label><p>{{ t('关闭后使用服务器原有简介。') }}</p></div><el-switch id="normal-enabled" v-model="normal.enabled" :disabled="locked" :aria-label="t('启用正常简介')" /></div>
+            <label class="field-label" for="normal-line1">{{ t('第一行') }}</label><input id="normal-line1" v-model="normal.line1" maxlength="512" type="text" />
+            <label class="field-label" for="normal-line2">{{ t('第二行') }}</label><input id="normal-line2" v-model="normal.line2" maxlength="512" type="text" />
+            <MinecraftTextPreview :legacy="false" :show-help="false" atomic-variables :lines="[normal.line1, normal.line2]" :variables="previewVariables" :label="t('正常简介预览')" />
+          </fieldset>
+          <fieldset v-else :disabled="locked">
+            <p class="field-help">{{ t('维护期间始终显示，不受正常简介开关影响。') }}</p>
+            <label class="field-label" for="maintenance-line1">{{ t('第一行') }}</label><input id="maintenance-line1" v-model="maintenance.line1" maxlength="512" type="text" />
+            <label class="field-label" for="maintenance-line2">{{ t('第二行') }}</label><input id="maintenance-line2" v-model="maintenance.line2" maxlength="512" type="text" />
+            <MinecraftTextPreview :legacy="false" :show-help="false" atomic-variables :lines="[maintenance.line1, maintenance.line2]" :variables="previewVariables" :label="t('维护简介预览')" />
+          </fieldset>
+          <p class="field-help">{{ t('支持 MiniMessage 颜色和 {online}、{max}、{version}，每行最多 512 字符。') }}</p>
+        </section>
       </div>
+      <footer class="maintenance-savebar">
+        <span :class="{ 'warning-text': currentDirty }" role="status">{{ t(currentDirty ? '当前分区有未保存修改' : '当前分区已保存') }}</span>
+        <div><el-button :disabled="locked || !currentDirty" @click="resetCurrent">{{ t('撤销修改') }}</el-button><el-button type="primary" :loading="pending === saveKind" :disabled="locked || !currentDirty" @click="save(saveKind)"><Icon name="save" :size="15" />{{ t('保存当前分区') }}</el-button></div>
+      </footer>
     </template>
   </div>
 </template>
 
 <style scoped>
-.maintenance-workspace { max-width:1400px; margin:0 auto; color:var(--lc-text); }
-.workspace-heading,.card-heading,.live-heading,.card-actions,.manual-action { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-.workspace-heading { align-items:flex-start; margin-bottom:22px; }.workspace-heading h1 { display:flex; align-items:center; gap:10px; font-size:24px; margin:7px 0; }.workspace-heading p,.live-state p { margin:6px 0 0; color:var(--lc-text-soft); font-size:13px; line-height:1.7; }.workspace-heading :deep(.el-button) { gap:7px; }
-.eyebrow { font-size:11px; color:var(--el-color-primary); font-weight:650; letter-spacing:.04em; }
-h2 { font-size:18px; line-height:1.5; margin:4px 0; }h3 { font-size:13px; margin:0 0 6px; }
-.live-state,.workspace-card { border:1px solid var(--el-border-color-light); border-radius:12px; background:var(--lc-surface); padding:24px; min-width:0; }.live-state { border-top:3px solid var(--el-color-primary); margin-bottom:22px; }.live-layout { display:flex; align-items:center; justify-content:space-between; gap:20px; margin:13px 0 18px; }
-.mode-badge,.save-badge { font-size:11px; border-radius:20px; padding:5px 10px; background:var(--el-fill-color-light); color:var(--lc-text-soft); white-space:nowrap; }.mode-badge { color:var(--el-color-success); background:var(--el-color-success-light-9); }.mode-badge.maintaining,.save-badge.unsaved { color:var(--el-color-warning); background:var(--el-color-warning-light-9); }
-.player-counts { display:flex; gap:28px; margin:0; flex-shrink:0; }.player-counts dt { color:var(--lc-text-soft); font-size:12px; }.player-counts dd { font-size:28px; font-weight:650; margin:6px 0 0; font-variant-numeric:tabular-nums; }.active-motd { border:1px solid var(--el-border-color-lighter); border-radius:8px; padding:14px 16px; background:var(--el-fill-color-light); overflow-wrap:anywhere; font-family:monospace; line-height:1.7; font-size:13px; }.active-motd span { display:block; color:var(--lc-text-soft); font-size:11px; margin-bottom:7px; font-family:inherit; }.live-state .timestamp { font-size:11px; margin-top:10px; }
-.workspace-grid { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:22px; align-items:start; }.motd-stack { display:grid; gap:22px; min-width:0; }.card-heading { margin-bottom:18px; }.card-heading h2 { margin-bottom:0; }
-fieldset { border:0; margin:0; padding:0; min-width:0; }fieldset:disabled { opacity:.65; }.switch-row { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:0 0 16px; margin-bottom:16px; border-bottom:1px solid var(--el-border-color-lighter); cursor:pointer; }.switch-row strong { display:block; font-size:13px; font-weight:600; }.switch-row small { display:block; color:var(--lc-text-soft); font-size:12px; line-height:1.65; margin-top:5px; }.switch-row input { accent-color:var(--el-color-primary); width:20px; height:20px; flex-shrink:0; cursor:pointer; }
-.field-label { display:flex; justify-content:space-between; gap:10px; font-size:12px; margin:17px 0 8px; font-weight:600; }.field-label span { font-weight:400; color:var(--lc-text-soft); }input[type=text],textarea { box-sizing:border-box; display:block; width:100%; min-width:0; border:1px solid var(--el-border-color); border-radius:7px; background:var(--el-fill-color-blank); color:var(--lc-text); font:inherit; font-size:13px; line-height:1.65; padding:9px 11px; }textarea { resize:vertical; min-height:120px; }input:focus-visible,textarea:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }input:disabled,textarea:disabled { cursor:not-allowed; }
-.field-help,.manual-action p { font-size:12px; line-height:1.7; color:var(--lc-text-soft); margin:8px 0 0; }.card-actions { border-top:1px solid var(--el-border-color-lighter); padding-top:17px; margin-top:20px; }.card-actions > span { font-size:11px; color:var(--lc-text-soft); line-height:1.6; }.manual-action { align-items:flex-start; border-top:1px solid var(--el-border-color-light); padding-top:20px; margin-top:24px; }.manual-action :deep(.el-button) { flex-shrink:0; }.manual-action .warning-text { color:var(--el-color-warning); }
-.feedback,.draft-note,.loading-state { font-size:13px; line-height:1.7; border:1px solid var(--el-border-color-light); border-radius:8px; padding:12px 16px; margin-bottom:16px; overflow-wrap:anywhere; }.feedback.danger,.error-text { color:var(--el-color-danger) !important; }.feedback.success { color:var(--el-color-success); }.feedback.warning,.draft-note { color:var(--el-color-warning); }.draft-note { display:flex; gap:8px; align-items:flex-start; margin:0; }.draft-note :deep(svg) { flex-shrink:0; margin-top:3px; }.loading-state { padding:48px 16px; text-align:center; color:var(--lc-text-soft); }
-@media (max-width:1000px) { .workspace-grid { grid-template-columns:minmax(0,1fr); }.motd-stack { grid-template-columns:repeat(2,minmax(0,1fr)); }.draft-note { grid-column:1/-1; }.card-actions { flex-wrap:wrap; } }
-@media (max-width:650px) { .workspace-heading { flex-wrap:wrap; }.workspace-heading h1 { font-size:21px; }.live-state,.workspace-card { padding:18px; }.live-layout { flex-direction:column; align-items:flex-start; }.player-counts { gap:32px; }.player-counts dd { font-size:24px; }.motd-stack { grid-template-columns:minmax(0,1fr); }.manual-action { flex-direction:column; }.card-actions { align-items:flex-start; }.card-actions > span { flex-basis:100%; }.workspace-grid,.motd-stack { gap:16px; }.mode-badge,.save-badge { padding:4px 8px; } }
+.maintenance-workspace { min-width:0; max-width:1280px; margin:0 auto; }
+.page-header { margin-bottom:20px; }
+.page-header :deep(.el-button),.maintenance-actions :deep(.el-button),.maintenance-savebar :deep(.el-button) { gap:7px; }
+.live-bar { display:flex; align-items:center; gap:20px; padding:14px 0; margin-bottom:12px; border-top:1px solid var(--el-border-color); border-bottom:1px solid var(--el-border-color); flex-wrap:wrap; }
+.live-status { display:flex; align-items:center; gap:8px; color:var(--el-color-success); font-size:14px; }
+.live-status.maintaining,.live-status.unknown { color:var(--el-color-warning); }
+.status-dot,.draft-dot { width:7px; height:7px; border-radius:50%; background:currentColor; flex:none; }
+.draft-dot { display:inline-block; color:var(--el-color-warning); margin-left:7px; }
+.live-detail { font-size:12px; color:var(--lc-text-soft); flex:1; min-width:160px; overflow-wrap:anywhere; }
+.live-count { display:flex; gap:12px; align-items:center; font-size:12px; color:var(--lc-text-soft); }
+.live-count strong { color:var(--lc-text); font-size:18px; font-variant-numeric:tabular-nums; }
+.maintenance-main { padding:24px 0; min-width:0; }
+.maintenance-main h2 { font-size:15px; line-height:1.5; font-weight:600; margin:0 0 16px; }
+.control-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:40px; }
+fieldset { border:0; margin:0; padding:0; min-width:0; }
+fieldset:disabled { opacity:.7; }
+.mode-selector { display:flex; align-items:center; flex-wrap:wrap; gap:24px; padding:0 0 20px; }
+.mode-selector label { display:flex; gap:8px; align-items:center; font-size:13px; cursor:pointer; }
+.mode-selector input { margin:0; width:16px; height:16px; accent-color:var(--el-color-primary); }
+.setting-row { min-height:64px; display:flex; justify-content:space-between; align-items:center; gap:20px; padding:15px 0; border-top:1px solid var(--el-border-color-light); }
+.setting-row label { font-size:13px; font-weight:500; cursor:pointer; }
+.setting-row p,.field-help { color:var(--lc-text-soft); font-size:12px; line-height:1.6; margin:5px 0 0; }
+.setting-row :deep(.el-switch) { flex:none; }
+.schedule-fields { padding:0 0 20px; max-width:520px; }
+.field-label { display:flex; align-items:center; gap:12px; font-size:13px; font-weight:500; margin:20px 0 8px; }
+.field-label span { color:var(--lc-text-soft); font-size:12px; font-weight:400; }
+input[type=text],input[type=datetime-local],textarea { width:100%; min-width:0; max-width:100%; border:1px solid var(--el-border-color); border-radius:6px; color:var(--lc-text); background:var(--el-fill-color-blank); padding:8px 11px; font:inherit; font-size:13px; line-height:1.6; }
+input[type=datetime-local] { min-height:38px; color-scheme:inherit; }
+textarea { resize:vertical; min-height:180px; }
+.maintenance-actions { border-left:1px solid var(--el-border-color-light); padding-left:28px; min-width:0; }
+.maintenance-actions dl { margin:0 0 20px; }
+.maintenance-actions dl>div { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:12px 0; font-size:13px; }
+.maintenance-actions dt { color:var(--lc-text-soft); }
+.maintenance-actions dd { margin:0; font-variant-numeric:tabular-nums; font-weight:600; }
+.maintenance-actions .timestamp { color:var(--lc-text-soft); font-size:11px; margin:22px 0 0; }
+.editor-section { max-width:900px; min-width:0; }
+.section-heading { display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
+.section-heading h2 { margin-bottom:0; }
+.motd-selector { margin-bottom:20px; }
+.maintenance-savebar { position:sticky; bottom:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-top:1px solid var(--el-border-color); background:var(--lc-bg); }
+.maintenance-savebar>span { color:var(--lc-text-soft); font-size:12px; }
+.maintenance-savebar>div { display:flex; gap:8px; }
+.maintenance-savebar :deep(.el-button+.el-button) { margin-left:0; }
+.feedback { font-size:13px; line-height:1.7; padding:10px 12px; background:var(--el-fill-color-light); border-left:3px solid var(--el-border-color); margin:0 0 12px; overflow-wrap:anywhere; }
+.feedback.danger,.status-error { color:var(--el-color-danger); border-color:var(--el-color-danger); }
+.feedback.success { color:var(--el-color-success); border-color:var(--el-color-success); }
+.feedback.warning,.warning-text { color:var(--el-color-warning) !important; }
+.status-error { font-size:12px; margin:8px 0 16px; }
+.status-error button { border:0; color:var(--el-color-primary); background:none; text-decoration:underline; cursor:pointer; }
+.loading-state { padding:48px 0; color:var(--lc-text-soft); text-align:center; }
+@media(max-width:850px) { .control-layout { grid-template-columns:minmax(0,1fr); gap:24px; }.maintenance-actions { border-left:0; border-top:1px solid var(--el-border-color-light); padding:20px 0 0; }.maintenance-actions dl { max-width:400px; }.maintenance-main { padding:20px 0; } }
+@media(max-width:520px) { .live-bar { gap:10px 16px; }.live-detail { order:3; flex-basis:100%; }.live-count { margin-left:auto; }.maintenance-savebar { align-items:flex-start; flex-direction:column; }.maintenance-savebar>div { width:100%; justify-content:flex-end; }.page-header { align-items:flex-start; }.page-title { flex:1; min-width:180px; } }
 </style>
