@@ -45,7 +45,8 @@
 | `/spawn ondeath [on\|off]` | 查看、开启或关闭自己的死亡回主城 | lc.teleport.spawn | 所有人 |
 | `/back`（return） | 返回上一个位置/死亡点 | lc.teleport.back；死亡点记录 lc.teleport.back.ondeath | 所有人 |
 | `/rtp [世界] [玩家]`（tpr、wild、randomtp） | 随机传送 | lc.teleport.rtp，指定世界 lc.teleport.rtp.world，他人 lc.teleport.rtp.others | 所有人 |
-| `/rtpnpc <世界> <玩家> [半径]` | NPC 控制台随机传送，默认原点周围 1000 格的圆形范围 | lc.teleport.rtp.npc | OP / 控制台 |
+| `/rtpnpc <世界> [半径]` | 返回该世界上次位置；首次前往时随机传送 | lc.teleport.rtp | 所有人，仅限 RTP 允许的世界 |
+| `/rtpnpc <世界> <玩家> [半径]` | 由控制台或管理员为指定玩家执行上述传送 | lc.teleport.rtp.npc | OP / 控制台 |
 
 其它权限：
 - `lc.teleport.warp.<名>` / `lc.teleport.warp.*`：使用需要权限的地标（单独标记或 `warps.per-warp-permission: true`）。
@@ -53,13 +54,13 @@
 - `lc.teleport.tptoggle.bypass`：/tp、/tphere 无视对方的 tptoggle。
 - `lc.teleport.bypass.warmup|cooldown|cost|land`。
 
-## NPC 随机传送
+## NPC 世界传送
 
-让 NPC 以控制台身份执行 `rtpnpc world 玩家名 1000`。更换 `world` 即可指定目标世界；世界须已加载。半径不填时为 1000 格，中心固定为 `(0,0)`，不受普通 `/rtp` 世界白名单影响。
+让 NPC 以玩家身份执行 `rtpnpc world`，目标世界须已加载，并列入 `rtp.worlds`。也可使用控制台执行 `rtpnpc world 玩家名 1000`，此时须在 NPC 插件中填入它实际支持的点击玩家变量，不能直接把原版选择器 `@s` 当作玩家名。控制台不受普通 `/rtp` 世界白名单影响。
 
-NpcPlugin-Paper 的点击者变量为 `@s`，点击动作使用 `CONSOLE` 执行者，命令填 `rtpnpc world @s 1000`，不加开头的 `/`。玩家无需获得管理权限。
+玩家从主城进入目标世界时，优先回到上次离开该世界的位置，保留朝向。返回位置保存在玩家数据中，重启后仍可使用；返回不受随机传送冷却影响。玩家已经在目标世界时，命令仍执行随机传送。
 
-点击后立即异步寻找安全落点，无预热、不收费；保留 `cooldowns.rtp`、领地与安全落点检查，并记录 `/back`。没有找到落点时会提示，不会传送到固定点或虚空。
+没有历史位置时，在目标世界 `(0,0)` 周围寻找安全落点，半径默认 1000 格。无预热、不收费，保留 `cooldowns.rtp`、领地与安全落点检查，并记录 `/back`；找不到落点时提示失败。
 
 ## 变量
 | 变量 | 说明 |
@@ -74,7 +75,8 @@ NpcPlugin-Paper 的点击者变量为 `@s`，点击动作使用 `CONSOLE` 执行
 - `tpa.timeout`：请求超时秒数。
 - `homes.default-limit / groups / bed-home / respawn-at-home`。
 - `warps.per-warp-permission`；`warps.gui.enabled / rows / default-icon / filler`（地标 GUI）。
-- `spawn.on-first-join / on-daily-first-join`：新玩家首次加入、每天首次上线到已设置的主城。同日再次上线保留退出位置。
+- `spawn.on-first-join / on-daily-first-join`：新玩家首次加入、每天首次上线到已设置的主城。
+- `spawn.on-restart-first-join`：每次服务器重启后，已有玩家首次上线也回到主城，默认开启。模块热重载不重置该记录；同一服务器进程内，同日再次上线保留退出位置。
 - `spawn.daily-join-timezone`：每日刷新时区，留空使用服务器本地时区。
 - `spawn.on-respawn / respawn-default-enabled / respawn-ignore-bed`：死亡回主城总开关、尚未选择的玩家默认设置、是否忽略床或重生锚。玩家可用 `/spawn ondeath off` 单独关闭，选择保存在玩家存档中。
 - `back.on-death`；`back.persist`（/back 位置持久化到数据库，默认开启）。
@@ -84,6 +86,7 @@ NpcPlugin-Paper 的点击者变量为 `@s`，点击动作使用 `CONSOLE` 执行
 - `lc_teleport_homes`（uuid+name 主键）、`lc_teleport_warps`（name 主键，含 icon/description 列，旧表自动补列）、`lc_teleport_toggles`（关闭 tpa 的玩家）、`lc_teleport_back`（/back 位置，`back.persist: true` 时使用）。
 - 出生点保存在模块数据目录的 `spawn.yml`。
 - 每日首次上线使用核心玩家档案中持久化的上次上线时间判断；在入服选择出生位置时应用主城位置，可与 QQAuth 登录限制同时使用。
+- 各世界的返回位置保存在玩家数据中，跨世界离开或退出时更新。
 - 冷却保存在内存（重启清空）。
 
 ## Web 面板（传送系统）

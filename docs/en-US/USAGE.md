@@ -75,8 +75,12 @@ Under **World management → Configure**, set whether players can travel from ea
 
 Terrain also needs `-javaagent:LC-Terrain-Agent.jar` in the launch command for climate, monument placement and old-chunk blending. See the [terrain guide](../../modules/lc-terrain/README.en.md) for installation, settings and `/tectonic` commands.
 
-## NPC Random Teleport
+## Lobby and NPC Travel
 
-Run `rtpnpc world player [radius]` as the console to send the player to a safe point in the target world around `(0,0)`. The default circular radius is 1000 blocks. The world must already be loaded. For NpcPlugin-Paper, set the click action to `rtpnpc world @s 1000` with the `CONSOLE` executor; `@s` represents the clicking player.
+After `/setspawn`, new players and each day's first join go to the lobby by default. `spawn.on-restart-first-join` also sends existing players to the lobby on their first join after each server restart. It defaults to true, is not reset by module reloads, and keeps the logout location for later joins on the same day within the same server process.
 
-There is no warmup or charge. RTP cooldowns, land checks and `/back` recording still apply. Players do not need the `lc.teleport.rtp.npc` permission.
+An NPC can run `rtpnpc world [radius]` as the clicking player. When entering the target world from the lobby, it restores the player's last position and direction in that world. These return locations survive restarts. The world must be loaded and listed under `rtp.worlds` for ordinary players.
+
+Console commands use `rtpnpc world player [radius]` and require `lc.teleport.rtp.npc`. Use the NPC plugin's supported variable for the clicking player's name; an unresolved `@s` is not a console player name.
+
+Without a saved location, the command selects a safe random point around `(0,0)`, with a circular radius of 1000 blocks by default. There is no warmup or charge. Land checks and `/back` recording apply. Random travel has the ordinary RTP cooldown; returning to a saved location does not.

@@ -30,7 +30,7 @@ usage:
   spawn: "<prefix><white>用法：<gold>/spawn [玩家]</gold> 或 <gold>/spawn ondeath [on|off]"
   spawn-ondeath: "<prefix><white>用法：<gold>/spawn ondeath [on|off]"
   rtp: "<prefix><white>用法：<gold>/rtp (世界) (玩家)"
-  rtpnpc: "<prefix><white>用法：<gold>/rtpnpc (世界) (玩家) [半径]</gold><white>，默认以 0,0 为中心、半径 1000 格。"
+  rtpnpc: "<prefix><white>玩家：<gold>/rtpnpc (世界) [半径]</gold><white>；控制台：<gold>/rtpnpc (世界) (玩家) [半径]</gold><white>。优先返回原位置，无记录时随机传送。"
 
 teleport:
   success: "<prefix><green>传送成功。"
@@ -154,6 +154,8 @@ back:
   death-hint: "<prefix><white>输入 <gold>/back</gold> 返回死亡地点。"
 
 rtp:
+  npc-player-required: "<prefix><red>控制台必须填写点击玩家的名字。请在 NPC 动作中使用插件支持的玩家名变量，不能直接填 @s。"
+  returned: "<prefix><green>已返回 <yellow>{world}</yellow> 上次离开的位置。"
   invalid-radius: "<prefix><red>半径须为 1 至 {max} 的整数。"
   world-disabled: "<prefix><yellow>该世界未开启随机传送，请选择其他世界。"
   searching: "<prefix><yellow>正在寻找安全位置，请稍候。"

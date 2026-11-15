@@ -1,5 +1,6 @@
 package com.lunarboreal.teleport;
 
+import com.destroystokyo.paper.event.player.PlayerConnectionCloseEvent;
 import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,15 +13,22 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** 预热、死亡点、主城出生与玩家缓存。 */
 public final class TeleportListener implements Listener {
 
     private final TeleportModule m;
+    private final Map<UUID, Location> initialLocations = new ConcurrentHashMap<>();
 
     public TeleportListener(TeleportModule m) {
         this.m = m;
@@ -100,23 +108,56 @@ public final class TeleportListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInitialSpawn(AsyncPlayerSpawnLocationEvent e) {
+        UUID playerId = e.getConnection().getProfile().getId();
+        initialLocations.remove(playerId);
         Location spawn = m.spawns().configured();
         if (spawn == null) return;
-        var record = m.api().players().get(e.getConnection().getProfile().getId());
+        var record = m.api().players().get(playerId);
         boolean firstJoin = e.isNewPlayer() && m.config().getBoolean("spawn.on-first-join", true);
         long lastJoin = record.map(com.lunarboreal.api.player.PlayerCache.PlayerRecord::lastJoin).orElse(0L);
         boolean daily = m.config().getBoolean("spawn.on-daily-first-join", true)
                 && SpawnPreferences.firstJoinToday(lastJoin, System.currentTimeMillis(), m.spawnZone());
-        if (firstJoin || daily) e.setSpawnLocation(spawn);
+        boolean afterRestart = !e.isNewPlayer() && m.config().getBoolean("spawn.on-restart-first-join", true)
+                && SpawnPreferences.firstJoinAfterRestart(lastJoin);
+        if (firstJoin || daily || afterRestart) {
+            Location original = e.getSpawnLocation();
+            if (original.getWorld() != null && !original.getWorld().equals(spawn.getWorld()))
+                initialLocations.put(playerId, original.clone());
+            e.setSpawnLocation(spawn);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
+        Location original = initialLocations.remove(p.getUniqueId());
+        if (original != null) WorldReturnLocations.remember(p, original);
         m.homes().load(p.getUniqueId());
         m.teleports().loadBack(p.getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTeleport(PlayerTeleportEvent e) {
+        rememberDeparture(e);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPortal(PlayerPortalEvent e) {
+        rememberDeparture(e);
+    }
+
+    private void rememberDeparture(PlayerTeleportEvent e) {
+        if (e.isCancelled() || e.getPlayer().isDead() || e.getTo() == null
+                || e.getFrom().getWorld() == null || e.getTo().getWorld() == null
+                || e.getFrom().getWorld().equals(e.getTo().getWorld())) return;
+        WorldReturnLocations.remember(e.getPlayer(), e.getFrom());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onConnectionClose(PlayerConnectionCloseEvent e) {
+        initialLocations.remove(e.getPlayerUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -132,6 +173,8 @@ public final class TeleportListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
+        initialLocations.remove(p.getUniqueId());
+        if (!p.isDead()) WorldReturnLocations.remember(p, p.getLocation());
         m.teleports().forget(p.getUniqueId());
         m.tpa().forget(p.getUniqueId());
         m.homes().unload(p.getUniqueId());

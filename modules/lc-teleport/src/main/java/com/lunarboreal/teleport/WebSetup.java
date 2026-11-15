@@ -39,6 +39,7 @@ final class WebSetup {
         opts.add(new Opt("bed_home", "homes.bed-home", "bool", "床作为 bed 家", null));
         opts.add(new Opt("spawn_on_first_join", "spawn.on-first-join", "bool", "首次加入到出生点", null));
         opts.add(new Opt("spawn_on_daily_first_join", "spawn.on-daily-first-join", "bool", "每日首次上线回主城", null));
+        opts.add(new Opt("spawn_on_restart_first_join", "spawn.on-restart-first-join", "bool", "重启后首次上线回主城", null));
         opts.add(new Opt("spawn_daily_join_timezone", "spawn.daily-join-timezone", "text", "每日回主城时区", "留空使用服务器时区，例如 Asia/Shanghai"));
         opts.add(new Opt("spawn_on_respawn", "spawn.on-respawn", "bool", "启用死亡回主城", null));
         opts.add(new Opt("spawn_respawn_default_enabled", "spawn.respawn-default-enabled", "bool", "玩家默认开启死亡回主城", "玩家可用 /spawn ondeath on 或 off 调整"));

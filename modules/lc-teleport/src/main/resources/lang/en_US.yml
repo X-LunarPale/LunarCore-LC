@@ -29,7 +29,7 @@ usage:
   spawn: "<prefix><white>Usage: <gold>/spawn [player]</gold> or <gold>/spawn ondeath [on|off]"
   spawn-ondeath: "<prefix><white>Usage: <gold>/spawn ondeath [on|off]"
   rtp: "<prefix><white>Usage: <gold>/rtp (world) (player)"
-  rtpnpc: "<prefix><white>Usage: <gold>/rtpnpc (world) (player) [radius]</gold><white>. Defaults to a 1000-block radius around 0,0."
+  rtpnpc: "<prefix><white>Player: <gold>/rtpnpc (world) [radius]</gold><white>; console: <gold>/rtpnpc (world) (player) [radius]</gold><white>. Returns to the previous location, or chooses a random location when none is saved."
 
 teleport:
   success: "<prefix><green>Teleported."
@@ -153,6 +153,8 @@ back:
   death-hint: "<prefix><white>Use <gold>/back</gold> to return to where you died."
 
 rtp:
+  npc-player-required: "<prefix><red>The console needs the clicking player's name. Use the NPC plugin's player-name variable instead of a literal @s."
+  returned: "<prefix><green>Returned to your previous location in <yellow>{world}</yellow>."
   invalid-radius: "<prefix><red>Radius must be an integer between 1 and {max}."
   world-disabled: "<prefix><yellow>Random teleport is disabled here. Choose another world."
   searching: "<prefix><yellow>Searching for a safe location. Please wait."

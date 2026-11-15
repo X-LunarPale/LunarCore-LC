@@ -16,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
@@ -24,6 +25,7 @@ import org.bukkit.block.BlockType;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.AfterEach;
@@ -55,6 +57,8 @@ class RtpNpcCommandTest {
     private final Map<String, LcCommand> commands = new HashMap<>();
     private final Map<String, World> worlds = new LinkedHashMap<>();
     private final Map<String, Player> players = new LinkedHashMap<>();
+    private final Map<String, World> currentWorlds = new HashMap<>();
+    private final Map<String, PersistentDataContainer> playerData = new HashMap<>();
     private final List<String> messages = new ArrayList<>();
     private final List<Location> destinations = new ArrayList<>();
     private Server previousServer;
@@ -68,6 +72,7 @@ class RtpNpcCommandTest {
     private int economyCalls;
     private int landChecks;
     private boolean allowLand = true;
+    private boolean teleportSucceeds = true;
 
     @BeforeEach void setup() throws Exception {
         previousServer = Bukkit.getServer();
@@ -157,7 +162,7 @@ class RtpNpcCommandTest {
 
     @Test void registersAnAdministrativeCommandUsableByConsole() {
         assertEquals(Set.of("rtpnpc"), commands.keySet());
-        assertEquals("lc.teleport.rtp.npc", command().permission());
+        assertEquals("lc.teleport.rtp", command().permission());
         assertFalse(command().isPlayerOnly());
     }
 
@@ -172,9 +177,15 @@ class RtpNpcCommandTest {
     }
 
     @Test void requiresAnExactOnlinePlayerAndRejectsSelectors() {
-        for (String name : List.of("Ali", "Missing", "@p", "Offline"))
+        for (String name : List.of("Ali", "Missing", "Offline"))
             reject("common.player-not-found", "survival", name);
         assertEquals(0, looseLookups, "NPC commands must not fall back to prefix matching");
+    }
+
+    @Test void consoleSelectorsExplainThatTheNpcMustSupplyTheClickingPlayer() {
+        for (String selector : List.of("@s", "@p", "@a"))
+            reject("rtp.npc-player-required", "survival", selector);
+        assertEquals(0, looseLookups);
     }
 
     @Test void rejectsNonIntegralAndOutOfRangeRadii() {
@@ -243,6 +254,80 @@ class RtpNpcCommandTest {
         assertTrue(messages.contains("teleport.teleport.land-denied"));
     }
 
+    @Test void playerCanUseTheWorldOnlyFormAndOptionalRadiusForThemselves() {
+        config.set("rtp.worlds.creative.max-radius", 1000);
+        Player alice = players.get("Alice");
+        command().execute(alice, "rtpnpc", new String[]{"creative"});
+        command().execute(alice, "rtpnpc", new String[]{"creative", "1"});
+        assertEquals(2, destinations.size());
+        assertTrue(destinations.getLast().getX() * destinations.getLast().getX()
+                + destinations.getLast().getZ() * destinations.getLast().getZ() <= 1);
+    }
+
+    @Test void playerSelectorMeansTheExecutingPlayerAndNeverGuessesForConsole() {
+        config.set("rtp.worlds.creative.max-radius", 1000);
+        command().execute(players.get("Alice"), "rtpnpc", new String[]{"creative", "@s"});
+        assertEquals(1, destinations.size());
+        assertSame(worlds.get("creative"), destinations.getFirst().getWorld());
+    }
+
+    @Test void ordinaryPlayersCannotTargetOtherPlayersOrUnconfiguredWorlds() {
+        Player alice = players.get("Alice");
+        command().execute(alice, "rtpnpc", new String[]{"creative", "Bob"});
+        assertEquals(List.of("teleport.common.no-permission"), messages);
+        messages.clear();
+        command().execute(alice, "rtpnpc", new String[]{"creative"});
+        assertEquals(List.of("teleport.rtp.world-disabled"), messages);
+        assertTrue(destinations.isEmpty());
+        assertEquals(0, chunkLoads);
+    }
+
+    @Test void returningToASavedLocationDoesNotGenerateAnotherRandomDestinationOrUseRtpCooldown() {
+        Player alice = players.get("Alice");
+        World survival = worlds.get("survival");
+        currentWorlds.put("Alice", worlds.get("creative"));
+        Location saved = new Location(survival, 180.25, 73, -84.75, 30, 12);
+        WorldReturnLocations.remember(alice, saved);
+        config.set("cooldowns.rtp", 300);
+        teleports.setCooldown(alice, "rtp");
+        execute("survival", "Alice");
+        assertEquals(List.of(saved), destinations);
+        assertEquals(1, chunkLoads, "Only the saved destination chunk should be prepared");
+        assertFalse(messages.contains("teleport.rtp.searching"));
+        assertTrue(messages.contains("teleport.rtp.returned"));
+        assertTrue(landChecks > 0);
+        assertEquals(saved, WorldReturnLocations.get(alice, survival));
+    }
+
+    @Test void anExistingBackLocationCanRestorePlayersWhoHaveNoPerWorldRecordYet() {
+        Player alice = players.get("Alice");
+        Location saved = new Location(worlds.get("creative"), 30.25, 73, 75.75);
+        teleports.setBack(alice.getUniqueId(), saved);
+        execute("creative", "Alice");
+        assertEquals(List.of(saved), destinations);
+        assertTrue(messages.contains("teleport.rtp.returned"));
+        assertFalse(messages.contains("teleport.rtp.searching"));
+    }
+
+    @Test void deniedOrCancelledReturnsKeepTheSavedLocation() {
+        Player alice = players.get("Alice");
+        World survival = worlds.get("survival");
+        currentWorlds.put("Alice", worlds.get("creative"));
+        Location saved = new Location(survival, 180.25, 73, -84.75);
+        WorldReturnLocations.remember(alice, saved);
+        allowLand = false;
+        execute("survival", "Alice");
+        assertTrue(destinations.isEmpty());
+        assertEquals(saved, WorldReturnLocations.get(alice, survival));
+        allowLand = true;
+        teleportSucceeds = false;
+        messages.clear();
+        execute("survival", "Alice");
+        assertEquals(saved, WorldReturnLocations.get(alice, survival));
+        assertTrue(messages.contains("teleport.teleport.failed"));
+        assertFalse(messages.contains("teleport.rtp.returned"));
+    }
+
     private void reject(String key, String... args) {
         messages.clear();
         execute(args);
@@ -266,6 +351,7 @@ class RtpNpcCommandTest {
         return proxy(World.class, (method, args) -> switch (method) {
             case "getUID" -> id;
             case "getName" -> name;
+            case "getKey" -> new NamespacedKey("minecraft", name);
             case "getEnvironment" -> World.Environment.NORMAL;
             case "getMinHeight" -> -64;
             case "getMaxHeight" -> 320;
@@ -289,12 +375,15 @@ class RtpNpcCommandTest {
         return proxy(Player.class, (method, args) -> switch (method) {
             case "getUniqueId" -> id;
             case "getName" -> name;
+            case "getPersistentDataContainer" -> playerData.computeIfAbsent(name, ignored -> TestPersistentData.container());
+            case "hasPermission" -> args[0].equals("lc.teleport.rtp");
             case "isOnline", "canSee" -> online;
             case "getGameMode" -> GameMode.SURVIVAL;
-            case "getLocation" -> new Location(worlds.get("survival"), 50.5, 73, 50.5);
+            case "getWorld" -> currentWorlds.getOrDefault(name, worlds.get("survival"));
+            case "getLocation" -> new Location(currentWorlds.getOrDefault(name, worlds.get("survival")), 50.5, 73, 50.5);
             case "teleportAsync" -> {
                 destinations.add(((Location) args[0]).clone());
-                yield CompletableFuture.completedFuture(true);
+                yield CompletableFuture.completedFuture(teleportSucceeds);
             }
             case "teleport" -> throw new AssertionError("Paper RTP should use teleportAsync");
             default -> null;

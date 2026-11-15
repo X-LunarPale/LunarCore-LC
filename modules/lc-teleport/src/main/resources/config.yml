@@ -89,6 +89,8 @@ spawn:
   on-first-join: true
   # 每天首次上线到已设置的主城，同一天重连保留退出位置
   on-daily-first-join: true
+  # 服务器重启后首次上线回主城，同一次运行中重连保留退出位置
+  on-restart-first-join: true
   # 留空使用服务器本地时区，也可填写 Asia/Shanghai 等时区
   daily-join-timezone: ""
   # 允许死亡重生到主城；玩家可用 /spawn ondeath off 单独关闭

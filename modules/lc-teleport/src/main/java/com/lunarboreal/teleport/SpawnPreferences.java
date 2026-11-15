@@ -4,12 +4,14 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.lang.management.ManagementFactory;
 import java.time.Instant;
 import java.time.ZoneId;
 
 /** Player choices persist with the player save; login dates use the core player record. */
 public final class SpawnPreferences {
     private static final NamespacedKey DEATH_SPAWN = new NamespacedKey("lunarcore", "teleport_death_spawn");
+    private static final long SERVER_STARTED_AT = ManagementFactory.getRuntimeMXBean().getStartTime();
 
     private SpawnPreferences() {}
 
@@ -25,5 +27,13 @@ public final class SpawnPreferences {
     static boolean firstJoinToday(long lastJoin, long now, ZoneId zone) {
         return lastJoin <= 0 || !Instant.ofEpochMilli(lastJoin).atZone(zone).toLocalDate()
                 .equals(Instant.ofEpochMilli(now).atZone(zone).toLocalDate());
+    }
+
+    static boolean firstJoinAfterRestart(long lastJoin) {
+        return firstJoinAfterRestart(lastJoin, SERVER_STARTED_AT);
+    }
+
+    static boolean firstJoinAfterRestart(long lastJoin, long serverStartedAt) {
+        return lastJoin < serverStartedAt;
     }
 }

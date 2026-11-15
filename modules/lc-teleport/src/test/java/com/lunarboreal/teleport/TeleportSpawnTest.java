@@ -1,5 +1,6 @@
 package com.lunarboreal.teleport;
 
+import com.destroystokyo.paper.event.player.PlayerConnectionCloseEvent;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.lunarboreal.api.LC;
 import com.lunarboreal.api.LunarBorealAPI;
@@ -20,7 +21,12 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.persistence.PersistentDataAdapterContext;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -32,6 +38,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.lang.management.ManagementFactory;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -40,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,6 +76,8 @@ class TeleportSpawnTest {
     private TeleportListener listener;
     private World deathWorld = survival;
     private Location personalRespawn;
+    private Location currentLocation = saved;
+    private boolean dead;
     private AutoCloseable materials;
 
     @BeforeEach void setup() throws Exception {
@@ -101,7 +112,11 @@ class TeleportSpawnTest {
             if (name.equals("register")) commands.put(((LcCommand) args[1]).name(), (LcCommand) args[1]);
             return null;
         });
-        var database = proxy(Database.class, (name, args) -> name.equals("table") ? args[0] : null);
+        var database = proxy(Database.class, (name, args) -> switch (name) {
+            case "table" -> args[0];
+            case "queryAsync" -> CompletableFuture.completedFuture(List.of());
+            default -> null;
+        });
         LC.setInstance(proxy(LunarBorealAPI.class, (name, args) -> switch (name) {
             case "players" -> players;
             case "messages" -> service;
@@ -118,6 +133,8 @@ class TeleportSpawnTest {
         set(SpawnManager.class, spawns, "configuredSpawn", hubSpawn);
         set(TeleportModule.class, module, "spawns", spawns);
         set(TeleportModule.class, module, "homes", new HomeManager(module));
+        set(TeleportModule.class, module, "teleports", new TeleportManager(module));
+        set(TeleportModule.class, module, "tpa", new TpaManager(module));
         listener = new TeleportListener(module);
         SpawnCommands.register(module);
     }
@@ -142,6 +159,29 @@ class TeleportSpawnTest {
         listener.onInitialSpawn(event);
         assertEquals(saved, event.getSpawnLocation());
         new TeleportListener(module).onInitialSpawn(event);
+        assertEquals(saved, event.getSpawnLocation());
+    }
+
+    @Test void firstJoinAfterRestartReturnsToHubEvenWhenDailyReturnIsDisabled() {
+        config.set("spawn.on-daily-first-join", false);
+        lastJoin = ManagementFactory.getRuntimeMXBean().getStartTime() - 1;
+        var event = initial(false);
+        listener.onInitialSpawn(event);
+        assertEquals(hubSpawn, event.getSpawnLocation());
+        lastJoin = System.currentTimeMillis();
+        var reconnect = initial(false);
+        listener.onInitialSpawn(reconnect);
+        assertEquals(saved, reconnect.getSpawnLocation());
+        new TeleportListener(module).onInitialSpawn(reconnect);
+        assertEquals(saved, reconnect.getSpawnLocation());
+    }
+
+    @Test void restartReturnCanBeDisabledWithoutChangingOtherSpawnPolicies() {
+        config.set("spawn.on-daily-first-join", false);
+        config.set("spawn.on-restart-first-join", false);
+        lastJoin = ManagementFactory.getRuntimeMXBean().getStartTime() - 1;
+        var event = initial(false);
+        listener.onInitialSpawn(event);
         assertEquals(saved, event.getSpawnLocation());
     }
 
@@ -334,15 +374,75 @@ class TeleportSpawnTest {
         assertTrue(tasks.isEmpty());
     }
 
+    @Test void redirectedLoginRemembersTheSavedWorldPositionOnTheMainThread() {
+        World originalWorld = historyWorld("survival");
+        Location original = new Location(originalWorld, 31.5, 80, -62.5, 90, 0);
+        var event = initial(false, original);
+        listener.onInitialSpawn(event);
+        assertEquals(hubSpawn, event.getSpawnLocation());
+        assertTrue(playerData.isEmpty());
+        listener.onJoin(new PlayerJoinEvent(player(), (net.kyori.adventure.text.Component) null));
+        assertEquals(original, WorldReturnLocations.get(player(), originalWorld));
+    }
+
+    @Test void aClosedOrSupersededLoginDoesNotLeaveAnOldReturnPoint() {
+        World originalWorld = historyWorld("survival");
+        Location original = new Location(originalWorld, 31.5, 80, -62.5);
+        listener.onInitialSpawn(initial(false, original));
+        listener.onConnectionClose(new PlayerConnectionCloseEvent(uuid, "Player",
+                new InetSocketAddress("127.0.0.1", 25565), true));
+        listener.onJoin(new PlayerJoinEvent(player(), (net.kyori.adventure.text.Component) null));
+        assertNull(WorldReturnLocations.get(player(), originalWorld));
+
+        listener.onInitialSpawn(initial(false, original));
+        lastJoin = System.currentTimeMillis();
+        listener.onInitialSpawn(initial(false, original));
+        listener.onJoin(new PlayerJoinEvent(player(), (net.kyori.adventure.text.Component) null));
+        assertNull(WorldReturnLocations.get(player(), originalWorld));
+    }
+
+    @Test void successfulWorldDepartureAndQuitKeepSeparateWorldReturnPoints() {
+        World originalWorld = historyWorld("survival");
+        World destination = historyWorld("hub");
+        Location original = new Location(originalWorld, 31.5, 80, -62.5, 90, 0);
+        var event = new PlayerTeleportEvent(player(), original, new Location(destination, 0, 80, 0));
+        listener.onTeleport(event);
+        assertEquals(original, WorldReturnLocations.get(player(), originalWorld));
+        currentLocation = new Location(destination, 12, 80, 3);
+        listener.onQuit(new PlayerQuitEvent(player(), (net.kyori.adventure.text.Component) null));
+        assertEquals(original, WorldReturnLocations.get(player(), originalWorld));
+        assertEquals(currentLocation, WorldReturnLocations.get(player(), destination));
+    }
+
+    @Test void cancelledPortalsAndDeadPlayerQuitDoNotOverwriteReturnPoints() {
+        World originalWorld = historyWorld("survival");
+        World destination = historyWorld("hub");
+        Location original = new Location(originalWorld, 31.5, 80, -62.5);
+        WorldReturnLocations.remember(player(), original);
+        var event = new PlayerPortalEvent(player(), new Location(originalWorld, 99, 80, 99),
+                new Location(destination, 0, 80, 0));
+        event.setCancelled(true);
+        listener.onPortal(event);
+        assertEquals(original, WorldReturnLocations.get(player(), originalWorld));
+        currentLocation = new Location(originalWorld, 122, 80, 3);
+        dead = true;
+        listener.onQuit(new PlayerQuitEvent(player(), (net.kyori.adventure.text.Component) null));
+        assertEquals(original, WorldReturnLocations.get(player(), originalWorld));
+    }
+
     private void fireRespawn(PlayerRespawnEvent event) {
         listener.onRespawnFallback(event);
         listener.onRespawn(event);
     }
 
     private AsyncPlayerSpawnLocationEvent initial(boolean fresh) {
+        return initial(fresh, saved);
+    }
+
+    private AsyncPlayerSpawnLocationEvent initial(boolean fresh, Location location) {
         var profile = proxy(PlayerProfile.class, (name, args) -> name.equals("getId") ? uuid : null);
         var connection = proxy(PlayerConfigurationConnection.class, (name, args) -> name.equals("getProfile") ? profile : null);
-        return new AsyncPlayerSpawnLocationEvent(connection, saved.clone(), fresh);
+        return new AsyncPlayerSpawnLocationEvent(connection, location.clone(), fresh);
     }
 
     private PlayerRespawnEvent respawn(Player player, boolean bed) {
@@ -350,17 +450,37 @@ class TeleportSpawnTest {
     }
 
     private Player player() {
-        var pdc = proxy(PersistentDataContainer.class, (name, args) -> switch (name) {
-            case "get" -> playerData.get(args[0]);
-            case "set" -> { playerData.put((NamespacedKey) args[0], args[2]); yield null; }
-            default -> null;
-        });
+        var pdc = persistentData(playerData);
         return proxy(Player.class, (name, args) -> switch (name) {
             case "getUniqueId" -> uuid;
             case "isOnline" -> true;
             case "getPersistentDataContainer" -> pdc;
             case "getWorld" -> deathWorld;
+            case "getLocation" -> currentLocation.clone();
+            case "isDead" -> dead;
             case "getRespawnLocation" -> personalRespawn;
+            default -> null;
+        });
+    }
+
+    private static PersistentDataContainer persistentData(Map<NamespacedKey, Object> values) {
+        return proxy(PersistentDataContainer.class, (name, args) -> switch (name) {
+            case "get" -> values.get(args[0]);
+            case "set" -> { values.put((NamespacedKey) args[0], args[2]); yield null; }
+            case "getAdapterContext" -> proxy(PersistentDataAdapterContext.class, (method, arguments) ->
+                    method.equals("newPersistentDataContainer") ? persistentData(new HashMap<>()) : null);
+            default -> null;
+        });
+    }
+
+    private static World historyWorld(String name) {
+        var border = proxy(org.bukkit.WorldBorder.class, (method, args) -> method.equals("isInside"));
+        return proxy(World.class, (method, args) -> switch (method) {
+            case "getKey" -> NamespacedKey.minecraft(name);
+            case "getName" -> name;
+            case "getMinHeight" -> -64;
+            case "getMaxHeight" -> 320;
+            case "getWorldBorder" -> border;
             default -> null;
         });
     }

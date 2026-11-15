@@ -25,6 +25,13 @@ class SpawnPreferencesTest {
         assertFalse(SpawnPreferences.firstJoinToday(previous, now, ZoneId.of("UTC")));
     }
 
+    @Test void restartIsIndependentOfTheDailyBoundary() {
+        long started = at("2026-11-05T12:00:00Z");
+        assertTrue(SpawnPreferences.firstJoinAfterRestart(at("2026-11-05T11:59:59Z"), started));
+        assertFalse(SpawnPreferences.firstJoinAfterRestart(started, started));
+        assertFalse(SpawnPreferences.firstJoinAfterRestart(at("2026-11-05T12:00:01Z"), started));
+    }
+
     private static long at(String value) {
         return Instant.parse(value).toEpochMilli();
     }
