@@ -71,6 +71,8 @@ The anti-cheat module provides translated GrimAC setting names. Explicitly reloa
 
 Optimizations start disabled. Review them before enabling; operation counts do not prove improved performance. Terrain creates separate new worlds without converting existing ones. Fully restart after installation or supported height changes. Unloading worlds saves them without deleting their folders.
 
+Under **World management → Configure**, set whether players can travel from each world to the Overworld, Nether and End separately. For example, disabling Nether travel still allows travel to the End. Portals and cross-dimension teleports follow these settings; travel within the same environment is unaffected. Changes apply when saved.
+
 Terrain also needs `-javaagent:LC-Terrain-Agent.jar` in the launch command for climate, monument placement and old-chunk blending. See the [terrain guide](../../modules/lc-terrain/README.en.md) for installation, settings and `/tectonic` commands.
 
 ## NPC Random Teleport

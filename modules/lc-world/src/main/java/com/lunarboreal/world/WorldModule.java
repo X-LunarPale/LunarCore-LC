@@ -88,7 +88,7 @@ public final class WorldModule extends LcModule implements Listener {
         if (type == null) type = WorldType.NORMAL;
         return new WorldOptions(w.getName(),w.getEnvironment(),type,w.getSeed(),true,w.getPVP(),w.getDifficulty(),
                 w.getTime(),Boolean.TRUE.equals(w.getGameRuleValue(GameRule.DO_DAYLIGHT_CYCLE)),
-                w.isThundering()?"THUNDER":w.hasStorm()?"RAIN":"CLEAR",w.isAutoSave(),true,
+                w.isThundering()?"THUNDER":w.hasStorm()?"RAIN":"CLEAR",w.isAutoSave(),true,true,true,
                 spawn.getBlockX(),spawn.getBlockY(),spawn.getBlockZ(),Map.of());
     }
     void importLoaded(String name,String actor) throws Exception {

@@ -6,7 +6,7 @@
 
 支持 NORMAL/NETHER/THE_END 环境；普通环境允许 NORMAL/FLAT/LARGE_BIOMES/AMPLIFIED 类型，其他环境只接受 NORMAL。枚举通过 Paper26.3 API javap 核实；实际新世界生成需要实服验证，single-biome/debug和自定义生成器未开放。seed使用文本整数避免Web浮点精度丢失。
 
-`worlds.yml` 持久记录每世界生成参数、启动加载、PvP、难度、时间、昼夜循环、天气、自动保存、`allowCrossDimension` 及可选出生点XYZ；`allowCrossDimension: false` 时，从该世界通过传送门或跨世界传送进入其他环境会被拒绝，同一环境传送不受影响；gamerules对象支持额外布尔/整数规则（API可提交，文件也可配置）。NORMAL 环境关闭 daylightCycle 并设置 time=1000 可固定白天；Paper 26.3 下界和末地没有世界时钟，时间值仍保存但不调用setTime，不承诺固定白天效果；gamerules不可覆盖PvP和昼夜专用字段。天气为应用时设置，可通过 `gamerules` 关闭 weather cycle 固定天气。模块重新启用时应用配置。配置重载请使用模块重新加载；不在运行中自动监视文件。
+`worlds.yml` 保存每个世界的生成参数、启动加载、PvP、难度、时间、昼夜循环、天气、自动保存及可选出生点XYZ。面板中可分别设置允许前往主世界、下界和末地，保存后立即生效；传送门和跨维度传送均遵守设置，同一环境传送不受影响。对应配置为 `allowOverworld`、`allowNether`、`allowEnd`；例如只禁止下界可设 `allowNether: false`，其他两项为 `true`。旧 `allowCrossDimension` 配置继续兼容。gamerules对象支持额外布尔/整数规则（API可提交，文件也可配置）。NORMAL 环境关闭 daylightCycle 并设置 time=1000 可固定白天；Paper 26.3 下界和末地没有世界时钟，时间值仍保存但不调用setTime，不承诺固定白天效果；gamerules不可覆盖PvP和昼夜专用字段。天气为应用时设置，可通过 `gamerules` 关闭 weather cycle 固定天气。模块重新启用时应用配置。直接修改文件后需重新加载模块。
 
 创建/加载接口返回 operationId（世界名），状态 `queued/running/succeeded/failed` 和错误文本保存到配置并在列表显示。世界生成在服务器主线程任务执行，可能造成生成期间卡顿。重复同名创建拒绝，加载执行中拒绝重复排队。失败记录保留，修正原因后可重试加载。启动遇损坏配置不覆盖原文件，禁用写操作并输出明确日志。
 
