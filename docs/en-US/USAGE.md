@@ -64,3 +64,9 @@ The anti-cheat module provides translated GrimAC setting names. Explicitly reloa
 Optimizations start disabled. Review them before enabling; operation counts do not prove improved performance. Terrain creates separate new worlds without converting existing ones. Fully restart after installation or supported height changes. Unloading worlds saves them without deleting their folders.
 
 Terrain also needs `-javaagent:LC-Terrain-Agent.jar` in the launch command for climate, monument placement and old-chunk blending. See the [terrain guide](../../modules/lc-terrain/README.en.md) for installation, settings and `/tectonic` commands.
+
+## NPC Random Teleport
+
+Run `rtpnpc world player [radius]` as the console to send the player to a safe point in the target world around `(0,0)`. The default circular radius is 1000 blocks. The world must already be loaded. For NpcPlugin-Paper, set the click action to `rtpnpc world @s 1000` with the `CONSOLE` executor; `@s` represents the clicking player.
+
+There is no warmup or charge. RTP cooldowns, land checks and `/back` recording still apply. Players do not need the `lc.teleport.rtp.npc` permission.

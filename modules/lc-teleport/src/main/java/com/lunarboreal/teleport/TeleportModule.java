@@ -7,6 +7,7 @@ import com.lunarboreal.api.service.EssentialsService;
 import com.lunarboreal.api.service.LandService;
 import com.lunarboreal.teleport.command.AdminCommands;
 import com.lunarboreal.teleport.command.HomeCommands;
+import com.lunarboreal.teleport.command.RtpNpcCommand;
 import com.lunarboreal.teleport.command.SpawnCommands;
 import com.lunarboreal.teleport.command.TpaCommands;
 import com.lunarboreal.teleport.command.WarpCommands;
@@ -71,6 +72,7 @@ public final class TeleportModule extends LcModule {
         HomeCommands.register(this);
         WarpCommands.register(this);
         SpawnCommands.register(this);
+        RtpNpcCommand.register(this);
 
         registerListener(new TeleportListener(this));
         registerListener(new WarpGui.GuiListener(this));

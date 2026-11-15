@@ -16,9 +16,12 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 
 /** 随机传送：异步加载区块（Paper World#getChunkAtAsync），逐次尝试直到找到合适落点。 */
 public final class RtpManager {
+
+    public static final int MAX_RADIUS = 30_000_000;
 
     public record Settings(int centerX, int centerZ, int minRadius, int maxRadius) {}
 
@@ -43,40 +46,77 @@ public final class RtpManager {
 
     /** 异步寻找随机落点，找不到时以 null 完成。 */
     public CompletableFuture<Location> find(World w) {
-        CompletableFuture<Location> result = new CompletableFuture<>();
         Settings st = settings(w);
+        return find(w, st, false);
+    }
+
+    public CompletableFuture<Location> findCircle(World w, int centerX, int centerZ, int radius) {
+        if (radius < 1 || radius > MAX_RADIUS) throw new IllegalArgumentException("Invalid radius");
+        return find(w, new Settings(centerX, centerZ, 0, radius), true);
+    }
+
+    private CompletableFuture<Location> find(World w, Settings st, boolean circle) {
+        CompletableFuture<Location> result = new CompletableFuture<>();
         if (st == null) {
             result.complete(null);
             return result;
         }
-        attempt(w, st, 0, Math.max(1, m.config().getInt("rtp.max-attempts", 20)), result);
+        attempt(w, st, circle, 0, Math.max(1, m.config().getInt("rtp.max-attempts", 20)), result);
         return result;
     }
 
-    private void attempt(World w, Settings st, int i, int max, CompletableFuture<Location> result) {
+    static int[] circleOffset(RandomGenerator random, int radius) {
+        if (radius < 1 || radius > MAX_RADIUS) throw new IllegalArgumentException("Invalid radius");
+        int dx, dz;
+        double distanceSquared;
+        do {
+            dx = random.nextInt(-radius, radius);
+            dz = random.nextInt(-radius, radius);
+            // The landing position is the block center, including at the circle edge.
+            distanceSquared = (dx + 0.5) * (dx + 0.5) + (dz + 0.5) * (dz + 0.5);
+        } while (distanceSquared > (double) radius * radius);
+        return new int[]{dx, dz};
+    }
+
+    private void attempt(World w, Settings st, boolean circle, int i, int max,
+                         CompletableFuture<Location> result) {
         if (i >= max || !m.isEnabled()) {
             result.complete(null);
             return;
         }
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
         int x, z;
-        // 方形环：在 [min,max] 范围内随机，保证至少一个轴的偏移 >= min
-        int dx = rnd.nextInt(-st.maxRadius(), st.maxRadius() + 1);
-        int dz = rnd.nextInt(-st.maxRadius(), st.maxRadius() + 1);
-        if (Math.abs(dx) < st.minRadius() && Math.abs(dz) < st.minRadius()) {
-            int span = st.maxRadius() - st.minRadius() + 1;
-            int edge = st.minRadius() + rnd.nextInt(span);
-            if (rnd.nextBoolean()) dx = rnd.nextBoolean() ? edge : -edge;
-            else dz = rnd.nextBoolean() ? edge : -edge;
+        int dx, dz;
+        if (circle) {
+            int[] offset = circleOffset(rnd, st.maxRadius());
+            dx = offset[0];
+            dz = offset[1];
+        } else {
+            dx = rnd.nextInt(-st.maxRadius(), st.maxRadius() + 1);
+            dz = rnd.nextInt(-st.maxRadius(), st.maxRadius() + 1);
+            if (Math.abs(dx) < st.minRadius() && Math.abs(dz) < st.minRadius()) {
+                int span = st.maxRadius() - st.minRadius() + 1;
+                int edge = st.minRadius() + rnd.nextInt(span);
+                if (rnd.nextBoolean()) dx = rnd.nextBoolean() ? edge : -edge;
+                else dz = rnd.nextBoolean() ? edge : -edge;
+            }
         }
         x = st.centerX() + dx;
         z = st.centerZ() + dz;
+        if (circle && !w.getWorldBorder().isInside(new Location(w, x + 0.5, w.getMinHeight(), z + 0.5))) {
+            attempt(w, st, true, i + 1, max, result);
+            return;
+        }
         int fx = x, fz = z;
         loadChunk(w, x >> 4, z >> 4).whenComplete((chunk, err) -> {
             Runnable next = () -> {
+                if (!m.isEnabled()) {
+                    result.complete(null);
+                    return;
+                }
                 Location loc = err == null ? check(w, fx, fz) : null;
                 if (loc != null) result.complete(loc);
-                else attempt(w, st, i + 1, max, result);
+                else attempt(w, st, circle, i + 1, max, result);
             };
             if (Bukkit.isPrimaryThread()) next.run();
             else if (m.isEnabled()) m.runTask(next);

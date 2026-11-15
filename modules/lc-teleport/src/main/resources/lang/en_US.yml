@@ -29,6 +29,7 @@ usage:
   spawn: "<prefix><white>Usage: <gold>/spawn [player]</gold> or <gold>/spawn ondeath [on|off]"
   spawn-ondeath: "<prefix><white>Usage: <gold>/spawn ondeath [on|off]"
   rtp: "<prefix><white>Usage: <gold>/rtp (world) (player)"
+  rtpnpc: "<prefix><white>Usage: <gold>/rtpnpc (world) (player) [radius]</gold><white>. Defaults to a 1000-block radius around 0,0."
 
 teleport:
   success: "<prefix><green>Teleported."
@@ -152,6 +153,7 @@ back:
   death-hint: "<prefix><white>Use <gold>/back</gold> to return to where you died."
 
 rtp:
+  invalid-radius: "<prefix><red>Radius must be an integer between 1 and {max}."
   world-disabled: "<prefix><yellow>Random teleport is disabled here. Choose another world."
   searching: "<prefix><yellow>Searching for a safe location. Please wait."
   failed: "<prefix><red>Could not find a suitable location, try again later."

@@ -30,6 +30,7 @@ usage:
   spawn: "<prefix><white>用法：<gold>/spawn [玩家]</gold> 或 <gold>/spawn ondeath [on|off]"
   spawn-ondeath: "<prefix><white>用法：<gold>/spawn ondeath [on|off]"
   rtp: "<prefix><white>用法：<gold>/rtp (世界) (玩家)"
+  rtpnpc: "<prefix><white>用法：<gold>/rtpnpc (世界) (玩家) [半径]</gold><white>，默认以 0,0 为中心、半径 1000 格。"
 
 teleport:
   success: "<prefix><green>传送成功。"
@@ -153,6 +154,7 @@ back:
   death-hint: "<prefix><white>输入 <gold>/back</gold> 返回死亡地点。"
 
 rtp:
+  invalid-radius: "<prefix><red>半径须为 1 至 {max} 的整数。"
   world-disabled: "<prefix><yellow>该世界未开启随机传送，请选择其他世界。"
   searching: "<prefix><yellow>正在寻找安全位置，请稍候。"
   failed: "<prefix><red>未能找到合适的随机位置，请稍后再试。"
