@@ -57,11 +57,19 @@ public final class TeleportListener implements Listener {
         World deathWorld = p.getWorld();
         World destination = e.getRespawnLocation().getWorld();
         if (deathWorld.getEnvironment() != World.Environment.NORMAL
-                || deathWorld.equals(destination) || p.getRespawnLocation() != null) return;
+                || p.getRespawnLocation() != null) return;
+        Location worldSpawn = deathWorld.getSpawnLocation();
+        boolean defaultLocalSpawn = deathWorld.equals(destination)
+                && e.getRespawnLocation().getBlockX() == worldSpawn.getBlockX()
+                && e.getRespawnLocation().getBlockY() == worldSpawn.getBlockY()
+                && e.getRespawnLocation().getBlockZ() == worldSpawn.getBlockZ();
         var worlds = Bukkit.getWorlds();
-        if (worlds.isEmpty() || !worlds.getFirst().equals(destination)) return;
+        if (!defaultLocalSpawn && (deathWorld.equals(destination)
+                || worlds.isEmpty() || !worlds.getFirst().equals(destination))) return;
         // 先纠正 Paper 对扩展世界的主世界回落，后续插件仍可设置自己的重生点。
-        e.setRespawnLocation(deathWorld.getSpawnLocation());
+        Location safe = SafeLocation.findRespawn(worldSpawn, 16);
+        if (safe != null) e.setRespawnLocation(safe);
+        else m.logger().warning("世界 " + deathWorld.getName() + " 出生点附近没有安全重生位置，请设置安全出生点。");
     }
 
     @EventHandler(priority = EventPriority.HIGH)

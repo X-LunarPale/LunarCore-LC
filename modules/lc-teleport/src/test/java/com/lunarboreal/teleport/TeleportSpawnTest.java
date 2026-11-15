@@ -52,7 +52,8 @@ class TeleportSpawnTest {
     private final UUID uuid = UUID.randomUUID();
     private final World survival = world("survival");
     private final World hub = world("hub");
-    private final World terrain = world("jixian");
+    private final RespawnTestWorld terrainFixture = new RespawnTestWorld("jixian");
+    private final World terrain = terrainFixture.world;
     private final Location saved = new Location(survival, 83, 72, -45);
     private final Location hubSpawn = new Location(hub, 4.5, 80, 8.5);
     private final Map<NamespacedKey, Object> playerData = new HashMap<>();
@@ -66,8 +67,10 @@ class TeleportSpawnTest {
     private TeleportListener listener;
     private World deathWorld = survival;
     private Location personalRespawn;
+    private AutoCloseable materials;
 
     @BeforeEach void setup() throws Exception {
+        materials = RespawnTestWorld.materials();
         oldServer = Bukkit.getServer();
         oldApi = LC.isLoaded() ? LC.get() : null;
         var scheduler = proxy(BukkitScheduler.class, (name, args) -> {
@@ -122,6 +125,7 @@ class TeleportSpawnTest {
     @AfterEach void cleanup() throws Exception {
         LC.setInstance(oldApi);
         set(Bukkit.class, null, "server", oldServer);
+        materials.close();
     }
 
     @Test void firstLoginOfDaySpawnsAtHubWithoutCallingTeleport() {
@@ -212,6 +216,27 @@ class TeleportSpawnTest {
         assertEquals(terrain.getSpawnLocation(), event.getRespawnLocation());
         assertTrue(tasks.isEmpty());
         assertFalse(messages.contains("teleport.spawn.death-hint"));
+    }
+
+    @Test void disabledHubReturnFindsTheRealSurfaceWhenTheTerrainSpawnIsBuriedInAMountain() {
+        deathWorld = terrain;
+        terrainFixture.ground(250);
+        SpawnPreferences.setReturnsOnDeath(player(), false);
+        var event = respawn(player(), false);
+        fireRespawn(event);
+        assertEquals(new Location(terrain, .5, 251, .5), event.getRespawnLocation());
+        assertEquals(80, terrain.getSpawnLocation().getBlockY());
+        assertEquals(0, terrainFixture.writes);
+    }
+
+    @Test void aDefaultSpawnAlreadyInTheDeathWorldAlsoUsesTheRealSurface() {
+        deathWorld = terrain;
+        terrainFixture.ground(250);
+        SpawnPreferences.setReturnsOnDeath(player(), false);
+        var event = new PlayerRespawnEvent(player(), terrain.getSpawnLocation(), false, false, false,
+                PlayerRespawnEvent.RespawnReason.DEATH);
+        fireRespawn(event);
+        assertEquals(new Location(terrain, .5, 251, .5), event.getRespawnLocation());
     }
 
     @Test void defaultOffAndMasterOffAlsoKeepExtraOverworldsLocal() {
@@ -345,16 +370,7 @@ class TeleportSpawnTest {
     }
 
     private static World world(String name, World.Environment environment) {
-        UUID id = UUID.randomUUID();
-        World[] world = new World[1];
-        world[0] = proxy(World.class, (method, args) -> switch (method) {
-            case "getUID" -> id;
-            case "getName" -> name;
-            case "getEnvironment" -> environment;
-            case "getSpawnLocation" -> new Location(world[0], 0.5, 80, 0.5);
-            default -> null;
-        });
-        return world[0];
+        return new RespawnTestWorld(name, environment, -64, 320).world;
     }
 
     private static void set(Class<?> owner, Object target, String name, Object value) throws Exception {
