@@ -1,86 +1,98 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api'
 import PlayerCell from '../components/PlayerCell.vue'
 import MinecraftTextPreview from '../components/text-preview/MinecraftTextPreview.vue'
+import { requireSuccess } from '../utils/panel'
 import { t } from '../i18n'
 
+const tab = ref('broadcast')
 const broadcastText = ref('')
 const sending = ref(false)
 const saving = ref(false)
+const whitelistBusy = ref(false)
+const whitelistError = ref('')
+const whitelistQuery = ref('')
 const wl = reactive({ enabled: false, enforced: false, items: [], loading: false, name: '' })
+const shown = computed(() => {
+  const query = whitelistQuery.value.trim().toLowerCase()
+  return query ? wl.items.filter(player => `${player.name} ${player.uuid}`.toLowerCase().includes(query)) : wl.items
+})
 
 async function broadcast() {
-  if (!broadcastText.value.trim()) return ElMessage.warning(t('请输入广播内容'))
+  if (sending.value) return
+  const message = broadcastText.value.trim()
+  if (!message) return ElMessage.warning(t('请输入广播内容'))
   sending.value = true
   try {
-    const r = await api.post('/api/server/broadcast', { message: broadcastText.value })
-    ElMessage.success(r.message)
-    broadcastText.value = ''
-  } catch (e) {
-    ElMessage.error(e.message)
-  } finally {
-    sending.value = false
-  }
+    const response = requireSuccess(await api.post('/api/server/broadcast', { message }))
+    ElMessage.success(response.message || t('已发送'))
+    if (broadcastText.value.trim() === message) broadcastText.value = ''
+  } catch (error) { ElMessage.error(error.message) }
+  finally { sending.value = false }
 }
 
 async function save() {
+  if (saving.value) return
   saving.value = true
   try {
-    const r = await api.post('/api/server/save')
-    ElMessage.success(r.message)
-  } catch (e) {
-    ElMessage.error(e.message)
-  } finally {
-    saving.value = false
-  }
+    const response = requireSuccess(await api.post('/api/server/save'))
+    ElMessage.success(response.message || t('已保存'))
+  } catch (error) { ElMessage.error(error.message) }
+  finally { saving.value = false }
 }
 
 async function loadWl() {
+  if (wl.loading) return
   wl.loading = true
   try {
-    const r = await api.get('/api/server/whitelist')
-    Object.assign(wl, { enabled: r.enabled, enforced: r.enforced, items: r.items })
-  } catch (e) {
-    ElMessage.error(e.message)
-  } finally {
-    wl.loading = false
-  }
+    const response = requireSuccess(await api.get('/api/server/whitelist'))
+    if (!Array.isArray(response?.items)) throw new Error(t('白名单返回格式错误'))
+    Object.assign(wl, { enabled: response.enabled, enforced: response.enforced, items: response.items })
+    whitelistError.value = ''
+  } catch (error) { whitelistError.value = error.message }
+  finally { wl.loading = false }
 }
 
-async function toggleWl(v) {
+async function changeWhitelist(operation) {
+  if (whitelistBusy.value || wl.loading) return
+  whitelistBusy.value = true
   try {
-    const r = await api.post('/api/server/whitelist', { enabled: v })
-    ElMessage.success(r.message)
-  } catch (e) {
-    ElMessage.error(e.message)
-  }
-  loadWl()
+    await operation()
+    await loadWl()
+  } catch (error) { ElMessage.error(error.message) }
+  finally { whitelistBusy.value = false }
 }
 
-async function addWl() {
-  if (!wl.name.trim()) return
-  try {
-    const r = await api.post('/api/server/whitelist/add', { name: wl.name.trim() })
-    ElMessage.success(r.message)
-    wl.name = ''
-    loadWl()
-  } catch (e) {
-    ElMessage.error(e.message)
-  }
+function toggleWl(value) {
+  return changeWhitelist(async () => {
+    if (value && wl.enforced) {
+      const accepted = await ElMessageBox.confirm(t('强制白名单会移出不在名单内的在线玩家，确定开启吗？'), t('开启白名单'), { type: 'warning' }).then(() => true).catch(() => false)
+      if (!accepted) return
+    }
+    const response = requireSuccess(await api.post('/api/server/whitelist', { enabled: value }))
+    ElMessage.success(response.message || t('已保存'))
+  })
 }
 
-async function removeWl(p) {
-  const ok = await ElMessageBox.confirm(t('将 {name} 移出白名单？', { name: p.name }), t('白名单'), { type: 'warning' }).then(() => true).catch(() => false)
-  if (!ok) return
-  try {
-    const r = await api.post('/api/server/whitelist/remove', { name: p.uuid })
-    ElMessage.success(r.message)
-    loadWl()
-  } catch (e) {
-    ElMessage.error(e.message)
-  }
+function addWl() {
+  const name = wl.name.trim()
+  if (!name) return
+  return changeWhitelist(async () => {
+    const response = requireSuccess(await api.post('/api/server/whitelist/add', { name }))
+    ElMessage.success(response.message || t('已添加'))
+    if (wl.name.trim() === name) wl.name = ''
+  })
+}
+
+function removeWl(player) {
+  return changeWhitelist(async () => {
+    const accepted = await ElMessageBox.confirm(t('将 {name} 移出白名单？', { name: player.name }), t('白名单'), { type: 'warning' }).then(() => true).catch(() => false)
+    if (!accepted) return
+    const response = requireSuccess(await api.post('/api/server/whitelist/remove', { name: player.uuid }))
+    ElMessage.success(response.message || t('已移除'))
+  })
 }
 
 onMounted(loadWl)
@@ -88,42 +100,64 @@ onMounted(loadWl)
 
 <template>
   <div class="page server-page">
-    <div class="page-header"><div><p class="eyebrow">{{ t('运行管理') }}</p><h1 class="page-title">{{ t('服务器操作') }}</h1><p class="page-sub">{{ t('发布全服通知、保存运行数据并管理白名单。') }}</p></div></div>
-    <div class="grid">
-      <div class="card">
-        <div class="card-title"><Icon name="megaphone" :size="16" />{{ t('全服广播') }}</div>
-        <p class="section-description">{{ t('向所有在线玩家发送通知，支持 MiniMessage 格式。') }}</p>
-        <el-input v-model="broadcastText" type="textarea" :rows="3" :placeholder="t('请输入广播内容')" />
-        <MinecraftTextPreview :text="broadcastText" :label="t('广播预览')" />
-        <div class="actions"><el-button type="primary" :loading="sending" @click="broadcast"><Icon name="send" :size="14" />&nbsp;{{ t('发送广播') }}</el-button></div>
-      </div>
-      <div class="card">
-        <div class="card-title"><Icon name="hard-drive" :size="16" />{{ t('保存数据') }}</div>
-        <p class="muted">{{ t('立即保存所有世界与在线玩家数据（等同于 save-all）。') }}</p>
-        <el-button type="primary" plain :loading="saving" @click="save"><Icon name="save" :size="14" />&nbsp;{{ t('保存所有世界') }}</el-button>
-      </div>
-    </div>
-    <div class="card" style="margin-top: 16px" v-loading="wl.loading">
-      <div class="card-title">
-        <Icon name="list-checks" :size="16" />{{ t('白名单') }}
-        <el-switch :model-value="wl.enabled" :active-text="t('已开启')" :inactive-text="t('已关闭')" inline-prompt style="margin-left: 12px" @change="toggleWl" />
-        <span v-if="wl.enforced" class="muted" style="font-weight: 400; font-size: 12px">{{ t('强制模式：开启白名单时，不在名单内的在线玩家可能被移出服务器。') }}</span>
-      </div>
-      <div class="toolbar">
-        <el-input v-model="wl.name" :placeholder="t('玩家名或 UUID')" style="width: 240px" @keyup.enter="addWl" />
-        <el-button type="primary" @click="addWl"><Icon name="plus" :size="14" />&nbsp;{{ t('添加') }}</el-button>
-        <div class="spacer" />
-        <span class="muted">{{ t('共 {count} 人', { count: wl.items.length }) }}</span>
-      </div>
-      <el-table :data="wl.items" stripe max-height="420">
-        <el-table-column :label="t('玩家')" min-width="200"><template #default="{ row }"><PlayerCell :name="row.name" :uuid="row.uuid" /> <el-tag v-if="row.online" size="small" type="success">{{ t('在线') }}</el-tag></template></el-table-column>
-        <el-table-column label="UUID" min-width="290"><template #default="{ row }"><span class="mono muted">{{ row.uuid }}</span></template></el-table-column>
-        <el-table-column :label="t('操作')" width="110"><template #default="{ row }"><el-button size="small" type="danger" plain @click="removeWl(row)">{{ t('移除') }}</el-button></template></el-table-column>
-      </el-table>
-    </div>
+    <header class="page-header">
+      <h1 class="page-title">{{ t('服务器操作') }}</h1>
+      <el-button :loading="saving" @click="save"><Icon name="save" :size="15" />{{ t('保存所有世界') }}</el-button>
+    </header>
+    <el-tabs v-model="tab" class="workspace-tabs">
+      <el-tab-pane :label="t('全服广播')" name="broadcast">
+        <section class="broadcast-layout">
+          <el-form label-position="top" @submit.prevent="broadcast">
+            <el-form-item :label="t('广播内容')">
+              <el-input v-model="broadcastText" type="textarea" :rows="5" :disabled="sending" :placeholder="t('请输入广播内容')" />
+            </el-form-item>
+            <el-button type="primary" native-type="submit" :loading="sending" :disabled="!broadcastText.trim()"><Icon name="send" :size="15" />{{ t('发送广播') }}</el-button>
+          </el-form>
+          <MinecraftTextPreview :text="broadcastText" :label="t('广播预览')" :show-help="false" />
+        </section>
+      </el-tab-pane>
+      <el-tab-pane :label="t('白名单')" name="whitelist">
+        <section class="whitelist-section">
+          <header class="section-heading">
+            <div class="whitelist-state">
+              <el-switch :model-value="wl.enabled" :disabled="whitelistBusy || wl.loading" :aria-label="t('白名单')" @change="toggleWl" />
+              <strong>{{ t(wl.enabled ? '已开启' : '已关闭') }}</strong>
+              <el-tag v-if="wl.enforced" type="warning" size="small">{{ t('强制模式') }}</el-tag>
+            </div>
+            <span class="muted">{{ t('共 {count} 人', { count: wl.items.length }) }}</span>
+          </header>
+          <el-alert v-if="whitelistError" :title="whitelistError" type="error" show-icon :closable="false" />
+          <div class="toolbar whitelist-toolbar">
+            <el-input v-model="whitelistQuery" clearable :placeholder="t('搜索玩家名')" :aria-label="t('搜索玩家名')"><template #prefix><Icon name="search" :size="14" /></template></el-input>
+            <el-button :loading="wl.loading" :disabled="whitelistBusy" @click="loadWl"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
+            <span class="spacer" />
+            <el-input v-model="wl.name" :disabled="whitelistBusy" :placeholder="t('玩家名或 UUID')" :aria-label="t('玩家名或 UUID')" @keyup.enter="addWl" />
+            <el-button type="primary" :loading="whitelistBusy" :disabled="!wl.name.trim() || wl.loading" @click="addWl"><Icon name="plus" :size="15" />{{ t('添加') }}</el-button>
+          </div>
+          <el-table :data="shown" v-loading="wl.loading" :empty-text="t('没有找到玩家')">
+            <el-table-column :label="t('玩家')" min-width="180"><template #default="{ row }"><PlayerCell :name="row.name" :uuid="row.uuid" /> <el-tag v-if="row.online" size="small" type="success">{{ t('在线') }}</el-tag></template></el-table-column>
+            <el-table-column label="UUID" min-width="290"><template #default="{ row }"><span class="mono muted">{{ row.uuid }}</span></template></el-table-column>
+            <el-table-column :label="t('操作')" width="90"><template #default="{ row }"><el-button size="small" type="danger" text :disabled="whitelistBusy" @click="removeWl(row)">{{ t('移除') }}</el-button></template></el-table-column>
+          </el-table>
+        </section>
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
 <style scoped>
-.server-page{color:var(--lc-text);min-width:0}.page-header{margin-bottom:20px}.page-title{font-size:25px;letter-spacing:-.5px}.eyebrow{margin:0 0 5px;color:var(--lc-text-soft);font-size:11px;letter-spacing:.08em}.page-sub{margin:6px 0 0}.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}.grid .card+.card{margin-top:0}.card{padding:18px;border-radius:8px;overflow:hidden}.card-title{font-size:14px;margin-bottom:14px;flex-wrap:wrap;gap:8px}.section-description,.grid .muted{font-size:12px;color:var(--lc-text-soft);line-height:1.7;margin:0 0 12px}.actions{margin-top:12px;text-align:right}.toolbar{gap:8px;margin-bottom:14px}.toolbar :deep(.el-input){max-width:100%;min-width:0}.server-page :deep(td.el-table__cell){padding:10px 0}@media(max-width:760px){.grid{grid-template-columns:1fr}.page-title{font-size:23px}.card{padding:14px}.toolbar :deep(.el-input){width:auto!important;flex:1}.toolbar .spacer{display:none}.toolbar>.muted{width:100%;font-size:12px}.card-title>.muted{width:100%;line-height:1.7}.card-title :deep(.el-switch){margin-left:auto!important}}
+.server-page { min-width: 0; }
+.page-header .el-button, .toolbar .el-button, .broadcast-layout .el-button { gap: 7px; }
+.broadcast-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr); align-items: start; gap: 28px; max-width: 1160px; padding-top: 12px; }
+.broadcast-layout > * { min-width: 0; }
+.whitelist-section { padding-top: 8px; min-width: 0; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 18px; font-size: 13px; }
+.whitelist-state { display: flex; align-items: center; gap: 10px; }
+.whitelist-state strong { font-size: 13px; font-weight: 500; }
+.whitelist-toolbar { margin: 18px 0 14px; }
+.whitelist-toolbar .el-input { width: 220px; min-width: 0; }
+.whitelist-toolbar .el-button { margin-left: 0; }
+.el-alert { margin-bottom: 14px; }
+@media (max-width: 850px) { .broadcast-layout { grid-template-columns: 1fr; gap: 24px; }.whitelist-toolbar .spacer { flex-basis: 100%; }.whitelist-toolbar .el-input { flex: 1; width: auto; }.whitelist-toolbar { gap: 8px; } }
+@media (max-width: 480px) { .section-heading { flex-wrap: wrap; }.whitelist-state { gap: 8px; } }
 </style>

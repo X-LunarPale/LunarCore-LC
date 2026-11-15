@@ -35,7 +35,7 @@ record ScoreboardSettings(boolean enabled, Mode defaultMode, String title, List<
                 Map.entry("title", cfg.getString("title", "<aqua>LunarCore")), Map.entry("lines", cfg.getStringList("lines")), Map.entry("frames", cfg.getStringList("island-frames")),
                 Map.entry("updateTicks", cfg.getInt("update-ticks", 20)), Map.entry("rotationTicks", cfg.getInt("rotation-ticks", 100)),
                 Map.entry("rotate", cfg.getBoolean("rotate", true)), Map.entry("color", cfg.getString("boss-color", "BLUE")), Map.entry("progress", cfg.getDouble("boss-progress", 1)),
-                Map.entry("adminEnabled", cfg.getBoolean("admin.enabled", true)), Map.entry("adminTitle", cfg.getString("admin.title", "<gold>服务器管理")), Map.entry("adminLines", cfg.getStringList("admin.lines"))));
+                Map.entry("adminEnabled", cfg.getBoolean("admin.enabled", true)), Map.entry("adminTitle", cfg.getString("admin.title", "<aqua>LunarCore</aqua> <yellow>· 管理</yellow>")), Map.entry("adminLines", cfg.getStringList("admin.lines"))));
     }
     static ScoreboardSettings from(Map<String, Object> map) {
         if (!(map.get("enabled") instanceof Boolean enabled) || !(map.get("rotate") instanceof Boolean rotate)) throw new IllegalArgumentException("开关须为布尔值");
@@ -47,10 +47,24 @@ record ScoreboardSettings(boolean enabled, Mode defaultMode, String title, List<
         return new ScoreboardSettings(enabled, Mode.parse(text(map, "defaultMode")), text(map, "title"), list(map.get("lines")), list(map.get("frames")),
                 integer(map.get("updateTicks")), integer(map.get("rotationTicks")), rotate, color, progress.floatValue(),
                 map.getOrDefault("adminEnabled", true) instanceof Boolean enabledAdmin ? enabledAdmin : invalidAdmin(),
-                (String) map.getOrDefault("adminTitle", "<gold>服务器管理"), list(map.getOrDefault("adminLines", defaultAdminLines())));
+                (String) map.getOrDefault("adminTitle", "<aqua>LunarCore</aqua> <yellow>· 管理</yellow>"), list(map.getOrDefault("adminLines", defaultAdminLines())));
     }
     private static boolean invalidAdmin() { throw new IllegalArgumentException("管理员计分板开关须为布尔值"); }
-    static List<String> defaultAdminLines() { return List.of("<white>管理员 <white>{player}", "<white>称号 <white>{title}", "<white>余额 <gold>{balance}", "", "<white>在线 <aqua>{online} <white>/ {max_players}", "<white>TPS <green>{tps} <white>MSPT <white>{mspt}", "<white>实体 <white>{entities} <white>区块 <white>{chunks}", "<white>内存 <white>{memory_used} / {memory_max} MB", "<white>世界 <white>{world}", "<white>延迟 <white>{ping}ms"); }
+    static List<String> defaultAdminLines() {
+        return List.of(
+                "<aqua>玩家</aqua> <white>{player}</white>",
+                "<light_purple>称号</light_purple> <white>{title}</white>",
+                "",
+                "<green>世界</green> <white>{world}</white>",
+                "<gold>余额</gold> <white>{balance}</white>",
+                "",
+                "<aqua>在线</aqua> <white>{online}</white><dark_aqua> / </dark_aqua><white>{max_players}</white>",
+                "<yellow>延迟</yellow> <white>{ping}</white> <yellow>ms</yellow>",
+                "",
+                "<green>TPS</green> <white>{tps}</white>  <yellow>MSPT</yellow> <white>{mspt}</white>",
+                "<aqua>实体</aqua> <white>{entities}</white>  <blue>区块</blue> <white>{chunks}</white>",
+                "<light_purple>内存</light_purple> <white>{memory_used}</white><light_purple> / </light_purple><white>{memory_max}</white> <light_purple>MB</light_purple>");
+    }
     static int integer(Object value) {
         if (!(value instanceof Number n) || !Double.isFinite(n.doubleValue()) || n.doubleValue() != n.longValue() || n.longValue() < Integer.MIN_VALUE || n.longValue() > Integer.MAX_VALUE) throw new IllegalArgumentException("间隔须为整数");
         return n.intValue();

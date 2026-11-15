@@ -26,7 +26,9 @@
 `lc.chat.bypass.filter|spam|ad`、`lc.chat.ignore.exempt`、`lc.chat.msg.bypass`（无视对方屏蔽/关闭私聊）、`lc.chat.silentjoin`、`lc.chat.format.<组>`。
 
 ## 变量
-`%lc_chat_nick%`、`%lc_chat_mail_unread%`
+`%lc_chat_nick%`（昵称）、`%lc_chat_mail_unread%`（未读邮件数）、`%lc_chat_world_name%`（当前世界显示名）。
+
+世界显示名不附加颜色或方括号；未设置别名时返回原始世界名。世界名与世界标识均可匹配别名，优先采用完全一致的配置，也兼容 `lc_terrain:example` 和 `lc_terrain_example`。离线玩家不返回世界名。
 
 ## 说明
 - Paper 下使用 AsyncChatEvent + ChatRenderer；Spigot 下回退 AsyncPlayerChatEvent。
@@ -55,17 +57,19 @@ AI网络客户端在首个实际请求时才创建，禁用、繁忙或冷却时
 
 ## TAB 配置
 
-`tablist.enabled` 默认 true；`refresh-seconds` 默认 5，范围 1–3600 秒。`header` / `footer` 使用 MiniMessage；`player-name-format` 默认 `{world} {player}`，仍可读取旧 `name-format`。留空不接管列表名称。支持 `{title}`、`{player}`、`{world}`、`{world_name}`、`{ping}`、`{online}`、`{max_players}`、`{tps}`、`{mspt}`。
+`tablist.enabled` 默认 true；`refresh-seconds` 默认 5，范围 1–3600 秒。`header` / `footer` 使用 MiniMessage；`show-current-title` 默认 true；`player-name-format` 默认 `{world} {title} {player}`，仍可读取旧 `name-format`。留空不接管列表名称。支持 `{title}`、`{player}`、`{world}`、`{world_name}`、`{ping}`、`{online}`、`{max_players}`、`{tps}`、`{mspt}`。
+
+开启 TAB 称号时，内置旧格式 `{world} {player}` 会自动补上 `{title}`。自定义格式和空格式保留；自定义格式需要包含 `{title}` 或对应称号变量。聊天称号开关不影响 TAB。
 
 聊天与 TAB 共用 `format.title.placeholder`，默认官方 PlayerTitle 变量 `%playerTitle_use%`。未连接该变量时，依次使用 PlayerTitle 桥接、内置称号；未佩戴时留空。称号颜色保留。需要显示称号时，每秒更新一次缓存；聊天、TAB 和头顶称号均关闭后停止查询。
 
-若由 LunarCore 统一显示，请关闭 PlayerTitle 的 `isChat` 和 `isTabPrefix`，避免重复称号。检测到独立 TAB 插件或其他插件接管列表时，LunarCore 让出相应显示。
+若由 LunarCore 统一显示，请关闭 PlayerTitle 的 `isChat`、`isTabPrefix` 和 `isTabSuffix`，避免重复称号。检测到独立 TAB 插件或其他插件接管列表时，LunarCore 让出相应显示。
 
 `tablist.name-colors` 可按权限设置玩家名称颜色。各条目包含 `permission`、`priority`、`color`；优先级大的先匹配。颜色使用 `aqua` 等颜色名或 `#RRGGBB`，不会添加管理员、服主等身份前缀。
 
 ## 头顶称号
 
-开启 `nameplate.enabled` 后，当前佩戴称号独立显示在原生玩家名上方。`height` 为离地高度，默认 2.65 格；`view-range` 默认 32 格；`refresh-ticks` 默认 2 个游戏刻。称号与聊天共用每秒更新的缓存，不会额外请求 PAPI。
+开启 `nameplate.enabled` 后，当前佩戴称号独立显示在原生玩家名上方。`height` 为离地高度，默认 2.3 格，可在 2.3–8 格内调整；体型较高的玩家会自动提高称号位置。`view-range` 默认 32 格；`refresh-ticks` 默认 2 个游戏刻。称号与聊天共用每秒更新的缓存，不会额外请求 PAPI。
 
 需要仅在头顶显示时，关闭 `format.title.enabled`、`tablist.show-current-title`，并从聊天及 TAB 模板移除 `{title}`。PlayerTitle 的 `isChat`、`isTabPrefix`、`isTabSuffix` 均应关闭。
 
@@ -89,7 +93,7 @@ format:
     placeholder: "%playerTitle_use%"
 ```
 
-聊天格式中的 `{world}` 显示带颜色的中文别名，`{world_name}` 显示原始世界名，`{title}` 显示当前称号。默认聊天顺序为「世界 → 玩家 → 消息」，聊天和 TAB 默认不显示称号。内置旧模板会自动升级，自定义模板保留。AI 使用相同世界显示名，不使用玩家称号。
+聊天格式中的 `{world}` 显示带颜色的中文别名，`{world_name}` 显示原始世界名，`{title}` 显示当前称号。默认聊天顺序为「世界 → 玩家 → 消息」，不显示称号；TAB 默认顺序为「世界 → 称号 → 玩家」。内置旧模板会自动升级，自定义模板保留。AI 使用相同世界显示名，不使用玩家称号。
 
 开启 `format.worlds.brackets` 后，`{world}` 显示为 `[世界名]`，括号与世界名颜色一致。此时聊天及 TAB 模板直接使用 `{world}`，避免重复添加括号。
 

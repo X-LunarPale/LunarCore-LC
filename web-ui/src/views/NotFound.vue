@@ -4,20 +4,20 @@ import { t } from '../i18n'
 
 <template>
   <div class="page missing-page">
-    <section class="missing-panel">
-      <div class="error-code" aria-hidden="true">404</div>
-      <div class="missing-copy"><p class="eyebrow">{{ t('页面访问') }}</p><h1>{{ t('页面不可用') }}</h1><p class="description">{{ t('该页面不存在，或对应模块已被禁用。') }}<br />{{ t('请检查访问地址，或返回首页继续操作。') }}</p><el-button type="primary" @click="$router.push('/')">{{ t('返回首页') }} <Icon name="arrow-right" :size="15" /></el-button></div>
+    <section class="missing-content">
+      <Icon name="scan-search" :size="32" class="missing-icon" />
+      <h1>{{ t('页面不可用') }}</h1>
+      <p>{{ t('该页面不存在，或对应模块已被禁用。') }}</p>
+      <el-button type="primary" @click="$router.push('/')"><Icon name="layout-dashboard" :size="16" /><span>{{ t('返回首页') }}</span></el-button>
     </section>
   </div>
 </template>
 
 <style scoped>
-.missing-page { color: var(--lc-text); }
-.missing-panel { display: flex; align-items: center; gap: 40px; max-width: 960px; margin: 16px 0; border: 1px solid var(--el-border-color-light); border-radius: 10px; background: var(--lc-surface); padding: 44px 40px; }
-.error-code { display: grid; place-items: center; padding: 28px 30px; color: var(--el-text-color-secondary); background: var(--el-fill-color-light); border: 1px solid var(--el-border-color-lighter); border-radius: 10px; font-size: 64px; font-weight: 600; line-height: 1; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
-.eyebrow { font-size: 12px; color: var(--lc-text-soft); margin: 0 0 8px; }
-h1 { font-size: 23px; font-weight: 600; line-height: 1.4; margin: 0; letter-spacing: -.4px; }
-.description { color: var(--lc-text-soft); font-size: 13px; line-height: 1.9; margin: 12px 0 24px; }
-.el-button { gap: 10px; }
-@media (max-width: 600px) { .missing-panel { padding: 26px 22px; flex-direction: column; align-items: flex-start; gap: 24px; margin-top: 0; }.error-code { font-size: 42px; padding: 18px 22px; } h1 { font-size: 21px; } }
+.missing-content { max-width: 480px; padding: 48px 0; }
+.missing-icon { color: var(--lc-text-soft); margin-bottom: 18px; }
+h1 { margin: 0; font-size: 22px; line-height: 1.5; font-weight: 650; letter-spacing: 0; }
+p { margin: 8px 0 24px; color: var(--lc-text-soft); font-size: 13px; line-height: 1.75; }
+.el-button { gap: 7px; }
+@media (max-width: 600px) { .missing-content { padding: 24px 0; } }
 </style>

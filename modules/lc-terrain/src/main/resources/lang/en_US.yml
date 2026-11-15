@@ -14,3 +14,8 @@ command:
   coordinates-hover: "Click to suggest a teleport command. Check the destination before teleporting."
   debug: "<white>{world} | Region {region} | Erosion {erosion} | Region selector {selector} | Cave depth cutoff {cutoff}"
   failed: "<red>Terrain query failed: {error}"
+multiverse:
+  no-permission: "<red>You do not have permission to manage this world."
+  loading: "<green>Loading requested for terrain world {world}."
+  unloaded: "<green>Terrain world {world} was saved and unloaded."
+  failed: "<red>Terrain world operation failed: {error}"

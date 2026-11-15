@@ -10,10 +10,17 @@ import java.util.*;
 /** Validated, immutable persisted world settings. */
 record WorldOptions(String name, World.Environment environment, WorldType type, long seed,
                     boolean loadOnStartup, boolean pvp, Difficulty difficulty, long time,
-                    boolean daylightCycle, String weather, boolean autoSave, boolean allowCrossDimension,
+                    boolean daylightCycle, String weather, boolean autoSave,
+                    boolean allowOverworld, boolean allowNether, boolean allowEnd,
                     Integer spawnX, Integer spawnY, Integer spawnZ, Map<String, String> gamerules) {
     static boolean allowsCrossDimension(WorldOptions options, World.Environment from, World.Environment to) {
-        return options == null || options.allowCrossDimension || from == to;
+        if (options == null || from == to) return true;
+        return switch (to) {
+            case NORMAL -> options.allowOverworld;
+            case NETHER -> options.allowNether;
+            case THE_END -> options.allowEnd;
+            default -> true;
+        };
     }
     static String validateName(String value) {
         if (value == null || !value.matches("[A-Za-z0-9][A-Za-z0-9_-]{0,47}")
@@ -76,11 +83,15 @@ record WorldOptions(String name, World.Environment environment, WorldType type, 
             if (!(value instanceof Map<?, ?> map)) throw new IllegalArgumentException("gamerules必须为对象");
             map.forEach((k,v) -> rules.put(String.valueOf(k), String.valueOf(v)));
         }
+        boolean resetDimensions = m.containsKey("allowCrossDimension");
+        boolean legacyAccess = bool(m,"allowCrossDimension",true);
         return new WorldOptions(name, environment, type, seed,
                 bool(m,"loadOnStartup",old == null || old.loadOnStartup), bool(m,"pvp",old == null || old.pvp),
                 Difficulty.valueOf(text(m,"difficulty",old == null ? "NORMAL" : old.difficulty.name()).toUpperCase(Locale.ROOT)), time,
                 bool(m,"daylightCycle",old == null || old.daylightCycle), weather, bool(m,"autoSave",old == null || old.autoSave),
-                bool(m,"allowCrossDimension",old == null || old.allowCrossDimension),
+                bool(m,"allowOverworld",resetDimensions ? legacyAccess : old == null || old.allowOverworld),
+                bool(m,"allowNether",resetDimensions ? legacyAccess : old == null || old.allowNether),
+                bool(m,"allowEnd",resetDimensions ? legacyAccess : old == null || old.allowEnd),
                 coord(m,"spawnX",old == null ? null : old.spawnX), coord(m,"spawnY",old == null ? null : old.spawnY),
                 coord(m,"spawnZ",old == null ? null : old.spawnZ), Map.copyOf(rules));
     }
@@ -107,7 +118,10 @@ record WorldOptions(String name, World.Environment environment, WorldType type, 
         m.put("name",name); m.put("environment",environment.name()); m.put("type",type.name()); m.put("seed",Long.toString(seed));
         m.put("loadOnStartup",loadOnStartup); m.put("pvp",pvp); m.put("difficulty",difficulty.name()); m.put("time",time);
         m.put("daylightCycle",daylightCycle); m.put("weather",weather); m.put("autoSave",autoSave);
-        m.put("allowCrossDimension",allowCrossDimension);
+        m.put("allowOverworld",allowOverworld); m.put("allowNether",allowNether); m.put("allowEnd",allowEnd);
+        m.put("allowCrossDimension",allowsCrossDimension(this,environment,World.Environment.NORMAL)
+                && allowsCrossDimension(this,environment,World.Environment.NETHER)
+                && allowsCrossDimension(this,environment,World.Environment.THE_END));
         m.put("spawnX",spawnX); m.put("spawnY",spawnY); m.put("spawnZ",spawnZ); m.put("gamerules",gamerules);
         return m;
     }

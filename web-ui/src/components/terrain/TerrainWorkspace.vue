@@ -7,6 +7,7 @@ import { useAuth } from '../../stores/auth'
 import { requireSuccess } from '../../utils/panel'
 import { t } from '../../i18n'
 import { baseConfigKeys, configMinY, defaultConfig, parseConfig, parseStatus, sameConfig, sameSpawn, validName, validSeed, validSpawn, validTerrainHeight, worldStates } from './terrain'
+import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
 
 const auth = useAuth()
 const snapshot = ref(null)
@@ -23,6 +24,12 @@ const chosenPresetId = ref('')
 const copyConfig = config => ({ ...Object.fromEntries(baseConfigKeys.map(key => [key, config[key]])), advanced: { ...config.advanced } })
 const draft = reactive({ name: '', seed: '', ...copyConfig(defaultConfig) })
 const customHeight = reactive({ minY: -64, maxY: 640 })
+const tab = ref('worlds')
+const confirming = ref(false)
+const tabs = computed(() => [
+  { id: 'worlds', label: '地形世界', icon: 'map', count: worlds.value.length },
+  ...(canManage.value ? [{ id: 'create', label: '创建世界', icon: 'plus', dirty: dirty.value }] : [])
+])
 let baseline = copyConfig(defaultConfig)
 let initialized = false
 let disposed = false
@@ -45,7 +52,7 @@ const selectedHeightRange = computed({
 const selected = computed(() => worlds.value.find(world => world.name === selectedName.value))
 const canManage = computed(() => auth.can('terrain.manage'))
 const canTeleport = computed(() => auth.can('terrain.teleport'))
-const busy = computed(() => loading.value || !!pending.value)
+const busy = computed(() => loading.value || !!pending.value || confirming.value)
 const blocked = computed(() => busy.value || uncertain.value || !verified.value || !snapshot.value?.supported || snapshot.value.busy)
 const dirty = computed(() => !!draft.name || !!draft.seed || !sameConfig(draft, baseline))
 const spawnDirty = computed(() => selected.value?.spawn ? !sameSpawn(spawnDraft, selected.value.spawn)
@@ -167,6 +174,12 @@ function verifyWrite(operation, expectedName, body) {
 
 async function submit(operation, world) {
   if (blocked.value || operation !== 'teleport' && !canManage.value || operation === 'teleport' && !canTeleport.value) return
+  confirming.value = true
+  try { await executeOperation(operation, world) }
+  finally { confirming.value = false }
+}
+
+async function executeOperation(operation, world) {
   let body = {}, endpoint, expectedName
   if (operation === 'create') {
     if (validation.value) { error.value = t(validation.value); return }
@@ -218,7 +231,7 @@ async function submit(operation, world) {
     if (disposed) return
     verifyWrite(operation, expectedName, body)
     if (operation !== 'delete' || worlds.value.some(item => item.name === expectedName)) selectedName.value = expectedName
-    if (operation === 'create') { draft.name = ''; draft.seed = ''; baseline = copyConfig(draft) }
+    if (operation === 'create') { draft.name = ''; draft.seed = ''; baseline = copyConfig(draft); tab.value = 'worlds' }
     if (operation === 'teleport') player.value = ''
     notice.value = result?.message || t(operation === 'create' ? '世界创建请求已提交' : '世界状态已更新')
   } catch (cause) {
@@ -240,7 +253,7 @@ async function syncMultiverse() {
 }
 
 async function leave() {
-  if (pending.value) { await ElMessageBox.alert(t('当前操作尚未结束，请完成后再离开。'), t('操作进行中')); return false }
+  if (pending.value || confirming.value) { await ElMessageBox.alert(t('当前操作尚未结束，请完成后再离开。'), t('操作进行中')); return false }
   if (uncertain.value) return confirm(t('操作结果尚未核对。仍要离开此页面吗？'), t('核对操作结果'))
   if (dirty.value) return confirm(t('新世界创建参数尚未提交。离开后将丢失，是否继续？'), t('放弃未保存修改'))
   if (spawnDirty.value) return confirm(t('出生点坐标尚未提交。离开后将丢失，是否继续？'), t('放弃未保存修改'))
@@ -272,8 +285,9 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
     <p v-if="snapshot?.error" class="feedback failure" role="alert">{{ snapshot.error }}</p>
     <p v-if="uncertain" class="feedback warning" role="alert">{{ t('请求结果尚未核对，请刷新世界列表后再执行操作。') }}</p>
     <p v-if="snapshot && !snapshot.supported" class="feedback warning">{{ t('地形生成器不可用，请检查启动参数与启动日志。') }}</p>
+    <WorkspaceTabs v-model="tab" :items="tabs" label="地形管理分区" id="terrain" />
     <div class="terrain-layout">
-      <section class="creation-section" aria-labelledby="terrain-create">
+      <section v-show="tab === 'create'" class="creation-section" aria-labelledby="terrain-create">
         <h2 id="terrain-create">{{ t('创建地形世界') }}</h2>
         <p class="creation-scope">{{ t('Tectonic 参数只作用于新建专属地形世界的新区块，不会改变原主世界或已生成区块。') }}</p>
         <form novalidate @submit.prevent="submit('create')">
@@ -321,7 +335,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
           <p v-if="draft.name && validation" class="validation">{{ t(validation) }}</p>
         </form>
       </section>
-      <section class="worlds-section" aria-labelledby="terrain-worlds">
+      <section v-show="tab === 'worlds'" class="worlds-section" aria-labelledby="terrain-worlds">
         <header class="section-heading"><h2 id="terrain-worlds">{{ t('地形世界') }}</h2><span>{{ t('{count} 个世界', { count: worlds.length }) }}</span></header>
         <div class="world-table-scroll">
           <table class="world-table">
@@ -380,11 +394,11 @@ h3 { font-size:15px; margin:0; overflow-wrap:anywhere; }
 .failure,.validation { color:var(--el-color-danger); }
 .success { color:var(--el-color-success); }
 .warning { color:var(--el-color-warning); }
-.terrain-layout { display:grid; grid-template-columns:minmax(300px,.85fr) minmax(0,1.25fr); gap:32px; }
+.terrain-layout { display:block; }
 .custom-height { margin-bottom:18px; }
 .custom-height > .scale-fields { margin-top:12px; }
 .creation-section,.worlds-section { min-width:0; }
-.creation-section { padding-right:30px; border-right:1px solid var(--el-border-color-light); }
+.creation-section { max-width:860px; padding:0; }
 .creation-scope { margin:4px 0 18px; color:var(--lc-text-soft); font-size:11px; line-height:1.65; }
 fieldset { padding:0; margin:0; border:0; min-width:0; }
 .field { margin-bottom:17px; min-width:0; }
@@ -448,7 +462,6 @@ dt { color:var(--lc-text-soft); font-size:11px; }dd { margin:4px 0 0; font-size:
 .spawn-hint { margin:8px 0 12px; line-height:1.65; }
 .teleport-form { border-top:1px solid var(--el-border-color-light); padding-top:16px; }
 .teleport-form > div { display:flex; gap:8px; min-width:0; }.teleport-form :deep(.el-input) { flex:1; min-width:0; }.teleport-form :deep(.el-button) { margin:0; flex-shrink:0; }
-@media(max-width:1050px) { .terrain-layout { grid-template-columns:minmax(260px,.8fr) minmax(0,1fr); gap:22px; }.creation-section { padding-right:20px; }.scale-fields { grid-template-columns:1fr; gap:0; } }
-@media(max-width:760px) { .terrain-layout { grid-template-columns:minmax(0,1fr); gap:28px; }.creation-section { padding:0 0 24px; border-right:0; border-bottom:1px solid var(--el-border-color-light); }.scale-fields { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }.world-table { table-layout:fixed; }.world-table td,.world-table th { padding:10px 6px; white-space:normal; overflow-wrap:anywhere; }.world-select { max-width:100%; }.generator-status .working { margin-left:0; } }
+@media(max-width:760px) { .scale-fields { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }.world-table { table-layout:fixed; }.world-table td,.world-table th { padding:10px 6px; white-space:normal; overflow-wrap:anywhere; }.world-select { max-width:100%; }.generator-status .working { margin-left:0; } }
 button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
 </style>

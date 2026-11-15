@@ -49,11 +49,13 @@ class TabListTest {
         config.set("tablist.player-name-format","{title} {player}");
         assertEquals("{title} {player}",TabList.nameFormat(config));
     }
-    @Test void newTabDefaultsDoNotRestoreTitlesAndUnusedTitlesNeedNoPolling() {
+    @Test void newTabDefaultsIncludeTitlesAndUnusedTitlesNeedNoPolling() {
         var config=new org.bukkit.configuration.file.YamlConfiguration();
-        config.addDefault("tablist.player-name-format","{world} {player}");
-        assertEquals("{world} {player}",TabList.nameFormat(config));
+        assertEquals("{world} {title} {player}",TabList.nameFormat(config));
+        config.addDefault("tablist.player-name-format","{world} {title} {player}");
+        assertEquals("{world} {title} {player}",TabList.nameFormat(config));
         config.set("format.title.enabled",false);
+        assertTrue(TabList.needsTitles(config));
         config.set("tablist.show-current-title",false);
         assertFalse(TabList.needsTitles(config));
         for(String setting:java.util.List.of("nameplate.enabled","format.title.enabled","tablist.show-current-title")){

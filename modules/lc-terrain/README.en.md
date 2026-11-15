@@ -63,6 +63,10 @@ Load or save and unload worlds, set safe spawn points and teleport online player
 
 With Multiverse-Core installed, new and registered terrain worlds are added to MV automatically; `mv import` is no longer needed. The Multiverse panel delegates loading, unloading and autoload changes to the terrain module so the saved native settings remain in use. MV's own autoload flag stays off to let the terrain module initialize first.
 
+For example, `jixian` has the dimension key `lc_terrain:jixian` and display name `lc_terrain_jixian`. The terrain module handles `mv load`, `mv import` and `mv unload` for registered terrain worlds, with the corresponding Multiverse permissions. The panel prefers dimension keys and also accepts world names and MV aliases.
+
+If the same display name was already loaded as `minecraft:lc_terrain_jixian`, correct the ordinary-world registration and fully restart. Keep the existing terrain save folder; the terrain module restores its original dimension key and generation settings.
+
 Choose **Delete world** and enter the full world name to permanently remove its save and LC/MV registrations. Primary worlds, the MV default world and worlds with online players cannot be deleted. Deletion runs in the background. Interrupted deletions pause autoload and can be retried from the panel.
 
 - Registrations: `plugins/LunarCore/modules/terrain/worlds.yml`.

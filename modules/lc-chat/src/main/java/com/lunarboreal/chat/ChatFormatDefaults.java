@@ -36,7 +36,8 @@ final class ChatFormatDefaults {
             tab = legacyTab;
             changed = true;
         }
-        boolean customTab = legacyTab instanceof String || tab instanceof String template && !template.equals("{world} {player}");
+        boolean customTab = legacyTab instanceof String || tab instanceof String template
+                && !template.equals(TabList.LEGACY_NAME_FORMAT) && !template.equals(TabList.DEFAULT_NAME_FORMAT);
         if ((customChat || customTab) && !config.contains("format.worlds.brackets", true)) {
             config.set("format.worlds.brackets", false);
             changed = true;
@@ -92,6 +93,11 @@ final class ChatFormatDefaults {
                 default -> NAME;
             } + SUFFIX;
             config.set(path, format);
+            changed = true;
+        }
+        if (config.getBoolean("tablist.show-current-title", true)
+                && TabList.LEGACY_NAME_FORMAT.equals(config.getString("tablist.player-name-format"))) {
+            config.set("tablist.player-name-format", TabList.DEFAULT_NAME_FORMAT);
             changed = true;
         }
         return changed;

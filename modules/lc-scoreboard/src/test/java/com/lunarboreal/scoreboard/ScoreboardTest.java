@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.*;
 import java.util.*;
+import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.*;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
@@ -36,6 +37,26 @@ class ScoreboardTest {
         var text=DisplayRenderer.renderTemplate("<aqua>{player}</aqua> %test_value%",Map.of("player","<click:run_command:'/op x'>X</click>"),key->"<red>world</red>");
         assertEquals("<click:run_command:'/op x'>X</click> <red>world</red>",PlainTextComponentSerializer.plainText().serialize(text));
         assertNull(text.clickEvent());
+    }
+    @Test void sidebarUsesConfiguredWorldNameAndFallsBackWithoutChatModule() {
+        assertEquals("极限地形", DisplayRenderer.worldName("lc_terrain_jixian", token -> {
+            assertEquals("%lc_chat_world_name%", token);
+            return "极限地形";
+        }));
+        for (String unresolved : List.of("", " ", "%lc_chat_world_name%", "%other_world%")) {
+            assertEquals("lc_terrain_jixian", DisplayRenderer.worldName("lc_terrain_jixian", token -> unresolved));
+        }
+        assertEquals("world", DisplayRenderer.worldName("world", token -> null));
+    }
+    @Test void worldLabelsRemainLiteralForBothSidebarTemplates() {
+        Map<String, String> variables = Map.of("world", "<red>极限地形</red>", "world_name", "lc_terrain_jixian",
+                "world_key", "lc_terrain:jixian");
+        for (String template : List.of("{world} · {world_name} · {world_key}",
+                "<green>世界</green> {world} · {world_name} · {world_key}")) {
+            String rendered = PlainTextComponentSerializer.plainText().serialize(
+                    DisplayRenderer.renderTemplate(template, variables, Function.identity()));
+            assertTrue(rendered.contains("<red>极限地形</red> · lc_terrain_jixian · lc_terrain:jixian"));
+        }
     }
     @Test void preferencesPersistDefaultRemovesOverrideAndCorruptionRefuses() throws Exception {
         Path file=dir.resolve("players.tsv");UUID id=UUID.randomUUID();var store=new PlayerModes(file);

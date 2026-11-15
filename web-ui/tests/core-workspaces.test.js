@@ -1,0 +1,213 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { test } from 'node:test'
+import { parse, compileScript } from '@vue/compiler-sfc'
+import * as vue from 'vue'
+import * as panel from '../src/utils/panel.js'
+import * as format from '../src/utils/format.js'
+import { formatVersion, locale, t } from '../src/i18n.js'
+
+const renderer = vue.createRenderer({
+  createElement: type => ({ type, children: [] }), createText: text => ({ text }), createComment: text => ({ text }),
+  insert(node, parent) { node.parent = parent; parent.children.push(node) },
+  remove(node) { node.parent?.children.splice(node.parent.children.indexOf(node), 1) },
+  setText(node, text) { node.text = text }, setElementText(node, text) { node.text = text },
+  parentNode: node => node.parent, nextSibling: () => null, patchProp() {}
+})
+
+const defaults = {
+  '/api/users': { items: [] }, '/api/roles': { items: [] }, '/api/permissions': [],
+  '/api/server/whitelist': { enabled: false, enforced: true, items: [] },
+  '/api/market': { items: [], pending: [], state: 'idle' },
+  '/api/config': { content: 'language: zh_CN\n', path: 'config.yml' },
+  '/api/console/history': []
+}
+const deferred = () => {
+  let resolve, reject
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no })
+  return { promise, resolve, reject }
+}
+async function settle() { for (let index = 0; index < 10; index++) await Promise.resolve(); await vue.nextTick() }
+
+async function mount(context, name) {
+  const { descriptor } = parse(await readFile(new URL(`../src/views/${name}.vue`, import.meta.url), 'utf8'))
+  const script = compileScript(descriptor, { id: name, genDefaultAs: '__component' })
+  const messages = { success: [], error: [], warning: [], info: [] }
+  const api = {
+    get: async path => defaults[path] || { items: [], total: 0 },
+    post: async () => ({ ok: true, message: 'Saved' }),
+    put: async () => ({ ok: true, message: 'Saved' }),
+    del: async () => ({ ok: true, message: 'Saved' })
+  }
+  const auth = { user: { username: 'admin' }, can: () => true, fetchMe: async () => {}, setToken() {} }
+  const messageBox = { confirm: async () => true }
+  const message = Object.assign(options => messages[options.type].push(options.message),
+    Object.fromEntries(Object.keys(messages).map(level => [level, text => messages[level].push(text)])))
+  const previousWindow = globalThis.window
+  globalThis.window = new EventTarget()
+  const scope = {
+    ...vue, ...panel, ...format, api, formatVersion, locale, t,
+    useAuth: () => auth, useApp: () => ({}), onBeforeRouteLeave() {},
+    ElMessage: message,
+    ElMessageBox: messageBox,
+    PlayerCell: {}, MinecraftTextPreview: {}, CodeEditor: {}, TotpSettings: {},
+    useAutoRefresh(callback, options) { if (options.immediate) vue.onMounted(callback) },
+    socket: { connected: true, onStatus: () => () => {}, subscribe: () => () => {} }
+  }
+  const imports = Object.keys(script.imports)
+  for (const name of imports) assert.ok(Object.hasOwn(scope, name), `Missing import: ${name}`)
+  const component = new Function(...imports, `${script.content.replace(/^import .*$/gm, '')};return __component`)(...imports.map(name => scope[name]))
+  component.render = () => null
+  const app = renderer.createApp(component)
+  app.mount({ children: [] })
+  context.after(() => { app.unmount(); globalThis.window = previousWindow })
+  await settle()
+  return { state: app._instance.setupState, api, auth, messages, messageBox }
+}
+
+test('broadcasts reject repeat clicks and keep a newer draft after the request completes', async context => {
+  const env = await mount(context, 'Server')
+  const response = deferred()
+  let writes = 0
+  env.api.post = async () => { writes++; return response.promise }
+  env.state.broadcastText = 'First message'
+  const sending = env.state.broadcast()
+  await env.state.broadcast()
+  assert.equal(writes, 1)
+  env.state.broadcastText = 'Next message'
+  response.resolve({ ok: true, message: 'Sent' })
+  await sending
+  assert.equal(env.state.broadcastText, 'Next message')
+  assert.equal(env.state.sending, false)
+})
+
+test('whitelist confirmation blocks conflicting writes and cancellation sends no mutation', async context => {
+  const env = await mount(context, 'Server')
+  const confirmation = deferred()
+  env.messageBox.confirm = () => confirmation.promise
+  let writes = 0
+  env.api.post = async () => { writes++; return { ok: true } }
+  env.state.wl.name = 'PlayerOne'
+  const changing = env.state.toggleWl(true)
+  assert.equal(env.state.whitelistBusy, true)
+  await env.state.addWl()
+  confirmation.reject(new Error('cancel'))
+  await changing
+  assert.equal(writes, 0)
+  assert.equal(env.state.whitelistBusy, false)
+})
+
+test('account saves stay locked until readback and rejected writes keep the editor open', async context => {
+  const env = await mount(context, 'Accounts')
+  Object.assign(env.state.userDlg, { visible: true, editing: false, username: 'helper', password: 'test-password', role: 'viewer' })
+  const response = deferred()
+  let writes = 0
+  env.api.post = () => { writes++; return response.promise }
+  const saving = env.state.saveUser()
+  await env.state.saveUser()
+  assert.equal(writes, 1)
+  assert.equal(env.state.busy, 'user')
+  response.resolve({ ok: false, error: 'Rejected' })
+  await saving
+  assert.equal(env.state.userDlg.visible, true)
+  assert.equal(env.state.busy, '')
+  assert.deepEqual(env.messages.success, [])
+  assert.deepEqual(env.messages.error, ['Rejected'])
+})
+
+test('market removal confirmation blocks competing installs and releases the lock on cancel', async context => {
+  const env = await mount(context, 'ModuleMarket')
+  const confirmation = deferred()
+  env.messageBox.confirm = () => confirmation.promise
+  let writes = 0
+  env.api.post = async () => { writes++; return { ok: true } }
+  const changing = env.state.action({ id: 'chat', name: 'Chat' }, 'remove')
+  await env.state.action({ id: 'economy', name: 'Economy' }, 'install')
+  assert.equal(env.state.busy, true)
+  confirmation.reject(new Error('cancel'))
+  await changing
+  assert.equal(writes, 0)
+  assert.equal(env.state.busy, false)
+})
+
+test('a slow player-history response cannot replace a newer search result', async context => {
+  const env = await mount(context, 'Players')
+  const first = deferred()
+  let reads = 0
+  env.api.get = () => ++reads === 1 ? first.promise : Promise.resolve({ items: [{ name: 'NewPlayer' }], total: 1 })
+  env.state.historyQuery = 'Old'
+  env.state.searchHistory()
+  env.state.historyQuery = 'New'
+  env.state.searchHistory()
+  await settle()
+  assert.equal(env.state.hist.items[0].name, 'NewPlayer')
+  first.resolve({ items: [{ name: 'OldPlayer' }], total: 1 })
+  await settle()
+  assert.equal(env.state.hist.items[0].name, 'NewPlayer')
+  assert.equal(env.state.hist.loading, false)
+})
+
+test('online refreshes use the submitted search instead of a draft being typed', async context => {
+  const env = await mount(context, 'Players')
+  const queries = []
+  env.api.get = async (_, query) => { queries.push(query.q); return { items: [] } }
+  env.state.onlineQuery = 'Draft'
+  await env.state.loadOnline()
+  assert.deepEqual(queries, [''])
+  env.state.searchOnline()
+  await settle()
+  assert.deepEqual(queries, ['', 'Draft'])
+})
+
+test('core configuration loads on first visit and ignores validation for a replaced draft', async context => {
+  const env = await mount(context, 'Config')
+  assert.equal(env.state.loaded, false)
+  env.state.activeTab = 'core'
+  await settle()
+  assert.equal(env.state.loaded, true)
+  const response = deferred()
+  env.api.post = () => response.promise
+  const validating = env.state.validate()
+  env.state.content = 'language: en_US\n'
+  await settle()
+  response.resolve({ ok: false, error: 'Error from the older draft' })
+  await validating
+  assert.equal(env.state.validation, null)
+  assert.equal(env.state.validating, false)
+})
+
+test('configuration reload locks its confirmation and keeps the draft on cancellation', async context => {
+  const env = await mount(context, 'Config')
+  env.state.activeTab = 'core'
+  await settle()
+  env.state.content = 'language: en_US\n'
+  const confirmation = deferred()
+  env.messageBox.confirm = () => confirmation.promise
+  let reads = 0
+  env.api.get = async () => { reads++; return defaults['/api/config'] }
+  const loading = env.state.load()
+  await env.state.load()
+  assert.equal(env.state.loading, true)
+  confirmation.reject(new Error('cancel'))
+  await loading
+  assert.equal(reads, 0)
+  assert.equal(env.state.content, 'language: en_US\n')
+  assert.equal(env.state.loaded, true)
+  assert.equal(env.state.loading, false)
+})
+
+test('console rejection retains the command for correction and repeat execution is blocked', async context => {
+  const env = await mount(context, 'Console')
+  const response = deferred()
+  let writes = 0
+  env.api.post = () => { writes++; return response.promise }
+  env.state.command = 'unknown-command'
+  const sending = env.state.send()
+  await env.state.send()
+  response.resolve({ ok: false, message: 'Unknown command' })
+  await sending
+  assert.equal(writes, 1)
+  assert.equal(env.state.command, 'unknown-command')
+  assert.equal(env.state.sending, false)
+  assert.deepEqual(env.messages.warning, ['Unknown command'])
+})

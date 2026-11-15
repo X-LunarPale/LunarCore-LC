@@ -53,6 +53,40 @@ class WorldOptionsTest {
         assertFalse(blocked.map().get("allowCrossDimension") instanceof String);
     }
 
+    @Test void blocksOnlyTheSelectedDestinationDimension() {
+        WorldOptions options = WorldOptions.parse("extra",Map.of("allowNether",false),null);
+        assertFalse(WorldOptions.allowsCrossDimension(options,World.Environment.NORMAL,World.Environment.NETHER));
+        assertTrue(WorldOptions.allowsCrossDimension(options,World.Environment.NORMAL,World.Environment.THE_END));
+        assertTrue(WorldOptions.allowsCrossDimension(options,World.Environment.THE_END,World.Environment.NORMAL));
+        assertTrue(WorldOptions.allowsCrossDimension(options,World.Environment.NORMAL,World.Environment.NORMAL));
+        assertTrue(WorldOptions.allowsCrossDimension(null,World.Environment.NORMAL,World.Environment.NETHER));
+    }
+
+    @Test void dimensionPatchesPreserveOtherAccessRules() {
+        WorldOptions options = WorldOptions.parse("extra",Map.of("allowNether",false),null);
+        WorldOptions changed = WorldOptions.parse("extra",Map.of("allowEnd",false),options);
+        assertTrue(changed.allowOverworld());
+        assertFalse(changed.allowNether());
+        assertFalse(changed.allowEnd());
+        WorldOptions reloaded = WorldOptions.parse("extra",changed.map(),null);
+        assertEquals(changed,reloaded);
+    }
+
+    @Test void individualSettingsOverrideTheLegacyCrossDimensionSwitch() {
+        WorldOptions options = WorldOptions.parse("extra",Map.of("allowCrossDimension",false,"allowEnd",true),null);
+        assertFalse(WorldOptions.allowsCrossDimension(options,World.Environment.NORMAL,World.Environment.NETHER));
+        assertTrue(WorldOptions.allowsCrossDimension(options,World.Environment.NORMAL,World.Environment.THE_END));
+        WorldOptions enabled = WorldOptions.parse("extra",Map.of("allowCrossDimension",true),options);
+        assertTrue(enabled.allowOverworld());
+        assertTrue(enabled.allowNether());
+        assertTrue(enabled.allowEnd());
+    }
+
+    @Test void validatesIndividualDimensionSettings() {
+        for (String key : new String[]{"allowOverworld","allowNether","allowEnd"})
+            assertThrows(IllegalArgumentException.class,()->WorldOptions.parse("extra",Map.of(key,"yes"),null));
+    }
+
     @Test void exactSeedAndFixedDaySurviveRoundTrip() {
         WorldOptions o=WorldOptions.parse("extra",Map.of("seed","9223372036854775807","daylightCycle",false,"time",1000),null);
         WorldOptions reloaded=WorldOptions.parse("extra",o.map(),null);

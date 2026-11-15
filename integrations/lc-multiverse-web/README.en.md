@@ -16,6 +16,8 @@ With the updated `lc-terrain.jar`, new and registered terrain worlds join Multiv
 
 The Multiverse panel delegates terrain loading, unloading and autoload changes to LC so saved native generation settings are restored. MV's own autoload flag stays off. Existing world folders and dimension keys remain unchanged.
 
+Panel operations prefer full dimension keys such as `lc_terrain:jixian`. Existing world-name requests and MV aliases remain supported. Use the full dimension key when multiple registrations share a name or alias.
+
 To permanently remove a terrain world, open **Tectonic terrain**, choose **Delete world** and enter the full name. Primary worlds, the MV default world and worlds containing online players cannot be unloaded or deleted.
 
 ## Permissions and API

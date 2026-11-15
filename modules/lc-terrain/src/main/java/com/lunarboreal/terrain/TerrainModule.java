@@ -81,6 +81,13 @@ public final class TerrainModule extends LcModule implements Listener {
             @Override public void load(String keyOrName, String actor) throws Exception {
                 String name = managedName(keyOrName);
                 if (name == null) throw new IllegalArgumentException("地形世界未登记");
+                requireWritable();
+                World loaded = world(name);
+                if (loaded != null) {
+                    syncMultiverse(name, loaded);
+                    return;
+                }
+                if (Set.of("queued", "running").contains(states.get(name))) return;
                 queueLoad(name, actor);
             }
             @Override public void unload(String keyOrName, String actor) throws Exception {
@@ -101,6 +108,7 @@ public final class TerrainModule extends LcModule implements Listener {
         });
         commands = new TerrainCommands(this);
         registerCommand(commands);
+        registerListener(new TerrainMultiverseCommands(this));
         placeholder((player, key) -> switch (key) {
             case "worlds" -> Integer.toString(worlds.size());
             case "ready" -> Boolean.toString(supported && storageReady);
@@ -129,10 +137,8 @@ public final class TerrainModule extends LcModule implements Listener {
     }
 
     private String managedName(String keyOrName) {
-        if (keyOrName == null) return null;
-        if (worlds.containsKey(keyOrName)) return keyOrName;
-        NamespacedKey key = NamespacedKey.fromString(keyOrName);
-        if (key != null && TerrainNamespace.isTerrain(key.getNamespace()) && worlds.containsKey(key.getKey())) return key.getKey();
+        String registered = TerrainNamespace.registeredName(keyOrName, worlds.keySet());
+        if (registered != null || keyOrName == null) return registered;
         for (String name : worlds.keySet()) {
             World world = world(name);
             if (world != null && world.getName().equals(keyOrName)) return name;

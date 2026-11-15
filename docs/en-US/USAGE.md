@@ -22,6 +22,14 @@ Save or reset the name and logo separately under **Server settings → Branding*
 
 Switch Chinese and English on the login page or panel toolbar. Player input, configuration contents and console logs keep their original text.
 
+## Maintenance Scheduling
+
+Choose manual or scheduled control under **Server Display & Maintenance**. Manual mode follows the maintenance switch. Scheduled mode runs one maintenance window and reopens the server at the end. An empty end time keeps maintenance active. To end it early, switch to manual control and turn maintenance off.
+
+Dates and times use the current device's time zone. A server restart restores the schedule without disconnecting players again. Automatic disconnection runs once when maintenance starts or when that option is enabled during maintenance. Whitelisted players are exempt.
+
+Controls, whitelist, messages and server descriptions are edited and saved separately. Automatic status refresh preserves drafts. Manual disconnection uses the saved whitelist and message.
+
 ## Chat Appearance and Announcements
 
 Set world display names and colors in chat settings without renaming English world folders. When matching world brackets are enabled, `{world}` already includes them; do not add another pair to the format.
@@ -62,6 +70,8 @@ Message edits apply immediately. Apply other settings with **Apply settings**, `
 The anti-cheat module provides translated GrimAC setting names. Explicitly reload GrimAC after saving; unsupported fields remain read-only.
 
 Optimizations start disabled. Review them before enabling; operation counts do not prove improved performance. Terrain creates separate new worlds without converting existing ones. Fully restart after installation or supported height changes. Unloading worlds saves them without deleting their folders.
+
+Under **World management → Configure**, set whether players can travel from each world to the Overworld, Nether and End separately. For example, disabling Nether travel still allows travel to the End. Portals and cross-dimension teleports follow these settings; travel within the same environment is unaffected. Changes apply when saved.
 
 Terrain also needs `-javaagent:LC-Terrain-Agent.jar` in the launch command for climate, monument placement and old-chunk blending. See the [terrain guide](../../modules/lc-terrain/README.en.md) for installation, settings and `/tectonic` commands.
 

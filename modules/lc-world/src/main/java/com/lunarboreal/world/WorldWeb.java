@@ -27,10 +27,10 @@ final class WorldWeb {
                 .field(new WebPanel.Field("seed","种子（整数）","text").defaultValue("0"));
         WebPanel.Action configure = settings(new WebPanel.Action("configure","配置","worlds/{name}/config").permission("world.manage"));
         m.webPanel(WebPanel.of("world","世界管理").icon("globe").group("服务器").permission("world.view")
-                .section(new WebPanel.Text("说明","创建与加载异步排队，刷新列表查看状态。`allowCrossDimension=false` 时禁止从该世界进入其他维度。固定白天：时间1000，昼夜循环关闭。时间*仅对有世界时钟的维度生效；下界/末地不支持时钟，值仅保存。配置操作只修改填写的字段；出生点XYZ同时填写。"))
+                .section(new WebPanel.Text("说明","每个世界可分别允许或禁止前往主世界、下界和末地，同环境传送不受影响，保存后立即生效。创建与加载完成后刷新列表查看状态。固定白天可设时间1000并关闭昼夜循环；时间设置不适用于下界和末地。出生点XYZ须同时填写。"))
                 .section(new WebPanel.Table("世界列表","worlds").rowKey("name").column("name","名称").column("environment","环境","tag")
                         .column("type","类型","tag").column("status","操作状态","tag").column("loaded","已加载","bool")
-                        .column("pvp","PvP","bool").column("allowCrossDimension","跨维度","bool").column("difficulty","难度").column("time","时间*","number").column("daylightCycle","昼夜循环","bool").column("operationError","错误")
+                        .column("pvp","PvP","bool").column("dimensionAccess","跨维度通行").column("difficulty","难度").column("time","时间*","number").column("daylightCycle","昼夜循环","bool").column("operationError","错误")
                         .column("managed","已托管","bool").toolbarAction(create).rowAction(configure)
                         .rowAction(new WebPanel.Action("import","导入已加载世界","worlds/{name}/import").permission("world.manage"))
                         .rowAction(new WebPanel.Action("load","加载","worlds/{name}/load").permission("world.manage"))
@@ -45,19 +45,28 @@ final class WorldWeb {
                 .field(new WebPanel.Field("weather","天气","select").option("CLEAR","晴朗").option("RAIN","降雨").option("THUNDER","雷雨"))
                 .field(new WebPanel.Field("autoSave","自动保存","select").option("true","启用").option("false","关闭"))
                 .field(new WebPanel.Field("loadOnStartup","启动加载","select").option("true","启用").option("false","关闭"))
-                .field(new WebPanel.Field("allowCrossDimension","允许进入其他维度","select").option("true","允许").option("false","禁止"))
+                .field(new WebPanel.Field("allowOverworld","允许前往主世界","bool"))
+                .field(new WebPanel.Field("allowNether","允许前往下界","bool"))
+                .field(new WebPanel.Field("allowEnd","允许前往末地","bool"))
                 .field(new WebPanel.Field("spawnX","出生X","number")).field(new WebPanel.Field("spawnY","出生Y","number")).field(new WebPanel.Field("spawnZ","出生Z","number"));
     }
     private Map<String,Object> list(WebContext c) {
         List<Map<String,Object>> out=new ArrayList<>();String q=c.query("q","").toLowerCase(Locale.ROOT);
-        m.worlds.forEach((n,o)->{if(!n.toLowerCase(Locale.ROOT).contains(q))return;Map<String,Object>x=o.map();x.put("loaded",Bukkit.getWorld(n)!=null);x.put("managed",true);x.put("status",m.states.getOrDefault(n,"registered"));x.put("operationError",m.errors.getOrDefault(n,""));out.add(x);});
+        m.worlds.forEach((n,o)->{if(!n.toLowerCase(Locale.ROOT).contains(q))return;Map<String,Object>x=o.map();x.put("dimensionAccess",dimensionAccess(o));x.put("loaded",Bukkit.getWorld(n)!=null);x.put("managed",true);x.put("status",m.states.getOrDefault(n,"registered"));x.put("operationError",m.errors.getOrDefault(n,""));out.add(x);});
         for(World world:Bukkit.getWorlds()) {
             String n=world.getName();
             if(m.worlds.containsKey(n)||!n.toLowerCase(Locale.ROOT).contains(q))continue;
-            Map<String,Object>x=m.snapshot(world).map();x.put("loaded",true);x.put("managed",false);x.put("status","unmanaged");x.put("operationError","");out.add(x);
+            WorldOptions options=m.snapshot(world);Map<String,Object>x=options.map();x.put("dimensionAccess",dimensionAccess(options));x.put("loaded",true);x.put("managed",false);x.put("status","unmanaged");x.put("operationError","");out.add(x);
         }
         int size=Math.max(1,Math.min(100,c.queryInt("size",20))),page=Math.max(1,c.queryInt("page",1));int start=(int)Math.min(out.size(),(long)(page-1)*size);
         return Map.of("total",out.size(),"items",out.subList(start,Math.min(out.size(),start+size)));
+    }
+    private static String dimensionAccess(WorldOptions options) {
+        List<String> blocked=new ArrayList<>();
+        if(options.environment()!=World.Environment.NORMAL&&!options.allowOverworld())blocked.add("主世界");
+        if(options.environment()!=World.Environment.NETHER&&!options.allowNether())blocked.add("下界");
+        if(options.environment()!=World.Environment.THE_END&&!options.allowEnd())blocked.add("末地");
+        return blocked.isEmpty()?"全部允许":"禁止："+String.join("、",blocked);
     }
     private Map<String,Object> create(Map<String,Object>b,String actor) throws Exception {
         String n=WorldOptions.validateName(String.valueOf(b.getOrDefault("name","")));

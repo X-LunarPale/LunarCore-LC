@@ -14,3 +14,8 @@ command:
   coordinates-hover: "点击填写传送命令；传送前确认落脚位置。"
   debug: "<white>{world} | 区域 {region} | 侵蚀 {erosion} | 区域选择 {selector} | 洞穴截断 {cutoff}"
   failed: "<red>地形查询失败：{error}"
+multiverse:
+  no-permission: "<red>没有执行此世界操作的权限。"
+  loading: "<green>已提交地形世界 {world} 的加载请求。"
+  unloaded: "<green>地形世界 {world} 已保存并卸载。"
+  failed: "<red>地形世界操作失败：{error}"

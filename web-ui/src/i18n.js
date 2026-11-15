@@ -13,9 +13,13 @@ import enGrimConfig from './locales/en-grim-config.js'
 import enGrimSchema from './locales/en-grim-schema.js'
 import enSecurity from './locales/en-security.js'
 import enMarket from './locales/en-market.js'
+import enMaintenanceRewrite from './locales/en-maintenance-rewrite.js'
+import enShellRewrite from './locales/en-shell-rewrite.js'
+import enViewsRewrite from './locales/en-views-rewrite.js'
+import enPanelsRewrite from './locales/en-panels-rewrite.js'
 
 const STORAGE_KEY = 'lc-locale'
-const translations = { ...enCoreViews, ...enAdminViews, ...enWorkspaces, ...enPanel, ...enBranding, ...enSurvival, ...enTerrain, ...enAiChat, ...enQQAuth, ...enGrimConfig, ...enGrimSchema, ...enSecurity, ...enMarket, ...enShell }
+const translations = { ...enCoreViews, ...enAdminViews, ...enWorkspaces, ...enPanel, ...enBranding, ...enSurvival, ...enTerrain, ...enAiChat, ...enQQAuth, ...enGrimConfig, ...enGrimSchema, ...enSecurity, ...enMarket, ...enShell, ...enMaintenanceRewrite, ...enShellRewrite, ...enViewsRewrite, ...enPanelsRewrite }
 
 function storedLocale() {
   try { return localStorage.getItem(STORAGE_KEY) === 'en_US' ? 'en_US' : 'zh_CN' }

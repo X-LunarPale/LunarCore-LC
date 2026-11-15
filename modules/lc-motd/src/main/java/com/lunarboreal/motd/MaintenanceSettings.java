@@ -14,7 +14,13 @@ import java.util.regex.Pattern;
 
 /** Validated local configuration; identity validation never performs profile/network lookups. */
 record MaintenanceSettings(boolean enabled, boolean allowJoin, boolean kickOnline, List<String> whitelist,
-                           String joinMessage, String kickMessage, String line1, String line2) {
+                           String joinMessage, String kickMessage, String line1, String line2,
+                           MaintenanceSchedule schedule) {
+    MaintenanceSettings(boolean enabled, boolean allowJoin, boolean kickOnline, List<String> whitelist,
+                        String joinMessage, String kickMessage, String line1, String line2) {
+        this(enabled, allowJoin, kickOnline, whitelist, joinMessage, kickMessage, line1, line2,
+                MaintenanceSchedule.defaults());
+    }
     static final String DEFAULT_JOIN_MESSAGE = "<yellow>服务器正在维护，暂时无法加入。请稍后重试。";
     static final String DEFAULT_KICK_MESSAGE = "<yellow>服务器已进入维护模式，您的连接已断开。请稍后重试。";
     static final String DEFAULT_LINE1 = "<gold><bold>服务器维护中</bold></gold>";
@@ -24,6 +30,8 @@ record MaintenanceSettings(boolean enabled, boolean allowJoin, boolean kickOnlin
     private static final Pattern UUID_TEXT = Pattern.compile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
     private static final Pattern COMPACT_UUID = Pattern.compile("[0-9a-fA-F]{32}");
     private static final Set<String> FIELDS = Set.of("enabled", "allowJoin", "kickOnline", "whitelist", "joinMessage", "kickMessage", "line1", "line2");
+    private static final Set<String> SCHEDULED_FIELDS = Set.of("enabled", "allowJoin", "kickOnline", "whitelist",
+            "joinMessage", "kickMessage", "line1", "line2", "scheduleEnabled", "scheduleStart", "scheduleEnd");
 
     MaintenanceSettings {
         if (whitelist == null || whitelist.size() > MAX_WHITELIST_ENTRIES)
@@ -35,6 +43,7 @@ record MaintenanceSettings(boolean enabled, boolean allowJoin, boolean kickOnlin
         MotdSettings.validateLine(kickMessage, "维护踢出提示");
         MotdSettings.validateLine(line1, "维护简介第一行");
         MotdSettings.validateLine(line2, "维护简介第二行");
+        if (schedule == null) throw new IllegalArgumentException("定时维护设置不得为空");
     }
 
     static MaintenanceSettings defaults() {
@@ -54,13 +63,24 @@ record MaintenanceSettings(boolean enabled, boolean allowJoin, boolean kickOnlin
         values.put("kickMessage", config.get("maintenance.kick-message", DEFAULT_KICK_MESSAGE));
         values.put("line1", config.get("maintenance.line1", DEFAULT_LINE1));
         values.put("line2", config.get("maintenance.line2", DEFAULT_LINE2));
-        return parse(values, false);
+        MaintenanceSchedule schedule = MaintenanceSchedule.load(config);
+        MaintenanceSettings loaded = parse(values, false, schedule);
+        return new MaintenanceSettings(loaded.enabled(), loaded.allowJoin(), loaded.kickOnline(), loaded.whitelist(),
+                loaded.joinMessage(), loaded.kickMessage(), loaded.line1(), loaded.line2(), schedule);
     }
 
-    static MaintenanceSettings from(Map<String, Object> body) { return parse(body, true); }
+    static MaintenanceSettings from(Map<String, Object> body) {
+        return from(body, MaintenanceSchedule.defaults());
+    }
 
-    private static MaintenanceSettings parse(Map<String, Object> body, boolean web) {
-        if (body == null || !body.keySet().equals(FIELDS)) throw new IllegalArgumentException("请提交完整的维护设置");
+    static MaintenanceSettings from(Map<String, Object> body, MaintenanceSchedule previousSchedule) {
+        return parse(body, true, previousSchedule);
+    }
+
+    private static MaintenanceSettings parse(Map<String, Object> body, boolean web, MaintenanceSchedule previousSchedule) {
+        if (body == null || (!body.keySet().equals(FIELDS)
+                && !body.keySet().equals(SCHEDULED_FIELDS)))
+            throw new IllegalArgumentException("请提交完整的维护设置");
         List<String> entries = new ArrayList<>();
         Object raw = body.get("whitelist");
         if (web) {
@@ -78,8 +98,11 @@ record MaintenanceSettings(boolean enabled, boolean allowJoin, boolean kickOnlin
                 entries.add(text);
             }
         }
+        MaintenanceSchedule schedule = body.containsKey("scheduleEnabled")
+                ? new MaintenanceSchedule(bool(body, "scheduleEnabled"), text(body, "scheduleStart"), text(body, "scheduleEnd"))
+                : previousSchedule;
         return new MaintenanceSettings(bool(body, "enabled"), bool(body, "allowJoin"), bool(body, "kickOnline"), entries,
-                text(body, "joinMessage"), text(body, "kickMessage"), text(body, "line1"), text(body, "line2"));
+                text(body, "joinMessage"), text(body, "kickMessage"), text(body, "line1"), text(body, "line2"), schedule);
     }
 
     private static boolean bool(Map<String, Object> body, String key) {
@@ -105,9 +128,17 @@ record MaintenanceSettings(boolean enabled, boolean allowJoin, boolean kickOnlin
     }
 
     Map<String, Object> webValues() {
-        return Map.of("enabled", enabled, "allowJoin", allowJoin, "kickOnline", kickOnline,
-                "whitelist", String.join("\n", whitelist), "joinMessage", joinMessage, "kickMessage", kickMessage,
-                "line1", line1, "line2", line2);
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("enabled", enabled);
+        values.put("allowJoin", allowJoin);
+        values.put("kickOnline", kickOnline);
+        values.put("whitelist", String.join("\n", whitelist));
+        values.put("joinMessage", joinMessage);
+        values.put("kickMessage", kickMessage);
+        values.put("line1", line1);
+        values.put("line2", line2);
+        values.putAll(schedule.webValues());
+        return values;
     }
 
     void apply(ConfigurationSection config) {
@@ -119,5 +150,11 @@ record MaintenanceSettings(boolean enabled, boolean allowJoin, boolean kickOnlin
         config.set("maintenance.kick-message", kickMessage);
         config.set("maintenance.line1", line1);
         config.set("maintenance.line2", line2);
+        schedule.apply(config);
+    }
+
+    MaintenanceSettings withEnabled(boolean replacement) {
+        return new MaintenanceSettings(replacement, allowJoin, kickOnline, whitelist,
+                joinMessage, kickMessage, line1, line2, schedule);
     }
 }

@@ -1,8 +1,10 @@
 package com.lunarboreal.teleport;
 
+import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.WorldBorder;
 import org.bukkit.block.Block;
 
 import java.util.EnumSet;
@@ -36,6 +38,48 @@ public final class SafeLocation {
         Material t = b.getType();
         if (DANGEROUS.contains(t)) return false;
         return b.isPassable();
+    }
+
+    /** 按实际地表选择重生点，找不到安全陆地时返回 null。 */
+    public static Location findRespawn(Location spawn, int radius) {
+        World world = spawn.getWorld();
+        if (world == null) return null;
+        int x = spawn.getBlockX(), z = spawn.getBlockZ();
+        if (safeRespawn(world, x, spawn.getBlockY(), z)) {
+            return new Location(world, x + 0.5, spawn.getBlockY(), z + 0.5, spawn.getYaw(), spawn.getPitch());
+        }
+        int limit = Math.max(0, Math.min(radius, 16));
+        for (int r = 0; r <= limit; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int bx = x + dx, bz = z + dz;
+                    if (!insideBorder(world, bx, spawn.getBlockY(), bz)) continue;
+                    int y = world.getHighestBlockYAt(bx, bz, HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1;
+                    if (safeRespawn(world, bx, y, bz)) {
+                        return new Location(world, bx + 0.5, y, bz + 0.5, spawn.getYaw(), spawn.getPitch());
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean safeRespawn(World world, int x, int y, int z) {
+        if (!insideBorder(world, x, y, z) || !isSafe(world, x, y, z)) return false;
+        Block floor = world.getBlockAt(x, y - 1, z);
+        if (floor.isLiquid() || world.getBlockAt(x, y, z).isLiquid()
+                || world.getBlockAt(x, y + 1, z).isLiquid()) return false;
+        var bounds = floor.getBoundingBox();
+        return bounds.getMaxY() <= y && bounds.getMaxY() > y - 1
+                && bounds.getMinX() <= x + 0.2 && bounds.getMaxX() >= x + 0.8
+                && bounds.getMinZ() <= z + 0.2 && bounds.getMaxZ() >= z + 0.8;
+    }
+
+    private static boolean insideBorder(World world, int x, int y, int z) {
+        WorldBorder border = world.getWorldBorder();
+        return border.isInside(new Location(world, x + 0.2, y, z + 0.2))
+                && border.isInside(new Location(world, x + 0.8, y, z + 0.8));
     }
 
     /**

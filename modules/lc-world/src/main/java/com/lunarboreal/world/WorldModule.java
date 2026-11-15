@@ -1,22 +1,29 @@
 package com.lunarboreal.world;
 
 import com.lunarboreal.api.module.LcModule;
+import com.lunarboreal.api.world.TerrainWorldLifecycle;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.WorldLoadEvent;
 import java.nio.file.*;
 import java.util.*;
 
 /** All mutable state and Bukkit calls are confined to the server thread. */
-public final class WorldModule extends LcModule {
+public final class WorldModule extends LcModule implements Listener {
     final Map<String, WorldOptions> worlds = new LinkedHashMap<>();
     final Map<String, String> states = new LinkedHashMap<>();
     final Map<String, String> errors = new LinkedHashMap<>();
     final Set<String> imported = new HashSet<>();
     final Map<String,String> saveRoots = new HashMap<>();
     final Map<String,String> dimensionPaths = new HashMap<>();
+    private final Map<String, TerrainLoad> terrainLoads = new HashMap<>();
     private Path file;
     private boolean storageReady;
+
+    private record TerrainLoad(String key, String actor) {}
 
     @Override public void onEnable() {
         file = dataFolder().toPath().resolve("worlds.yml");
@@ -46,13 +53,14 @@ public final class WorldModule extends LcModule {
             if (invalid) logger().severe("部分世界配置无效，已禁用配置写入以保护原文件");
         } catch (Exception e) { logger().severe("无法读取worlds.yml，管理写入已禁用: " + e.getMessage()); }
         registerListener(new DimensionRestrictionListener(this));
+        registerListener(this);
         new WorldWeb(this).register();
         for (WorldOptions options : List.copyOf(worlds.values())) if (storageReady && options.loadOnStartup()) {
             try { queueLoad(options,"startup"); } catch (Exception e) { fail(options.name(),e); }
         }
     }
 
-    private Path resolveSaveRoot(World w) throws Exception {
+    private Path resolveSaveRoot(World w, String registrationName) throws Exception {
         // Bukkit's public world key can differ from the vanilla dimension key.
         String dimension = switch (w.getEnvironment()) {
             case NORMAL -> "overworld";
@@ -69,7 +77,8 @@ public final class WorldModule extends LcModule {
                     w.getKey().getNamespace(),w.getKey().getKey());
         }
         String relative = save.relativize(folder.toRealPath()).toString().replace('\\','/');
-        if (!relative.isEmpty()) dimensionPaths.put(w.getName(),relative);
+        if (relative.isEmpty()) dimensionPaths.remove(registrationName);
+        else dimensionPaths.put(registrationName,relative);
         return save;
     }
 
@@ -79,7 +88,7 @@ public final class WorldModule extends LcModule {
         if (type == null) type = WorldType.NORMAL;
         return new WorldOptions(w.getName(),w.getEnvironment(),type,w.getSeed(),true,w.getPVP(),w.getDifficulty(),
                 w.getTime(),Boolean.TRUE.equals(w.getGameRuleValue(GameRule.DO_DAYLIGHT_CYCLE)),
-                w.isThundering()?"THUNDER":w.hasStorm()?"RAIN":"CLEAR",w.isAutoSave(),true,
+                w.isThundering()?"THUNDER":w.hasStorm()?"RAIN":"CLEAR",w.isAutoSave(),true,true,true,
                 spawn.getBlockX(),spawn.getBlockY(),spawn.getBlockZ(),Map.of());
     }
     void importLoaded(String name,String actor) throws Exception {
@@ -87,7 +96,7 @@ public final class WorldModule extends LcModule {
         if (worlds.keySet().stream().anyMatch(k -> k.equalsIgnoreCase(name))) throw new IllegalArgumentException("世界已注册");
         World w = Bukkit.getWorld(name);
         if (w == null || !w.getName().equals(name)) throw new IllegalArgumentException("只能导入已加载的确切名称世界");
-        Path save = resolveSaveRoot(w);
+        Path save = resolveSaveRoot(w, name);
         saveRoots.put(name,save.getFileName().toString());
         WorldOptions options = snapshot(w);
         worlds.put(name,options); imported.add(name); states.put(name,"succeeded"); errors.put(name,"");
@@ -154,6 +163,12 @@ public final class WorldModule extends LcModule {
             runTask(() -> {
                 try {
                     states.put(options.name(),"running"); persist();
+                    TerrainWorldLifecycle terrain = api().services().get(TerrainWorldLifecycle.class).orElse(null);
+                    String nativeKey = terrainKey(options.name(), dimensionPaths.get(options.name()), terrain);
+                    if (nativeKey != null) {
+                        restoreTerrain(options, nativeKey, actor, terrain);
+                        return;
+                    }
                     World world = Bukkit.getWorld(options.name());
                     if (world == null) {
                         String saveName = saveRoots.getOrDefault(options.name(),options.name());
@@ -172,18 +187,109 @@ public final class WorldModule extends LcModule {
                         }
                         world = new WorldCreator(options.name()).environment(options.environment()).type(options.type()).seed(options.seed()).createWorld();
                     }
-                    if (world == null) throw new IllegalStateException("世界加载返回null");
-                    if (world.getEnvironment() != options.environment()) throw new IllegalArgumentException("现有世界环境不符");
-                    Path save = resolveSaveRoot(world);
-                    saveRoots.put(options.name(),save.getFileName().toString());
-                    apply(world,options);
-                    states.put(options.name(),"succeeded"); errors.put(options.name(),""); persist();
-                    audit(actor,"world.load",options.name());
+                    completeLoad(options, world, actor);
                 } catch (Exception e) { fail(options.name(),e); }
             });
         } catch (Exception e) { throw new IllegalArgumentException(e.getMessage(),e); }
     }
+    static String terrainKey(String name, String dimensionPath, TerrainWorldLifecycle terrain) {
+        if (dimensionPath != null && dimensionPath.matches("dimensions/[a-z0-9_.-]+/[a-z0-9_-]+")) {
+            String[] parts = dimensionPath.split("/");
+            if (terrainNamespace(parts[1])) return parts[1] + ":" + parts[2];
+            if (parts[1].equals("minecraft")) {
+                String alias = terrainAlias(parts[2]);
+                if (alias != null) return alias;
+            }
+        }
+        String alias = terrainAlias(name);
+        if (alias != null) return alias;
+        return terrain != null && terrain.manages(name) ? "lc_terrain:" + name : null;
+    }
+    private static String terrainAlias(String name) {
+        for (String namespace : List.of("lc_terrain", "lbr_terrain")) {
+            String prefix = namespace + "_";
+            if (name.startsWith(prefix) && name.length() > prefix.length())
+                return namespace + ":" + name.substring(prefix.length());
+        }
+        return null;
+    }
+    private static boolean terrainNamespace(String namespace) {
+        return namespace.equals("lc_terrain") || namespace.equals("lbr_terrain");
+    }
+    static boolean sameTerrainWorld(String key, World world) {
+        NamespacedKey expected = NamespacedKey.fromString(key);
+        NamespacedKey actual = world.getKey();
+        return expected != null && terrainNamespace(actual.getNamespace())
+                && expected.getKey().equals(actual.getKey());
+    }
+    private World terrainWorld(String key) {
+        NamespacedKey expected = NamespacedKey.fromString(key);
+        if (expected == null) throw new IllegalArgumentException("原生地形标识无效");
+        World world = Bukkit.getWorld(expected);
+        if (world != null) return world;
+        String alternate = expected.getNamespace().equals("lc_terrain") ? "lbr_terrain" : "lc_terrain";
+        return Bukkit.getWorld(new NamespacedKey(alternate, expected.getKey()));
+    }
+    private void restoreTerrain(WorldOptions options, String key, String actor, TerrainWorldLifecycle terrain) throws Exception {
+        World named = Bukkit.getWorld(options.name());
+        if (named != null && !sameTerrainWorld(key, named))
+            throw new IllegalArgumentException("同名普通世界已加载，请完整重启后恢复原生地形");
+        World loaded = terrainWorld(key);
+        if (loaded != null) {
+            completeLoad(options, loaded, actor);
+            return;
+        }
+        if (terrain == null) throw new IllegalArgumentException("地形模块未启用，无法恢复原生世界");
+        if (!terrain.manages(key)) throw new IllegalArgumentException("原生世界未在地形模块登记");
+        TerrainLoad pending = new TerrainLoad(key, actor);
+        terrainLoads.put(options.name(), pending);
+        states.put(options.name(), "queued");
+        persist();
+        try {
+            terrain.load(key, actor);
+            loaded = terrainWorld(key);
+            if (loaded != null) {
+                terrainLoads.remove(options.name(), pending);
+                completeLoad(options, loaded, actor);
+                return;
+            }
+            runTaskLater(() -> {
+                if (!terrainLoads.remove(options.name(), pending)) return;
+                try {
+                    World current = terrainWorld(key);
+                    if (current == null) throw new IllegalStateException("原生世界加载未完成，请检查地形模块状态");
+                    completeLoad(options, current, actor);
+                } catch (Exception failure) { fail(options.name(), failure); }
+            }, 1200L);
+        } catch (Exception failure) {
+            terrainLoads.remove(options.name(), pending);
+            throw failure;
+        }
+    }
+    @EventHandler public void worldLoaded(WorldLoadEvent event) {
+        for (var entry : List.copyOf(terrainLoads.entrySet())) {
+            String name = entry.getKey();
+            TerrainLoad pending = entry.getValue();
+            if (!sameTerrainWorld(pending.key(), event.getWorld())) continue;
+            runTask(() -> {
+                if (!terrainLoads.remove(name, pending)) return;
+                try {
+                    completeLoad(require(name), terrainWorld(pending.key()), pending.actor());
+                } catch (Exception failure) { fail(name, failure); }
+            });
+        }
+    }
+    private void completeLoad(WorldOptions options, World world, String actor) throws Exception {
+        if (world == null) throw new IllegalStateException("世界加载返回null");
+        if (world.getEnvironment() != options.environment()) throw new IllegalArgumentException("现有世界环境不符");
+        Path save = resolveSaveRoot(world, options.name());
+        saveRoots.put(options.name(),save.getFileName().toString());
+        apply(world,options);
+        states.put(options.name(),"succeeded"); errors.put(options.name(),""); persist();
+        audit(actor,"world.load",options.name());
+    }
     void fail(String name,Exception e) {
+        terrainLoads.remove(name);
         states.put(name,"failed"); errors.put(name,String.valueOf(e.getMessage()));
         logger().severe("世界操作失败 " + name + ": " + e.getMessage());
         try { persist(); } catch (Exception write) { logger().severe("保存失败状态失败: " + write.getMessage()); }

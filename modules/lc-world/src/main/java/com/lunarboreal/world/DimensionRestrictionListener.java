@@ -7,7 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-/** Prevents cross-environment travel when the source world opts out. */
+/** Applies the source world's access rules to portals and other teleports. */
 final class DimensionRestrictionListener implements Listener {
     private final WorldModule module;
     DimensionRestrictionListener(WorldModule module) { this.module = module; }
@@ -28,7 +28,13 @@ final class DimensionRestrictionListener implements Listener {
         if (from == null || to == null || from.getEnvironment() == to.getEnvironment()) return false;
         WorldOptions options = module.worlds.get(from.getName());
         if (WorldOptions.allowsCrossDimension(options, from.getEnvironment(), to.getEnvironment())) return false;
-        player.sendMessage("§c当前世界禁止进入其他维度。");
+        String destination = switch (to.getEnvironment()) {
+            case NORMAL -> "主世界";
+            case NETHER -> "下界";
+            case THE_END -> "末地";
+            default -> "目标维度";
+        };
+        player.sendMessage("§c当前世界不允许前往§e" + destination + "§c。");
         return true;
     }
 }

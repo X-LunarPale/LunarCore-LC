@@ -22,6 +22,12 @@ const tab = computed(() => chatPreview(props.model.tabName, { ...values.value, s
 const nameplate = computed(() => nameplatePreview(title.value, player.value))
 const duplicateBrackets = computed(() => props.model.worldBrackets === true &&
   [props.model.defaultChatFormat, props.model.tabEnabled && props.model.tabName].some(format => /\[(?:\{world}|<world>)]/.test(format || '')))
+const missingTabTitle = computed(() => {
+  const format = String(props.model.tabName || '').trim().toLowerCase()
+  return props.model.tabEnabled && props.model.tabShowTitle !== false && format &&
+    !['{title}', '<title>', props.model.titlePlaceholder, '%playerTitle_use%', '%lc_playertitle_current%', '%lc_titles_title%']
+      .filter(Boolean).some(token => format.includes(token.toLowerCase()))
+})
 </script>
 
 <template>
@@ -46,6 +52,7 @@ const duplicateBrackets = computed(() => props.model.worldBrackets === true &&
         <label>{{ t('预览消息') }}<el-input v-model="message" :aria-label="t('预览消息')" maxlength="256" /></label>
       </div>
       <p v-if="duplicateBrackets" class="preview-warning" role="note">{{ t('世界名称已含方括号，请移除格式中 {world} 外的重复括号。') }}</p>
+      <p v-if="missingTabTitle" class="preview-warning" role="note">{{ t('TAB 名称格式缺少 {title}，当前称号不会显示。') }}</p>
       <MinecraftTextPreview :text="chat" :legacy="false" :show-help="false" :placeholder-api="false" :label="'聊天预览'" />
       <MinecraftTextPreview v-if="model.tabEnabled" :text="tab" :legacy="false" :show-help="false" :placeholder-api="false" :label="'TAB 玩家名称预览'" />
       <MinecraftTextPreview v-if="model.nameplateEnabled" class="nameplate-preview" :text="nameplate" :legacy="false" :show-help="false" :placeholder-api="false" :label="'头顶称号预览'" />
@@ -56,7 +63,7 @@ const duplicateBrackets = computed(() => props.model.worldBrackets === true &&
 </template>
 
 <style scoped>
-.chat-appearance{margin-top:24px;padding-top:24px;border-top:1px solid var(--el-border-color-light);min-width:0}
+.chat-appearance{margin-top:0;padding-top:0;min-width:0}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 h4{font-size:13px;margin:0;font-weight:600}
 .column-labels,.world-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(145px,.8fr) 36px;gap:12px;align-items:center}
@@ -73,6 +80,6 @@ h4{font-size:13px;margin:0;font-weight:600}
 .preview-controls :deep(.el-select){width:100%}
 .preview-warning{font-size:12px;color:var(--el-color-warning);line-height:1.6;overflow-wrap:anywhere}
 .preview-note{font-size:11px;color:var(--lc-text-soft);line-height:1.6;margin:8px 0 0}
-.nameplate-preview :deep(.preview-surface){text-align:center;min-height:90px;display:grid;align-content:center;gap:8px}
+.nameplate-preview :deep(.preview-surface){text-align:center;min-height:72px;display:grid;align-content:center;gap:2px}
 @container (max-width:620px){.column-labels{display:none}.world-row{grid-template-columns:minmax(0,1fr) 36px;padding:12px 0;border-bottom:1px solid var(--el-border-color-lighter)}.world-row>.el-input:first-child{grid-column:1}.world-row>.el-input:nth-child(2){grid-column:1}.color-field{grid-column:1;grid-row:3}.remove{grid-column:2;grid-row:1}.preview-controls{grid-template-columns:minmax(0,1fr)}}
 </style>

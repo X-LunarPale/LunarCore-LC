@@ -34,6 +34,36 @@ class ChatAppearanceTest {
         assertEquals("[survival_nether]", ChatFormatter.plain(appearance.world("survival_nether")));
     }
 
+    @Test void worldNamesBridgeNamespacedAndBukkitNamesWithoutChatFormatting() {
+        var config = new YamlConfiguration();
+        config.set("worlds.brackets", true);
+        config.set("worlds.aliases", List.of(
+                Map.of("world", "lc_terrain_jixian", "name", "极限地形", "color", "#ffaa00"),
+                Map.of("world", "lc_terrain:first", "name", "宏伟地形", "color", "#55ff55"),
+                Map.of("world", "island", "name", "海岛", "color", "#55ffff")));
+        var appearance = new ChatAppearance();
+        appearance.load(config);
+        assertEquals("极限地形", appearance.worldName("lc_terrain:jixian"));
+        assertEquals("宏伟地形", appearance.worldName("lc_terrain_first"));
+        assertEquals("海岛", appearance.worldName("unrelated", "custom:island"));
+        assertEquals("unrelated", appearance.worldName("unrelated", "minecraft:unrelated"));
+        assertEquals("[极限地形]", ChatFormatter.plain(appearance.world("lc_terrain:jixian")));
+        assertEquals(TextColor.fromHexString("#ffaa00"), appearance.world("lc_terrain:jixian").color());
+    }
+
+    @Test void exactWorldAndKeyAliasesTakePriorityOverNormalizedAliases() {
+        var config = new YamlConfiguration();
+        config.set("worlds.aliases", List.of(
+                Map.of("world", "lc_terrain:jixian", "name", "命名空间别名"),
+                Map.of("world", "lc_terrain_jixian", "name", "目录别名"),
+                Map.of("world", "custom:exact", "name", "精确标识")));
+        var appearance = new ChatAppearance();
+        appearance.load(config);
+        assertEquals("目录别名", appearance.worldName("lc_terrain_jixian", "lc_terrain:jixian"));
+        assertEquals("命名空间别名", appearance.worldName("lc_terrain:jixian", "custom:exact"));
+        assertEquals("精确标识", appearance.worldName("missing_name", "custom:exact"));
+    }
+
     @Test void titleUsesConfiguredPapiThenBridgeWithoutLeakingTokens() {
         assertEquals("[探险者]", ChatFormatter.plain(ChatAppearance.resolveTitle("%custom_title%",
                 token -> token.equals("%custom_title%") ? "&6[探险者]" : token)));
@@ -110,11 +140,11 @@ class ChatAppearanceTest {
 
     @Test void nameplateApiValidatesSettingsWithoutRequiringWorldAliases() {
         assertDoesNotThrow(() -> ChatModule.validateAppearanceConfig(Map.of(
-                "worldBrackets", true, "nameplateEnabled", true, "nameplateHeight", 2.65, "nameplateViewRange", 32)));
+                "worldBrackets", true, "nameplateEnabled", true, "nameplateHeight", 2.3, "nameplateViewRange", 32)));
         for (Map<String, Object> input : List.of(
                 Map.<String, Object>of("worldBrackets", "true"),
                 Map.<String, Object>of("nameplateEnabled", 1),
-                Map.<String, Object>of("nameplateHeight", 2.64),
+                Map.<String, Object>of("nameplateHeight", 2.29),
                 Map.<String, Object>of("nameplateHeight", 8.1),
                 Map.<String, Object>of("nameplateHeight", Double.NaN),
                 Map.<String, Object>of("nameplateViewRange", 3),
