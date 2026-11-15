@@ -27,8 +27,9 @@ final class ChatAppearance {
     record WorldLabel(String world, String name, String color) {
         Map<String, String> view() { return Map.of("world", world, "name", name, "color", color); }
     }
-    private record Settings(Map<String, WorldLabel> worlds, String color, boolean brackets, boolean title, String placeholder) {}
-    private volatile Settings settings = new Settings(Map.of(), DEFAULT_COLOR, false, true, TITLE_PLACEHOLDER);
+    private record Settings(Map<String, WorldLabel> worlds, Map<String, WorldLabel> normalizedWorlds,
+                            String color, boolean brackets, boolean title, String placeholder) {}
+    private volatile Settings settings = new Settings(Map.of(), Map.of(), DEFAULT_COLOR, false, true, TITLE_PLACEHOLDER);
     private final Map<UUID, Component> titles = new ConcurrentHashMap<>();
 
     void load(ConfigurationSection format) {
@@ -36,9 +37,11 @@ final class ChatAppearance {
         List<WorldLabel> aliases = labels(format.getMapList("worlds.aliases"));
         Map<String, WorldLabel> worlds = new LinkedHashMap<>();
         for (WorldLabel alias : aliases) worlds.put(alias.world(), alias);
+        Map<String, WorldLabel> normalized = new LinkedHashMap<>();
+        worlds.forEach((world, alias) -> normalized.putIfAbsent(normalizeWorld(world), alias));
         String placeholder = format.getString("title.placeholder", TITLE_PLACEHOLDER);
         if (placeholder == null || !PLACEHOLDER.matcher(placeholder).matches()) placeholder = TITLE_PLACEHOLDER;
-        settings = new Settings(Map.copyOf(worlds), format.getString("worlds.default-color", DEFAULT_COLOR), format.getBoolean("worlds.brackets", false),
+        settings = new Settings(Map.copyOf(worlds), Map.copyOf(normalized), format.getString("worlds.default-color", DEFAULT_COLOR), format.getBoolean("worlds.brackets", false),
                 format.getBoolean("title.enabled", true), placeholder);
         titles.clear();
     }
@@ -62,12 +65,35 @@ final class ChatAppearance {
 
     Component world(String world) {
         Settings current = settings;
-        WorldLabel label = current.worlds().get(world);
+        WorldLabel label = worldLabel(current, world, null);
         String name = label == null ? world : label.name();
         Component result = Component.text(current.brackets() ? "[" + name + "]" : name);
         TextColor color = color(label == null ? current.color() : label.color());
         return color == null ? result : result.color(color);
     }
+
+    String worldName(String world) { return worldName(world, null); }
+
+    String worldName(String world, String key) {
+        WorldLabel label = worldLabel(settings, world, key);
+        return label == null ? world : label.name();
+    }
+
+    private static WorldLabel worldLabel(Settings settings, String world, String key) {
+        WorldLabel label = settings.worlds().get(world);
+        if (label == null && key != null) label = settings.worlds().get(key);
+        if (label == null) label = settings.normalizedWorlds().get(normalizeWorld(world));
+        if (label == null && key != null) label = settings.normalizedWorlds().get(normalizeWorld(key));
+        if (label != null) return label;
+        for (String candidate : new String[]{world, key}) {
+            if (candidate == null || !candidate.contains(":")) continue;
+            label = settings.worlds().get(candidate.substring(candidate.indexOf(':') + 1));
+            if (label != null) return label;
+        }
+        return null;
+    }
+
+    private static String normalizeWorld(String world) { return world.replace(':', '_'); }
 
     List<Map<String, String>> aliases() {
         return settings.worlds().values().stream().sorted(java.util.Comparator.comparing(WorldLabel::world))

@@ -9,6 +9,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /** 仅通过 Multiverse 公开 API 登记已加载的原生世界。 */
 final class TerrainMultiverse {
@@ -96,12 +99,43 @@ final class TerrainMultiverse {
     }
 
     private Object find(NamespacedKey key, String name) throws Exception {
+        return find(manager, key, name);
+    }
+
+    static Object find(Object manager, NamespacedKey key, String name) throws Exception {
         Object direct = call(call(manager, "getWorld", key.toString()), "getOrNull");
-        if (direct != null) return direct;
-        for (Object world : (Collection<?>) call(manager, "getWorlds")) {
+        if (direct != null && matches(direct, key, name)) return direct;
+        Object conflict = direct != null && name.equals(call(direct, "getName")) ? direct : null;
+        for (Object world : worlds(manager)) {
             if (matches(world, key, name)) return world;
+            if (name.equals(call(world, "getName"))) conflict = world;
         }
+        if (conflict != null) throw new IllegalStateException("Multiverse 同名世界登记标识不符：应为 "
+                + key + "，实际为 " + call(conflict, "getKey") + "；请修正登记后完整重启");
         return null;
+    }
+
+    static Collection<?> worlds(Object manager) throws Exception {
+        Map<String, Object> worlds = new LinkedHashMap<>();
+        for (String getter : List.of("getWorlds", "getUnloadedWorlds", "getLoadedWorlds")) {
+            Collection<?> values;
+            try {
+                values = (Collection<?>) call(manager, getter);
+            } catch (NoSuchMethodException ignored) {
+                if (getter.equals("getWorlds")) throw ignored;
+                continue;
+            }
+            for (Object world : values) {
+                String identity;
+                try {
+                    identity = call(world, "getKey").toString();
+                } catch (NoSuchMethodException ignored) {
+                    identity = call(world, "getName").toString();
+                }
+                worlds.put(identity, world);
+            }
+        }
+        return worlds.values();
     }
 
     private static boolean matches(Object world, NamespacedKey key, String name) throws Exception {

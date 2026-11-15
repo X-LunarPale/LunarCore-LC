@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 public final class TerrainNamespace {
     public static final String CURRENT = "lc_terrain";
@@ -13,6 +15,21 @@ public final class TerrainNamespace {
 
     public static boolean isTerrain(String namespace) {
         return CURRENT.equals(namespace) || LEGACY.equals(namespace);
+    }
+
+    static String registeredName(String value, Collection<String> registered) {
+        if (value == null) return null;
+        var matches = new LinkedHashSet<String>();
+        if (registered.contains(value)) matches.add(value);
+        for (String name : registered) {
+            for (String namespace : new String[]{CURRENT, LEGACY}) {
+                String displayName = namespace + "_" + name;
+                if (value.equals(namespace + ":" + name) || value.equals(displayName)
+                        || value.equals("minecraft:" + displayName)) matches.add(name);
+            }
+        }
+        if (matches.size() > 1) throw new IllegalArgumentException("地形世界标识对应多个登记，请使用完整维度标识");
+        return matches.stream().findFirst().orElse(null);
     }
 
     public static String forWorld(Path levelDirectory, String name) throws IOException {

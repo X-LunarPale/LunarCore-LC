@@ -119,7 +119,7 @@ public final class ScoreboardModule extends LcModule implements Listener {
         var color = new WebPanel.Field("color", "顶部颜色", "select").required(true);
         for (var value : net.kyori.adventure.bossbar.BossBar.Color.values()) color.option(value.name(), switch (value) { case PINK -> "粉色"; case BLUE -> "蓝色"; case RED -> "红色"; case GREEN -> "绿色"; case YELLOW -> "黄色"; case PURPLE -> "紫色"; case WHITE -> "白色"; }); form.field(color);
         webPanel(WebPanel.of("scoreboard", "计分板显示").icon("layout-dashboard").group("玩家").permission("scoreboard.view")
-            .section(new WebPanel.Text("显示说明", "可选择右侧计分板或顶部信息岛。加载可选资源包后显示胶囊，未加载时回退原版信息条；玩家可用 /scoreboard pack 请求加载。玩家使用 /scoreboard 选择个人模式。变量：{player} 玩家、{title} 当前称号、{balance} 余额、{world} 世界、{online} 在线、{ping} 延迟、{tps}、{mspt}。管理员还可使用 {entities} 实体数、{chunks} 区块数、{memory_used} 已用内存、{memory_max} 最大内存、{max_players} 人数上限。"))
+            .section(new WebPanel.Text("显示说明", "可选择右侧计分板或顶部信息岛。玩家使用 /scoreboard 选择个人模式，使用 /scoreboard pack 请求加载可选资源包。变量：{player} 玩家、{title} 当前称号、{balance} 余额、{world} 世界显示名、{world_name} 原始世界名、{world_key} 世界标识、{online} 在线人数、{max_players} 人数上限、{ping} 延迟、{tps}、{mspt}。世界显示名沿用聊天设置中的名称。管理员还可使用 {entities} 实体数、{chunks} 区块数、{memory_used} 已用内存、{memory_max} 最大内存。"))
             .section(new WebPanel.Stats("显示状态", "status").refresh(10)).section(form)
             .section(new WebPanel.Form("胶囊资源包", "pack-settings", "pack-settings").savePermission("scoreboard.manage")
                 .field(new WebPanel.Field("enabled", "启用资源包", "bool"))

@@ -98,6 +98,13 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
         if(!(b.get(key) instanceof String s)||s.isBlank()||s.length()>128||s.chars().anyMatch(Character::isISOControl))throw HttpException.badRequest("无效字段: "+key);
         return s;
     }
+    static String worldReference(Map<String,Object> body){
+        if(body.containsKey("key"))return text(body,"key");
+        String name=text(body,"name");
+        if(body.get("row") instanceof Map<?,?> row && name.equals(row.get("name"))
+                && row.get("key") instanceof String key)return text(Map.of("key",key),"key");
+        return name;
+    }
     static boolean bool(Object raw){
         if(raw instanceof Boolean b)return b;
         if("true".equals(raw))return true;
@@ -177,8 +184,8 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
         }
     }
     private void configure(WebContext c)throws Exception{
-        var b=body(c,"name","property","value","values","expected");
-        String name=text(b,"name");
+        var b=body(c,"name","key","property","value","values","expected");
+        String name=worldReference(b);
         Map<String,Object> changes;
         if(b.containsKey("values")){
             if(b.containsKey("property")||b.containsKey("value"))throw HttpException.badRequest("请使用批量配置字段");
@@ -198,7 +205,7 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
         c.ok("世界配置已保存");
     }
     private void lifecycle(WebContext c)throws Exception{
-        var b=body(c,"name","operation");String name=text(b,"name"),op=text(b,"operation");
+        var b=body(c,"name","key","operation");String name=worldReference(b),op=text(b,"operation");
         if(!List.of("load","unload").contains(op))throw HttpException.badRequest("未知操作");
         boolean queued=c.sync(()->{
             MvApi m=mv();Object world=m.world(name);TerrainWorldLifecycle terrain=terrain(world);
@@ -227,7 +234,7 @@ public final class MultiverseWebPlugin extends JavaPlugin implements org.bukkit.
             }audit(c,op,name);return null;});c.ok("世界"+op+"完成");
     }
     private void teleport(WebContext c)throws Exception{
-        var b=body(c,"name","player");String name=text(b,"name"),player=text(b,"player");
+        var b=body(c,"name","key","player");String name=worldReference(b),player=text(b,"player");
         c.sync(()->{MvApi m=mv();Object w=m.world(name);Player p=Bukkit.getPlayerExact(player);
             if(p==null||!Boolean.TRUE.equals(MvApi.call(w,"isLoaded")))throw HttpException.badRequest("玩家须在线且目标世界已加载");
             Location spawn=(Location)MvApi.call(w,"getSpawnLocation");

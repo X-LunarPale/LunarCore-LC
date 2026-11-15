@@ -21,6 +21,10 @@ Java25/Paper26.3 标准 LunarCore 模块，无跨模块实现类引用。默认�
 
 静态管理员模板允许MiniMessage；内置{player}/{world}/{online}/{ping}/{tps}/{mspt}与注册表/PAPI变量以unparsed组件插入，玩家/扩展变量不能注入click/hover等标签，变量产生的标签将作为文字显示。TPS为1分钟数据（最高20），MSPT为Paper平均tick耗时。所有Bukkit/占位符/计分板更新主线程，一个受追踪timer，失败按玩家隔离、最多每分钟警告一次。
 
+普通侧边栏默认显示玩家、称号、世界、余额、在线人数和延迟。管理员侧边栏在下方增加服务器性能信息，各组之间留空行。
+
+`{world}` 使用聊天模块中设置的世界名称，不带聊天前缀的方括号。未启用聊天模块时显示原名。需要查看原名或世界标识时，分别使用 `{world_name}` 和 `{world_key}`。这三个变量在普通侧边栏、管理员侧边栏和顶部信息条中均可使用。
+
 sidebar仅在玩家使用main scoreboard且原板没有任何teams/objectives时接管，保留原板引用；其他插件设置非main板后不抢回。原main后来增加team/objective时立即归还。恢复仅当当前板仍等于本模块own时执行，绝不覆盖后来第三方新板。独立own objective与稳定entry、Score.customName渲染，重复行不冲突，NumberFormat.blank隐藏数字，更新不reset所有行，仅删除缩短行。quit/disable/reload/mode switch恢复自身占用并释放引用。
 
 island每玩家独立BossBar，切换、退出、禁用隐藏自己的bar，不操作其他插件bar。轮播按实际配置tick累进；更新间隔比轮播间隔长时会跳帧，建议update-ticks不大于rotation-ticks。

@@ -24,6 +24,7 @@ export default {
   '世界名称自带同色方括号': 'Include matching brackets in world names',
   '显示头顶称号': 'Show overhead titles',
   '称号高度（格）': 'Title height (blocks)',
+  'TAB 名称格式缺少 {title}，当前称号不会显示。': 'The TAB name format is missing {title}; the current title will not appear.',
   '称号可见距离（格）': 'Title viewing distance (blocks)',
   '显示预览': 'Display preview',
   '头顶称号预览': 'Overhead title preview',

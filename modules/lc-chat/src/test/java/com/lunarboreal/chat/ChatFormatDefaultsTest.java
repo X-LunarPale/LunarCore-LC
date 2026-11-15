@@ -190,7 +190,8 @@ class ChatFormatDefaultsTest {
         assertEquals(before, fresh.saveToString());
         assertTrue(fresh.getBoolean("format.worlds.brackets"));
         assertFalse(fresh.getBoolean("format.title.enabled"));
-        assertFalse(fresh.getBoolean("tablist.show-current-title"));
+        assertTrue(fresh.getBoolean("tablist.show-current-title"));
+        assertEquals("{world} {title} {player}", TabList.nameFormat(fresh));
     }
 
     @Test void builtInLegacyFormatsUseNewDefaultsRatherThanPreservingRemovedLabels() {
@@ -205,7 +206,7 @@ class ChatFormatDefaultsTest {
             assertTrue(ChatFormatDefaults.migrate(config));
             assertTrue(config.getBoolean("format.worlds.brackets", false));
             assertFalse(config.getBoolean("format.title.enabled", true));
-            assertFalse(config.getBoolean("tablist.show-current-title", true));
+            assertTrue(config.getBoolean("tablist.show-current-title", false));
             assertFalse(config.getString(path("default")).contains("{title}"));
             assertTrue(config.getString(path("default")).startsWith("{world} "));
             var appearance = new ChatAppearance();
@@ -224,6 +225,34 @@ class ChatFormatDefaultsTest {
             assertFalse(config.contains("format.title.enabled", true));
             assertFalse(config.contains("format.worlds.brackets", true));
             assertFalse(ChatFormatDefaults.preserveLegacySettings(config));
+        }
+    }
+
+    @Test void enablingTabTitlesUpgradesOnlyTheKnownTitlelessDefault() {
+        var config = new YamlConfiguration();
+        config.set("format.title.enabled", false);
+        config.set("tablist.show-current-title", false);
+        config.set("tablist.player-name-format", "{world} {player}");
+        assertFalse(ChatFormatDefaults.migrate(config));
+        assertEquals("{world} {player}", TabList.nameFormat(config));
+        config.set("tablist.show-current-title", true);
+        assertTrue(ChatFormatDefaults.migrate(config));
+        assertEquals("{world} {title} {player}", TabList.nameFormat(config));
+        assertFalse(config.getBoolean("format.title.enabled"));
+        assertFalse(ChatFormatDefaults.migrate(config));
+        assertEquals("[旅行者] Steve", ChatFormatter.plain(TabList.renderName(
+                TabList.nameFormat(config).replace("{world} ", "").replace("{player}", "<displayname>"),
+                Component.text("Steve"), ChatAppearance.vendorTitle("&6[旅行者]"))));
+    }
+
+    @Test void enablingTabTitlesDoesNotRewriteCustomOrBlankTemplates() {
+        for (String format : List.of("", "   ", "<aqua>{player}</aqua>", "{world} <displayname>",
+                "%playerTitle_use% {player}", "{world} {title} <displayname>")) {
+            var config = new YamlConfiguration();
+            config.set("tablist.show-current-title", true);
+            config.set("tablist.player-name-format", format);
+            assertFalse(ChatFormatDefaults.migrate(config), format);
+            assertEquals(format, TabList.nameFormat(config));
         }
     }
 

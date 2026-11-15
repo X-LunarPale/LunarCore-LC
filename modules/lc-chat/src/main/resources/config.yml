@@ -157,9 +157,9 @@ tablist:
   footer:
     - "<aqua>Powered by LunarCore"
   # 仅控制 TAB 内的称号，独立于聊天和头顶显示。
-  show-current-title: false
+  show-current-title: true
   # 玩家列表名称；留空不修改。旧配置 name-format 在本项缺失时仍可读取。
-  player-name-format: "{world} {player}"
+  player-name-format: "{world} {title} {player}"
   # 按权限与优先级设置名称颜色，不添加身份文字。
   name-colors:
     admin:
@@ -170,7 +170,8 @@ tablist:
 # 当前称号独立显示在原生玩家名上方；本人、潜行及隐身时不显示。
 nameplate:
   enabled: false
-  height: 2.65
+  # 从玩家脚下计算；2.3 格贴近原生姓名上方。
+  height: 2.3
   view-range: 32
   refresh-ticks: 2
 

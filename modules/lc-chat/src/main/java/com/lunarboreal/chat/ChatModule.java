@@ -111,6 +111,11 @@ public final class ChatModule extends LcModule implements Listener {
         placeholder((player, key) -> {
             if (player == null) return null;
             return switch (key) {
+                case "world_name" -> {
+                    Player online = player.getPlayer();
+                    yield online == null ? null : formatter.appearance.worldName(
+                            online.getWorld().getName(), online.getWorld().getKey().toString());
+                }
                 case "nick" -> {
                     ChatUser u = store.peek(player.getUniqueId()).orElse(null);
                     yield u == null || u.nick == null ? player.getName() : ChatFormatter.plain(ChatFormatter.nick(u.nick));
@@ -500,7 +505,7 @@ public final class ChatModule extends LcModule implements Listener {
                         .field(new WebPanel.Field("worldAliases", "世界显示名称", "world-aliases"))
                         .field(new WebPanel.Field("titlePlaceholder", "PlayerTitle 占位符", "text").group("头顶称号"))
                         .field(new WebPanel.Field("nameplateEnabled", "显示头顶称号", "bool").group("头顶称号"))
-                        .field(new WebPanel.Field("nameplateHeight", "称号高度（格）", "number").range(2.65, 8, 0.05).group("头顶称号"))
+                        .field(new WebPanel.Field("nameplateHeight", "称号高度（格）", "number").range(NameplateTitles.MIN_HEIGHT, NameplateTitles.MAX_HEIGHT, 0.05).group("头顶称号"))
                         .field(new WebPanel.Field("nameplateViewRange", "称号可见距离（格）", "number").range(4, 64, 1).group("头顶称号"))
                         .field(new WebPanel.Field("tabEnabled", "启用 TAB", "bool").group("玩家列表"))
                         .field(new WebPanel.Field("tabRefresh", "TAB 刷新秒数（1–3600）", "number").range(1, 3600, 1).group("玩家列表"))
@@ -539,7 +544,7 @@ public final class ChatModule extends LcModule implements Listener {
             if (body.containsKey(key) && !(body.get(key) instanceof Boolean))
                 throw HttpException.badRequest("世界括号与头顶称号开关必须为布尔值");
         }
-        validateRange(body, "nameplateHeight", 2.65, 8, false, "称号高度须为 2.65–8 格");
+        validateRange(body, "nameplateHeight", NameplateTitles.MIN_HEIGHT, NameplateTitles.MAX_HEIGHT, false, "称号高度须为 2.3–8 格");
         validateRange(body, "nameplateViewRange", 4, 64, false, "称号可见距离须为 4–64 格");
         if (body.containsKey("chatShowTitle") && !(body.get("chatShowTitle") instanceof Boolean))
             throw HttpException.badRequest("聊天称号开关必须为布尔值");

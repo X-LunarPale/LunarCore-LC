@@ -231,9 +231,15 @@ public final class NativeTectonicBridge implements Listener {
         NamespacedKey bukkitKey = new NamespacedKey(namespace, name);
         World loaded = Bukkit.getWorld(bukkitKey);
         if (loaded != null) {
-            verifyLoaded(loaded, seed, options);
+            verifyLoaded(loaded, bukkitKey, seed, options);
             configureWorld(loaded, options);
             return loaded;
+        }
+        WorldCreator creator = WorldCreator.ofKey(bukkitKey);
+        World conflicting = Bukkit.getWorld(creator.name());
+        if (conflicting != null) {
+            throw new IOException("世界 " + bukkitKey + " 的名称已由 " + conflicting.getKey()
+                    + " 占用；请修正普通世界登记后完整重启，保留现有地形存档");
         }
         if (Bukkit.getWorld(name) != null) throw new IllegalArgumentException("World name is already loaded");
         ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION,
@@ -267,7 +273,7 @@ public final class NativeTectonicBridge implements Listener {
         setupErrors.remove(name);
         World world;
         try {
-            world = WorldCreator.ofKey(bukkitKey)
+            world = creator
                     .environment(World.Environment.NORMAL)
                     .seed(seed)
                     .generateStructures(true)
@@ -280,7 +286,7 @@ public final class NativeTectonicBridge implements Listener {
         Throwable failure = setupErrors.remove(name);
         if (failure != null) throw new IOException("Native terrain decoration setup failed", failure);
         if (!configured.remove(name)) throw new IOException("Paper did not initialize the terrain decoration hooks");
-        verifyLoaded(world, seed, options);
+        verifyLoaded(world, bukkitKey, seed, options);
         return world;
     }
 
@@ -305,7 +311,10 @@ public final class NativeTectonicBridge implements Listener {
         verifyNoise(((NoiseBasedChunkGenerator) stem.generator()).generatorSettings().value(), options);
     }
 
-    private void verifyLoaded(World world, long seed, TerrainOptions options) throws IOException {
+    private void verifyLoaded(World world, NamespacedKey expectedKey, long seed, TerrainOptions options) throws IOException {
+        if (!expectedKey.equals(world.getKey())) {
+            throw new IOException("地形世界标识不符：应为 " + expectedKey + "，实际为 " + world.getKey());
+        }
         if (world.getSeed() != seed || world.getMinHeight() != options.minY()
                 || world.getMaxHeight() != options.maxY()
                 || !isDimensionType(((CraftWorld) world).getHandle().dimensionTypeRegistration(), options.heightRange())

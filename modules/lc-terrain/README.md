@@ -63,6 +63,10 @@ java -Xmx4G -javaagent:LC-Terrain-Agent.jar -jar paper.jar --nogui
 
 安装 Multiverse-Core 后，新建和已登记的地形世界会自动加入 MV，不需要手动执行 `mv import`。多世界面板也可加载、卸载和修改自动加载开关；生成参数始终由地形模块恢复。MV 自身的自动加载保持关闭，避免抢先以普通地形加载。
 
+例如，`jixian` 的维度标识为 `lc_terrain:jixian`，显示名为 `lc_terrain_jixian`。对已登记地形世界执行 `mv load`、`mv import` 或 `mv unload` 时，会交给地形模块处理；命令仍检查对应的 Multiverse 权限。面板优先使用完整维度标识，也兼容世界名和 MV 别名。
+
+若同名世界已经按 `minecraft:lc_terrain_jixian` 加载，需要修正普通世界登记并完整重启。保留已有的地形存档目录，由地形模块恢复原维度标识和生成设置。
+
 选择“删除世界”并输入完整世界名称，可永久删除该世界存档及 LC、MV 登记。主世界、MV 默认世界和有在线玩家的世界不能删除。删除在后台执行；中断后暂停自动加载，可在面板重试。
 
 - 登记文件：`plugins/LunarCore/modules/terrain/worlds.yml`。

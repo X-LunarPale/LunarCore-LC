@@ -13,6 +13,8 @@ import java.util.*;
 
 /** Main-thread TAB owner; yields individual fields when another writer replaces them. */
 final class TabList {
+    static final String DEFAULT_NAME_FORMAT = "{world} {title} {player}";
+    static final String LEGACY_NAME_FORMAT = "{world} {player}";
     private static final String CURRENT = "%lc_playertitle_current%";
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.builder().character('&').hexColors().useUnusualXRepeatedCharacterHexFormat().build();
     private static final class View {
@@ -28,9 +30,9 @@ final class TabList {
     TabList(ChatModule module) { this.module=module; }
     static long period(long seconds) { return Math.max(1,Math.min(3600,seconds))*20L; }
     static String nameFormat(org.bukkit.configuration.file.FileConfiguration config) {
-        if(config.contains("tablist.player-name-format",true))return config.getString("tablist.player-name-format","{world} {player}");
-        if(config.contains("tablist.name-format",true))return config.getString("tablist.name-format","{world} {player}");
-        return config.getString("tablist.player-name-format","{world} {player}");
+        if(config.contains("tablist.player-name-format",true))return config.getString("tablist.player-name-format",DEFAULT_NAME_FORMAT);
+        if(config.contains("tablist.name-format",true))return config.getString("tablist.name-format",DEFAULT_NAME_FORMAT);
+        return config.getString("tablist.player-name-format",DEFAULT_NAME_FORMAT);
     }
     static boolean needsTitles(ConfigurationSection config) {
         return config.getBoolean("nameplate.enabled", false)

@@ -19,10 +19,14 @@ import java.util.UUID;
 
 /** 独立头顶称号；不修改原生姓名或占用玩家乘客位置。 */
 final class NameplateTitles {
+    static final double DEFAULT_HEIGHT = 2.3;
+    static final double MIN_HEIGHT = 2.3;
+    static final double MAX_HEIGHT = 8;
+
     record Settings(boolean enabled, double height, double range, long ticks) {
         static Settings load(ConfigurationSection config) {
             return new Settings(config.getBoolean("nameplate.enabled", false),
-                    finite(config.getDouble("nameplate.height", 2.65), 2.65, 2.65, 8),
+                    finite(config.getDouble("nameplate.height", DEFAULT_HEIGHT), DEFAULT_HEIGHT, MIN_HEIGHT, MAX_HEIGHT),
                     finite(config.getDouble("nameplate.view-range", 32), 32, 4, 64),
                     Math.max(1, Math.min(20, config.getLong("nameplate.refresh-ticks", 2))));
         }
@@ -83,7 +87,8 @@ final class NameplateTitles {
     }
 
     static double height(double configured, double playerHeight) {
-        return Math.max(configured, playerHeight + 0.85);
+        // TextDisplay 以文字底边定位，贴近原生姓名上缘即可，无需再预留一行高度。
+        return Math.max(configured, playerHeight + 0.5);
     }
 
     private void refresh() {
@@ -112,6 +117,7 @@ final class NameplateTitles {
                     display.setGravity(false);
                     display.setInvulnerable(true);
                     display.setBillboard(Display.Billboard.CENTER);
+                    display.setAlignment(TextDisplay.TextAlignment.CENTER);
                     display.setDefaultBackground(false);
                     display.setBackgroundColor(Color.fromARGB(0));
                     display.setShadowed(true);

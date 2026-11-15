@@ -4,9 +4,30 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class TerrainMultiverseTest {
+    public record WorldEntry(NamespacedKey key, String name) {
+        public NamespacedKey getKey() { return key; }
+        public String getName() { return name; }
+    }
+
+    public record Option(Object value) {
+        public Object getOrNull() { return value; }
+    }
+
+    public static class Manager {
+        final List<WorldEntry> unloaded;
+        Manager(WorldEntry... unloaded) { this.unloaded = List.of(unloaded); }
+        public Option getWorld(String name) { return new Option(null); }
+        public Collection<?> getWorlds() { return List.of(); }
+        public Collection<?> getLoadedWorlds() { return List.of(); }
+        public Collection<?> getUnloadedWorlds() { return unloaded; }
+    }
+
     public static class Options {
         NamespacedKey key;
         String name;
@@ -52,5 +73,20 @@ class TerrainMultiverseTest {
         assertEquals("world/dimensions/legacy/alpine", older.name);
         assertFalse(older.folderCheck);
         assertFalse(older.spawnAdjust);
+    }
+
+    @Test void findsNativeRegistrationsEvenWhenOnlyTheUnloadedListContainsThem() throws Exception {
+        NamespacedKey key = new NamespacedKey(TerrainNamespace.CURRENT, "jixian");
+        WorldEntry world = new WorldEntry(key, "lc_terrain_jixian");
+        assertSame(world, TerrainMultiverse.find(new Manager(world), key, world.name()));
+    }
+
+    @Test void refusesToImportAgainWhenAStaleMinecraftEntryUsesTheNativeDisplayName() {
+        NamespacedKey key = new NamespacedKey(TerrainNamespace.CURRENT, "jixian");
+        WorldEntry conflicting = new WorldEntry(NamespacedKey.minecraft("lc_terrain_jixian"), "lc_terrain_jixian");
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> TerrainMultiverse.find(new Manager(conflicting), key, conflicting.name()));
+        assertTrue(failure.getMessage().contains("minecraft:lc_terrain_jixian"));
+        assertTrue(failure.getMessage().contains("lc_terrain:jixian"));
     }
 }

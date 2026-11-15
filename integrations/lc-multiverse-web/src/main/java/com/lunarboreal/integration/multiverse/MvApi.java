@@ -43,16 +43,33 @@ final class MvApi {
         if (!Boolean.TRUE.equals(call(result,"isSuccess"))) throw new IllegalStateException("Multiverse拒绝操作: "+result);
     }
     Object world(String name) throws Exception {
+        return world(manager,name);
+    }
+    static Object world(Object manager,String name) throws Exception {
         Object direct=call(call(manager,"getWorld",name),"getOrNull");
+        if(direct!=null&&name.equals(identity(direct)))return direct;
+        List<Object> named=new ArrayList<>(),aliased=new ArrayList<>();
+        for(Object w : worlds(manager)){
+            if(name.equals(identity(w)))return w;
+            if(name.equalsIgnoreCase(call(w,"getName").toString()))named.add(w);
+            try{if(name.equalsIgnoreCase(Objects.toString(call(w,"getAlias"),"")))aliased.add(w);}
+            catch(NoSuchMethodException ignored){}
+        }
+        List<Object> matches=named.isEmpty()?aliased:named;
+        if(matches.size()>1)throw new IllegalArgumentException("多个世界使用此名称或别名，请使用完整维度标识");
+        if(matches.size()==1)return matches.getFirst();
         if(direct!=null)return direct;
-        for(Object w : worlds(manager)) if(name.equals(call(w,"getName")) || name.equals(identity(w))) return w;
         throw new IllegalArgumentException("世界未在Multiverse注册");
     }
     static Collection<Object> worlds(Object manager)throws Exception{
         Map<String,Object> worlds=new LinkedHashMap<>();
         // MV 5.8.1 omits newly unloaded worlds from getWorlds().
-        for(String getter:List.of("getWorlds","getUnloadedWorlds","getLoadedWorlds"))
-            for(Object world:(Collection<?>)call(manager,getter))worlds.put(identity(world),world);
+        for(String getter:List.of("getWorlds","getUnloadedWorlds","getLoadedWorlds")){
+            Collection<?> values;
+            try{values=(Collection<?>)call(manager,getter);}
+            catch(NoSuchMethodException ignored){if(getter.equals("getWorlds"))throw ignored;continue;}
+            for(Object world:values)worlds.put(identity(world),world);
+        }
         return worlds.values();
     }
     static String identity(Object world) throws Exception {

@@ -16,8 +16,9 @@ class NameplateTitlesTest {
         var config = new YamlConfiguration();
         var settings = NameplateTitles.Settings.load(config);
         assertFalse(settings.enabled());
-        assertEquals(2.65, NameplateTitles.height(settings.height(), 1.8));
-        assertEquals(3.85, NameplateTitles.height(settings.height(), 3));
+        assertEquals(2.3, settings.height());
+        assertEquals(2.3, NameplateTitles.height(settings.height(), 1.8));
+        assertEquals(3.5, NameplateTitles.height(settings.height(), 3));
         assertEquals(32, settings.range());
         assertEquals(2, settings.ticks());
     }
@@ -28,16 +29,27 @@ class NameplateTitlesTest {
         config.set("nameplate.view-range", Double.POSITIVE_INFINITY);
         config.set("nameplate.refresh-ticks", Long.MIN_VALUE);
         var settings = NameplateTitles.Settings.load(config);
-        assertEquals(2.65, settings.height());
+        assertEquals(2.3, settings.height());
         assertEquals(32, settings.range());
         assertEquals(1, settings.ticks());
         config.set("nameplate.height", 0);
         config.set("nameplate.view-range", 10000);
         config.set("nameplate.refresh-ticks", Long.MAX_VALUE);
         settings = NameplateTitles.Settings.load(config);
-        assertEquals(2.65, settings.height());
+        assertEquals(2.3, settings.height());
         assertEquals(64, settings.range());
         assertEquals(20, settings.ticks());
+    }
+
+    @Test void closeNameplatesKeepConfiguredAdjustmentsAndClearScaledPlayerNames() {
+        assertEquals(2.35, NameplateTitles.height(2.35, 1.8));
+        assertEquals(4, NameplateTitles.height(4, 1.8));
+        assertEquals(3.2, NameplateTitles.height(2.3, 2.7));
+        var config = new YamlConfiguration();
+        config.set("nameplate.height", 2.4);
+        assertEquals(2.4, NameplateTitles.Settings.load(config).height());
+        config.set("nameplate.height", 100);
+        assertEquals(8, NameplateTitles.Settings.load(config).height());
     }
 
     @Test void hidesTitlesWithNoTitleOrWhenPlayerIsHidden() {

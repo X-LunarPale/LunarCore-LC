@@ -5,7 +5,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
@@ -17,7 +16,7 @@ import java.util.regex.Pattern;
 final class DisplayRenderer {
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final Pattern VARIABLE = Pattern.compile("%[A-Za-z0-9_:.]+%");
-    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+    private static final String WORLD_NAME = "%lc_chat_world_name%";
     private final ScoreboardModule module;
     private final Map<UUID, View> views = new HashMap<>();
     private final Map<UUID, Map<String,String>> variables = new HashMap<>();
@@ -60,7 +59,11 @@ final class DisplayRenderer {
     private Map<String,String> values(Player player) {
         double tps = 20, mspt = 0;
         try { tps = Bukkit.getServer().getTPS()[0]; mspt = Bukkit.getServer().getAverageTickTime(); } catch (LinkageError ignored) { }
-        Map<String, String> vars = new HashMap<>(Map.of("player", player.getName(), "world", player.getWorld().getName(), "online", String.valueOf(Bukkit.getOnlinePlayers().size()),
+        String worldName = player.getWorld().getName();
+        Map<String, String> vars = new HashMap<>(Map.of("player", player.getName(),
+                "world", worldName(worldName, key -> module.api().placeholders().apply(player, key)),
+                "world_name", worldName, "world_key", player.getWorld().getKey().toString(),
+                "online", String.valueOf(Bukkit.getOnlinePlayers().size()),
                 "ping", String.valueOf(player.getPing()), "tps", String.format(Locale.ROOT, "%.2f", Math.min(20, tps)), "mspt", String.format(Locale.ROOT, "%.2f", mspt)));
         String title = module.api().placeholders().apply(player, "%lc_playertitle_current_plain%");
         vars.put("title", title == null || title.isBlank() || title.equals("%lc_playertitle_current_plain%") ? "未佩戴" : title);
@@ -73,6 +76,10 @@ final class DisplayRenderer {
         vars.put("memory_used", String.valueOf((runtime.totalMemory() - runtime.freeMemory()) / 1048576));
         vars.put("memory_max", String.valueOf(runtime.maxMemory() / 1048576));
         return vars;
+    }
+    static String worldName(String original, Function<String, String> registry) {
+        String resolved = registry.apply(WORLD_NAME);
+        return resolved == null || resolved.isBlank() || VARIABLE.matcher(resolved).find() ? original : resolved;
     }
     static Component renderTemplate(String template, Map<String,String> variables, Function<String,String> registry) {
         List<TagResolver> tags = new ArrayList<>();
