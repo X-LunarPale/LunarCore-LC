@@ -82,6 +82,31 @@ public final class SafeLocation {
                 && border.isInside(new Location(world, x + 0.8, y, z + 0.8));
     }
 
+    /** /back：原点安全时直接返回，否则逐层搜索圆形范围，整层无落点才升高一格。 */
+    public static Location findBack(Location loc, int radius) {
+        World world = loc.getWorld();
+        if (world == null) return null;
+        int x = loc.getBlockX(), z = loc.getBlockZ();
+        int startY = Math.max(world.getMinHeight() + 1, loc.getBlockY());
+        int maxY = world.getMaxHeight() - 2;
+        if (world.getEnvironment() == World.Environment.NETHER && loc.getBlockY() < 127)
+            maxY = Math.min(maxY, 125);
+        int limit = Math.max(20, radius);
+        for (int y = startY; y <= maxY; y++) {
+            for (int r = 0; r <= limit; r++) {
+                for (int dx = -r; dx <= r; dx++) {
+                    for (int dz = -r; dz <= r; dz++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dz)) != r
+                                || (long) dx * dx + (long) dz * dz > (long) limit * limit) continue;
+                        if (safeRespawn(world, x + dx, y, z + dz))
+                            return center(loc, x + dx, y, z + dz);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * 从给定位置寻找安全落点：先原地，再同一列向上、向下，最后在水平半径内逐圈搜索。
      * @return 居中的安全位置（保留朝向），找不到返回 null

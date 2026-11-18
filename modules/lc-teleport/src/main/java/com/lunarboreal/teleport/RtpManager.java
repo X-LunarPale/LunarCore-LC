@@ -10,7 +10,6 @@ import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -23,7 +22,7 @@ public final class RtpManager {
 
     public static final int MAX_RADIUS = 30_000_000;
 
-    public record Settings(int centerX, int centerZ, int minRadius, int maxRadius) {}
+    public record Settings(double centerX, double centerZ, int minRadius, int maxRadius) {}
 
     private final TeleportModule m;
 
@@ -32,15 +31,21 @@ public final class RtpManager {
     }
 
     public List<String> worlds() {
-        ConfigurationSection s = m.config().getConfigurationSection("rtp.worlds");
-        return s == null ? List.of() : new ArrayList<>(s.getKeys(false));
+        return Bukkit.getWorlds().stream()
+                .filter(w -> m.config().getBoolean("rtp.worlds." + w.getName() + ".enabled", true))
+                .map(World::getName).toList();
+    }
+
+    public int defaultRadius() {
+        return Math.max(1, Math.min(MAX_RADIUS, m.config().getInt("rtp.default-radius", 1000)));
     }
 
     public Settings settings(World w) {
         ConfigurationSection s = m.config().getConfigurationSection("rtp.worlds." + w.getName());
-        if (s == null) return null;
+        if (s == null) return new Settings(0, 0, 0, defaultRadius());
         int min = Math.max(0, s.getInt("min-radius", 0));
-        int max = Math.max(min + 1, s.getInt("max-radius", 5000));
+        min = Math.min(MAX_RADIUS - 1, min);
+        int max = Math.min(MAX_RADIUS, Math.max(min + 1, s.getInt("max-radius", defaultRadius())));
         return new Settings(s.getInt("center-x", 0), s.getInt("center-z", 0), min, max);
     }
 
@@ -48,6 +53,14 @@ public final class RtpManager {
     public CompletableFuture<Location> find(World w) {
         Settings st = settings(w);
         return find(w, st, false);
+    }
+
+    /** 普通 /rtp 默认以玩家坐标为圆心；可按世界配置固定中心与半径。 */
+    public CompletableFuture<Location> find(World w, Location origin) {
+        Settings st = settings(w);
+        if (m.config().getBoolean("rtp.worlds." + w.getName() + ".center-on-player", true))
+            st = new Settings(origin.getX(), origin.getZ(), st.minRadius(), st.maxRadius());
+        return find(w, st, true);
     }
 
     public CompletableFuture<Location> findCircle(World w, int centerX, int centerZ, int radius) {
@@ -66,14 +79,19 @@ public final class RtpManager {
     }
 
     static int[] circleOffset(RandomGenerator random, int radius) {
+        return circleOffset(random, radius, 0, 0);
+    }
+
+    private static int[] circleOffset(RandomGenerator random, int radius, double fractionX, double fractionZ) {
         if (radius < 1 || radius > MAX_RADIUS) throw new IllegalArgumentException("Invalid radius");
         int dx, dz;
         double distanceSquared;
         do {
-            dx = random.nextInt(-radius, radius);
-            dz = random.nextInt(-radius, radius);
+            dx = random.nextInt(-radius, radius + 1);
+            dz = random.nextInt(-radius, radius + 1);
             // The landing position is the block center, including at the circle edge.
-            distanceSquared = (dx + 0.5) * (dx + 0.5) + (dz + 0.5) * (dz + 0.5);
+            double x = dx + 0.5 - fractionX, z = dz + 0.5 - fractionZ;
+            distanceSquared = x * x + z * z;
         } while (distanceSquared > (double) radius * radius);
         return new int[]{dx, dz};
     }
@@ -88,7 +106,11 @@ public final class RtpManager {
         int x, z;
         int dx, dz;
         if (circle) {
-            int[] offset = circleOffset(rnd, st.maxRadius());
+            double fractionX = st.centerX() - Math.floor(st.centerX());
+            double fractionZ = st.centerZ() - Math.floor(st.centerZ());
+            int[] offset = fractionX == 0 && fractionZ == 0
+                    ? circleOffset(rnd, st.maxRadius())
+                    : circleOffset(rnd, st.maxRadius(), fractionX, fractionZ);
             dx = offset[0];
             dz = offset[1];
         } else {
@@ -101,8 +123,14 @@ public final class RtpManager {
                 else dz = rnd.nextBoolean() ? edge : -edge;
             }
         }
-        x = st.centerX() + dx;
-        z = st.centerZ() + dz;
+        x = (int) Math.floor(st.centerX()) + dx;
+        z = (int) Math.floor(st.centerZ()) + dz;
+        double offsetX = x + .5 - st.centerX(), offsetZ = z + .5 - st.centerZ();
+        double distanceSquared = offsetX * offsetX + offsetZ * offsetZ;
+        if (circle && distanceSquared < (double) st.minRadius() * st.minRadius()) {
+            attempt(w, st, true, i + 1, max, result);
+            return;
+        }
         if (circle && !w.getWorldBorder().isInside(new Location(w, x + 0.5, w.getMinHeight(), z + 0.5))) {
             attempt(w, st, true, i + 1, max, result);
             return;

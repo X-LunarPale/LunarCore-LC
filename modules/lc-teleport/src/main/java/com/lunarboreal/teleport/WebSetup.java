@@ -3,10 +3,12 @@ package com.lunarboreal.teleport;
 import com.lunarboreal.api.web.HttpException;
 import com.lunarboreal.api.web.WebContext;
 import com.lunarboreal.api.web.WebPanel;
+import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -44,6 +46,7 @@ final class WebSetup {
         opts.add(new Opt("spawn_respawn_default_enabled", "spawn.respawn-default-enabled", "bool", "玩家默认开启死亡回主城", "玩家可用 /spawn ondeath on 或 off 调整"));
         opts.add(new Opt("back_on_death", "back.on-death", "bool", "记录死亡点", null));
         opts.add(new Opt("back_persist", "back.persist", "bool", "/back 位置持久化", "重启后仍可 /back"));
+        opts.add(new Opt("back_safe_search_radius", "back.safe-search-radius", "int", "/back 安全搜索半径", "至少 20 格；当前 Y 层无安全位置后逐层向上搜索"));
         opts.add(new Opt("warp_gui", "warps.gui.enabled", "bool", "地标 GUI", "关闭则 /warps 显示文本列表"));
         opts.add(new Opt("warp_gui_icon", "warps.gui.default-icon", "text", "地标默认图标", "物品 ID，如 ENDER_PEARL"));
         for (String k : KEYS) {
@@ -53,8 +56,9 @@ final class WebSetup {
         }
         opts.add(new Opt("cost_sethome", "costs.sethome", "double", "sethome 费用", null));
         opts.add(new Opt("rtp_max_attempts", "rtp.max-attempts", "int", "rtp 最大尝试次数", null));
+        opts.add(new Opt("rtp_default_radius", "rtp.default-radius", "int", "rtp 默认半径", "默认以玩家为中心的 1000 格圆形范围，未单独配置的世界使用此值"));
         opts.add(new Opt("rtp_avoid_lands", "rtp.avoid-lands", "bool", "rtp 避开领地", null));
-        opts.add(new Opt("rtp_default_world", "rtp.default-world", "text", "rtp 默认世界", "世界参数需在 config.yml rtp.worlds 中配置"));
+        opts.add(new Opt("rtp_avoid_biomes", "rtp.avoid-biomes", "list", "rtp 避开的群系", "群系关键字以逗号或换行分隔，例如 ocean, river"));
     }
 
     void register() {
@@ -77,7 +81,7 @@ final class WebSetup {
         for (Opt o : opts) {
             String type = switch (o.type()) {
                 case "bool" -> "bool";
-                case "text" -> "text";
+                case "text", "list" -> "text";
                 default -> "number";
             };
             WebPanel.Field f = new WebPanel.Field(o.key(), o.label(), type);
@@ -113,12 +117,16 @@ final class WebSetup {
                                 .confirm("确定删除该家？").permission(MANAGE)))
                 .section(new WebPanel.Table("随机传送世界 (rtp)", "rtp").rowKey("world").searchable(false)
                         .column("world", "世界")
+                        .column("enabled", "启用", "bool")
+                        .column("center_on_player", "以玩家为中心", "bool")
                         .column("center", "中心")
                         .column("min", "最小半径", "number")
                         .column("max", "最大半径", "number")
                         .rowAction(new WebPanel.Action("edit", "编辑", "rtp/{world}/edit").style("primary").permission(MANAGE)
-                                .field(new WebPanel.Field("center_x", "中心 X", "number"))
-                                .field(new WebPanel.Field("center_z", "中心 Z", "number"))
+                                .field(new WebPanel.Field("enabled", "启用该世界的 RTP", "bool"))
+                                .field(new WebPanel.Field("center_on_player", "以玩家为中心", "bool"))
+                                .field(new WebPanel.Field("center_x", "固定中心 X（关闭玩家中心时使用）", "number"))
+                                .field(new WebPanel.Field("center_z", "固定中心 Z（关闭玩家中心时使用）", "number"))
                                 .field(new WebPanel.Field("min_radius", "最小半径", "number"))
                                 .field(new WebPanel.Field("max_radius", "最大半径", "number"))))
                 .section(form));
@@ -274,6 +282,7 @@ final class WebSetup {
                     case "bool" -> map.put(o.key(), m.config().getBoolean(o.path()));
                     case "int" -> map.put(o.key(), m.config().getInt(o.path(), o.path().startsWith("warmups.") ? m.config().getInt("teleport.warmup") : 0));
                     case "double" -> map.put(o.key(), m.config().getDouble(o.path()));
+                    case "list" -> map.put(o.key(), String.join(", ", m.config().getStringList(o.path())));
                     default -> map.put(o.key(), m.config().getString(o.path(), ""));
                 }
             }
@@ -285,6 +294,9 @@ final class WebSetup {
     private void saveConfig(WebContext ctx) throws Exception {
         Map<String, Object> body = ctx.bodyMap();
         Object timezone = body.get("spawn_daily_join_timezone");
+        if (body.containsKey("rtp_default_radius")) integer(body.get("rtp_default_radius"), 1, RtpManager.MAX_RADIUS);
+        if (body.containsKey("back_safe_search_radius")) integer(body.get("back_safe_search_radius"), 20, Integer.MAX_VALUE);
+        if (body.containsKey("rtp_max_attempts")) integer(body.get("rtp_max_attempts"), 1, Integer.MAX_VALUE);
         if (timezone != null && !String.valueOf(timezone).isBlank()) {
             try {
                 java.time.ZoneId.of(String.valueOf(timezone).trim());
@@ -300,6 +312,9 @@ final class WebSetup {
                     case "bool" -> m.config().set(o.path(), bool(v));
                     case "int" -> m.config().set(o.path(), Math.max(0, (int) num(v, 0)));
                     case "double" -> m.config().set(o.path(), Math.max(0, num(v, 0)));
+                    case "list" -> m.config().set(o.path(), java.util.Arrays.stream(
+                            (v == null ? "" : String.valueOf(v)).split("[,\\r\\n]+"))
+                            .map(String::trim).filter(s -> !s.isEmpty()).toList());
                     default -> m.config().set(o.path(), v == null ? "" : String.valueOf(v));
                 }
             }
@@ -315,17 +330,26 @@ final class WebSetup {
         List<Map<String, Object>> items = ctx.sync(() -> {
             List<Map<String, Object>> list = new ArrayList<>();
             var sec = m.config().getConfigurationSection("rtp.worlds");
-            if (sec != null) {
-                for (String w : sec.getKeys(false)) {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("world", w);
-                    row.put("center", sec.getInt(w + ".center-x") + ", " + sec.getInt(w + ".center-z"));
-                    row.put("center_x", sec.getInt(w + ".center-x"));
-                    row.put("center_z", sec.getInt(w + ".center-z"));
-                    row.put("min", sec.getInt(w + ".min-radius"));
-                    row.put("max", sec.getInt(w + ".max-radius"));
-                    list.add(row);
-                }
+            var names = new LinkedHashSet<String>();
+            Bukkit.getWorlds().forEach(w -> names.add(w.getName()));
+            if (sec != null) names.addAll(sec.getKeys(false));
+            for (String w : names) {
+                String base = "rtp.worlds." + w + ".";
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("world", w);
+                boolean relative = m.config().getBoolean(base + "center-on-player", true);
+                row.put("enabled", m.config().getBoolean(base + "enabled", true));
+                row.put("center_on_player", relative);
+                row.put("center", relative ? "玩家当前位置" : m.config().getInt(base + "center-x") + ", " + m.config().getInt(base + "center-z"));
+                row.put("center_x", m.config().getInt(base + "center-x"));
+                row.put("center_z", m.config().getInt(base + "center-z"));
+                int min = m.config().getInt(base + "min-radius", 0);
+                int max = m.config().getInt(base + "max-radius", m.rtp().defaultRadius());
+                row.put("min", min);
+                row.put("max", max);
+                row.put("min_radius", min);
+                row.put("max_radius", max);
+                list.add(row);
             }
             return list;
         });
@@ -337,12 +361,16 @@ final class WebSetup {
         Map<String, Object> body = ctx.bodyMap();
         String base = "rtp.worlds." + world + ".";
         String error = ctx.sync(() -> {
-            if (!m.config().isConfigurationSection("rtp.worlds." + world)) return "该世界未配置 rtp";
-            if (body.containsKey("center_x")) m.config().set(base + "center-x", (int) num(body.get("center_x"), 0));
-            if (body.containsKey("center_z")) m.config().set(base + "center-z", (int) num(body.get("center_z"), 0));
-            int min = body.containsKey("min_radius") ? (int) num(body.get("min_radius"), 0) : m.config().getInt(base + "min-radius");
-            int max = body.containsKey("max_radius") ? (int) num(body.get("max_radius"), 0) : m.config().getInt(base + "max-radius");
+            if (Bukkit.getWorld(world) == null && !m.config().isConfigurationSection("rtp.worlds." + world)) return "世界不存在";
+            int min = body.containsKey("min_radius") ? integer(body.get("min_radius"), 0, RtpManager.MAX_RADIUS - 1) : m.config().getInt(base + "min-radius");
+            int max = body.containsKey("max_radius") ? integer(body.get("max_radius"), 1, RtpManager.MAX_RADIUS) : m.config().getInt(base + "max-radius", m.rtp().defaultRadius());
             if (min < 0 || max <= min) return "半径无效：需要 0 <= 最小 < 最大";
+            int centerX = body.containsKey("center_x") ? integer(body.get("center_x"), -RtpManager.MAX_RADIUS, RtpManager.MAX_RADIUS) : m.config().getInt(base + "center-x");
+            int centerZ = body.containsKey("center_z") ? integer(body.get("center_z"), -RtpManager.MAX_RADIUS, RtpManager.MAX_RADIUS) : m.config().getInt(base + "center-z");
+            m.config().set(base + "center-x", centerX);
+            m.config().set(base + "center-z", centerZ);
+            if (body.containsKey("enabled")) m.config().set(base + "enabled", bool(body.get("enabled")));
+            if (body.containsKey("center_on_player")) m.config().set(base + "center-on-player", bool(body.get("center_on_player")));
             m.config().set(base + "min-radius", min);
             m.config().set(base + "max-radius", max);
             m.saveConfig();
@@ -367,5 +395,12 @@ final class WebSetup {
         } catch (NumberFormatException e) {
             return def;
         }
+    }
+
+    private static int integer(Object value, int min, int max) {
+        double number = num(value, Double.NaN);
+        if (!Double.isFinite(number) || number != Math.rint(number) || number < min || number > max)
+            throw HttpException.badRequest("需要 " + min + " 到 " + max + " 之间的整数");
+        return (int) number;
     }
 }

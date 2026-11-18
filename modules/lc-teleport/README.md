@@ -43,8 +43,8 @@
 | `/setspawn` | 设置出生点（保存到 spawn.yml） | lc.teleport.setspawn | OP |
 | `/spawn [玩家]` | 回出生点 | lc.teleport.spawn，他人 lc.teleport.spawn.others | 所有人 |
 | `/spawn ondeath [on\|off]` | 查看、开启或关闭自己的死亡回主城 | lc.teleport.spawn | 所有人 |
-| `/back`（return） | 返回上一个位置/死亡点 | lc.teleport.back；死亡点记录 lc.teleport.back.ondeath | 所有人 |
-| `/rtp [世界] [玩家]`（tpr、wild、randomtp） | 随机传送 | lc.teleport.rtp，指定世界 lc.teleport.rtp.world，他人 lc.teleport.rtp.others | 所有人 |
+| `/back`（return） | 返回上一个位置/死亡点；原点安全则直达，否则按 Y 层向上搜索至少 20 格半径 | lc.teleport.back；死亡点记录 lc.teleport.back.ondeath | 所有人 |
+| `/rtp [世界] [玩家]`（tpr、wild、randomtp） | 默认在当前世界、以自身为圆心的 1000 格半径内随机传送 | lc.teleport.rtp，指定世界 lc.teleport.rtp.world，他人 lc.teleport.rtp.others | 所有人 |
 | `/rtpnpc <世界> <玩家> [半径]` | NPC 控制台随机传送，默认原点周围 1000 格的圆形范围 | lc.teleport.rtp.npc | OP / 控制台 |
 
 其它权限：
@@ -77,8 +77,10 @@ NpcPlugin-Paper 的点击者变量为 `@s`，点击动作使用 `CONSOLE` 执行
 - `spawn.on-first-join / on-daily-first-join`：新玩家首次加入、每天首次上线到已设置的主城。同日再次上线保留退出位置。
 - `spawn.daily-join-timezone`：每日刷新时区，留空使用服务器本地时区。
 - `spawn.on-respawn / respawn-default-enabled / respawn-ignore-bed`：死亡回主城总开关、尚未选择的玩家默认设置、是否忽略床或重生锚。玩家可用 `/spawn ondeath off` 单独关闭，选择保存在玩家存档中。
-- `back.on-death`；`back.persist`（/back 位置持久化到数据库，默认开启）。
-- `rtp.max-attempts / avoid-biomes / avoid-lands / default-world / worlds.<世界>.{center-x,center-z,min-radius,max-radius}`（世界白名单）。
+- `back.on-death`；`back.persist`（/back 位置持久化到数据库，默认开启）；`back.safe-search-radius`（默认且至少为 20 格）。原坐标安全时保留精确位置与朝向；否则先完整搜索死亡高度的圆形范围，没有安全位置才搜索 Y+1、Y+2，直到找到安全位置或达到世界高度上限。不会向下搜索，下界死亡点在基岩顶层以下时不会选取基岩顶层。沿用通用安全检查开关及创造/旁观/飞行豁免。
+- `rtp.default-radius`：默认 1000 格，普通 RTP 使用圆形范围。无参数命令只使用当前世界；当前世界被禁用时提示失败，不会跳转到其他世界，旧 `rtp.default-world` 不再使用。
+- `rtp.max-attempts / avoid-biomes / avoid-lands`：尝试次数、群系关键字列表、避开领地。
+- `rtp.worlds.<世界>.{enabled,center-on-player,center-x,center-z,min-radius,max-radius}`：可选世界覆盖；所有已加载世界默认启用，默认跟随玩家中心、最小半径 0、最大半径继承 `rtp.default-radius`。关闭 `center-on-player` 后使用固定中心。已有世界半径配置继续生效。
 
 ## 存储
 - `lc_teleport_homes`（uuid+name 主键）、`lc_teleport_warps`（name 主键，含 icon/description 列，旧表自动补列）、`lc_teleport_toggles`（关闭 tpa 的玩家）、`lc_teleport_back`（/back 位置，`back.persist: true` 时使用）。
@@ -88,5 +90,5 @@ NpcPlugin-Paper 的点击者变量为 `@s`，点击动作使用 `CONSOLE` 执行
 
 ## Web 面板（传送系统）
 - 权限：`teleport.view`、`teleport.manage`。
-- 概览统计；地标表（编辑“需要权限”/费用/GUI 图标/描述、删除）；玩家家表（按玩家名/家名搜索、删除）；rtp 世界参数编辑；配置表单（预热/冷却/费用/tpa 超时/家上限/rtp 参数等，保存后自动重载）。
+- 概览统计；地标表（编辑“需要权限”/费用/GUI 图标/描述、删除）；玩家家表（按玩家名/家名搜索、删除）；rtp 表列出已加载和已配置世界，可编辑启用开关、玩家/固定中心、最小及最大半径；配置表单提供默认 RTP 半径、避开群系、尝试次数、领地选项及 back 搜索半径等，保存后自动重载。
 - 所有管理操作写审计日志。

@@ -103,20 +103,27 @@ back:
   on-death: true
   # 将 /back 位置持久化到数据库（表 lc_teleport_back），重启后仍可返回；false 则仅保存在内存
   persist: true
+  # 原位置安全时直接返回；否则先搜索当前 Y 层的圆形范围，再逐层 Y+1 搜索
+  # 最小半径为 20，允许增大；达到世界高度上限仍无安全落点则取消传送
+  safe-search-radius: 20
 
 rtp:
+  # 未单独配置的世界以玩家当前位置为中心，搜索此半径内的圆形范围
+  # /rtp 不带世界参数时只在当前世界搜索，不再回退到其他世界
+  default-radius: 1000
   # 最大尝试次数（每次尝试会异步加载一个区块）
   max-attempts: 20
   # 不传送到这些生物群系（匹配群系 key 中的关键字，如 ocean 匹配所有海洋）
   avoid-biomes: [ocean, river]
   # 避开领地
   avoid-lands: true
-  # 执行 /rtp 不带世界参数且所在世界不在白名单时使用的世界
-  default-world: world
-  # 世界白名单及参数：center-x/center-z 中心，min-radius/max-radius 半径范围（方形环）
-  worlds:
-    world:
-      center-x: 0
-      center-z: 0
-      min-radius: 200
-      max-radius: 5000
+  # 所有已加载世界默认可用，可在 Web 面板单独配置；以下为可选配置示例：
+  # worlds:
+  #   world:
+  #     enabled: true
+  #     center-on-player: true
+  #     center-x: 0  # center-on-player 为 false 时使用固定中心
+  #     center-z: 0
+  #     min-radius: 0
+  #     max-radius: 1000
+  worlds: {}

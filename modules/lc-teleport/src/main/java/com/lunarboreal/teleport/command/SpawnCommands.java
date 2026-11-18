@@ -86,9 +86,6 @@ public final class SpawnCommands {
                 if (world == null) { m.msg(s, "common.world-not-found", "world", a[0]); return; }
             } else {
                 world = target.getWorld();
-                if (!allowed.contains(world.getName())) {
-                    world = Bukkit.getWorld(m.config().getString("rtp.default-world", "world"));
-                }
             }
             if (world == null || !allowed.contains(world.getName())) { m.msg(s, "rtp.world-disabled"); return; }
             World fw = world;
@@ -96,7 +93,7 @@ public final class SpawnCommands {
             var req = m.teleports().request(target, "rtp")
                     .toAsync(() -> {
                         m.msg(target, "rtp.searching");
-                        return m.rtp().find(fw);
+                        return m.rtp().find(fw, target.getLocation());
                     })
                     .targetFail("rtp.failed")
                     .onSuccess(loc -> m.msg(target, "rtp.success", "x", loc.getBlockX(), "y", loc.getBlockY(), "z", loc.getBlockZ(), "world", fw.getName()))
