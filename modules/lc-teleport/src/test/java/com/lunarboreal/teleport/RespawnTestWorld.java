@@ -66,6 +66,7 @@ final class RespawnTestWorld {
             case "getMinHeight" -> minHeight;
             case "getMaxHeight" -> maxHeight;
             case "getWorldBorder" -> border;
+            case "getChunkAtAsync" -> java.util.concurrent.CompletableFuture.completedFuture(null);
             case "getSpawnLocation" -> spawn.clone();
             case "getBlockAt" -> args[0] instanceof Location location
                     ? block(location.getBlockX(), location.getBlockY(), location.getBlockZ())

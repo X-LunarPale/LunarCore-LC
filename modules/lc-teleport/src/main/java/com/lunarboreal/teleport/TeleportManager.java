@@ -228,7 +228,9 @@ public final class TeleportManager {
         if (!p.isOnline()) return;
         Location dest = loc;
         if (r.safe && m.config().getBoolean("teleport.safe-location", true) && needsSafety(p)) {
-            dest = SafeLocation.find(loc, m.config().getInt("teleport.safe-search-radius", 3));
+            dest = "back".equals(r.key)
+                    ? SafeLocation.findBack(loc, m.config().getInt("back.safe-search-radius", 20))
+                    : SafeLocation.find(loc, m.config().getInt("teleport.safe-search-radius", 3));
             if (dest == null) {
                 m.msg(p, "teleport.unsafe");
                 playSound(p, "teleport-fail");
