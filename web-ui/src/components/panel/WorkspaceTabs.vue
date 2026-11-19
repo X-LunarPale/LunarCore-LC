@@ -35,13 +35,6 @@ function move(event, index) {
 </template>
 
 <style scoped>
-.workspace-tabs { display:flex; align-items:stretch; gap:4px; max-width:100%; margin:18px 0 22px; border-bottom:1px solid var(--el-border-color-light); overflow-x:auto; scrollbar-width:thin; }
-button { display:flex; flex:0 0 auto; align-items:center; gap:7px; min-height:42px; padding:10px 13px; border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; color:var(--el-text-color-regular); font-size:13px; white-space:nowrap; cursor:pointer; transition:color 160ms,border-color 160ms; }
-button.active { color:var(--el-color-primary); border-bottom-color:var(--el-color-primary); font-weight:600; }
-button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:-3px; }
-.tab-count { padding:0 5px; min-width:18px; border-radius:4px; background:var(--el-fill-color-light); color:var(--lc-text-soft); font-size:11px; text-align:center; font-variant-numeric:tabular-nums; font-weight:400; }
-.tab-dirty { width:5px; height:5px; border-radius:50%; background:var(--el-color-warning); }
-@media (hover:hover) { button:hover { color:var(--el-color-primary); background:var(--el-fill-color-light); } }
-@media (max-width:600px) { .workspace-tabs { margin:14px 0 18px; } button { padding-inline:10px; } }
-@media (prefers-reduced-motion:reduce) { button { transition:none; } }
+.tab-count { color: var(--lc-text-soft); font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 400; }
+.tab-dirty { flex: 0 0 5px; height: 5px; border-radius: 50%; background: var(--el-color-warning); }
 </style>

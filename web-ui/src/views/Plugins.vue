@@ -31,8 +31,6 @@ const shown = computed(() => {
   const s = q.value.trim().toLowerCase()
   return s ? items.value.filter((p) => [p.name, p.description, (p.authors || []).join(',')].some((x) => String(x || '').toLowerCase().includes(s))) : items.value
 })
-const enabledCount = computed(() => items.value.filter((p) => p.enabled).length)
-
 function safeWebsite(value) {
   try {
     const target = new URL(value)
@@ -47,22 +45,21 @@ useAutoRefresh(() => { if (!loading.value) return load() }, { immediate: true })
 
 <template>
   <div class="page plugins-page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">{{ t('插件目录') }}</h1>
-      </div>
-      <div class="toolbar" style="margin: 0">
+    <header class="page-header">
+      <h1 class="page-title">{{ t('插件目录') }}</h1>
+      <div class="toolbar">
         <el-input v-model="q" :placeholder="t('搜索插件')" :aria-label="t('搜索插件')" clearable><template #prefix><Icon name="search" :size="14" /></template></el-input>
-        <el-button :loading="loading" @click="load"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
+        <el-button :loading="loading" :title="t('刷新')" :aria-label="t('刷新')" @click="load"><Icon name="refresh-cw" :size="15" /></el-button>
       </div>
-    </div>
+    </header>
     <el-alert v-if="error" :title="t('插件列表加载失败')" :description="error" type="error" show-icon :closable="false" />
-    <div v-if="loaded" class="plugin-summary"><div><span>{{ t('已安装') }} <b>{{ items.length }}</b></span><span class="enabled-count"><i />{{ t('已启用') }} <b>{{ enabledCount }}</b></span></div><span>{{ t('当前显示 {count} 项', { count: shown.length }) }}</span></div>
-    <div class="plugin-list">
-      <el-table :data="shown" v-loading="loading" row-key="name" :empty-text="t('没有找到插件')">
+    <div v-if="loaded || loading" class="plugin-list" :aria-busy="loading">
+      <el-table :data="shown" v-loading="loading && !loaded" row-key="name" :empty-text="t('没有找到插件')">
         <el-table-column type="expand">
           <template #default="{ row }">
             <div class="expand">
+              <p v-if="row.description" class="plugin-description">{{ row.description }}</p>
+              <div v-if="row.authors?.length"><b>{{ t('作者') }}:</b>{{ row.authors.join(', ') }}</div>
               <div><b>{{ t('主类：') }}</b><span class="mono">{{ row.main }}</span></div>
               <div v-if="row.apiVersion"><b>{{ t('API 版本：') }}</b>{{ row.apiVersion }}</div>
               <div v-if="row.depend?.length"><b>{{ t('依赖：') }}</b>{{ row.depend.join(', ') }}</div>
@@ -71,15 +68,13 @@ useAutoRefresh(() => { if (!loading.value) return load() }, { immediate: true })
             </div>
           </template>
         </el-table-column>
-        <el-table-column :label="t('名称')" prop="name" sortable min-width="160">
+        <el-table-column :label="t('名称')" prop="name" sortable min-width="114">
           <template #default="{ row }"><b>{{ row.name }}</b></template>
         </el-table-column>
-        <el-table-column :label="t('版本')" prop="version" width="150" />
-        <el-table-column :label="t('状态')" width="100" sortable :sort-by="(r) => (r.enabled ? 0 : 1)">
-          <template #default="{ row }"><el-tag :type="row.enabled ? 'success' : 'danger'" size="small">{{ row.enabled ? t('已启用') : t('未启用') }}</el-tag></template>
+        <el-table-column :label="t('版本')" prop="version" min-width="74" />
+        <el-table-column :label="t('状态')" min-width="90" sortable :sort-by="(r) => (r.enabled ? 0 : 1)">
+          <template #default="{ row }"><span class="plugin-state" :class="{ enabled: row.enabled }">{{ t(row.enabled ? '已启用' : '未启用') }}</span></template>
         </el-table-column>
-        <el-table-column :label="t('作者')" min-width="140"><template #default="{ row }">{{ (row.authors || []).join(', ') }}</template></el-table-column>
-        <el-table-column :label="t('描述')" prop="description" min-width="260" show-overflow-tooltip />
       </el-table>
     </div>
   </div>
@@ -87,18 +82,17 @@ useAutoRefresh(() => { if (!loading.value) return load() }, { immediate: true })
 
 <style scoped>
 .plugins-page, .plugin-list { min-width: 0; }
-.toolbar { margin: 0; gap: 8px; }
+.toolbar { margin: 0; }
 .toolbar .el-input { width: 230px; min-width: 0; }
-.toolbar .el-button { gap: 7px; }
 .el-alert { margin-bottom: 16px; }
-.plugin-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding-bottom: 16px; font-size: 12px; color: var(--lc-text-soft); }
-.plugin-summary > div { display: flex; gap: 22px; }
-.plugin-summary b { margin-left: 5px; color: var(--lc-text); font-weight: 600; }
-.enabled-count { display: inline-flex; align-items: center; gap: 6px; }
-.enabled-count i { width: 6px; height: 6px; border-radius: 50%; background: var(--el-color-success); }
-.plugin-list { overflow: hidden; border-top: 1px solid var(--el-border-color); }
-.expand { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 26px; padding: 16px 32px; font-size: 12px; line-height: 1.8; background: var(--el-fill-color-extra-light); }
+.plugin-list { border-top: 1px solid var(--lc-line); }
+.plugin-state { display: inline-flex; align-items: center; gap: 6px; color: var(--lc-text-soft); }
+.plugin-state::before { content: ""; flex: 0 0 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.plugin-state.enabled::before { color: var(--el-color-success); }
+.expand { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 8px 24px; padding: 14px 24px; font-size: 12px; line-height: 1.7; background: var(--el-fill-color-extra-light); }
 .expand > div { min-width: 0; overflow-wrap: anywhere; }
-.expand b { font-weight: 500; color: var(--lc-text-soft); margin-right: 7px; }
-@media (max-width: 700px) { .toolbar { width: 100%; flex-wrap: nowrap; }.toolbar .el-input { flex: 1; width: auto; }.expand { grid-template-columns: 1fr; padding: 14px 18px; }.plugin-summary > div { gap: 14px; } }
+.expand b { font-weight: 500; color: var(--lc-text-soft); margin-inline-end: 6px; }
+.plugin-description { grid-column: 1 / -1; margin: 0; overflow-wrap: anywhere; }
+.plugin-list :deep(.cell) { overflow-wrap: anywhere; }
+@media (max-width: 700px) { .toolbar { width: 100%; flex-wrap: nowrap; } .toolbar .el-input { flex: 1; width: auto; } }
 </style>

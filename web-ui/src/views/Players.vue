@@ -127,22 +127,19 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
 
 <template>
   <div class="page players-page">
-    <div class="page-header">
-      <h1 class="page-title">{{ t('玩家管理') }}</h1>
-      <span class="update-note"><i />{{ t('在线列表每 15 秒更新') }}</span>
-    </div>
+    <header class="page-header"><h1 class="page-title">{{ t('玩家管理') }}</h1></header>
     <div class="player-list">
-      <el-tabs v-model="tab" class="workspace-tabs">
+      <el-tabs v-model="tab">
         <el-tab-pane :label="t('在线玩家（{count}）', { count: online.length })" name="online">
-          <div class="toolbar">
-            <el-input v-model="onlineQuery" :placeholder="t('搜索玩家名')" :aria-label="t('搜索玩家名')" clearable style="width: 220px" @keyup.enter="searchOnline" @clear="searchOnline">
+          <form class="toolbar" role="search" @submit.prevent="searchOnline">
+            <el-input v-model="onlineQuery" :placeholder="t('搜索玩家名')" :aria-label="t('搜索玩家名')" clearable @clear="searchOnline">
               <template #prefix><Icon name="search" :size="14" /></template>
             </el-input>
-            <el-button type="primary" :loading="onlineLoading" @click="searchOnline"><Icon name="search" :size="14" />{{ t('搜索') }}</el-button>
-            <el-button :disabled="onlineLoading || !!playerBusy" @click="loadOnline"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
-          </div>
+            <el-button native-type="submit" :loading="onlineLoading">{{ t('搜索') }}</el-button>
+            <el-tooltip :content="t('刷新')"><el-button class="refresh-button" :aria-label="t('刷新')" :disabled="onlineLoading || !!playerBusy" @click="loadOnline"><Icon name="refresh-cw" :size="15" /></el-button></el-tooltip>
+          </form>
           <el-alert v-if="onlineError" :title="onlineError" type="error" show-icon :closable="false" />
-          <el-table :data="online" v-loading="onlineLoading" stripe :empty-text="t('当前没有在线玩家')">
+          <el-table :data="online" v-loading="onlineLoading" :empty-text="t('当前没有在线玩家')">
             <el-table-column :label="t('玩家')" min-width="170">
               <template #default="{ row }"><PlayerCell :name="row.name" :uuid="row.uuid" /> <el-tag v-if="row.op" size="small" type="warning">OP</el-tag></template>
             </el-table-column>
@@ -160,25 +157,25 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
             <el-table-column :label="t('游戏时长')" width="130">
               <template #default="{ row }">{{ formatDuration(row.playTime) }}</template>
             </el-table-column>
-            <el-table-column v-if="auth.can('core.players.manage')" :label="t('操作')" width="260" fixed="right">
+            <el-table-column v-if="auth.can('core.players.manage')" :label="t('操作')" width="195" fixed="right" align="right">
               <template #default="{ row }">
-                <el-button size="small" :disabled="!!playerBusy" @click="message(row)">{{ t('私信') }}</el-button>
-                <el-button v-if="auth.can('core.console.execute')" size="small" :disabled="!!playerBusy" @click="openCommand(row)">{{ t('命令') }}</el-button>
-                <el-button size="small" type="danger" plain :disabled="!!playerBusy" @click="kick(row)">{{ t('踢出') }}</el-button>
+                <el-button link size="small" :disabled="!!playerBusy" @click="message(row)">{{ t('私信') }}</el-button>
+                <el-button v-if="auth.can('core.console.execute')" link size="small" :disabled="!!playerBusy" @click="openCommand(row)">{{ t('命令') }}</el-button>
+                <el-button link size="small" type="danger" :disabled="!!playerBusy" @click="kick(row)">{{ t('踢出') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
         <el-tab-pane :label="t('历史玩家（{count}）', { count: hist.total })" name="history">
-          <div class="toolbar">
-            <el-input v-model="historyQuery" :placeholder="t('搜索名字 / UUID / IP')" :aria-label="t('搜索名字 / UUID / IP')" clearable style="width: 260px" @keyup.enter="searchHistory" @clear="searchHistory">
+          <form class="toolbar" role="search" @submit.prevent="searchHistory">
+            <el-input v-model="historyQuery" :placeholder="t('搜索名字 / UUID / IP')" :aria-label="t('搜索名字 / UUID / IP')" clearable @clear="searchHistory">
               <template #prefix><Icon name="search" :size="14" /></template>
             </el-input>
-            <el-button type="primary" :loading="hist.loading" @click="searchHistory"><Icon name="search" :size="14" />{{ t('搜索') }}</el-button>
-            <el-button :disabled="hist.loading" @click="loadHistory"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
-          </div>
+            <el-button native-type="submit" :loading="hist.loading">{{ t('搜索') }}</el-button>
+            <el-tooltip :content="t('刷新')"><el-button class="refresh-button" :aria-label="t('刷新')" :disabled="hist.loading" @click="loadHistory"><Icon name="refresh-cw" :size="15" /></el-button></el-tooltip>
+          </form>
           <el-alert v-if="historyError" :title="historyError" type="error" show-icon :closable="false" />
-          <el-table :data="hist.items" v-loading="hist.loading" stripe @sort-change="onSort" :default-sort="{ prop: 'lastJoin', order: 'descending' }">
+          <el-table :data="hist.items" v-loading="hist.loading" @sort-change="onSort" :default-sort="{ prop: 'lastJoin', order: 'descending' }">
             <el-table-column :label="t('玩家')" prop="name" sortable="custom" min-width="200">
               <template #default="{ row }"><PlayerCell :name="row.name" :uuid="row.uuid" /> <el-tag v-if="row.online" size="small" type="success">{{ t('在线') }}</el-tag></template>
             </el-table-column>
@@ -215,15 +212,14 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
 <style scoped>
 .players-page, .player-list { min-width: 0; }
 .player-list { overflow: hidden; }
-.update-note { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--lc-text-soft); }
-.update-note i { width: 6px; height: 6px; background: var(--el-color-success); border-radius: 50%; }
-.toolbar { margin: 6px 0 18px; gap: 8px; }
-.toolbar .el-input { min-width: 0; max-width: 100%; }
-.toolbar .el-button { gap: 7px; margin-left: 0; }
+.toolbar { margin: 4px 0 12px; gap: 8px; flex-wrap: nowrap; }
+.toolbar .el-input { width: min(100%, 270px); min-width: 0; }
+.toolbar .el-button { flex: none; margin-left: 0; }
+.refresh-button { width: 34px; padding: 0; }
 .el-alert { margin-bottom: 14px; }
 .pager { margin-top: 18px; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 .command-note { font-size: 12px; overflow-wrap: anywhere; }
 .players-page :deep(.el-radio-group) { display: flex; flex-wrap: wrap; gap: 8px; }
 .players-page :deep(.el-radio) { margin-right: 10px; }
-@media (max-width: 600px) { .toolbar { flex-wrap: wrap; }.toolbar .el-input { flex-basis: 100%; width: 100% !important; }.pager { justify-content: center; }.pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump), .pager :deep(.el-pagination__total) { display: none; }.players-page :deep(.el-table__cell.is-fixed-column--right) { position: static !important; }.players-page :deep(.el-table__cell.is-fixed-column--right::before) { display: none; } }
+@media (max-width: 600px) { .pager { justify-content: center; }.pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump), .pager :deep(.el-pagination__total) { display: none; }.players-page :deep(.el-table__cell.is-fixed-column--right) { position: static !important; }.players-page :deep(.el-table__cell.is-fixed-column--right::before) { display: none; } }
 </style>

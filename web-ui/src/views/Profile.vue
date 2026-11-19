@@ -65,17 +65,17 @@ async function unbind() {
 
 <template>
   <div class="page profile-page">
-    <div class="page-header"><h1 class="page-title">{{ t('个人设置') }}</h1></div>
+    <header class="page-header"><h1 class="page-title">{{ t('个人设置') }}</h1></header>
       <section class="identity-panel">
-        <div class="identity-head"><Icon name="user-round" :size="22" /><div><h2>{{ auth.user?.username }}</h2><span>{{ auth.user?.roleName }} <span class="muted">{{ auth.user?.role }}</span></span></div></div>
+        <div class="identity-head"><Icon name="user-round" :size="20" /><div><h2>{{ auth.user?.username }}</h2><span :title="auth.user?.role">{{ auth.user?.roleName || auth.user?.role }}</span></div></div>
         <dl class="identity-details"><div><dt>{{ t('上次登录') }}</dt><dd>{{ formatDateTime(auth.user?.lastLogin) }}</dd></div><div><dt>{{ t('会话到期') }}</dt><dd>{{ formatDateTime(auth.user?.expiresAt) }}</dd></div></dl>
       </section>
-      <el-tabs v-model="tab" class="workspace-tabs">
+      <el-tabs v-model="tab">
       <el-tab-pane :label="t('登录安全')" name="security">
       <div class="security-layout">
         <TotpSettings />
         <section class="setting-section">
-          <header><Icon name="key-round" :size="18" /><h3>{{ t('修改密码') }}</h3></header>
+          <h3>{{ t('修改密码') }}</h3>
           <el-form label-position="top" class="password-form" :disabled="busy" @submit.prevent="changePassword">
             <el-form-item :label="t('原密码')" class="full-field"><el-input v-model="pw.oldPassword" type="password" show-password autocomplete="current-password" /></el-form-item>
             <el-form-item :label="t('新密码')"><el-input v-model="pw.newPassword" type="password" show-password autocomplete="new-password" :placeholder="t('至少 8 位')" /></el-form-item>
@@ -91,14 +91,17 @@ async function unbind() {
           <template v-else><p class="binding-help">{{ t('在游戏内执行') }} <code>/lc web bind</code> {{ t('获取验证码，输入后完成绑定。') }}</p><el-form class="bind-form" :disabled="bindingBusy" @submit.prevent="bind"><el-input v-model="code" maxlength="10" :placeholder="t('游戏内获取的验证码')" :aria-label="t('游戏内获取的验证码')" /><el-button type="primary" native-type="submit" :loading="bindingBusy" :disabled="!code.trim()">{{ t('绑定账号') }}</el-button></el-form></template>
         </section>
       </el-tab-pane>
-      <el-tab-pane :label="t('已分配权限')" name="permissions"><div class="permission-section"><div class="permission-tags"><el-tag v-for="p in auth.user?.permissions || []" :key="p" size="small" effect="plain">{{ p }}</el-tag><span v-if="!auth.user?.permissions?.length" class="muted">{{ t('暂无已分配权限') }}</span></div></div></el-tab-pane>
+      <el-tab-pane :label="t('已分配权限')" name="permissions" lazy>
+        <ul v-if="auth.user?.permissions?.length" class="permission-list"><li v-for="p in auth.user.permissions" :key="p"><code>{{ p }}</code></li></ul>
+        <p v-else class="muted">{{ t('暂无已分配权限') }}</p>
+      </el-tab-pane>
       </el-tabs>
   </div>
 </template>
 
 <style scoped>
 .profile-page { min-width: 0; }
-.identity-panel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 30px; padding: 0 0 22px; margin-bottom: 14px; border-bottom: 1px solid var(--el-border-color); }
+.identity-panel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 30px; padding: 0 0 16px; margin-bottom: 10px; border-bottom: 1px solid var(--lc-line); }
 .identity-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .identity-head > .lc-icon { color: var(--lc-text-soft); flex-shrink: 0; }
 .identity-head h2 { font-size: 16px; margin: 0 0 3px; overflow-wrap: anywhere; }
@@ -106,13 +109,14 @@ async function unbind() {
 .identity-details { margin: 0; display: flex; flex-wrap: wrap; gap: 15px 32px; }
 .identity-details dt { color: var(--lc-text-soft); font-size: 11px; margin-bottom: 4px; }
 .identity-details dd { margin: 0; font-size: 12px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.permission-section { padding-top: 12px; }
-.permission-tags { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; }.permission-tags :deep(.el-tag) { max-width: 100%; height: auto; min-height: 24px; white-space: normal; overflow-wrap: anywhere; }
+.permission-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0 24px; list-style: none; padding: 0; margin: 0; }
+.permission-list li { min-width: 0; border-bottom: 1px solid var(--lc-line); padding-block: 8px; }
+.permission-list code { background: none; padding: 0; }
 .security-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 32px; padding-top: 8px; max-width: 1200px; }
 .security-layout :deep(.totp-setting) { padding: 0; border: 0; min-width: 0; }
 .security-layout :deep(.totp-setting h3) { font-size: 14px; }
 .setting-section { min-width: 0; padding-top: 8px; max-width: 660px; }.security-layout .setting-section { padding: 0 0 0 32px; border-left: 1px solid var(--el-border-color-light); }
-.setting-section header { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }.setting-section header > .lc-icon { color: var(--lc-text-soft); }.setting-section h3 { font-size: 14px; margin: 0; font-weight: 600; }
+.setting-section h3 { font-size: 14px; margin: 0 0 16px; font-weight: 600; }
 .password-form { max-width: 520px; }.password-form :deep(.el-form-item) { margin-bottom: 18px; }.form-footer { margin-top: 2px; }
 .bound { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 0 0 18px; border-bottom: 1px solid var(--el-border-color-light); }
 .binding-help { color: var(--lc-text-soft); font-size: 12px; margin: 0 0 14px; line-height: 1.9; }.bind-form { display: flex; gap: 10px; max-width: 430px; }.bind-form .el-input { min-width: 0; }.bind-form .el-button { margin-left: 0; }

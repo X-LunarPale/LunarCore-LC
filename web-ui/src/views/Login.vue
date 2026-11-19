@@ -5,7 +5,7 @@ import { ElMessage } from 'element-plus'
 import { useAuth } from '../stores/auth'
 import { useApp } from '../stores/app'
 import { url } from '../api'
-import { formatVersion, locale, setLocale, t } from '../i18n'
+import { locale, setLocale, t } from '../i18n'
 
 const auth = useAuth()
 const app = useApp()
@@ -98,7 +98,6 @@ async function submit() {
 <template>
   <div class="login-page">
     <header class="login-header">
-      <div class="login-brand"><img :src="logo" alt="" /><span>{{ brandName }}</span></div>
       <div class="login-tools">
         <el-dropdown trigger="click" @command="setLocale">
           <button type="button" class="tool-button" :aria-label="t('语言')"><Icon name="languages" :size="17" /><span>{{ locale === 'en_US' ? 'English' : '中文' }}</span></button>
@@ -113,27 +112,24 @@ async function submit() {
       </div>
     </header>
     <main class="login-main">
-      <section class="login-form" :aria-label="t('登录控制台')">
-        <div class="login-heading"><h1>{{ challenge ? t('两步验证') : t('登录控制台') }}</h1></div>
-        <el-segmented v-if="!challenge" v-model="mode" :disabled="loading" :options="[{ label: t('账号密码'), value: 'password' }, { label: t('游戏账号登录'), value: 'game' }]" block class="login-modes" />
+      <section class="login-form" aria-labelledby="login-title">
+        <div class="login-brand"><img :src="logo" alt="" /><span>{{ brandName }}</span></div>
+        <h1 id="login-title">{{ challenge ? t('两步验证') : t('登录') }}</h1>
+        <el-segmented v-if="!challenge" v-model="mode" :aria-label="t('登录')" :disabled="loading" :options="[{ label: t('账号密码'), value: 'password' }, { label: t('游戏账号登录'), value: 'game' }]" block class="login-modes" />
         <div v-if="error" id="login-error" class="login-error" role="alert"><Icon name="circle-alert" :size="16" /><span>{{ error }}</span></div>
         <el-form :disabled="loading" label-position="top" size="large" :aria-describedby="error ? 'login-error' : undefined" @submit.prevent="submit">
           <Transition name="login-mode" mode="out-in" @after-enter="focusCurrentInput">
             <div v-if="challenge" key="factor" class="login-fields factor-fields">
               <el-form-item :label="t('动态验证码或恢复码')">
-                <el-input ref="factorInput" v-model="secondFactor" maxlength="20" autocomplete="one-time-code" autocapitalize="none" :spellcheck="false" :placeholder="t('动态验证码或恢复码')" @input="error = ''" />
+                <el-input ref="factorInput" v-model="secondFactor" maxlength="20" autocomplete="one-time-code" autocapitalize="none" :spellcheck="false" @input="error = ''" />
               </el-form-item>
             </div>
             <div v-else-if="mode === 'password'" key="password" class="login-fields">
               <el-form-item :label="t('用户名')">
-                <el-input ref="usernameInput" v-model="form.username" :placeholder="t('用户名')" autocomplete="username" autocapitalize="none" :spellcheck="false" @input="error = ''">
-                  <template #prefix><Icon name="user" :size="16" /></template>
-                </el-input>
+                <el-input ref="usernameInput" v-model="form.username" autocomplete="username" autocapitalize="none" :spellcheck="false" @input="error = ''" />
               </el-form-item>
               <el-form-item :label="t('密码')">
-                <el-input v-model="form.password" type="password" show-password :placeholder="t('密码')" autocomplete="current-password" @input="error = ''">
-                  <template #prefix><Icon name="lock" :size="16" /></template>
-                </el-input>
+                <el-input v-model="form.password" type="password" show-password autocomplete="current-password" @input="error = ''" />
               </el-form-item>
             </div>
             <div v-else key="game" class="login-fields">
@@ -151,24 +147,22 @@ async function submit() {
         <details class="login-help"><summary>{{ t('管理员登录帮助') }}</summary><p>{{ t('首次启动的管理员密码请查看服务器控制台。忘记密码时，可在控制台执行') }}</p><code>/lc web resetadmin</code></details>
       </section>
     </main>
-    <footer class="login-footer"><span>{{ brandName }}</span><span v-if="app.info?.version">{{ formatVersion(app.info.version) }}</span></footer>
   </div>
 </template>
 
 <style scoped>
 .login-page { min-height: 100dvh; display: flex; flex-direction: column; background: var(--lc-surface); }
-.login-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 64px; padding: 12px 28px; border-bottom: 1px solid var(--lc-line); }
-.login-brand { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--lc-text); font-size: 16px; font-weight: 650; }
-.login-brand img { width: 30px; height: 30px; flex: none; object-fit: contain; }
+.login-header { display: flex; align-items: center; justify-content: flex-end; min-height: 64px; padding: 12px 28px; }
+.login-brand { display: flex; align-items: center; gap: 12px; min-width: 0; margin-bottom: 24px; color: var(--lc-text); font-size: 17px; font-weight: 650; }
+.login-brand img { width: 38px; height: 38px; flex: none; object-fit: contain; }
 .login-brand span { min-width: 0; overflow-wrap: anywhere; }
 .login-tools { display: flex; align-items: center; gap: 6px; flex: none; }
 .tool-button { display: flex; align-items: center; justify-content: center; gap: 7px; height: 34px; min-width: 34px; padding: 0 8px; border: 0; border-radius: 5px; background: none; color: var(--el-text-color-regular); font-size: 12px; cursor: pointer; }
 .tool-button:hover { background: var(--el-fill-color-light); }
-.login-main { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; padding: 48px 24px 64px; }
-.login-form { width: 100%; max-width: 360px; min-width: 0; }
-.login-heading { margin-bottom: 28px; }
-.login-heading h1 { margin: 0; font-size: 24px; font-weight: 650; line-height: 1.4; letter-spacing: 0; }
-.login-modes { margin-bottom: 24px; }
+.login-main { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; padding: 32px 24px 80px; }
+.login-form { width: 100%; max-width: 340px; min-width: 0; }
+.login-form h1 { margin: 0 0 20px; font-size: 22px; font-weight: 650; line-height: 1.4; }
+.login-modes { margin-bottom: 20px; }
 .login-error { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 20px; padding: 10px 12px; border: 1px solid var(--el-color-danger-light-7); border-radius: 5px; color: var(--el-color-danger); background: var(--el-color-danger-light-9); font-size: 13px; overflow-wrap: anywhere; }
 .login-error .lc-icon { margin-top: 2px; }
 .login-fields { display: flow-root; min-height: 176px; }
@@ -179,8 +173,7 @@ async function submit() {
 .login-help summary { display: list-item; width: fit-content; cursor: pointer; color: var(--el-text-color-regular); }
 .login-help p { margin: 12px 0 8px; }
 code { padding: 3px 6px; border-radius: 4px; background: var(--el-fill-color-light); color: var(--el-text-color-regular); font-family: 'Cascadia Code', Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
-.game-code-help { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 0 0 20px; color: var(--lc-text-soft); font-size: 12px; }
-.login-footer { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; padding: 16px 24px; color: var(--lc-text-soft); font-size: 11px; }
+.game-code-help { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 0 0 20px; color: var(--lc-text-soft); font-size: 12px; }
 .login-mode-enter-active { transition: opacity 150ms ease-out, transform 240ms var(--motion-spring-soft); }
 .login-mode-leave-active { transition: opacity 100ms ease-in; }
 .login-mode-enter-from { opacity: 0; transform: translateY(4px); }
@@ -188,12 +181,9 @@ code { padding: 3px 6px; border-radius: 4px; background: var(--el-fill-color-lig
 :deep(.el-form-item__label) { font-size: 13px; line-height: 1.6; padding-bottom: 7px; }
 :deep(.el-input__wrapper) { min-height: 40px; }
 @media (max-width: 600px) {
-  .login-header { gap: 12px; min-height: 60px; padding: 12px 16px; }
-  .login-brand { font-size: 14px; }
-  .login-brand span { max-height: 42px; overflow: hidden; }
+  .login-header { min-height: 56px; padding: 8px 16px; }
   .login-tools { gap: 2px; }
   .tool-button span { display: none; }
-  .login-main { align-items: flex-start; padding: 40px 24px; }
-  .login-heading h1 { font-size: 22px; }
+  .login-main { align-items: flex-start; padding: 24px 24px 40px; }
 }
 </style>

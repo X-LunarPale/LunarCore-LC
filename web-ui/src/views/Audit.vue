@@ -47,33 +47,26 @@ useAutoRefresh(() => { if (!s.loading && s.page === 1 && !selected.value) return
 
 <template>
   <div class="page audit-page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">{{ t('操作日志') }}</h1>
-      </div>
-      <span class="live-status"><i />{{ t(selected ? '查看记录详情' : s.page === 1 ? '自动更新' : '历史记录') }}</span>
-    </div>
+    <header class="page-header"><h1 class="page-title">{{ t('操作日志') }}</h1></header>
     <el-alert v-if="error" :title="error" type="error" show-icon :closable="false" />
     <div class="audit-surface">
-      <div class="toolbar">
-        <el-select v-model="s.module" :placeholder="t('全部模块')" clearable style="width: 160px" @change="search">
+      <form class="toolbar" role="search" @submit.prevent="search">
+        <el-select v-model="s.module" :placeholder="t('全部模块')" :aria-label="t('模块')" clearable @change="search">
           <el-option v-for="m in s.modules" :key="m" :label="moduleLabel(m)" :value="m" />
         </el-select>
-        <el-input v-model="query" :placeholder="t('搜索操作者 / 动作 / 详情')" :aria-label="t('搜索操作者 / 动作 / 详情')" clearable style="width: 280px" @keyup.enter="search" @clear="search">
+        <el-input v-model="query" :placeholder="t('搜索操作者 / 动作 / 详情')" :aria-label="t('搜索操作者 / 动作 / 详情')" clearable @clear="search">
           <template #prefix><Icon name="search" :size="14" /></template>
         </el-input>
-        <el-button type="primary" :loading="s.loading" @click="search"><Icon name="search" :size="14" />{{ t('搜索') }}</el-button>
-        <div class="spacer" />
-        <el-button :disabled="s.loading" @click="load"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
-      </div>
-      <div class="list-caption"><span>{{ t('管理操作记录') }} <strong>{{ s.total }}</strong></span><span>{{ t('按时间倒序排列') }}</span></div>
-      <el-table :data="s.items" v-loading="s.loading && !s.items.length" class="audit-table" @row-click="selected = $event">
+        <el-button native-type="submit" :loading="s.loading">{{ t('搜索') }}</el-button>
+        <el-tooltip :content="t('刷新')"><el-button class="refresh-button" :aria-label="t('刷新')" :disabled="s.loading" @click="load"><Icon name="refresh-cw" :size="15" /></el-button></el-tooltip>
+      </form>
+      <el-table :data="s.items" v-loading="s.loading && !s.items.length" class="audit-table" :empty-text="t('暂无操作记录')">
+        <el-table-column :label="t('操作')" min-width="200">
+          <template #default="{ row }"><div class="operation"><Icon :name="row.action?.includes('delete') ? 'trash-2' : row.action?.includes('console') ? 'terminal' : 'file-pen-line'" :size="16" /><div><button class="record-link" type="button" @click="selected = row">{{ actionLabel(row.action) }}</button><small>{{ moduleLabel(row.module) }}</small></div></div></template>
+        </el-table-column>
         <el-table-column :label="t('时间')" width="180"><template #default="{ row }"><time class="record-time">{{ formatDateTime(row.time) }}</time></template></el-table-column>
-        <el-table-column :label="t('操作')" min-width="200"><template #default="{ row }"><div class="operation"><span class="operation-icon"><Icon :name="row.action?.includes('delete') ? 'trash-2' : row.action?.includes('console') ? 'terminal' : 'file-pen-line'" :size="16" /></span><div><strong>{{ actionLabel(row.action) }}</strong><small>{{ moduleLabel(row.module) }}</small></div></div></template></el-table-column>
         <el-table-column :label="t('操作者')" width="170"><template #default="{ row }"><div class="actor"><Icon name="user-round" :size="15" /><div><span>{{ actorName(row.actor) }}</span><small>{{ actorSource(row.actor) }}</small></div></div></template></el-table-column>
         <el-table-column :label="t('记录摘要')" min-width="260"><template #default="{ row }"><span class="detail-summary">{{ row.detail || t('无补充信息') }}</span></template></el-table-column>
-        <el-table-column width="85" align="right"><template #default="{ row }"><el-button link type="primary" @click.stop="selected = row">{{ t('详情') }}<Icon name="chevron-right" :size="13" /></el-button></template></el-table-column>
-        <template #empty><div class="audit-empty"><Icon name="scroll-text" :size="30" /><strong>{{ t('暂无操作记录') }}</strong><span>{{ t('新的管理操作将在此显示。') }}</span></div></template>
       </el-table>
       <el-dialog :model-value="!!selected" :title="t('操作记录详情')" width="640px" append-to-body @update:model-value="value => { if (!value) selected = null }">
         <template v-if="selected"><dl class="record-meta"><div><dt>{{ t('时间') }}</dt><dd>{{ formatDateTime(selected.time) }}</dd></div><div><dt>{{ t('操作者') }}</dt><dd>{{ actorName(selected.actor) }} · {{ actorSource(selected.actor) }}</dd></div><div><dt>{{ t('模块') }}</dt><dd>{{ moduleLabel(selected.module) }} <small>{{ selected.module }}</small></dd></div><div><dt>{{ t('操作') }}</dt><dd>{{ actionLabel(selected.action) }} <small>{{ selected.action }}</small></dd></div></dl><div class="detail-label">{{ t('完整记录') }}</div><pre class="record-detail">{{ selected.detail || t('无补充信息') }}</pre></template>
@@ -84,27 +77,24 @@ useAutoRefresh(() => { if (!s.loading && s.page === 1 && !selected.value) return
 </template>
 
 <style scoped>
-.audit-page { min-width: 0; }.audit-page > .el-alert { margin-bottom: 16px; }.toolbar .el-button { gap: 7px; margin-left: 0; }
-.live-status { display: flex; align-items: center; gap: 7px; color: var(--lc-text-soft); font-size: 12px; }
-.live-status i { width: 6px; height: 6px; background: var(--el-color-success); border-radius: 50%; }
+.audit-page > .el-alert { margin-bottom: 16px; }
 .audit-surface { min-width: 0; overflow: hidden; }
-.toolbar { padding-bottom: 20px; border-bottom: 1px solid var(--el-border-color-light); }
-.list-caption { display: flex; justify-content: space-between; color: var(--lc-text-soft); font-size: 12px; padding: 4px 0 18px; }
-.list-caption strong { color: var(--lc-text); font-weight: 500; margin-left: 8px; }
+.toolbar .el-select { width: 145px; }
+.toolbar .el-input { width: 270px; min-width: 0; }
+.toolbar .el-button { margin-left: 0; }
+.refresh-button { width: 34px; padding: 0; }
 .audit-table { --el-table-header-bg-color: transparent; --el-table-border-color: var(--el-border-color-lighter); }
-.audit-table :deep(.el-table__row) { cursor: pointer; }
 .audit-table :deep(td.el-table__cell) { padding: 11px 0; }
 .record-time { color: var(--lc-text-soft); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.operation { display: flex; gap: 12px; align-items: center; }
-.operation-icon { width: 32px; height: 32px; display: grid; place-items: center; flex-shrink: 0; background: var(--el-fill-color-light); color: var(--lc-text-soft); border-radius: 8px; }
-.operation strong { display: block; font-size: 13px; font-weight: 550; color: var(--lc-text); }
+.operation { display: flex; gap: 10px; align-items: center; }
+.operation > .lc-icon { color: var(--lc-text-soft); }
+.operation > div { min-width: 0; }
+.record-link { border: 0; padding: 0; background: none; text-align: start; color: var(--lc-accent); font-weight: 550; cursor: pointer; overflow-wrap: anywhere; }
+.record-link:hover { text-decoration: underline; }
 .operation small, .actor small { display: block; font-size: 11px; color: var(--lc-text-soft); margin-top: 3px; }
 .actor { display: flex; align-items: center; gap: 9px; color: var(--el-text-color-regular); }
 .actor > .lc-icon { color: var(--lc-text-soft); }
 .detail-summary { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lc-text-soft); font-size: 12px; }
-.audit-empty { display: flex; align-items: center; flex-direction: column; gap: 10px; padding: 44px 0; color: var(--lc-text-soft); }
-.audit-empty strong { font-weight: 500; }
-.audit-empty span { font-size: 12px; }
 .record-meta { margin: 0 0 24px; }
 .record-meta > div { display: flex; gap: 20px; padding: 9px 0; }
 .record-meta dt { color: var(--lc-text-soft); width: 60px; flex-shrink: 0; }
@@ -113,5 +103,15 @@ useAutoRefresh(() => { if (!s.loading && s.page === 1 && !selected.value) return
 .detail-label { font-size: 12px; color: var(--lc-text-soft); margin-bottom: 8px; }
 .record-detail { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 45vh; overflow: auto; padding: 16px; border: 1px solid var(--el-border-color-light); border-radius: 8px; background: var(--el-fill-color-light); line-height: 1.8; font-size: 12px; }
 .pager { padding-top: 18px; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
-@media (max-width: 700px) { .toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding-bottom:14px;margin-bottom:12px}.toolbar > .el-select{width:100%!important;grid-column:1/-1}.toolbar > .el-input { width: 100% !important;min-width:0; }.toolbar>.spacer{display:none}.toolbar>.el-button:last-child{grid-column:1/-1;margin:0}.list-caption{padding-bottom:12px}.list-caption > span:last-child { display: none; }.pager{justify-content:center}.pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump),.pager :deep(.el-pagination__total) { display: none; }.record-meta>div{gap:10px}.record-meta dt{width:48px}.record-detail{padding:10px}.operation{gap:8px} }
+@media (max-width: 700px) {
+  .toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; margin-bottom: 12px; }
+  .toolbar .el-select { width: 100%; grid-column: 1 / -1; }
+  .toolbar .el-input { width: 100%; }
+  .pager { justify-content: center; }
+  .pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump) { display: none; }
+  .record-meta > div { gap: 10px; }
+  .record-meta dt { width: 48px; }
+  .record-detail { padding: 10px; }
+  .operation { gap: 8px; }
+}
 </style>

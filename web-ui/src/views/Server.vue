@@ -104,24 +104,24 @@ onMounted(loadWl)
       <h1 class="page-title">{{ t('服务器操作') }}</h1>
       <el-button :loading="saving" @click="save"><Icon name="save" :size="15" />{{ t('保存所有世界') }}</el-button>
     </header>
-    <el-tabs v-model="tab" class="workspace-tabs">
-      <el-tab-pane :label="t('全服广播')" name="broadcast">
+    <el-tabs v-model="tab">
+      <el-tab-pane :label="t('全服广播')" name="broadcast" lazy>
         <section class="broadcast-layout">
           <el-form label-position="top" @submit.prevent="broadcast">
             <el-form-item :label="t('广播内容')">
-              <el-input v-model="broadcastText" type="textarea" :rows="5" :disabled="sending" :placeholder="t('请输入广播内容')" />
+              <el-input v-model="broadcastText" type="textarea" :rows="5" :disabled="sending" />
             </el-form-item>
             <el-button type="primary" native-type="submit" :loading="sending" :disabled="!broadcastText.trim()"><Icon name="send" :size="15" />{{ t('发送广播') }}</el-button>
           </el-form>
           <MinecraftTextPreview :text="broadcastText" :label="t('广播预览')" :show-help="false" />
         </section>
       </el-tab-pane>
-      <el-tab-pane :label="t('白名单')" name="whitelist">
+      <el-tab-pane :label="t('白名单')" name="whitelist" lazy>
         <section class="whitelist-section">
           <header class="section-heading">
             <div class="whitelist-state">
               <el-switch :model-value="wl.enabled" :disabled="whitelistBusy || wl.loading" :aria-label="t('白名单')" @change="toggleWl" />
-              <strong>{{ t(wl.enabled ? '已开启' : '已关闭') }}</strong>
+              <span>{{ t(wl.enabled ? '已开启' : '已关闭') }}</span>
               <el-tag v-if="wl.enforced" type="warning" size="small">{{ t('强制模式') }}</el-tag>
             </div>
             <span class="muted">{{ t('共 {count} 人', { count: wl.items.length }) }}</span>
@@ -153,7 +153,6 @@ onMounted(loadWl)
 .whitelist-section { padding-top: 8px; min-width: 0; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 18px; font-size: 13px; }
 .whitelist-state { display: flex; align-items: center; gap: 10px; }
-.whitelist-state strong { font-size: 13px; font-weight: 500; }
 .whitelist-toolbar { margin: 18px 0 14px; }
 .whitelist-toolbar .el-input { width: 220px; min-width: 0; }
 .whitelist-toolbar .el-button { margin-left: 0; }

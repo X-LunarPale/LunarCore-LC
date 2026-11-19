@@ -285,11 +285,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="ai-workspace" :aria-busy="busy">
-    <header class="ai-heading">
-      <div>
-        <h1><Icon name="bot" :size="23" />{{ t('AI 聊天') }}</h1>
-      </div>
-      <el-button :disabled="busy" @click="load()"><Icon name="refresh-cw" :size="15" />{{ t('读取配置') }}</el-button>
+    <header class="page-header">
+      <h1 class="page-title">{{ t('AI 聊天') }}</h1>
+      <el-button :disabled="busy" :title="t('读取配置')" :aria-label="t('读取配置')" @click="load()"><Icon name="refresh-cw" :size="15" /></el-button>
     </header>
 
     <div class="ai-status" role="status">
@@ -310,18 +308,17 @@ onBeforeUnmount(() => {
         <section v-show="tab === 'identity'" class="settings-block" aria-labelledby="ai-identity-title">
           <h2 id="ai-identity-title"><Icon name="message-circle" :size="17" />{{ t('身份与触发') }}</h2>
           <div class="toggle-line"><label for="ai-enabled">{{ t('启用 AI 对话') }}</label><el-switch id="ai-enabled" v-model="form.enabled" :disabled="busy" :aria-label="t('启用 AI 对话')" /></div>
-          <div class="field"><label for="ai-name">{{ t('角色名称') }}</label><el-input id="ai-name" v-model="form.name" maxlength="24" show-word-limit :disabled="busy" /><small>{{ t('玩家可在聊天中用 @名称 呼叫它。') }}</small></div>
-          <div class="field"><label for="ai-mode">{{ t('回应方式') }}</label><el-select id="ai-mode" v-model="form.replyMode" :disabled="busy"><el-option value="mention" :label="t('仅在被提及时回应')" /><el-option value="all" :label="t('允许主动回复')" /></el-select><small>{{ t('被 @名称 提及时优先回应；主动模式对其他公开聊天按概率抽样。') }}</small></div>
+          <div class="field"><label for="ai-name">{{ t('角色名称') }}</label><el-input id="ai-name" v-model="form.name" maxlength="24" :disabled="busy" /></div>
+          <div class="field"><label for="ai-mode">{{ t('回应方式') }}</label><el-select id="ai-mode" v-model="form.replyMode" :disabled="busy"><el-option value="mention" :label="t('仅在被提及时回应')" /><el-option value="all" :label="t('允许主动回复')" /></el-select></div>
           <div v-if="form.replyMode === 'all'" class="field"><label for="ai-proactive-probability">{{ t('主动回复概率') }}</label><div class="probability-control"><el-slider v-model="form.proactiveProbability" :min="0" :max="100" :step="1" :show-tooltip="false" :disabled="busy" :aria-label="t('主动回复概率')" /><el-input-number id="ai-proactive-probability" v-model="form.proactiveProbability" :min="0" :max="100" :step="1" controls-position="right" :disabled="busy" :aria-label="t('主动回复概率')" /><span>%</span></div><small>{{ t('仅对未提及 AI 的公开聊天生效；0% 只回应提及，100% 回应每条，仍受全服冷却限制。') }}</small></div>
-          <div class="field"><label for="ai-cooldown">{{ t('最短回应间隔（秒）') }}</label><el-input-number id="ai-cooldown" v-model="form.cooldownSeconds" :min="5" :max="600" :step="5" controls-position="right" :disabled="busy" /><small>{{ t('服务器全局限速，避免刷屏和意外费用。') }}</small></div>
-          <p class="activation-note">{{ t('保存后立即生效；首次安装新版插件需重启服务器。') }}</p>
+          <div class="field"><label for="ai-cooldown">{{ t('最短回应间隔（秒）') }}</label><el-input-number id="ai-cooldown" v-model="form.cooldownSeconds" :min="5" :max="600" :step="5" controls-position="right" :disabled="busy" /></div>
         </section>
 
         <section v-show="tab === 'connection'" class="settings-block" aria-labelledby="ai-connection-title">
           <h2 id="ai-connection-title"><Icon name="link" :size="17" />{{ t('模型连接') }}</h2>
-          <div class="field"><label for="ai-provider">{{ t('上游供应商') }}</label><el-select id="ai-provider" :model-value="form.providerType" :disabled="busy" @update:model-value="selectProvider(form, $event)"><el-option v-for="item in providers" :key="item.value" :value="item.value" :label="t(item.label)" /></el-select><small>{{ t('选择类型后可查询 DeepSeek 或 sub2API 的余额；其他兼容接口仍可正常聊天。') }}</small></div>
-          <div class="field"><label for="ai-base-url">{{ t('Base URL') }}</label><el-input id="ai-base-url" v-model="form.baseUrl" maxlength="2048" placeholder="https://api.openai.com/v1" :disabled="busy" /><small>{{ t('输入兼容聊天补全接口的服务根地址，例如 https://api.openai.com/v1。') }}</small></div>
-          <div class="field"><label for="ai-model">{{ t('模型 ID') }}</label><el-input id="ai-model" v-model="form.model" maxlength="128" :disabled="busy" /><small>{{ t('使用服务商提供的模型标识。') }}</small></div>
+          <div class="field"><label for="ai-provider">{{ t('上游供应商') }}</label><el-select id="ai-provider" :model-value="form.providerType" :disabled="busy" @update:model-value="selectProvider(form, $event)"><el-option v-for="item in providers" :key="item.value" :value="item.value" :label="t(item.label)" /></el-select></div>
+          <div class="field"><label for="ai-base-url">{{ t('Base URL') }}</label><el-input id="ai-base-url" v-model="form.baseUrl" maxlength="2048" placeholder="https://api.openai.com/v1" :disabled="busy" /></div>
+          <div class="field"><label for="ai-model">{{ t('模型 ID') }}</label><el-input id="ai-model" v-model="form.model" maxlength="128" :disabled="busy" /></div>
           <div v-if="models.primary?.length" class="field"><label for="ai-model-list">{{ t('上游可用模型') }}</label><el-select id="ai-model-list" v-model="form.model" filterable :disabled="busy"><el-option v-for="item in models.primary" :key="item" :value="item" :label="item" /></el-select></div>
           <div class="field"><label for="ai-fallback">{{ t('回退模型 ID') }}</label><el-input id="ai-fallback" v-model="form.fallbackModel" maxlength="128" :disabled="busy" /><small>{{ t('限流、模型不存在或上游故障时尝试一次；鉴权或余额错误不回退。留空关闭。') }}</small></div>
           <div class="field"><label for="ai-key">{{ t('API Key') }}</label><el-input id="ai-key" v-model="apiKey" maxlength="512" type="password" show-password autocomplete="new-password" :disabled="busy || clearApiKey" /><small :class="{ 'key-present': keyConfigured }">{{ t(keyConfigured ? '已保存密钥（不会返回浏览器）' : '尚未保存密钥') }}<span class="key-hint">{{ t('留空保持现有密钥；输入新值会替换。') }}</span><span class="key-hint">{{ t('更换 Base URL 时需重填密钥，或关闭 AI 后清除旧密钥。') }}</span></small></div>
@@ -338,7 +335,7 @@ onBeforeUnmount(() => {
       </section>
 
       <section v-show="tab === 'bots'" class="additional-bots" aria-labelledby="ai-bots-title">
-        <div class="section-heading"><div><h2 id="ai-bots-title"><Icon name="users" :size="17" />{{ t('附加 AI 角色') }}</h2><p>{{ t('每个角色有独立的名称、人格、上游与模型。点名时选择对应角色；主动聊天在已启用角色间轮换。') }}</p></div><el-button :disabled="busy || form.bots.length >= 4" @click="addBot"><Icon name="plus" :size="14" />{{ t('添加角色') }}</el-button></div>
+        <div class="section-heading"><h2 id="ai-bots-title">{{ t('附加 AI 角色') }}</h2><el-button :disabled="busy || form.bots.length >= 4" @click="addBot"><Icon name="plus" :size="14" />{{ t('添加角色') }}</el-button></div>
         <div v-for="(bot, index) in form.bots" :key="bot.id" class="bot-editor">
           <div class="bot-title"><strong>{{ bot.name || t('新角色') }}</strong><el-switch v-model="bot.enabled" :disabled="busy" :aria-label="t('启用角色')" /><el-button text type="danger" :disabled="busy" @click="form.bots.splice(index, 1)">{{ t('移除') }}</el-button></div>
           <div class="bot-fields">
@@ -369,7 +366,6 @@ onBeforeUnmount(() => {
 
       <footer class="settings-actions">
         <span v-if="validation" class="validation" role="alert">{{ t(validation) }}</span>
-        <span v-else class="action-hint">{{ t(dirty ? '修改尚未保存' : '配置已加载') }}</span>
         <el-button type="primary" native-type="submit" :loading="saving" :disabled="busy || !dirty || !!validation || uncertain"><Icon name="save" :size="15" />{{ t('保存 AI 配置') }}</el-button>
       </footer>
     </form>
@@ -378,11 +374,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .ai-workspace { max-width: 1160px; min-width: 0; }
-.ai-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
-.ai-heading h1 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 22px; font-weight: 650; line-height: 1.4; }
-.ai-heading h1 :deep(svg) { color: var(--el-color-primary); }
-.ai-heading p, .persona-block p { margin: 0; color: var(--lc-text-soft); font-size: 12px; line-height: 1.65; }
-.ai-heading :deep(.el-button > span), .settings-actions :deep(.el-button > span) { display: inline-flex; align-items: center; gap: 6px; }
+.persona-block p { margin: 0; color: var(--lc-text-soft); font-size: 12px; line-height: 1.65; }
+.settings-actions :deep(.el-button > span) { display: inline-flex; align-items: center; gap: 6px; }
 .ai-status { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 0; border-top: 1px solid var(--el-border-color); border-bottom: 1px solid var(--el-border-color); font-size: 12px; }
 .ai-status strong { font-weight: 600; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lc-text-soft); }
@@ -410,7 +403,6 @@ h2 :deep(svg) { color: var(--el-color-primary); }
 .probability-control :deep(.el-slider) { min-width: 0; padding: 0 5px; }
 .probability-control :deep(.el-input-number) { width: 104px; }
 .probability-control > span { color: var(--lc-text-soft); font-size: 12px; }
-.activation-note { margin: 0 0 20px; color: var(--lc-text-soft); font-size: 11px; line-height: 1.55; }
 .toggle-line { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; padding: 0 0 14px; border-bottom: 1px solid var(--el-border-color-lighter); }
 .toggle-line > label { margin: 0; }
 .clear-key { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; cursor: pointer; }
@@ -421,9 +413,9 @@ h2 :deep(svg) { color: var(--el-color-primary); }
 .persona-block h2 { margin-bottom: 5px; }
 .persona-block :deep(textarea) { font-size: 13px; line-height: 1.6; }
 .additional-bots { padding:0; }
-.section-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; }
+.section-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
 .section-heading h2 { margin-bottom:4px; }
-.section-heading p,.section-note { color:var(--lc-text-soft); font-size:11px; line-height:1.6; margin:0 0 16px; }
+.section-note { color:var(--lc-text-soft); font-size:11px; line-height:1.6; margin:0 0 16px; }
 .bot-editor { padding:16px 0; border-top:1px solid var(--el-border-color-light); }
 .bot-title { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
 .bot-title strong { margin-right:auto; font-size:13px; }
@@ -445,7 +437,6 @@ h2 :deep(svg) { color: var(--el-color-primary); }
 .example-reply strong { color: var(--el-color-primary); }
 .settings-actions { display:flex; justify-content:flex-end; align-items:center; gap:16px; border-top:1px solid var(--el-border-color-light); padding:16px 0; margin-top:24px; position:sticky; bottom:0; z-index:3; background:var(--lc-surface); }
 .settings-actions > span { margin-right: auto; font-size: 12px; }
-.action-hint { color: var(--lc-text-soft); }
 @media (max-width:850px) { .persona-block { grid-template-columns:minmax(0,1fr); gap:12px; } }
-@media (max-width: 560px) { .ai-heading { gap: 12px; flex-wrap: wrap; }.ai-status { flex-wrap: wrap; }.unsaved { margin-left: 0; }.chat-example > div,.section-heading { flex-wrap: wrap; }.bot-fields { grid-template-columns:minmax(0,1fr); }.settings-actions { flex-wrap: wrap; }.settings-actions :deep(.el-button) { margin-left: auto; }.memory-clear { flex-wrap:wrap; } }
+@media (max-width: 560px) { .ai-status { flex-wrap: wrap; }.unsaved { margin-left: 0; }.chat-example > div,.section-heading { flex-wrap: wrap; }.bot-fields { grid-template-columns:minmax(0,1fr); }.settings-actions { flex-wrap: wrap; }.settings-actions :deep(.el-button) { margin-left: auto; }.memory-clear { flex-wrap:wrap; }.probability-control { grid-template-columns: minmax(0, 1fr) 92px auto; }.probability-control :deep(.el-input-number) { width: 92px; } }
 </style>

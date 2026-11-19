@@ -75,6 +75,17 @@ useAutoRefresh(() => { if (!busy.value) return load() }, { immediate: true, seco
 
 <template>
   <section class="market">
+    <div class="toolbar">
+      <el-input v-model="query" :placeholder="t('搜索模块')" :aria-label="t('搜索模块')" clearable>
+        <template #prefix><Icon name="search" :size="14" /></template>
+      </el-input>
+      <el-select v-model="category" :aria-label="t('模块分类')">
+        <el-option :label="t('全部分类')" value="all" />
+        <el-option v-for="(label, key) in categories" :key="key" :label="t(label)" :value="key" />
+      </el-select>
+      <el-button :loading="loading" :disabled="busy" :title="t('刷新')" :aria-label="t('刷新')" @click="load"><Icon name="refresh-cw" :size="15" /></el-button>
+      <small v-if="data.version" class="market-version">{{ formatVersion(data.version) }}</small>
+    </div>
     <el-alert v-if="loadError" :title="t('模块市场加载失败')" :description="loadError" type="error" :closable="false" show-icon />
     <el-alert v-if="data.state === 'failed'" :title="errorText(data.error)" type="error" :closable="false" show-icon />
     <div v-if="data.state === 'downloading'" class="market-status" role="status">
@@ -84,65 +95,64 @@ useAutoRefresh(() => { if (!busy.value) return load() }, { immediate: true, seco
       <div><strong>{{ t('等待重启') }}</strong><p>{{ pendingNames }}</p></div>
       <el-button v-if="auth.can('core.modules.manage')" :disabled="busy" @click="cancel">{{ t('取消变更') }}</el-button>
     </div>
-    <div class="market-toolbar">
-      <el-input v-model="query" :placeholder="t('搜索模块')" clearable>
-        <template #prefix><Icon name="search" :size="14" /></template>
-      </el-input>
-      <el-select v-model="category" :aria-label="t('模块分类')">
-        <el-option :label="t('全部分类')" value="all" />
-        <el-option v-for="(label, key) in categories" :key="key" :label="t(label)" :value="key" />
-      </el-select>
-      <el-button :loading="loading" :disabled="busy" @click="load"><Icon name="refresh-cw" :size="15" />{{ t('刷新') }}</el-button>
-    </div>
-    <div class="market-note"><span>{{ t('安装、更新和卸载在重启后生效。') }}</span><span class="market-version">{{ formatVersion(data.version) }}</span></div>
-    <div v-loading="loading && !data.items.length" class="market-list">
+    <div v-loading="loading && !data.items.length" class="market-list" :aria-busy="loading || busy">
       <article v-for="module in shown" :key="module.id" class="market-row">
-        <div class="market-name">
-          <Icon name="package" :size="20" />
-          <div><strong>{{ name(module) }}</strong><small>{{ module.id }} · v{{ module.version }}</small></div>
+        <div class="market-module">
+          <details>
+            <summary><h2>{{ name(module) }} <small v-if="module.version">v{{ module.version }}</small></h2></summary>
+            <div class="market-meta">
+              <code>{{ module.id }}</code>
+              <span v-if="module.depends?.length">{{ t('依赖') }}: {{ module.depends.map(id => name(data.items.find(m => m.id === id) || { name: id, nameEn: id })).join(', ') }}</span>
+            </div>
+          </details>
+          <p v-if="description(module)">{{ description(module) }}</p>
         </div>
-        <div class="market-description">
-          <p>{{ description(module) }}</p>
-          <small v-if="module.depends?.length">{{ t('依赖') }}: {{ module.depends.map(id => name(data.items.find(m => m.id === id) || { name: id, nameEn: id })).join(', ') }}</small>
-          <small v-if="module.installedVersion">{{ t('已安装') }}: v{{ module.installedVersion }}</small>
-        </div>
+        <span class="market-installed" :class="{ installed: module.installedVersion }">{{ module.installedVersion ? `${t('已安装')} v${module.installedVersion}` : t('未安装') }}</span>
         <div v-if="auth.can('core.modules.manage')" class="market-actions">
           <el-button v-if="!module.installedVersion || module.updateAvailable" type="primary" size="small"
-            :disabled="locked" @click="action(module, 'install')">
+            :disabled="locked" :title="t('安装、更新和卸载在重启后生效。')" @click="action(module, 'install')">
             <Icon name="download" :size="14" /> {{ t(module.installedVersion ? '更新' : '安装') }}
           </el-button>
-          <el-tag v-else type="success" size="small">{{ t('已安装') }}</el-tag>
           <el-button v-if="module.installedVersion" size="small" type="danger" plain :disabled="locked"
             @click="action(module, 'remove')">{{ t('卸载') }}</el-button>
         </div>
-        <el-tag v-else size="small">{{ t(module.installedVersion ? '已安装' : '未安装') }}</el-tag>
       </article>
-      <el-empty v-if="loaded && !loading && !shown.length" :description="t('没有找到模块')" />
+      <el-empty v-if="loaded && !loading && !shown.length" :description="t('没有找到模块')" :image-size="48" />
     </div>
   </section>
 </template>
 
 <style scoped>
-.market { min-width: 0; }
-.market-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin: 0 0 14px; color: var(--lc-text-soft); font-size: 12px; }
-.market-toolbar { display: flex; align-items: center; gap: 8px; margin: 8px 0 18px; }
-.market-toolbar .el-input { max-width: 300px; }
-.market-toolbar .el-select { width: 160px; flex-shrink: 0; }
-.market-toolbar .el-button { gap: 7px; }
+.market { min-width: 0; container-type: inline-size; }
+.toolbar .el-input { width: min(240px, 100%); min-width: 0; }
+.toolbar .el-select { width: 146px; max-width: 100%; }
+.market-version { margin-inline-start: auto; color: var(--lc-text-soft); }
+.market > .el-alert { margin-bottom: 12px; }
 .market-status { display: flex; align-items: center; gap: 10px; margin: 12px 0 18px; padding: 12px 14px; border-left: 3px solid var(--el-color-primary); background: var(--el-fill-color-light); font-size: 13px; }
 .pending { justify-content: space-between; border-color: var(--el-color-warning); }
+.pending > div { min-width: 0; }
 .market-status p { margin: 5px 0 0; font-size: 12px; overflow-wrap: anywhere; }
-.market-list { border-top: 1px solid var(--el-border-color); min-height: 100px; }
-.market-row { display: grid; grid-template-columns: minmax(180px, .8fr) minmax(150px, 1.4fr) auto; align-items: center; gap: 20px; padding: 17px 0; border-bottom: 1px solid var(--el-border-color-light); }
-.market-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.market-name > svg { color: var(--lc-text-soft); flex-shrink: 0; }
-.market-name strong { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
-.market-name small { display: block; margin-top: 4px; color: var(--lc-text-soft); font-size: 11px; overflow-wrap: anywhere; }
-.market-description { min-width: 0; font-size: 12px; line-height: 1.7; }
-.market-description p { margin: 0; overflow-wrap: anywhere; }
-.market-description small { display: block; color: var(--lc-text-soft); font-size: 11px; }
-.market-actions { display: flex; align-items: center; gap: 8px; }
-.market-actions .el-button { margin-left: 0; gap: 5px; }
-@media (max-width: 800px) { .market-row { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }.market-description { grid-column: 1 / -1; grid-row: 2; }.market-actions { grid-column: 2; grid-row: 1; } }
-@media (max-width: 480px) { .market-toolbar { flex-wrap: wrap; }.market-toolbar .el-input { max-width: none; flex-basis: 100%; }.market-toolbar .el-select { flex: 1; width: auto; min-width: 0; }.market-row { grid-template-columns: minmax(0, 1fr); padding: 14px 0; }.market-description { grid-row: 2; }.market-actions { grid-column: 1; grid-row: 3; justify-content: flex-start; }.pending { align-items: flex-start; flex-wrap: wrap; } }
+.market-list { border-top: 1px solid var(--lc-line); min-height: 90px; }
+.market-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, .28fr) auto; align-items: start; gap: 12px 24px; padding: 14px 0; border-bottom: 1px solid var(--lc-line); }
+.market-module { min-width: 0; overflow-wrap: anywhere; }
+.market-module details { color: var(--lc-text-soft); font-size: 12px; }
+.market-module summary { width: fit-content; cursor: pointer; }
+.market-module h2 { display: inline; margin: 0; font-size: 14px; font-weight: 600; color: var(--lc-text); }
+.market-module small { margin-inline-start: 4px; color: var(--lc-text-soft); font-size: 12px; font-weight: 400; }
+.market-module p { margin: 4px 0 0; font-size: 13px; color: var(--lc-text-soft); }
+.market-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; padding-top: 6px; }
+.market-installed { font-size: 12px; color: var(--lc-text-soft); overflow-wrap: anywhere; }
+.market-installed.installed { color: var(--lc-text); }
+.market-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; min-width: 140px; }
+.market-actions .el-button { min-height: 32px; margin: 0; gap: 5px; }
+@container (max-width: 560px) {
+  .market-row { grid-template-columns: minmax(0, 1fr) minmax(64px, .38fr); }
+  .market-actions { grid-column: 1 / -1; justify-content: flex-start; min-width: 0; }
+}
+@container (max-width: 360px) {
+  .toolbar .el-input { width: 100%; }
+  .toolbar .el-select { flex: 1; min-width: 0; }
+  .market-version { width: 100%; }
+  .pending { align-items: flex-start; flex-wrap: wrap; }
+}
 </style>

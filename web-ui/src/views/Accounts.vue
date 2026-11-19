@@ -176,18 +176,19 @@ onMounted(load)
 
 <template>
   <div class="page accounts-page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">{{ t('账号与角色') }}</h1>
+    <header class="page-header">
+      <h1 class="page-title">{{ t('账号与角色') }}</h1>
+      <div class="page-actions">
+        <el-tooltip :content="t('刷新')"><el-button class="refresh-button" :aria-label="t('刷新')" :loading="loading" :disabled="!!busy" @click="load"><Icon name="refresh-cw" :size="15" /></el-button></el-tooltip>
+        <el-button v-if="tab === 'users'" type="primary" :disabled="!!busy || loading" @click="openUser()"><Icon name="user-plus" :size="14" />{{ t('新建账号') }}</el-button>
+        <el-button v-else type="primary" :disabled="!!busy || loading" @click="openRole()"><Icon name="plus" :size="14" />{{ t('新建角色') }}</el-button>
       </div>
-      <el-button :loading="loading" :disabled="!!busy" @click="load"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
-    </div>
+    </header>
     <el-alert v-if="error" :title="t('账号列表加载失败')" :description="error" type="error" show-icon :closable="false" />
     <div class="account-panel" v-loading="loading && !loaded">
-      <el-tabs v-model="tab" class="workspace-tabs">
+      <el-tabs v-model="tab">
         <el-tab-pane :label="t('账号（{count}）', { count: users.length })" name="users">
-          <div class="list-toolbar"><span class="muted">{{ t('访问账号') }}</span><el-button type="primary" :disabled="!!busy || loading" @click="openUser()"><Icon name="user-plus" :size="14" />{{ t('新建账号') }}</el-button></div>
-          <el-table :data="users" stripe class="account-table">
+          <el-table :data="users" class="account-table">
             <el-table-column type="expand" width="38"><template #default="{ row }"><dl class="account-details"><div><dt>{{ t('最后 IP') }}</dt><dd>{{ row.lastIp || '-' }}</dd></div><div><dt>{{ t('创建时间') }}</dt><dd>{{ formatDateTime(row.created) }}</dd></div></dl></template></el-table-column>
             <el-table-column :label="t('用户名')" min-width="140">
               <template #default="{ row }"><b>{{ row.username }}</b> <el-tag v-if="row.username === auth.user?.username" size="small" type="success">{{ t('我') }}</el-tag></template>
@@ -213,9 +214,8 @@ onMounted(load)
             <el-empty v-if="loaded && !users.length" :description="t('暂无账号')" />
           </div>
         </el-tab-pane>
-        <el-tab-pane :label="t('角色（{count}）', { count: roles.length })" name="roles">
-          <div class="list-toolbar"><span class="muted">{{ t('角色与权限') }}</span><el-button type="primary" :disabled="!!busy || loading" @click="openRole()"><Icon name="plus" :size="14" />{{ t('新建角色') }}</el-button></div>
-          <el-table :data="roles" stripe class="account-table">
+        <el-tab-pane :label="t('角色（{count}）', { count: roles.length })" name="roles" lazy>
+          <el-table :data="roles" class="account-table">
             <el-table-column :label="t('角色')" min-width="150">
               <template #default="{ row }"><b>{{ row.display }}</b> <span class="muted mono">{{ row.name }}</span> <el-tag v-if="row.builtin" size="small" type="info">{{ t('内置') }}</el-tag></template>
             </el-table-column>
@@ -283,10 +283,10 @@ onMounted(load)
             <el-empty v-if="!permGroups.length" :description="t('没有找到权限')" :image-size="60" />
           </div>
         </el-form-item>
-        <p class="permission-help">{{ t('权限支持') }} <code>*</code>{{ t('、') }}<code>economy.*</code>{{ t('、') }}<code>*.view</code> {{ t('通配；以') }} <code>-</code> {{ t('开头表示显式拒绝。') }}</p>
         <el-form-item :label="t('自定义权限节点')">
           <el-input v-model="roleDlg.custom" type="textarea" :rows="3" class="mono" :placeholder="t('每行一个，例如：economy.*  或  *.view  或  -ban.manage')" />
         </el-form-item>
+        <details class="permission-help"><summary>{{ t('权限支持') }}</summary><p><code>*</code>{{ t('、') }}<code>economy.*</code>{{ t('、') }}<code>*.view</code> {{ t('通配；以') }} <code>-</code> {{ t('开头表示显式拒绝。') }}</p></details>
       </el-form>
       <template #footer>
         <el-button :disabled="!!busy" @click="roleDlg.visible = false">{{ t('取消') }}</el-button>
@@ -301,13 +301,8 @@ onMounted(load)
 .mobile-accounts { display: none; }
 .account-panel { min-width: 0; overflow: hidden; }
 .accounts-page > .el-alert { margin-bottom: 16px; }
-.page-header .el-button, .list-toolbar .el-button { gap: 7px; }
-.account-panel :deep(.el-tabs__header) { margin-bottom: 0; }
-.account-panel :deep(.el-tabs__item) { height: 50px; }
+.refresh-button { width: 34px; padding: 0; }
 .account-panel :deep(.el-table td.el-table__cell) { padding-block: 10px; }
-.list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0 18px; font-size: 13px; }
-.list-toolbar h3 { margin: 0; font-size: 15px; font-weight: 600; }
-.list-toolbar p { margin: 4px 0 0; font-size: 12px; color: var(--lc-text-soft); }
 .role-identity { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .role-form :deep(.el-form-item__label), .account-form :deep(.el-form-item__label) { padding-bottom: 6px; }
 .ptag { margin: 2px 4px 2px 0; max-width: 100%; }
@@ -319,7 +314,9 @@ onMounted(load)
 .perm-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 2px 12px; padding-left: 22px; }
 .perm-items :deep(.el-checkbox) { margin-right: 0; height: auto; min-height: 30px; white-space: normal; }
 .perm-items :deep(.el-checkbox__label) { display: flex; flex-wrap: wrap; gap: 0 6px; line-height: 1.5; padding-block: 4px; overflow-wrap: anywhere; }
-.permission-help { font-size: 12px; color: var(--lc-text-soft); line-height: 1.8; margin: -2px 0 14px; }
+.permission-help { font-size: 12px; color: var(--lc-text-soft); line-height: 1.8; }
+.permission-help summary { width: fit-content; cursor: pointer; }
+.permission-help p { margin: 8px 0 0; }
 .small { font-size: 11px; }
 code { background: var(--el-fill-color-light); padding: 1px 5px; border-radius: 4px; }
 @media (max-width: 650px) {
@@ -329,6 +326,6 @@ code { background: var(--el-fill-color-light); padding: 1px 5px; border-radius: 
   .mobile-user-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 10px; font-size: 12px; color: var(--lc-text-soft); }
   .mobile-user-details { margin-top: 12px; font-size: 12px; color: var(--lc-text-soft); }.mobile-user-details summary { cursor: pointer; width: fit-content; }.mobile-user-details dl { margin: 10px 0 0; display: grid; gap: 8px; }.mobile-user-details dl > div { display: flex; gap: 12px; }.mobile-user-details dt { flex: 0 0 72px; }.mobile-user-details dd { margin: 0; overflow-wrap: anywhere; }.mobile-user-details .all-permissions { margin-top: 10px; }
   .mobile-account-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }.mobile-account-actions .el-button { margin-left: 0; }
-  .list-toolbar { align-items: center; gap: 10px; }.role-identity { grid-template-columns: 1fr; gap: 0; }.perm-items { padding-left: 8px; }.permission-search { flex-wrap: wrap; gap: 8px; }.permission-search > span { flex-basis: 100%; }.account-details { padding-inline: 16px; }
+  .role-identity { grid-template-columns: 1fr; gap: 0; }.perm-items { padding-left: 8px; }.permission-search { flex-wrap: wrap; gap: 8px; }.permission-search > span { flex-basis: 100%; }.account-details { padding-inline: 16px; }
 }
 </style>

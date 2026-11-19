@@ -270,9 +270,9 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
 
 <template>
   <div class="terrain-workspace" :aria-busy="busy">
-    <header class="terrain-heading">
-      <h1><Icon name="mountain-snow" :size="23" />{{ t('Tectonic 宏伟地形') }}</h1>
-      <el-button :loading="loading" :disabled="busy" @click="refresh"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
+    <header class="page-header">
+      <h1 class="page-title">{{ t('Tectonic 宏伟地形') }}</h1>
+      <el-button :loading="loading" :disabled="busy" :title="t('刷新')" :aria-label="t('刷新')" @click="refresh"><Icon name="refresh-cw" :size="15" /></el-button>
     </header>
     <div class="generator-status" role="status">
       <Icon :name="snapshot?.supported && verified ? 'circle-check' : 'circle-alert'" :size="16" />
@@ -380,10 +380,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
 <style scoped>
 .terrain-workspace { min-width:0; max-width:1380px; letter-spacing:0; }
 .terrain-workspace :deep(.el-button > span) { display:inline-flex; align-items:center; gap:5px; }
-.terrain-heading,.section-heading,.selected-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.terrain-heading { margin-bottom:18px; flex-wrap:wrap; }
-h1 { display:flex; align-items:center; gap:9px; margin:0; font-size:22px; line-height:1.4; letter-spacing:0; }
-h1 :deep(svg) { color:var(--el-color-primary); }
+.section-heading,.selected-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 h2 { margin:0 0 18px; font-size:15px; letter-spacing:0; }
 h3 { font-size:15px; margin:0; overflow-wrap:anywhere; }
 .generator-status { display:flex; gap:9px 14px; align-items:center; flex-wrap:wrap; padding:11px 0; margin-bottom:18px; border-top:1px solid var(--el-border-color); border-bottom:1px solid var(--el-border-color); font-size:12px; }
