@@ -33,6 +33,10 @@ class OneBotLifecycleTest {
                         frame(first, 1, event.substring(0, 20));
                         frame(first, 128, event.substring(20));
                         reply.complete(readFrame(first));
+                        // Reconnect is triggered by the peer's WebSocket close event. A raw TCP
+                        // close does not reliably reach onClose before the client read times out.
+                        first.getOutputStream().write(new byte[]{(byte) 0x88, 0});
+                        first.getOutputStream().flush();
                     }
                     try (Socket second = peer.accept()) {
                         second.setSoTimeout(WAIT_SECONDS * 1000);
