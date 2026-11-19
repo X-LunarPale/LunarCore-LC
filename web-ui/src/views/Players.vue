@@ -130,7 +130,7 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
     <header class="page-header"><h1 class="page-title">{{ t('玩家管理') }}</h1></header>
     <div class="player-list">
       <el-tabs v-model="tab">
-        <el-tab-pane :label="t('在线玩家（{count}）', { count: online.length })" name="online">
+        <el-tab-pane :label="t('在线玩家')" name="online" :class="{ 'lc-pane-in': tab === 'online' }">
           <form class="toolbar" role="search" @submit.prevent="searchOnline">
             <el-input v-model="onlineQuery" :placeholder="t('搜索玩家名')" :aria-label="t('搜索玩家名')" clearable @clear="searchOnline">
               <template #prefix><Icon name="search" :size="14" /></template>
@@ -165,8 +165,9 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
               </template>
             </el-table-column>
           </el-table>
+          <div class="list-count">{{ t('共 {count} 人', { count: online.length }) }}</div>
         </el-tab-pane>
-        <el-tab-pane :label="t('历史玩家（{count}）', { count: hist.total })" name="history">
+        <el-tab-pane :label="t('历史记录')" name="history" lazy :class="{ 'lc-pane-in': tab === 'history' }">
           <form class="toolbar" role="search" @submit.prevent="searchHistory">
             <el-input v-model="historyQuery" :placeholder="t('搜索名字 / UUID / IP')" :aria-label="t('搜索名字 / UUID / IP')" clearable @clear="searchHistory">
               <template #prefix><Icon name="search" :size="14" /></template>
@@ -217,9 +218,10 @@ watch(tab, value => { if (value === 'history' && !hist.loaded && !hist.loading) 
 .toolbar .el-button { flex: none; margin-left: 0; }
 .refresh-button { width: 34px; padding: 0; }
 .el-alert { margin-bottom: 14px; }
+.list-count { margin-top: 10px; color: var(--lc-text-soft); font-size: 12px; }
 .pager { margin-top: 18px; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 .command-note { font-size: 12px; overflow-wrap: anywhere; }
 .players-page :deep(.el-radio-group) { display: flex; flex-wrap: wrap; gap: 8px; }
 .players-page :deep(.el-radio) { margin-right: 10px; }
-@media (max-width: 600px) { .pager { justify-content: center; }.pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump), .pager :deep(.el-pagination__total) { display: none; }.players-page :deep(.el-table__cell.is-fixed-column--right) { position: static !important; }.players-page :deep(.el-table__cell.is-fixed-column--right::before) { display: none; } }
+@media (max-width: 600px) { .pager { justify-content: center; }.pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump) { display: none; }.players-page :deep(.el-table__cell.is-fixed-column--right) { position: static !important; }.players-page :deep(.el-table__cell.is-fixed-column--right::before) { display: none; } }
 </style>

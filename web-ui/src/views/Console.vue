@@ -128,7 +128,6 @@ onUnmounted(() => {
   <div class="page console-page">
     <header class="page-header">
       <h1 class="page-title">{{ t('控制台') }}</h1>
-      <div class="log-status" role="status" :class="{ paused: paused || !connected }"><i aria-hidden="true" />{{ paused ? t('已暂停显示') : connected ? t('实时接收') : t('连接已断开') }}</div>
     </header>
     <el-alert v-if="loadError" :title="loadError" type="error" :closable="false" show-icon><el-button size="small" :loading="historyLoading" @click="loadHistory">{{ t('重试') }}</el-button></el-alert>
     <section class="console-workbench" :aria-label="t('控制台')">
@@ -143,7 +142,7 @@ onUnmounted(() => {
         </el-select>
         <div class="log-actions">
           <el-tooltip :content="paused ? t('继续') : t('暂停')">
-            <el-button :aria-label="paused ? t('继续') : t('暂停')" @click="togglePause"><Icon :name="paused ? 'play' : 'pause'" :size="15" /></el-button>
+            <el-button :aria-label="paused ? t('继续') : t('暂停')" :class="{ 'is-paused': paused }" @click="togglePause"><Icon :key="paused" class="control-icon" :name="paused ? 'play' : 'pause'" :size="15" /></el-button>
           </el-tooltip>
           <el-tooltip :content="t('清屏')">
             <el-button :aria-label="t('清屏')" @click="clearLog"><Icon name="eraser" :size="15" /></el-button>
@@ -166,8 +165,13 @@ onUnmounted(() => {
         <el-button type="primary" native-type="submit" :loading="sending" :disabled="!command.trim()"><Icon name="send" :size="14" />{{ t('执行') }}</el-button>
       </form>
       <div class="log-footer">
-        <span>{{ t('已显示 {shown} / {total} 条', { shown: shown.length, total: lines.length }) }}</span>
-        <el-button v-if="!autoScroll" text size="small" @click="(autoScroll = true), scroll()"><Icon name="chevron-down" :size="14" />{{ t('回到底部') }}</el-button>
+        <span class="log-status" role="status" :class="{ paused: paused || !connected }">
+          <i aria-hidden="true" />{{ paused ? t('已暂停显示') : connected ? t('实时接收') : t('连接已断开') }}
+        </span>
+        <span v-if="filter.trim() || level !== 'ALL'" class="log-count">{{ t('已显示 {shown} / {total} 条', { shown: shown.length, total: lines.length }) }}</span>
+        <div class="log-jump">
+          <el-tooltip v-if="!autoScroll" :content="t('回到底部')"><el-button text size="small" class="lc-pane-in" :aria-label="t('回到底部')" @click="(autoScroll = true), scroll()"><Icon name="chevron-down" :size="15" /></el-button></el-tooltip>
+        </div>
       </div>
     </section>
   </div>
@@ -175,13 +179,15 @@ onUnmounted(() => {
 
 <style scoped>
 .console-page { display: flex; flex-direction: column; height: calc(100dvh - var(--lc-header-height)); min-height: 420px; }
-.page-header { align-items: center; }
 .console-workbench { display: flex; flex: 1; flex-direction: column; min-height: 0; border: 1px solid var(--lc-line); border-radius: 8px; background: var(--lc-surface); }
 .log-toolbar { gap: 8px; flex-wrap: nowrap; padding: 10px 12px; margin: 0; }
 .log-toolbar .el-input { width: min(100%, 280px); min-width: 0; }
 .log-toolbar .el-select { width: 148px; flex: none; }
 .log-actions { display: flex; gap: 4px; margin-left: auto; }
 .log-actions .el-button { width: 34px; margin: 0; padding: 0; }
+.log-actions .is-paused { background: var(--el-fill-color-light); color: var(--lc-accent); }
+.control-icon { animation: console-control-in var(--motion-standard) var(--motion-spring) both; }
+@keyframes console-control-in { from { transform: scale(.67); opacity: .45; } to { transform: scale(1); opacity: 1; } }
 .log-status { display: flex; align-items: center; gap: 7px; color: var(--lc-text-soft); font-size: 12px; }
 .log-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--el-color-success); }
 .log-status.paused i { background: var(--el-color-warning); }
@@ -203,7 +209,11 @@ onUnmounted(() => {
 .cmd { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--lc-line); }
 .cmd .el-input { min-width: 0; flex: 1; }
 .cmd .el-button { flex: none; }
-.log-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 35px; padding: 2px 12px; color: var(--lc-text-soft); font-size: 12px; }
+.log-footer { display: flex; align-items: center; gap: 10px; min-height: 35px; padding: 2px 12px; color: var(--lc-text-soft); font-size: 12px; }
+.log-count { margin-inline-start: auto; }
+.log-jump { width: 28px; margin-inline-start: auto; flex: none; }
+.log-count + .log-jump { margin-inline-start: 0; }
+.log-jump .el-button { width: 28px; padding: 0; }
 .el-alert { margin-bottom: 12px; flex-shrink: 0; }
 @media (max-width: 600px) {
   .log-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 124px) auto; gap: 6px; padding-inline: 8px; }

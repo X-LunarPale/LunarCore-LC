@@ -36,8 +36,8 @@ const missingTabTitle = computed(() => {
     <div class="world-labels">
       <div class="column-labels"><span>{{ t('原始世界名') }}</span><span>{{ t('显示名称') }}</span><span>{{ t('颜色') }}</span><span /></div>
       <div v-for="(row, index) in rows" :key="index" class="world-row">
-        <el-input v-model="row.world" :disabled="disabled" :aria-label="t('原始世界名')" maxlength="256" />
-        <el-input v-model="row.name" :disabled="disabled" :aria-label="t('显示名称')" maxlength="64" />
+        <el-input v-model="row.world" :disabled="disabled" :placeholder="t('原始世界名')" :aria-label="t('原始世界名')" maxlength="256" />
+        <el-input v-model="row.name" :disabled="disabled" :placeholder="t('显示名称')" :aria-label="t('显示名称')" maxlength="64" />
         <div class="color-field"><el-color-picker :model-value="row.color" @update:model-value="row.color = $event || model.worldDefaultColor || '#55ffff'" :disabled="disabled" :aria-label="t('世界颜色')" /><el-input v-model="row.color" :disabled="disabled" :aria-label="t('颜色值')" maxlength="24" /></div>
         <el-tooltip :content="t('移除此显示设置')"><el-button class="remove" :disabled="disabled" :aria-label="t('移除此显示设置')" @click="remove(index)"><Icon name="trash-2" :size="15" /></el-button></el-tooltip>
       </div>
@@ -45,19 +45,20 @@ const missingTabTitle = computed(() => {
     </div>
     <section class="format-preview">
       <h4>{{ t('显示预览') }}</h4>
-      <div class="preview-controls">
-        <label>{{ t('预览世界') }}<el-select v-model="selected" :aria-label="t('预览世界')"><el-option v-for="(row, index) in rows" :key="index" :value="row.world" :label="`${row.name || row.world} (${row.world})`" /></el-select></label>
-        <label>{{ t('预览玩家') }}<el-input v-model="player" :aria-label="t('预览玩家')" maxlength="64" /></label>
-        <label>{{ t('预览称号') }}<el-input v-model="title" :aria-label="t('预览称号')" maxlength="256" /></label>
-        <label>{{ t('预览消息') }}<el-input v-model="message" :aria-label="t('预览消息')" maxlength="256" /></label>
-      </div>
       <p v-if="duplicateBrackets" class="preview-warning" role="note">{{ t('世界名称已含方括号，请移除格式中 {world} 外的重复括号。') }}</p>
       <p v-if="missingTabTitle" class="preview-warning" role="note">{{ t('TAB 名称格式缺少 {title}，当前称号不会显示。') }}</p>
       <MinecraftTextPreview :text="chat" :legacy="false" :show-help="false" :placeholder-api="false" :label="'聊天预览'" />
       <MinecraftTextPreview v-if="model.tabEnabled" :text="tab" :legacy="false" :show-help="false" :placeholder-api="false" :label="'TAB 玩家名称预览'" />
       <MinecraftTextPreview v-if="model.nameplateEnabled" class="nameplate-preview" :text="nameplate" :legacy="false" :show-help="false" :placeholder-api="false" :label="'头顶称号预览'" />
-      <p v-else class="empty">{{ t('头顶称号已关闭') }}</p>
-      <p class="preview-note">{{ t('效果仅供参考，以游戏内显示为准。') }}</p>
+      <details class="preview-options">
+        <summary>{{ t('设置') }}</summary>
+        <div class="preview-controls">
+          <label>{{ t('预览世界') }}<el-select v-model="selected" :aria-label="t('预览世界')"><el-option v-for="(row, index) in rows" :key="index" :value="row.world" :label="`${row.name || row.world} (${row.world})`" /></el-select></label>
+          <label>{{ t('预览玩家') }}<el-input v-model="player" :aria-label="t('预览玩家')" maxlength="64" /></label>
+          <label>{{ t('预览称号') }}<el-input v-model="title" :aria-label="t('预览称号')" maxlength="256" /></label>
+          <label>{{ t('预览消息') }}<el-input v-model="message" :aria-label="t('预览消息')" maxlength="256" /></label>
+        </div>
+      </details>
     </section>
   </section>
 </template>
@@ -75,11 +76,12 @@ h4{font-size:13px;margin:0;font-weight:600}
 .remove{padding:8px;width:36px;height:36px}
 .empty{font-size:12px;color:var(--lc-text-soft)}
 .format-preview{margin-top:24px;padding-top:20px;border-top:1px solid var(--el-border-color-lighter)}
+.preview-options{margin-top:12px}
+.preview-options summary{width:fit-content;cursor:pointer;font-size:13px;font-weight:600}
 .preview-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px;margin-top:14px}
 .preview-controls label{display:flex;flex-direction:column;gap:6px;font-size:12px;min-width:0}
 .preview-controls :deep(.el-select){width:100%}
 .preview-warning{font-size:12px;color:var(--el-color-warning);line-height:1.6;overflow-wrap:anywhere}
-.preview-note{font-size:11px;color:var(--lc-text-soft);line-height:1.6;margin:8px 0 0}
 .nameplate-preview :deep(.preview-surface){text-align:center;min-height:72px;display:grid;align-content:center;gap:2px}
 @container (max-width:620px){.column-labels{display:none}.world-row{grid-template-columns:minmax(0,1fr) 36px;padding:12px 0;border-bottom:1px solid var(--el-border-color-lighter)}.world-row>.el-input:first-child{grid-column:1}.world-row>.el-input:nth-child(2){grid-column:1}.color-field{grid-column:1;grid-row:3}.remove{grid-column:2;grid-row:1}.preview-controls{grid-template-columns:minmax(0,1fr)}}
 </style>

@@ -105,7 +105,7 @@ onMounted(loadWl)
       <el-button :loading="saving" @click="save"><Icon name="save" :size="15" />{{ t('保存所有世界') }}</el-button>
     </header>
     <el-tabs v-model="tab">
-      <el-tab-pane :label="t('全服广播')" name="broadcast" lazy>
+      <el-tab-pane :label="t('全服广播')" name="broadcast" lazy :class="{ 'lc-pane-in': tab === 'broadcast' }">
         <section class="broadcast-layout">
           <el-form label-position="top" @submit.prevent="broadcast">
             <el-form-item :label="t('广播内容')">
@@ -116,7 +116,7 @@ onMounted(loadWl)
           <MinecraftTextPreview :text="broadcastText" :label="t('广播预览')" :show-help="false" />
         </section>
       </el-tab-pane>
-      <el-tab-pane :label="t('白名单')" name="whitelist" lazy>
+      <el-tab-pane :label="t('白名单')" name="whitelist" lazy :class="{ 'lc-pane-in': tab === 'whitelist' }">
         <section class="whitelist-section">
           <header class="section-heading">
             <div class="whitelist-state">
@@ -124,13 +124,12 @@ onMounted(loadWl)
               <span>{{ t(wl.enabled ? '已开启' : '已关闭') }}</span>
               <el-tag v-if="wl.enforced" type="warning" size="small">{{ t('强制模式') }}</el-tag>
             </div>
-            <span class="muted">{{ t('共 {count} 人', { count: wl.items.length }) }}</span>
           </header>
           <el-alert v-if="whitelistError" :title="whitelistError" type="error" show-icon :closable="false" />
           <div class="toolbar whitelist-toolbar">
             <el-input v-model="whitelistQuery" clearable :placeholder="t('搜索玩家名')" :aria-label="t('搜索玩家名')"><template #prefix><Icon name="search" :size="14" /></template></el-input>
-            <el-button :loading="wl.loading" :disabled="whitelistBusy" @click="loadWl"><Icon name="refresh-cw" :size="14" />{{ t('刷新') }}</el-button>
-            <span class="spacer" />
+            <el-tooltip :content="t('刷新')"><el-button class="refresh-button" :aria-label="t('刷新')" :loading="wl.loading" :disabled="whitelistBusy" @click="loadWl"><Icon name="refresh-cw" :size="15" /></el-button></el-tooltip>
+            <span class="spacer" aria-hidden="true" />
             <el-input v-model="wl.name" :disabled="whitelistBusy" :placeholder="t('玩家名或 UUID')" :aria-label="t('玩家名或 UUID')" @keyup.enter="addWl" />
             <el-button type="primary" :loading="whitelistBusy" :disabled="!wl.name.trim() || wl.loading" @click="addWl"><Icon name="plus" :size="15" />{{ t('添加') }}</el-button>
           </div>
@@ -139,6 +138,7 @@ onMounted(loadWl)
             <el-table-column label="UUID" min-width="290"><template #default="{ row }"><span class="mono muted">{{ row.uuid }}</span></template></el-table-column>
             <el-table-column :label="t('操作')" width="90"><template #default="{ row }"><el-button size="small" type="danger" text :disabled="whitelistBusy" @click="removeWl(row)">{{ t('移除') }}</el-button></template></el-table-column>
           </el-table>
+          <div class="list-count">{{ t('共 {count} 人', { count: wl.items.length }) }}</div>
         </section>
       </el-tab-pane>
     </el-tabs>
@@ -148,15 +148,17 @@ onMounted(loadWl)
 <style scoped>
 .server-page { min-width: 0; }
 .page-header .el-button, .toolbar .el-button, .broadcast-layout .el-button { gap: 7px; }
-.broadcast-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr); align-items: start; gap: 28px; max-width: 1160px; padding-top: 12px; }
+.broadcast-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .8fr); align-items: start; gap: 24px; max-width: 960px; padding-top: 4px; }
 .broadcast-layout > * { min-width: 0; }
 .whitelist-section { padding-top: 8px; min-width: 0; }
-.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 18px; font-size: 13px; }
-.whitelist-state { display: flex; align-items: center; gap: 10px; }
-.whitelist-toolbar { margin: 18px 0 14px; }
+.section-heading { margin: 0 0 12px; font-size: 13px; }
+.whitelist-state { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.whitelist-toolbar { margin: 12px 0; }
 .whitelist-toolbar .el-input { width: 220px; min-width: 0; }
 .whitelist-toolbar .el-button { margin-left: 0; }
+.refresh-button { width: 34px; padding: 0; }
+.list-count { margin-top: 10px; color: var(--lc-text-soft); font-size: 12px; }
 .el-alert { margin-bottom: 14px; }
 @media (max-width: 850px) { .broadcast-layout { grid-template-columns: 1fr; gap: 24px; }.whitelist-toolbar .spacer { flex-basis: 100%; }.whitelist-toolbar .el-input { flex: 1; width: auto; }.whitelist-toolbar { gap: 8px; } }
-@media (max-width: 480px) { .section-heading { flex-wrap: wrap; }.whitelist-state { gap: 8px; } }
+@media (max-width: 480px) { .whitelist-state { gap: 8px; } }
 </style>

@@ -3,10 +3,11 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { coreMenus } from '../router'
+import AppearanceControls from '../components/AppearanceControls.vue'
 import { useAuth } from '../stores/auth'
 import { useApp } from '../stores/app'
 import { socket, url } from '../api'
-import { locale, setLocale, t } from '../i18n'
+import { t } from '../i18n'
 import { buildNavigation } from '../utils/navigation'
 
 const auth = useAuth()
@@ -133,7 +134,7 @@ function onViewportChange(event) {
 function visibleFocusable(root) {
   if (!root) return []
   return [...root.querySelectorAll('button, input, a[href]')]
-    .filter(element => !element.disabled && element.getClientRects().length)
+    .filter(element => !element.disabled && !element.closest('[inert]') && element.getClientRects().length)
 }
 function onNavigationKeydown(event) {
   if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key) || event.target.tagName === 'INPUT') return
@@ -199,6 +200,7 @@ onUnmounted(() => {
 
 <template>
   <div class="app-shell" :class="{ 'navigation-collapsed': collapsed }">
+    <a v-if="!mobileOpen" class="skip-link" href="#main-content" @click.prevent="focusMain">{{ t('跳到主要内容') }}</a>
     <Transition name="backdrop">
       <button v-if="narrow && mobileOpen" class="mobile-backdrop" :aria-label="t('关闭导航')" tabindex="-1" @click="closeMobile" />
     </Transition>
@@ -208,13 +210,13 @@ onUnmounted(() => {
           <img :src="logo" class="brand-logo" alt="" />
           <span class="brand-name">{{ brandName }}</span>
         </button>
-        <button ref="sidebarToggle" type="button" class="icon-control" :aria-label="collapseLabel" :title="collapseLabel" :aria-expanded="!collapsed" aria-controls="primary-navigation" @click="toggleMenu">
+        <button ref="sidebarToggle" type="button" class="lc-icon-button" :aria-label="collapseLabel" :title="collapseLabel" :aria-expanded="!collapsed" aria-controls="primary-navigation" @click="toggleMenu">
           <Icon :name="narrow ? 'x' : collapsed ? 'panel-left-open' : 'panel-left-close'" :size="17" />
         </button>
       </div>
       <div v-if="!collapsed" class="navigation-search">
         <Icon name="search" :size="15" />
-        <input ref="searchInput" v-model="menuQuery" :aria-label="t('搜索管理功能')" :placeholder="t('搜索管理功能')" />
+        <input ref="searchInput" v-model="menuQuery" :aria-label="t('搜索管理功能')" :placeholder="t('搜索')" />
         <button v-if="menuQuery" type="button" :aria-label="t('清除搜索')" @click="menuQuery = ''"><Icon name="x" :size="14" /></button>
       </div>
       <nav id="primary-navigation" ref="menuScroll" class="navigation" :aria-label="t('主导航')" @keydown="onNavigationKeydown">
@@ -223,8 +225,8 @@ onUnmounted(() => {
             <span>{{ group.title }}</span><Icon name="chevron-down" :size="13" :class="{ closed: !groupOpen(group.id) }" />
           </button>
           <span v-else-if="collapsed && group.id !== 'overview'" class="group-divider" :title="group.title" />
-          <Transition name="nav-group">
-            <ul v-show="groupOpen(group.id)" :id="`navigation-${group.id}`" class="navigation-items">
+          <div :id="`navigation-${group.id}`" class="navigation-fold" :class="{ 'is-open': groupOpen(group.id) }" :inert="!groupOpen(group.id) || undefined">
+            <ul class="navigation-items">
               <li v-for="item in group.items" :key="item.key">
                 <a :href="router.resolve(item.key).href" class="navigation-link" :aria-current="item.key === active ? 'page' : undefined" :aria-label="collapsed ? item.title : undefined" :title="collapsed ? item.title : undefined" @click="event => onNavigationClick(event, item.key)">
                   <Icon :name="item.icon" :size="16" />
@@ -232,7 +234,7 @@ onUnmounted(() => {
                 </a>
               </li>
             </ul>
-          </Transition>
+          </div>
         </section>
         <div v-if="!groups.length" class="navigation-empty">{{ t('未找到匹配的功能') }}</div>
         <div v-if="menuError && !collapsed" class="navigation-error">
@@ -242,27 +244,17 @@ onUnmounted(() => {
       </nav>
     </aside>
     <div class="app-body" :inert="narrow && mobileOpen || undefined">
-      <a class="skip-link" href="#main-content" @click.prevent="focusMain">{{ t('跳到主要内容') }}</a>
       <header class="app-header">
-        <button v-if="narrow" ref="menuToggle" class="icon-control" type="button" :aria-label="t('展开导航')" :aria-expanded="mobileOpen" aria-controls="primary-navigation" @click="toggleMenu">
+        <button v-if="narrow" ref="menuToggle" class="lc-icon-button" type="button" :aria-label="t('展开导航')" :aria-expanded="mobileOpen" aria-controls="primary-navigation" @click="toggleMenu">
           <Icon name="panel-left-open" :size="18" />
         </button>
         <span v-if="narrow || collapsed" class="header-brand">{{ brandName }}</span>
         <span class="connection-status" role="status" :class="{ online: wsOnline }" :aria-label="connectionLabel" :title="connectionLabel">
-          <span class="status-dot" aria-hidden="true" />
-          <span class="connection-label">{{ wsOnline ? t('实时连接') : t('连接重试中') }}</span>
+          <Icon :name="wsOnline ? 'link' : 'triangle-alert'" :size="15" />
+          <span v-if="!wsOnline" class="connection-label">{{ t('连接重试中') }}</span>
         </span>
         <div class="header-actions">
-          <el-dropdown trigger="click" @command="setLocale">
-            <button type="button" class="icon-control" :aria-label="t('语言')" :title="t('语言')"><Icon name="languages" :size="17" /></button>
-            <template #dropdown><el-dropdown-menu>
-              <el-dropdown-item command="zh_CN" :disabled="locale === 'zh_CN'">中文</el-dropdown-item>
-              <el-dropdown-item command="en_US" :disabled="locale === 'en_US'">English</el-dropdown-item>
-            </el-dropdown-menu></template>
-          </el-dropdown>
-          <el-tooltip :content="app.dark ? t('切换到亮色') : t('切换到暗色')">
-            <button type="button" class="icon-control theme-control" :aria-label="app.dark ? t('切换到亮色') : t('切换到暗色')" @click="app.toggleTheme()"><Icon :name="app.dark ? 'sun' : 'moon'" :size="17" /></button>
-          </el-tooltip>
+          <AppearanceControls />
           <el-dropdown trigger="click" @command="onCommand">
             <button type="button" class="account-control" :aria-label="t('账户菜单')">
               <img v-if="auth.user?.mcName" :src="`https://mc-heads.net/avatar/${encodeURIComponent(auth.user.mcName)}/24`" alt="" class="user-avatar" />
@@ -288,7 +280,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.app-shell { --sidebar-width: 224px; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); height: 100dvh; min-height: 0; }
+.app-shell { --sidebar-width: 224px; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); height: 100dvh; min-height: 0; transition: grid-template-columns var(--motion-standard) var(--motion-spring-soft); }
 .app-shell.navigation-collapsed { --sidebar-width: 56px; }
 .app-sidebar { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--lc-sidebar); border-right: 1px solid var(--lc-line); overflow: hidden; }
 .sidebar-heading { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 4px; height: var(--lc-header-height); padding: 0 10px; }
@@ -307,32 +299,35 @@ onUnmounted(() => {
 .group-toggle:hover { color: var(--lc-text); }
 .group-toggle .lc-icon { transition: transform var(--motion-standard) var(--motion-spring); }
 .group-toggle .closed { transform: rotate(-90deg); }
-.navigation-items { list-style: none; padding: 0; margin: 0; }
+.navigation-fold { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--motion-standard) var(--motion-spring-soft), opacity var(--motion-fast); }
+.navigation-fold.is-open { grid-template-rows: 1fr; opacity: 1; }
+.navigation-items { list-style: none; min-height: 0; overflow: hidden; padding: 0; margin: 0; }
 .navigation-link { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 33px; padding: 6px 8px; border-radius: 6px; color: var(--el-text-color-regular); text-decoration: none; font-size: 13px; line-height: 1.45; transition: color var(--motion-fast), background-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
 .navigation-link .lc-icon { color: var(--lc-text-soft); }
 .navigation-link > span { min-width: 0; overflow-wrap: anywhere; }
 .navigation-link:hover { color: var(--lc-text); background: var(--el-fill-color-light); }
 .navigation-link[aria-current="page"] { color: var(--lc-text); background: var(--el-fill-color); font-weight: 600; }
-.navigation-link[aria-current="page"] .lc-icon { color: var(--lc-accent); }
+.navigation-link[aria-current="page"] .lc-icon { color: var(--lc-accent); animation: lc-selection-in var(--motion-standard) var(--motion-spring) both; }
+.navigation-link[aria-current="page"]::after { content: ''; width: 3px; height: 13px; flex: none; margin-inline-start: auto; border-radius: 3px; background: var(--lc-accent); animation: lc-selection-in var(--motion-standard) var(--motion-spring) both; }
+@keyframes lc-selection-in { from { opacity: .3; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
 .navigation-link:active { transform: scale(.98); transition-duration: 80ms; }
 .navigation-link:focus-visible, .group-toggle:focus-visible { outline-offset: -2px; }
 .group-divider { display: block; height: 1px; margin: 0 9px 10px; background: var(--lc-line); }
 .navigation-empty { padding: 12px 10px; color: var(--lc-text-soft); font-size: 12px; }
 .navigation-error { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 16px 6px 0; color: var(--el-color-warning); font-size: 12px; }
 .navigation-error button { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: var(--lc-accent); cursor: pointer; font-size: 12px; }
-.icon-control, .account-control { border: 0; border-radius: 6px; color: var(--el-text-color-regular); background: transparent; cursor: pointer; transition: background-color var(--motion-fast), color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
-.icon-control { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; flex: none; }
-:is(.icon-control, .account-control):hover { color: var(--lc-text); background: var(--el-fill-color); }
-:is(.icon-control, .account-control):active { transform: scale(.93); transition-duration: 80ms; }
+.account-control { border: 0; border-radius: 6px; color: var(--el-text-color-regular); background: transparent; cursor: pointer; transition: background-color var(--motion-fast), color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
+.account-control:hover { color: var(--lc-text); background: var(--el-fill-color); }
+.account-control:active { transform: scale(.93); transition-duration: 80ms; }
 .navigation-collapsed .sidebar-heading { justify-content: center; padding: 0; }
 .navigation-collapsed .navigation { padding-top: 5px; }
 .navigation-collapsed .navigation-link { justify-content: center; padding: 9px; min-height: 36px; }
+.navigation-collapsed .navigation-link::after { display: none; }
 .app-body { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .app-header { height: var(--lc-header-height); flex: none; display: flex; align-items: center; gap: 12px; padding: 0 var(--lc-page-gutter); border-bottom: 1px solid var(--lc-line); background: var(--lc-surface); }
 .header-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; flex: none; }
-.connection-status { display: inline-flex; align-items: center; gap: 7px; color: var(--lc-text-soft); font-size: 12px; white-space: nowrap; }
-.status-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--el-color-warning); }
-.connection-status.online .status-dot { background: var(--el-color-success); }
+.connection-status { display: inline-flex; align-items: center; gap: 7px; color: var(--el-color-warning); font-size: 12px; white-space: nowrap; }
+.connection-status.online { color: var(--el-color-success); }
 .account-control { display: flex; align-items: center; gap: 7px; height: 34px; max-width: 180px; padding: 0 7px; }
 .user-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 500; }
 .user-avatar { width: 24px; height: 24px; object-fit: contain; border-radius: 4px; image-rendering: pixelated; }
@@ -344,8 +339,6 @@ onUnmounted(() => {
 .mobile-backdrop { position: fixed; inset: 0; z-index: 29; border: 0; background: #10111266; }
 .backdrop-enter-active, .backdrop-leave-active { transition: opacity var(--motion-fast) ease; }
 .backdrop-enter-from, .backdrop-leave-to { opacity: 0; }
-.nav-group-enter-active { transition: opacity var(--motion-fast), transform var(--motion-standard) var(--motion-spring-soft); }
-.nav-group-enter-from { opacity: 0; transform: translateY(-3px); }
 @media (max-width: 899px) {
   .app-shell { display: block; }
   .app-body { height: 100%; }
@@ -356,7 +349,6 @@ onUnmounted(() => {
   .header-actions { gap: 0; }
   .user-name, .account-control > .lc-icon:last-child { display: none; }
   .account-control { width: 42px; height: 42px; padding: 0; justify-content: center; }
-  .icon-control { width: 42px; height: 42px; }
   .connection-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .navigation-link { min-height: 44px; }
   .group-toggle { height: 32px; }

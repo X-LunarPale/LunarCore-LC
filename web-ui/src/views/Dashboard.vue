@@ -8,6 +8,7 @@ import { t } from '../i18n'
 
 const data = ref(null)
 const tab = ref('performance')
+const trend = ref('tps')
 const loading = ref(false)
 const clock = ref(performance.now())
 const uptimeBase = ref(null)
@@ -71,21 +72,41 @@ const cards = computed(() => {
   if (!d || !d.time) return []
   const memPct = d.memoryMax > 0 ? Math.round((d.memoryUsed / d.memoryMax) * 100) : 0
   return [
-    { label: 'TPS', value: d.tps ? Number(d.tps[0]).toFixed(1) : '-', hint: d.tps ? d.tps.map((x) => Number(x).toFixed(1)).join(' / ') + t(' · 1 / 5 / 15 分钟') : t('暂无采样'), color: tpsColor(d.tps?.[0] ?? 20) },
-    { label: 'MSPT', value: d.mspt >= 0 ? Number(d.mspt).toFixed(1) + ' ms' : 'N/A', hint: d.mspt >= 0 ? (d.mspt < 50 ? t('运行流畅') : t('负载较高')) : t('非 Paper 服务端') },
+    { label: 'TPS', value: d.tps ? Number(d.tps[0]).toFixed(1) : '-', color: tpsColor(d.tps?.[0] ?? 20) },
+    { label: 'MSPT', value: d.mspt >= 0 ? Number(d.mspt).toFixed(1) + ' ms' : 'N/A' },
     { label: t('在线玩家'), value: `${d.online} / ${d.maxPlayers}` },
-    { label: t('内存使用率'), value: `${memPct}%`, hint: `${formatBytes(d.memoryUsed)} / ${formatBytes(d.memoryMax)}` },
-    { label: 'CPU', value: d.cpuProcess >= 0 ? d.cpuProcess.toFixed(1) + '%' : 'N/A', hint: t('系统 {percent} · {cores} 核', { percent: d.cpuSystem >= 0 ? d.cpuSystem.toFixed(1) + '%' : '-', cores: d.cores }) },
+    { label: t('内存使用率'), value: `${memPct}%` },
+    { label: 'CPU', value: d.cpuProcess >= 0 ? d.cpuProcess.toFixed(1) + '%' : 'N/A' },
     { label: t('运行时长'), value: uptimeDisplay.value }
   ]
 })
-const series = computed(() => ({
-  tps: history.value.map((p) => p.tps),
-  mspt: history.value.map((p) => p.mspt),
-  online: history.value.map((p) => p.online),
-  memory: history.value.map((p) => p.memory),
-  cpu: history.value.map((p) => p.cpu)
-}))
+const trendOptions = computed(() => [
+  { label: 'TPS', value: 'tps' },
+  { label: 'MSPT', value: 'mspt' },
+  { label: t('内存'), value: 'memory' },
+  { label: 'CPU', value: 'cpu' },
+  { label: t('在线玩家'), value: 'online' }
+])
+const trendValues = computed(() => history.value.map((point) => point[trend.value]))
+const trendConfig = computed(() => {
+  const d = data.value
+  if (trend.value === 'tps') return {
+    max: 20, format: v => Number(v).toFixed(1),
+    summary: d.tps ? d.tps.map(x => Number(x).toFixed(1)).join(' / ') + t(' · 1 / 5 / 15 分钟') : t('暂无采样')
+  }
+  if (trend.value === 'mspt') return {
+    color: 'var(--el-color-warning)', format: v => v < 0 ? 'N/A' : Number(v).toFixed(1) + ' ms',
+    summary: d.mspt >= 0 ? (d.mspt < 50 ? t('运行流畅') : t('负载较高')) : t('非 Paper 服务端')
+  }
+  if (trend.value === 'memory') return {
+    max: d.memoryMax || null, format: formatBytes, summary: `${formatBytes(d.memoryUsed)} / ${formatBytes(d.memoryMax)}`
+  }
+  if (trend.value === 'cpu') return {
+    max: 100, color: 'var(--el-color-success)', format: v => v < 0 ? 'N/A' : Number(v).toFixed(1) + '%',
+    summary: t('系统 {percent} · {cores} 核', { percent: d.cpuSystem >= 0 ? d.cpuSystem.toFixed(1) + '%' : '-', cores: d.cores })
+  }
+  return {}
+})
 </script>
 
 <template>
@@ -105,27 +126,24 @@ const series = computed(() => ({
       <dl class="metric-strip" :aria-label="t('关键运行指标')">
         <div v-for="c in cards" :key="c.label" class="metric">
           <dt>{{ c.label }}</dt>
-          <dd>
-            <strong :style="c.color ? { color: c.color } : undefined">{{ c.value }}</strong>
-            <small v-if="c.hint">{{ c.hint }}</small>
-          </dd>
+          <dd :style="c.color ? { color: c.color } : undefined">{{ c.value }}</dd>
         </div>
       </dl>
       <el-tabs v-model="tab">
         <el-tab-pane :label="t('性能趋势')" name="performance">
-          <section class="trend-grid" :aria-label="t('性能趋势')">
-            <div class="trend"><h2>TPS</h2><Sparkline :height="100" :values="series.tps" :min="0" :max="20" color="var(--el-color-primary)" :format="(v) => Number(v).toFixed(1)" /></div>
-            <div class="trend"><h2>MSPT</h2><Sparkline :height="100" :values="series.mspt" :min="0" color="var(--el-color-warning)" :format="(v) => v < 0 ? 'N/A' : Number(v).toFixed(1) + ' ms'" /></div>
-            <div class="trend"><h2>{{ t('内存') }}</h2><Sparkline :height="100" :values="series.memory" :min="0" :max="data.memoryMax || null" color="var(--el-color-primary)" :format="formatBytes" /></div>
-            <div class="trend"><h2>CPU</h2><Sparkline :height="100" :values="series.cpu" :min="0" :max="100" color="var(--el-color-success)" :format="(v) => v < 0 ? 'N/A' : Number(v).toFixed(1) + '%'" /></div>
-            <div class="trend online-trend"><h2>{{ t('在线人数趋势') }}</h2><Sparkline :height="80" :values="series.online" :min="0" color="var(--el-color-primary)" /></div>
+          <section class="trend" :aria-label="t('性能趋势')">
+            <el-segmented v-model="trend" :options="trendOptions" :aria-label="t('关键运行指标')" />
+            <div :key="trend" class="trend-sample" :class="{ 'lc-pane-in': tab === 'performance' }">
+              <p class="trend-summary">{{ trendConfig.summary }}</p>
+              <Sparkline :height="176" :values="trendValues" :min="0" :max="trendConfig.max" :color="trendConfig.color || 'var(--lc-accent)'" :format="trendConfig.format" />
+            </div>
           </section>
         </el-tab-pane>
-        <el-tab-pane :label="t('世界与区块')" name="worlds" lazy>
+        <el-tab-pane :label="t('世界与区块')" name="worlds" lazy :class="{ 'lc-pane-in': tab === 'worlds' }">
           <div class="section-head"><span>{{ t('{worlds} 个世界 · {chunks} 个区块', { worlds: data.worldCount, chunks: data.chunks }) }}</span><span>{{ t('实体总数') }} {{ data.entities }}</span></div>
           <el-table v-if="data.worlds" :data="data.worlds" max-height="480"><el-table-column prop="name" :label="t('名称')" min-width="180" /><el-table-column prop="environment" :label="t('类型')" min-width="140" /><el-table-column prop="players" :label="t('玩家')" width="100" /><el-table-column prop="entities" :label="t('实体')" width="100" /><el-table-column prop="chunks" :label="t('区块')" width="100" /></el-table>
         </el-tab-pane>
-        <el-tab-pane :label="t('服务端')" name="server" lazy>
+        <el-tab-pane :label="t('服务端')" name="server" lazy :class="{ 'lc-pane-in': tab === 'server' }">
           <dl class="server-summary">
             <div><dt>{{ t('服务端') }}</dt><dd>{{ data.serverVersion || '-' }}</dd></div>
             <div><dt>LunarCore</dt><dd>{{ data.coreVersion || '-' }}</dd></div>
@@ -144,26 +162,27 @@ const series = computed(() => ({
 .page-header { align-items: center; }
 .page-header .el-button { width: 34px; padding: 0; }
 .load-error { margin-bottom: 16px; }
-.metric-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin: 0 0 22px; border-block: 1px solid var(--lc-line); }
-.metric { padding: 16px 18px; min-width: 0; border-right: 1px solid var(--el-border-color-light); }
-.metric:first-child { padding-left: 0; }
-.metric:last-child { border-right: 0; }
-.metric dt, .metric small { display: block; color: var(--lc-text-soft); font-size: 12px; }
-.metric dd { margin: 0; }
-.metric strong { display: block; margin: 4px 0; font-size: 22px; font-weight: 600; line-height: 1.4; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.metric small { font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
+.metric-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 16px; margin: 0 0 12px; }
+.metric { padding: 14px 0; min-width: 0; border-top: 1px solid var(--lc-line); }
+.metric dt { color: var(--lc-text-soft); font-size: 12px; overflow-wrap: anywhere; }
+.metric dd { margin: 4px 0 0; font-size: 22px; font-weight: 600; line-height: 1.4; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .section-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 12px; color: var(--lc-text-soft); }
 .status-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
 .status-label i { width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
-.trend-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; }
-.trend { min-width: 0; padding-block: 6px 14px; border-bottom: 1px solid var(--lc-line); }
-.trend h2 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
-.online-trend { grid-column: 1 / -1; }
+.trend { min-width: 0; padding-block: 4px 14px; }
+.trend .el-segmented { max-width: 100%; }
+.trend-summary { margin: 12px 0 8px; min-height: 1.55em; color: var(--lc-text-soft); font-size: 12px; }
+.trend-sample :deep(stop:first-child) { stop-opacity: .13; }
 .server-summary { max-width: 740px; margin: 0; }
 .server-summary > div { display: grid; grid-template-columns: minmax(94px, 1fr) 3fr; gap: 16px; padding-block: 12px; border-bottom: 1px solid var(--lc-line); }
 .server-summary dt { color: var(--lc-text-soft); }
 .server-summary dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .dashboard-page :deep(.legend) { flex-wrap: wrap; gap: 6px; font-size: 11px; }
-@media (max-width: 1200px) { .metric-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }.metric:nth-child(3) { border-right: 0; }.metric:nth-child(4) { padding-left: 0; }.metric:nth-child(-n+3) { border-bottom: 1px solid var(--el-border-color-light); } }
-@media (max-width: 650px) { .metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }.metric { padding: 12px; border-right: 0; border-bottom: 1px solid var(--el-border-color-light); }.metric:nth-child(odd) { padding-left: 0; border-right: 1px solid var(--el-border-color-light); }.metric:nth-child(even) { padding-left: 12px; }.metric:nth-last-child(-n+2) { border-bottom: 0; }.metric strong { font-size: 20px; }.trend-grid { grid-template-columns: 1fr; gap: 16px; } }
+@media (max-width: 1220px) { .metric-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metric { padding-block: 9px; }
+  .metric dd { font-size: 20px; }
+  .trend :deep(.el-segmented__item) { padding-inline: 7px; }
+}
 </style>
