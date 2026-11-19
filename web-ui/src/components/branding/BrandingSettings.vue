@@ -198,29 +198,28 @@ onBeforeUnmount(() => { selection++ })
 <template>
   <section class="branding-settings" v-loading="loading" :aria-busy="busy">
     <div class="section-head">
-      <div><h3>{{ t('面板品牌') }}</h3><p>{{ t('名称与 Logo 将显示在登录页和侧边栏。') }}</p></div>
-      <el-button :disabled="busy" @click="reload"><Icon name="rotate-ccw" :size="14" />&nbsp;{{ t('刷新') }}</el-button>
+      <h2>{{ t('面板品牌') }}</h2>
+      <el-button :disabled="busy" :title="t('重新加载')" :aria-label="t('重新加载')" @click="reload"><Icon name="rotate-ccw" :size="15" /></el-button>
     </div>
     <el-alert v-if="error" type="error" :title="t('品牌设置未完成')" :description="error" show-icon :closable="false" class="load-error" />
     <div class="brand-preview" :aria-label="t('品牌预览')">
       <span class="brand-mark"><img :src="previewLogo" :alt="t('品牌 Logo 预览')" /></span>
-      <div><strong>{{ previewName }}</strong><small>{{ t('管理控制台') }}</small></div>
-      <el-tag v-if="pendingLogo || nameChanged" size="small" type="warning" effect="plain">{{ t('预览中，尚未保存') }}</el-tag>
+      <strong>{{ previewName }}</strong>
+      <span v-if="pendingLogo || nameChanged" class="draft-state" role="status">{{ t('尚未保存') }}</span>
     </div>
     <div class="setting-block">
       <label for="brand-name">{{ t('品牌名称') }}</label>
-      <p>{{ t('长度为 2–48 个字符；不会修改服务器或插件的内部名称。') }}</p>
       <div class="field-row">
-        <el-input id="brand-name" v-model="name" :disabled="busy || !app.info" :placeholder="t('输入品牌名称')" @keyup.enter="saveName" />
+        <el-input id="brand-name" v-model="name" :disabled="busy || !app.info" @keyup.enter="saveName" />
         <el-button type="primary" :loading="nameBusy" :disabled="busy || !nameChanged || !validName" @click="saveName">{{ t('保存名称') }}</el-button>
         <el-button :disabled="busy || !app.info" @click="restoreName">{{ t('恢复默认名称') }}</el-button>
       </div>
-      <p :class="{ 'field-error': nameChanged && !validName }">{{ nameLength }}/48<span v-if="nameChanged && !validName"> · {{ t('品牌名称须为 2–48 个字符，且不能包含尖括号或控制字符。') }}</span></p>
+      <p v-if="nameChanged && !validName" class="field-error" role="alert">{{ t('品牌名称须为 2–48 个字符，且不能包含尖括号或控制字符。') }}</p>
     </div>
     <div class="setting-block logo-block">
-      <label>{{ t('品牌 Logo') }}</label>
+      <h3>{{ t('品牌 Logo') }}</h3>
       <p>{{ t('PNG 或 JPEG，最大 256 KiB，宽高均不超过 1024 像素。') }}</p>
-      <input ref="input" type="file" accept="image/png,image/jpeg" class="file-input" :aria-label="t('选择品牌 Logo')" @change="selectLogo" />
+      <input ref="input" type="file" accept="image/png,image/jpeg" hidden @change="selectLogo" />
       <div class="field-row">
         <el-button :disabled="busy || !app.info" @click="input?.click()"><Icon name="image-up" :size="14" />&nbsp;{{ t('选择图片') }}</el-button>
         <span v-if="pendingFile" class="file-meta">{{ pendingFile.name }} · {{ dimensions?.width }} × {{ dimensions?.height }}</span>
@@ -234,30 +233,26 @@ onBeforeUnmount(() => { selection++ })
 <style scoped>
 .branding-settings { padding: 20px 0; color: var(--lc-text); }
 .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
-.section-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
-.section-head p, .setting-block p { margin: 5px 0 0; color: var(--lc-text-soft); font-size: 12px; line-height: 1.7; }
-.brand-preview { display:flex; align-items:center; gap:14px; min-height:86px; padding:14px 0; border-top:1px solid var(--el-border-color-light); border-bottom:1px solid var(--el-border-color-light); }
-.brand-mark { width:56px; height:56px; flex:0 0 56px; display:grid; place-items:center; }
-.brand-mark img { max-width: 46px; max-height: 46px; object-fit: contain; }
-.brand-preview > div { display: grid; gap: 3px; min-width: 0; }
-.brand-preview strong { font-size: 17px; font-weight: 650; overflow-wrap: anywhere; }
-.brand-preview small { font-size: 11px; color: var(--lc-text-soft); }
-.brand-preview .el-tag { margin-left: auto; flex-shrink: 0; }
+.section-head h2 { margin: 0; font-size: 15px; font-weight: 650; }
+.setting-block p { margin: 5px 0 0; color: var(--lc-text-soft); font-size: 12px; line-height: 1.7; }
+.brand-preview { display:flex; align-items:center; gap:12px; min-height:62px; padding:10px 0; border-block:1px solid var(--lc-line); }
+.brand-mark { width:40px; height:40px; flex:0 0 40px; display:grid; place-items:center; }
+.brand-mark img { max-width:100%; max-height:100%; object-fit:contain; }
+.brand-preview strong { font-size: 16px; font-weight: 650; min-width: 0; overflow-wrap: anywhere; }
+.draft-state { color:var(--el-color-warning); font-size:12px; margin-inline-start:auto; }
 .setting-block { padding-top: 22px; }
 .setting-block + .setting-block { border-top: 1px solid var(--el-border-color-lighter); margin-top: 22px; }
-.setting-block > label { font-size: 13px; font-weight: 600; }
+.setting-block > :is(label, h3) { margin:0; font-size:13px; font-weight:600; }
 .field-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 12px; }
 .field-row :deep(.el-input) { max-width: 360px; min-width: 0; }
 .field-row .el-button { margin-left: 0; }
-.file-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .file-meta { min-width: 0; overflow-wrap: anywhere; color: var(--lc-text-soft); font-size: 12px; }
 .field-error { color: var(--el-color-danger) !important; }
 .load-error { margin-bottom: 16px; }
 @media (max-width: 600px) {
   .branding-settings { padding: 14px 0; }
   .section-head { align-items: flex-start; }
-  .brand-preview { flex-wrap: wrap; padding: 12px; }
-  .brand-preview .el-tag { margin-left: 0; }
+  .brand-preview { flex-wrap: wrap; }
   .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .field-row :deep(.el-input), .file-meta { grid-column: 1 / -1; max-width: none; }
   .field-row .el-button { min-width: 0; width: 100%; min-height: 32px; height: auto; padding-inline: 6px; white-space: normal; line-height: 1.4; }

@@ -118,12 +118,8 @@ watch(content, () => { validation.value = null })
 
 <template>
   <div class="page config-page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">{{ t('服务器配置') }}</h1>
-      </div>
-    </div>
-    <el-tabs v-model="activeTab" class="config-tabs workspace-tabs">
+    <header class="page-header"><h1 class="page-title">{{ t('服务器配置') }}</h1></header>
+    <el-tabs v-model="activeTab">
       <el-tab-pane name="paper" lazy><template #label>{{ t('Paper 设置') }}<el-tag v-if="paperDirty" class="tab-state" size="small" type="warning">{{ t('未保存') }}</el-tag></template><PaperWorkspace @dirty-change="paperDirty = $event" @busy-change="paperBusy = $event" /></el-tab-pane>
       <el-tab-pane name="branding" lazy><template #label>{{ t('品牌设置') }}<el-tag v-if="brandDirty" class="tab-state" size="small" type="warning">{{ t('未保存') }}</el-tag></template><BrandingSettings @dirty-change="brandDirty = $event" @busy-change="brandBusy = $event" /></el-tab-pane>
       <el-tab-pane v-if="canEditCore" name="core" lazy><template #label>{{ t('核心配置') }}<el-tag v-if="dirty" class="tab-state" size="small" type="warning">{{ t('未保存') }}</el-tag></template>
@@ -131,15 +127,15 @@ watch(content, () => { validation.value = null })
     <el-alert v-if="validation && !validation.ok" class="config-alert" type="error" :title="t('YAML 校验未通过')" :description="validation.error" show-icon />
     <section class="editor-panel" v-loading="loading">
       <div class="editor-toolbar">
-        <div class="file-info"><Icon name="file-cog" :size="17" /><div><strong>config.yml</strong><span :title="path">{{ path || t('核心配置文件') }}</span></div><el-tag v-if="dirty" type="warning" size="small" effect="plain">{{ t('未保存') }}</el-tag><el-tag v-else-if="loaded" type="info" size="small" effect="plain">{{ t('已同步') }}</el-tag></div>
+        <div class="file-info" :title="path"><Icon name="file-cog" :size="17" /><strong>config.yml</strong></div>
         <div class="editor-actions">
-          <el-button @click="load" :disabled="saving || validating"><Icon name="rotate-ccw" :size="14" />&nbsp;{{ t('重新加载') }}</el-button>
-          <el-button :loading="validating" :disabled="!loaded || loading || saving" @click="validate"><Icon name="check-check" :size="14" />&nbsp;{{ t('校验') }}</el-button>
-          <el-button type="primary" :loading="saving" :disabled="!dirty || !loaded || loading || validating" @click="save"><Icon name="save" :size="14" />&nbsp;{{ t('保存并重载') }}</el-button>
+          <el-tooltip :content="t('重新加载')"><el-button class="icon-button" :aria-label="t('重新加载')" :disabled="loading || saving || validating" @click="load"><Icon name="rotate-ccw" :size="15" /></el-button></el-tooltip>
+          <el-tooltip :content="t('校验')"><el-button class="icon-button" :aria-label="t('校验')" :loading="validating" :disabled="!loaded || loading || saving" @click="validate"><Icon name="check-check" :size="15" /></el-button></el-tooltip>
+          <el-button type="primary" :loading="saving" :disabled="!dirty || !loaded || loading || validating" @click="save"><Icon name="save" :size="14" />{{ t('保存并重载') }}</el-button>
         </div>
       </div>
       <div class="editor-body"><CodeEditor v-model="content" :readonly="loading || saving || !loaded" height="clamp(360px, calc(100dvh - 310px), 860px)" @save="save" /></div>
-      <div class="editor-status"><span><span class="status-dot" :class="{ modified: dirty }"></span>{{ t(dirty ? '存在未保存的修改' : loaded ? '配置已与服务器同步' : '等待加载配置') }}</span><span>YAML</span></div>
+      <div v-if="path" class="editor-status"><code>{{ path }}</code></div>
     </section>
     <details class="config-notes"><summary>{{ t('配置说明') }}</summary><p>{{ t('密码与密钥以') }} <code>******</code> {{ t('显示，保留占位符即可保留原值。') }}</p><p>{{ t('修改') }} <code>web</code> {{ t('配置后，需执行') }} <code>/lc web reload</code> {{ t('生效。') }}</p></details>
       </el-tab-pane>
@@ -150,24 +146,20 @@ watch(content, () => { validation.value = null })
 <style scoped>
 .tab-state { margin-left: 8px; }
 .editor-panel { min-width: 0; overflow: hidden; border: 1px solid var(--el-border-color); border-radius: 7px; background: var(--lc-surface); }
-.editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; border-bottom: 1px solid var(--el-border-color-light); }
-.file-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--el-border-color-light); }
+.file-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .file-info > .lc-icon { color: var(--lc-text-soft); }
-.file-info > div { min-width: 0; }
-.file-info strong { font-size: 13px; font-weight: 600; display: block; }
-.file-info div > span { display: block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lc-text-soft); font-size: 11px; margin-top: 2px; }
+.file-info strong { font-size: 13px; font-weight: 600; }
 .editor-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .editor-actions > .el-button { margin-left: 0; }
-.editor-body { padding: 8px; background: var(--el-fill-color-extra-light); }
-.editor-status { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 9px 18px; font-size: 11px; color: var(--lc-text-soft); border-top: 1px solid var(--el-border-color-light); }
-.editor-status > span { display: inline-flex; align-items: center; gap: 7px; }
-.status-dot { width: 6px; height: 6px; background: var(--el-text-color-secondary); border-radius: 50%; }
-.status-dot.modified { background: var(--el-color-warning); }
-.status-separator { opacity: .5; }
+.editor-actions .icon-button { width: 34px; padding: 0; }
+.editor-body { padding: 4px; }
+.editor-status { padding: 8px 12px; font-size: 11px; color: var(--lc-text-soft); border-top: 1px solid var(--el-border-color-light); overflow-wrap: anywhere; }
+.editor-status code { padding: 0; background: none; }
 .config-alert { margin-bottom: 12px; }
 .config-notes { padding: 14px 2px 0; color: var(--lc-text-soft); font-size: 12px; }
 .config-notes summary { cursor: pointer; width: fit-content; }
 .config-notes p { margin: 10px 0 0; line-height: 1.8; }
 code { background: var(--el-fill-color-light); border-radius: 3px; padding: 2px 4px; overflow-wrap: anywhere; }
-@media (max-width: 640px) { .editor-toolbar { padding: 14px 12px; gap: 14px; } .file-info { width: 100%; } .file-info div > span { max-width: 190px; } .editor-actions { width: 100%; } .editor-actions > .el-button { flex: 1; padding-inline: 8px; } .editor-status { padding-inline: 12px; } }
+@media (max-width: 580px) { .file-info { width: 100%; } }
 </style>

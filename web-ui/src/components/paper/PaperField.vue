@@ -30,8 +30,8 @@ function numberInput(event) {
 <template>
   <article class="paper-field" :class="{ changed, invalid: error }">
     <div class="field-copy">
-      <div class="field-title"><label :for="fieldId">{{ field.label || field.name || field.key }}</label><el-tag v-if="changed" type="warning" size="small">{{ t('未保存') }}</el-tag><el-tag v-if="field.present === false || field.editable === false" type="info" size="small">{{ t('只读') }}</el-tag></div>
-      <p class="field-help">{{ field.help || field.description }}</p>
+      <div class="field-title"><label :for="fieldId">{{ field.label || field.name || field.key }}</label><span v-if="field.present === false || field.editable === false">{{ t('只读') }}</span></div>
+      <p v-if="field.help || field.description" class="field-help">{{ field.help || field.description }}</p>
       <details class="field-details">
         <summary>{{ t('配置详情') }}</summary>
         <code>{{ field.key }}</code>
@@ -43,7 +43,7 @@ function numberInput(event) {
       <el-switch v-if="field.type === 'boolean' && typeof modelValue === 'boolean'" :id="fieldId" :model-value="modelValue" :disabled="readonly" :active-text="t('开启')" :inactive-text="t('关闭')" :aria-label="field.label || field.name" @update:model-value="emit('update:modelValue', $event)" />
       <template v-else-if="isNumeric(field)">
         <div class="numeric-control"><el-slider v-if="sliderVisible" :model-value="modelValue" :min="field.min" :max="field.max" :step="field.step || 1" :disabled="readonly" :aria-label="t('{name}滑块', { name: field.label || field.name })" @update:model-value="emit('update:modelValue', $event)" /><input :id="fieldId" class="exact-input" :type="typeof modelValue === 'string' ? 'text' : 'number'" :value="modelValue" :step="field.step || 'any'" :disabled="readonly" :aria-invalid="!!error" :aria-describedby="`${fieldId}-detail`" @input="numberInput" /></div>
-        <div :id="`${fieldId}-detail`" class="range-help"><span v-if="field.min != null || field.max != null">{{ t('常规范围：{min} 至 {max}', { min: field.min ?? t('不限'), max: field.max ?? t('不限') }) }}<template v-if="field.step">{{ t('，步长 {step}', { step: field.step }) }}</template>。</span><span v-if="currentSentinel">{{ t('当前特殊值：{value}（{label}）。', { value: t(formatValue(currentSentinel.value)), label: currentSentinel.label }) }}</span><span v-else-if="!sliderVisible && modelValue != null">{{ t('当前值保持原样，可使用精确输入调整。') }}</span></div>
+        <div :id="`${fieldId}-detail`" class="range-help"><span v-if="field.min != null || field.max != null">{{ t('常规范围：{min} 至 {max}', { min: field.min ?? t('不限'), max: field.max ?? t('不限') }) }}<template v-if="field.step">{{ t('，步长 {step}', { step: field.step }) }}</template>。</span><span v-if="currentSentinel">{{ t('当前特殊值：{value}（{label}）。', { value: t(formatValue(currentSentinel.value)), label: currentSentinel.label }) }}</span></div>
         <div v-if="sentinels.length" class="sentinel-options"><el-button v-for="item in sentinels" :key="String(item.value)" size="small" :disabled="readonly" :type="Object.is(item.value, modelValue) ? 'primary' : 'default'" plain @click="emit('update:modelValue', item.value)">{{ item.label }}（{{ item.value }}）</el-button></div>
       </template>
       <el-select v-else-if="options.length" :id="fieldId" :model-value="modelValue" :disabled="readonly" :aria-label="field.label || field.name" @update:model-value="emit('update:modelValue', $event)"><el-option v-if="!knownOption && modelValue != null" :value="modelValue" :label="t('当前值：{value}', { value: t(formatValue(modelValue)) })" disabled /><el-option v-for="option in options" :key="String(option.value)" :label="option.label" :value="option.value" /></el-select>
@@ -59,6 +59,7 @@ function numberInput(event) {
 .paper-field:last-child { border-bottom: 0; }
 .paper-field.changed { box-shadow: inset 3px 0 var(--el-color-warning); background: var(--el-color-warning-light-9); }
 .field-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 14px; }
+.field-title span { color:var(--lc-text-soft); font-size:12px; font-weight:400; }
 .field-help { margin: 8px 0 7px; color: var(--lc-text-soft); font-size: 13px; line-height: 1.7; }
 code { font-size: 11px; color: var(--el-text-color-secondary); overflow-wrap: anywhere; }
 .field-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 11px; color: var(--lc-text-soft); }
@@ -74,6 +75,7 @@ code { font-size: 11px; color: var(--el-text-color-secondary); overflow-wrap: an
 .exact-input:disabled { opacity: .65; cursor: not-allowed; }
 .range-help, .field-note { font-size: 11px; line-height: 1.7; color: var(--lc-text-soft); margin: 8px 0 0; }
 .range-help span { display: block; }
+.range-help:empty { display: none; }
 .sentinel-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .sentinel-options :deep(.el-button) { margin: 0; height: auto; white-space: normal; line-height: 1.6; }
 .field-error { color: var(--el-color-danger); font-size: 12px; margin: 8px 0 0; }

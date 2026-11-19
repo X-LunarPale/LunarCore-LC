@@ -210,8 +210,8 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunloa
 <template>
   <div class="maintenance-workspace" :aria-busy="busy">
     <header class="page-header">
-      <h1 class="page-title"><Icon name="server" :size="22" />{{ t('服务器展示与维护') }}</h1>
-      <el-button :loading="loading" :disabled="busy" @click="load"><Icon name="refresh-cw" :size="15" />{{ t('重新加载') }}</el-button>
+      <h1 class="page-title">{{ t('服务器展示与维护') }}</h1>
+      <el-button :loading="loading" :disabled="busy" :title="t('重新加载')" :aria-label="t('重新加载')" @click="load"><Icon name="refresh-cw" :size="15" /></el-button>
     </header>
     <p v-if="error" class="feedback danger" role="alert">{{ error }}</p>
     <p v-if="notice" class="feedback success" role="status">{{ notice }}</p>
@@ -230,17 +230,15 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunloa
         <section v-show="activeTab === 'control'" id="maintenance-control" role="tabpanel" aria-labelledby="maintenance-tab-control">
           <div class="control-layout">
             <fieldset :disabled="locked">
-              <h2>{{ t('维护控制') }}</h2>
               <div class="mode-selector" role="radiogroup" :aria-label="t('控制方式')">
                 <label><input v-model="maintenance.scheduleEnabled" type="radio" :value="false" />{{ t('手动控制') }}</label>
                 <label v-if="scheduleSupported"><input v-model="maintenance.scheduleEnabled" type="radio" :value="true" />{{ t('定时维护') }}</label>
               </div>
               <p v-if="!scheduleSupported" class="field-help">{{ t('更新维护模块后可使用定时维护。') }}</p>
               <template v-if="!maintenance.scheduleEnabled">
-                <div class="setting-row"><div><label for="manual-enabled">{{ t('启用维护模式') }}</label><p>{{ t('保存后立即生效。') }}</p></div><el-switch id="manual-enabled" v-model="maintenance.enabled" :disabled="locked" :aria-label="t('启用维护模式')" /></div>
+                <div class="setting-row"><label for="manual-enabled">{{ t('启用维护模式') }}</label><el-switch id="manual-enabled" v-model="maintenance.enabled" :disabled="locked" :aria-label="t('启用维护模式')" /></div>
               </template>
               <div v-else class="schedule-fields">
-                <p class="field-help">{{ t('计划期间启用维护，结束后自动开放。') }}</p>
                 <label class="field-label" for="maintenance-schedule-start">{{ t('开始时间') }}</label>
                 <input id="maintenance-schedule-start" v-model="localStart" type="datetime-local" />
                 <label class="field-label" for="maintenance-schedule-end">{{ t('结束时间') }}<span>{{ t('可选') }}</span></label>
@@ -253,26 +251,22 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunloa
             </fieldset>
             <aside class="maintenance-actions">
               <h2>{{ t('在线玩家操作') }}</h2>
-              <dl><div><dt>{{ t('可踢出人数') }}</dt><dd>{{ status && !statusError ? status.eligible : '—' }}</dd></div><div><dt>{{ t('已保存白名单') }}</dt><dd>{{ savedMaintenance.whitelist.split('\n').filter(Boolean).length }}</dd></div></dl>
+              <dl :title="updatedAt ? t('更新于 {time}', { time: updatedAt }) : undefined"><div><dt>{{ t('可踢出人数') }}</dt><dd>{{ status && !statusError ? status.eligible : '—' }}</dd></div><div><dt>{{ t('已保存白名单') }}</dt><dd>{{ savedMaintenance.whitelist.split('\n').filter(Boolean).length }}</dd></div></dl>
               <el-button type="danger" plain :loading="pending === 'kick'" :disabled="locked || !liveActive || !!statusError" @click="kick"><Icon name="log-out" :size="15" />{{ t('立即踢出') }}</el-button>
-              <p class="field-help">{{ t('使用已保存的白名单与踢出提示。') }}</p>
               <p v-if="!liveActive" class="field-help">{{ t('维护开启后可执行。') }}</p>
               <p v-else-if="dirty" class="warning-text">{{ t('此次操作不会使用未保存修改。') }}</p>
-              <p class="timestamp">{{ t('更新于 {time}', { time: updatedAt || '—' }) }}</p>
             </aside>
           </div>
         </section>
         <section v-show="activeTab === 'whitelist'" id="maintenance-whitelist-panel" role="tabpanel" aria-labelledby="maintenance-tab-whitelist" class="editor-section">
           <fieldset :disabled="locked">
-            <div class="section-heading"><h2>{{ t('维护白名单') }}</h2><span class="field-help">{{ t('{count} / 500 项', { count: whitelistCount }) }}</span></div>
-            <label class="field-label" for="maintenance-whitelist">{{ t('玩家名称或 UUID') }}</label>
+            <div class="section-heading"><label class="field-label" for="maintenance-whitelist">{{ t('玩家名称或 UUID') }}</label><span class="field-help">{{ t('{count} / 500 项', { count: whitelistCount }) }}</span></div>
             <textarea id="maintenance-whitelist" v-model="maintenance.whitelist" rows="10" maxlength="20000" :placeholder="t('每行一个玩家名称或 UUID')" spellcheck="false" />
             <p class="field-help">{{ t('白名单玩家可在维护期间加入，且不会被维护踢出。每行一项，名称忽略大小写。') }}</p>
           </fieldset>
         </section>
         <section v-show="activeTab === 'messages'" id="maintenance-messages" role="tabpanel" aria-labelledby="maintenance-tab-messages" class="editor-section">
           <fieldset :disabled="locked">
-            <h2>{{ t('提示消息') }}</h2>
             <label class="field-label" for="maintenance-join-message">{{ t('入服拒绝提示') }}</label>
             <input id="maintenance-join-message" v-model="maintenance.joinMessage" type="text" maxlength="512" />
             <MinecraftTextPreview :legacy="false" :show-help="false" atomic-variables :text="maintenance.joinMessage" :variables="previewVariables" :label="t('入服拒绝提示预览')" />
@@ -282,7 +276,6 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunloa
           </fieldset>
         </section>
         <section v-show="activeTab === 'motd'" id="maintenance-motd" role="tabpanel" aria-labelledby="maintenance-tab-motd" class="editor-section">
-          <h2>{{ t('服务器简介') }}</h2>
           <el-radio-group v-model="motdMode" :aria-label="t('简介类型')" class="motd-selector"><el-radio-button value="normal">{{ t('正常运行') }}</el-radio-button><el-radio-button value="maintenance">{{ t('维护期间') }}</el-radio-button></el-radio-group>
           <fieldset v-if="motdMode === 'normal'" :disabled="locked">
             <div class="setting-row"><div><label for="normal-enabled">{{ t('启用正常简介') }}</label><p>{{ t('关闭后使用服务器原有简介。') }}</p></div><el-switch id="normal-enabled" v-model="normal.enabled" :disabled="locked" :aria-label="t('启用正常简介')" /></div>
@@ -300,7 +293,7 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunloa
         </section>
       </div>
       <footer class="maintenance-savebar">
-        <span :class="{ 'warning-text': currentDirty }" role="status">{{ t(currentDirty ? '当前分区有未保存修改' : '当前分区已保存') }}</span>
+        <span v-if="currentDirty" class="warning-text" role="status">{{ t('尚未保存') }}</span>
         <div><el-button :disabled="locked || !currentDirty" @click="resetCurrent">{{ t('撤销修改') }}</el-button><el-button type="primary" :loading="pending === saveKind" :disabled="locked || !currentDirty" @click="save(saveKind)"><Icon name="save" :size="15" />{{ t('保存当前分区') }}</el-button></div>
       </footer>
     </template>
@@ -319,7 +312,7 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunloa
 .live-detail { font-size:12px; color:var(--lc-text-soft); flex:1; min-width:160px; overflow-wrap:anywhere; }
 .live-count { display:flex; gap:12px; align-items:center; font-size:12px; color:var(--lc-text-soft); }
 .live-count strong { color:var(--lc-text); font-size:18px; font-variant-numeric:tabular-nums; }
-.maintenance-main { padding:24px 0; min-width:0; }
+.maintenance-main { padding:0 0 24px; min-width:0; }
 .maintenance-main h2 { font-size:15px; line-height:1.5; font-weight:600; margin:0 0 16px; }
 .control-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:40px; }
 fieldset { border:0; margin:0; padding:0; min-width:0; }
@@ -342,14 +335,13 @@ textarea { resize:vertical; min-height:180px; }
 .maintenance-actions dl>div { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:12px 0; font-size:13px; }
 .maintenance-actions dt { color:var(--lc-text-soft); }
 .maintenance-actions dd { margin:0; font-variant-numeric:tabular-nums; font-weight:600; }
-.maintenance-actions .timestamp { color:var(--lc-text-soft); font-size:11px; margin:22px 0 0; }
 .editor-section { max-width:900px; min-width:0; }
 .section-heading { display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
-.section-heading h2 { margin-bottom:0; }
+.section-heading .field-label { margin-top:0; }
 .motd-selector { margin-bottom:20px; }
 .maintenance-savebar { position:sticky; bottom:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-top:1px solid var(--el-border-color); background:var(--lc-bg); }
 .maintenance-savebar>span { color:var(--lc-text-soft); font-size:12px; }
-.maintenance-savebar>div { display:flex; gap:8px; }
+.maintenance-savebar>div { display:flex; gap:8px; margin-inline-start:auto; }
 .maintenance-savebar :deep(.el-button+.el-button) { margin-left:0; }
 .feedback { font-size:13px; line-height:1.7; padding:10px 12px; background:var(--el-fill-color-light); border-left:3px solid var(--el-border-color); margin:0 0 12px; overflow-wrap:anywhere; }
 .feedback.danger,.status-error { color:var(--el-color-danger); border-color:var(--el-color-danger); }
@@ -358,6 +350,6 @@ textarea { resize:vertical; min-height:180px; }
 .status-error { font-size:12px; margin:8px 0 16px; }
 .status-error button { border:0; color:var(--el-color-primary); background:none; text-decoration:underline; cursor:pointer; }
 .loading-state { padding:48px 0; color:var(--lc-text-soft); text-align:center; }
-@media(max-width:850px) { .control-layout { grid-template-columns:minmax(0,1fr); gap:24px; }.maintenance-actions { border-left:0; border-top:1px solid var(--el-border-color-light); padding:20px 0 0; }.maintenance-actions dl { max-width:400px; }.maintenance-main { padding:20px 0; } }
+@media(max-width:850px) { .control-layout { grid-template-columns:minmax(0,1fr); gap:24px; }.maintenance-actions { border-left:0; border-top:1px solid var(--el-border-color-light); padding:20px 0 0; }.maintenance-actions dl { max-width:400px; } }
 @media(max-width:520px) { .live-bar { gap:10px 16px; }.live-detail { order:3; flex-basis:100%; }.live-count { margin-left:auto; }.maintenance-savebar { align-items:flex-start; flex-direction:column; }.maintenance-savebar>div { width:100%; justify-content:flex-end; }.page-header { align-items:flex-start; }.page-title { flex:1; min-width:180px; } }
 </style>

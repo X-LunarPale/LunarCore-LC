@@ -46,7 +46,6 @@ const configReady = computed(() => !!selected.value &&
   ['pvp', 'allowWeather', 'autoLoad'].every(key => typeof selected.value[key] === 'boolean'))
 const locked = computed(() => busy.value || uncertain.value || !canConfigure.value || !configReady.value)
 const selectedLabel = computed(() => selected.value?.alias || selected.value?.name || '')
-const loadedCount = computed(() => worlds.value.filter(world => world.loaded).length)
 const bridgeAvailable = computed(() => bridge.value.includes('可用') && !bridge.value.includes('不可用'))
 const configStatus = computed(() => t(uncertain.value ? '待核对' : !configReady.value ? '不可用' : dirty.value ? '未保存' : '已保存'))
 
@@ -310,10 +309,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="multiverse-workspace" :aria-busy="busy">
-    <header class="workspace-heading">
-      <div>
-        <h1><Icon name="globe" :size="23" />{{ t('多世界管理') }}</h1>
-      </div>
+    <header class="page-header">
+      <h1 class="page-title">{{ t('多世界管理') }}</h1>
       <el-button :loading="loading" :disabled="busy" @click="load()">
         <Icon name="refresh-cw" :size="14" />{{ t('重新读取') }}
       </el-button>
@@ -351,7 +348,6 @@ onBeforeUnmount(() => {
           </li>
         </ul>
         <el-pagination v-if="total > pageSize" class="roster-pagination" small layout="prev, pager, next" :total="total" :page-size="pageSize" :current-page="page" :disabled="busy" @current-change="changePage" />
-        <div v-if="worlds.length" class="roster-summary">{{ t('当前页已加载 {loaded} / {total} 个世界', { loaded: loadedCount, total: worlds.length }) }}</div>
       </aside>
 
       <main class="world-editor">
@@ -439,12 +435,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .multiverse-workspace { width:100%; max-width:1320px; min-width:0; color:var(--lc-text); }
-.workspace-heading,.world-heading,.section-heading,.config-actions,.operation-row { display:flex; justify-content:space-between; align-items:center; gap:16px; }
-.workspace-heading { margin-bottom:16px; }
-.workspace-heading h1 { display:flex; align-items:center; gap:10px; margin:0; font-size:22px; line-height:1.3; }
-.workspace-heading h1 :deep(svg) { color:var(--el-color-primary); }
-.workspace-heading p,.section-heading p { margin:0; color:var(--lc-text-soft); font-size:12px; line-height:1.7; }
-.workspace-heading :deep(.el-button) { flex-shrink:0; }
+.world-heading,.section-heading,.config-actions,.operation-row { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.section-heading p { margin:0; color:var(--lc-text-soft); font-size:12px; line-height:1.7; }
 .bridge-strip { display:flex; align-items:center; gap:7px 12px; flex-wrap:wrap; min-height:38px; margin-bottom:14px; padding:7px 12px; border:1px solid var(--el-border-color-light); border-left:3px solid var(--el-color-success); background:var(--lc-surface); color:var(--lc-text); font-size:12px; }
 .bridge-strip.unavailable { border-left-color:var(--el-color-warning); }
 .bridge-indicator,.world-state-dot { width:7px; height:7px; flex:0 0 7px; border-radius:50%; background:var(--el-color-warning); }
@@ -481,7 +473,6 @@ onBeforeUnmount(() => {
 .world-option-status { color:var(--lc-text-soft); font-size:10px; white-space:nowrap; }
 .roster-state { padding:22px 8px; color:var(--lc-text-soft); font-size:12px; text-align:center; }
 .roster-pagination { justify-content:center; margin-top:12px; }
-.roster-summary { margin-top:12px; padding-top:10px; border-top:1px solid var(--el-border-color-lighter); color:var(--lc-text-soft); font-size:10px; }
 .world-editor { min-width:0; padding:18px 0 18px 24px; }
 .editor-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:260px; gap:9px; color:var(--lc-text-soft); text-align:center; }
 .editor-empty strong { color:var(--lc-text); font-size:14px; }
@@ -546,8 +537,6 @@ button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset
   .world-editor { padding:18px 0; }
 }
 @media (max-width:620px) {
-  .workspace-heading h1 { font-size:21px; }
-  .workspace-heading { align-items:center; }
   .bridge-strip { align-items:flex-start; }
   .bridge-count { margin-left:0; }
   .bridge-strip time { flex-basis:100%; margin-left:19px; }

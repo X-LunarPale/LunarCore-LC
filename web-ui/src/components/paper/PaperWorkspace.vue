@@ -96,30 +96,29 @@ onBeforeUnmount(() => { active = false })
 
 <template>
   <div class="paper-workspace">
-    <div class="paper-intro"><h3>{{ t('Paper 可视化设置') }}</h3><el-tag v-if="current.loaded" :type="changedCount ? 'warning' : 'success'" effect="plain">{{ changedCount ? t('{count} 项未保存', { count: changedCount }) : t('已与配置文件同步') }}</el-tag></div>
-    <el-alert class="paper-alert" type="info" :title="t('保存后需重启服务器生效')" :description="t('每次保存会自动备份原配置文件；仅写入本次修改的设置。世界默认配置可能被各世界的独立配置覆盖。')" show-icon :closable="false" />
-    <div class="scope-selector" role="group" :aria-label="t('配置作用域')"><button v-for="item in SCOPES" :key="item.id" type="button" :class="{ selected: scope === item.id }" :aria-pressed="scope === item.id" :title="t(item.description)" @click="scope = item.id"><strong>{{ t(item.label) }}<span v-if="Object.keys(patchFor(states[item.id])).length" class="scope-dot" :aria-label="t('有未保存修改')" /></strong></button></div>
-    <el-alert v-if="current.loaded && !canEdit" class="paper-alert" type="info" :title="t('当前为只读模式')" :description="t('此账号或当前配置仅允许查看，无法保存修改。')" show-icon :closable="false" />
+    <div class="scope-selector workspace-tabs" role="group" :aria-label="t('配置作用域')"><button v-for="item in SCOPES" :key="item.id" type="button" :class="{ selected: scope === item.id }" :aria-pressed="scope === item.id" :title="t(item.description)" @click="scope = item.id">{{ t(item.label) }}<span v-if="Object.keys(patchFor(states[item.id])).length" class="scope-dot" :aria-label="t('有未保存修改')" /></button></div>
+    <div v-if="current.loaded" class="paper-state">
+      <span v-if="current.data.configVersion != null">{{ t('配置版本 {version}', { version: current.data.configVersion }) }}</span>
+      <span v-if="!canEdit">{{ t('只读') }}</span>
+      <span v-else-if="!current.saved"><Icon name="rotate-cw" :size="13" />{{ t('保存后需重启服务器生效') }}</span>
+    </div>
     <el-alert v-if="current.error" class="paper-alert" type="error" :title="t(current.conflict ? '配置已发生变化，已停止保存' : current.uncertain ? '保存结果需要核对' : 'Paper 配置操作失败')" :description="current.error + (current.conflict || current.uncertain ? t(' 当前修改已保留，请重新加载最新配置，核对后重新编辑。') : '')" show-icon :closable="false" />
-    <el-alert v-if="current.saved" class="paper-alert" type="success" :title="t('配置已保存，等待服务器重启后生效')" :description="t('已保存到配置文件，当前运行参数尚未刷新。')" show-icon :closable="false" />
+    <el-alert v-if="current.saved" class="paper-alert" type="success" :title="t('配置已保存，等待服务器重启后生效')" show-icon :closable="false" />
     <div class="paper-toolbar"><el-input v-model="search" :placeholder="t('搜索名称、说明或配置键')" clearable :aria-label="t('搜索 Paper 配置')" /><el-select v-model="group" clearable :placeholder="t('全部分组')" :aria-label="t('筛选配置分组')"><el-option v-for="name in groups" :key="name" :label="t(name)" :value="name" /></el-select><el-checkbox v-model="changedOnly">{{ t('仅看未保存') }}</el-checkbox><div class="toolbar-actions"><el-button :disabled="current.loading || current.saving" @click="load">{{ t('重新加载') }}</el-button><el-button v-if="canEdit" type="primary" :loading="current.saving" :disabled="!current.loaded || current.loading || !changedCount || !!errors.length || current.conflict || current.uncertain" @click="save">{{ changedCount ? t('保存 {count} 项修改', { count: changedCount }) : t('保存配置') }}</el-button></div></div>
     <div v-loading="current.loading" class="paper-content" :aria-busy="current.loading">
-      <template v-if="current.loaded"><div class="result-summary">{{ t('显示 {shown} / {total} 项设置', { shown: filtered.length, total: fields.length }) }}<span v-if="current.data.configVersion != null">{{ t('配置版本 {version}', { version: current.data.configVersion }) }}</span></div><section v-for="section in sections" :key="section.name" class="paper-group"><h4>{{ t(section.name) }}<span>{{ t('{count} 项', { count: section.fields.length }) }}</span></h4><PaperField v-for="field in section.fields" :key="`${scope}-${field.key}`" :field="field" :model-value="current.values[field.key]" :saved-value="current.original[field.key]" :disabled="!canEdit || current.saving || current.loading || current.conflict || current.uncertain" @update:model-value="updateField(field, $event)" /></section><el-empty v-if="!filtered.length" :description="t('没有匹配的设置')" /></template>
+      <template v-if="current.loaded"><section v-for="section in sections" :key="section.name" class="paper-group"><h3>{{ t(section.name) }}</h3><PaperField v-for="field in section.fields" :key="`${scope}-${field.key}`" :field="field" :model-value="current.values[field.key]" :saved-value="current.original[field.key]" :disabled="!canEdit || current.saving || current.loading || current.conflict || current.uncertain" @update:model-value="updateField(field, $event)" /></section><el-empty v-if="!filtered.length" :description="t('没有匹配的设置')" :image-size="48" /></template>
       <el-empty v-else :description="t(current.loading ? '正在读取 Paper 配置…' : '配置尚未加载，请重新加载')" />
     </div>
-    <p class="paper-footnote">{{ t('参考默认值仅用于说明，不代表继承值或服务器当前运行值。未收录的配置保持原样，不展示其内容。') }}</p>
     <p v-if="errors.length" class="validation-error" role="alert">{{ t('有 {count} 项修改尚未通过校验，请根据对应设置的提示调整后保存。', { count: errors.length }) }}</p>
   </div>
 </template>
 
 <style scoped>
-.paper-intro { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 6px 0 18px; }
-h3 { margin: 0 0 7px; font-size: 17px; }.paper-intro p { margin: 0; font-size: 13px; color: var(--lc-text-soft); line-height: 1.7; }
-.paper-alert { margin-bottom:14px; }.scope-selector { display:flex; flex-wrap:wrap; gap:5px; margin:18px 0; }
-.scope-selector button { padding:8px 12px; border:1px solid transparent; border-radius:5px; background:transparent; color:var(--el-text-color-regular); text-align:left; cursor:pointer; }
-.scope-selector button.selected { border-color:var(--el-border-color); color:var(--el-color-primary); background:var(--lc-surface); }.scope-selector strong { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; }.scope-dot { width:6px; height:6px; border-radius:50%; background:var(--el-color-warning); }
-.scope-selector button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
+.paper-alert { margin-bottom:14px; }.scope-selector { margin-bottom:14px; }
+.scope-dot { width:6px; height:6px; border-radius:50%; background:var(--el-color-warning); }
+.paper-state { display:flex; flex-wrap:wrap; gap:5px 16px; margin-bottom:12px; color:var(--lc-text-soft); font-size:12px; }
+.paper-state span { display:inline-flex; align-items:center; gap:6px; }
 .paper-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 0 12px; }.paper-toolbar > :deep(.el-input) { flex: 1; min-width: 200px; }.paper-toolbar > :deep(.el-select) { width: 160px; }.toolbar-actions { display: flex; gap: 8px; }.toolbar-actions :deep(.el-button) { margin: 0; }
-.paper-content { min-height:180px; }.result-summary { display:flex; flex-wrap:wrap; gap:8px 20px; color:var(--lc-text-soft); font-size:12px; margin-bottom:12px; }.paper-group { border-top:1px solid var(--el-border-color); margin-bottom:24px; }h4 { display:flex; align-items:center; justify-content:space-between; margin:0; padding:14px 0; border-bottom:1px solid var(--el-border-color-light); font-size:14px; }h4 span { font-size:11px; color:var(--lc-text-soft); font-weight:400; }.paper-footnote { font-size:12px; line-height:1.8; color:var(--lc-text-soft); }.validation-error { color:var(--el-color-danger); font-size:12px; }
-@media (max-width: 640px) { .scope-selector { grid-template-columns: 1fr; }.paper-toolbar > :deep(.el-select) { flex: 1; }.toolbar-actions { width: 100%; }.toolbar-actions :deep(.el-button) { flex: 1; }h4 { padding-inline: 16px; } }
+.paper-content { min-height:180px; }.paper-group { border-top:1px solid var(--lc-line); margin-bottom:20px; }h3 { margin:0; padding:14px 0 0; font-size:15px; font-weight:600; }.validation-error { color:var(--el-color-danger); font-size:12px; }
+@media (max-width: 640px) { .paper-toolbar > :deep(.el-input) { min-width: min(200px, 100%); }.paper-toolbar > :deep(.el-select) { flex: 1; }.toolbar-actions { width: 100%; }.toolbar-actions :deep(.el-button) { flex: 1; } }
 </style>

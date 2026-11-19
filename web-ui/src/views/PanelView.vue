@@ -24,7 +24,11 @@ const groups = computed(() => [
   { id: 'records', label: '数据记录', icon: 'table-2' },
   { id: 'settings', label: '设置', icon: 'sliders-horizontal' },
   { id: 'help', label: '说明', icon: 'book-open' }
-].filter(group => panel.value?.sections?.some(section => groupOf(section) === group.id)))
+].map(group => ({
+  ...group,
+  panelId: `module-content-${group.id}`,
+  sections: (panel.value?.sections || []).filter(section => groupOf(section) === group.id)
+})).filter(group => group.sections.length))
 watch(panelKey, () => { activeGroup.value = groups.value[0]?.id || 'overview' }, { immediate: true })
 watch(groups, available => {
   if (available.length && !available.some(group => group.id === activeGroup.value)) activeGroup.value = available[0].id
@@ -80,18 +84,18 @@ async function refreshMenu() {
     <template v-if="panel">
       <component :is="workspace" v-if="workspace" :key="panelKey" :panel="panel" :namespace="route.params.ns" :id="route.params.id" />
       <template v-else>
-        <header class="page-header"><h1 class="page-title"><Icon :name="panel.icon || 'box'" :size="22" />{{ t(panel.title) }}</h1></header>
+        <header class="page-header"><h1 class="page-title">{{ t(panel.title) }}</h1></header>
         <WorkspaceTabs v-if="groups.length > 1" v-model="activeGroup" :items="groups" label="模块内容分区" id="module-content" />
-        <div class="panel-sections">
-          <section v-for="(section, index) in panel.sections" v-show="groupOf(section) === activeGroup"
-            :key="sectionKey(section, index)" :style="spanStyle(section)" class="panel-section"
-            role="tabpanel" :aria-label="t(section.title || groups.find(group => group.id === activeGroup)?.label || '模块内容')">
-            <TableSection v-if="section.type === 'table'" :section="section" :namespace="panel.namespace" :active="groupOf(section) === activeGroup" />
-            <FormSection v-else-if="section.type === 'form'" :section="section" :namespace="panel.namespace" :active="groupOf(section) === activeGroup" />
-            <StatsSection v-else-if="section.type === 'stats'" :section="section" :namespace="panel.namespace" :active="groupOf(section) === activeGroup" />
+        <div v-for="group in groups" v-show="group.id === activeGroup" :id="group.panelId" :key="group.id"
+          class="panel-sections" :role="groups.length > 1 ? 'tabpanel' : undefined"
+          :aria-labelledby="groups.length > 1 ? `module-content-tab-${group.id}` : undefined">
+          <section v-for="(section, index) in group.sections" :key="sectionKey(section, index)" :style="spanStyle(section)" class="panel-section">
+            <TableSection v-if="section.type === 'table'" :section="section" :namespace="panel.namespace" :active="group.id === activeGroup" />
+            <FormSection v-else-if="section.type === 'form'" :section="section" :namespace="panel.namespace" :active="group.id === activeGroup" />
+            <StatsSection v-else-if="section.type === 'stats'" :section="section" :namespace="panel.namespace" :active="group.id === activeGroup" />
             <template v-else-if="section.type === 'iframe'">
               <h2 v-if="section.title" class="section-title">{{ t(section.title) }}</h2>
-              <iframe v-if="groupOf(section) === activeGroup" :src="iframeSrc(section.url)" :title="t(section.title || '扩展视图')" :style="{ height: (section.height || 600) + 'px' }" class="frame" />
+              <iframe v-if="group.id === activeGroup" :src="iframeSrc(section.url)" :title="t(section.title || '扩展视图')" :style="{ height: (section.height || 600) + 'px' }" class="frame" />
             </template>
             <template v-else-if="section.type === 'text'">
               <h2 v-if="section.title" class="section-title">{{ t(section.title) }}</h2>

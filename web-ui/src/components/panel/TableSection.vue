@@ -96,7 +96,7 @@ defineExpose({ reload: load })
 
 <template>
   <section class="table-section" :aria-busy="s.loading">
-    <header class="table-heading"><div><Icon class="heading-mark" name="table-2" :size="15" /><h3>{{ t(section.title || '数据列表') }}</h3><span class="record-count">{{ t('{count} 项', { count: s.total }) }}</span></div><span v-if="s.loading" class="loading-label" role="status">{{ t('正在更新…') }}</span></header>
+    <header class="table-heading"><h2>{{ t(section.title || '数据列表') }}</h2></header>
     <div class="toolbar">
       <el-input v-if="searchable" v-model="s.q" :disabled="runner?.busy" :placeholder="t('搜索')" :aria-label="t('{title}搜索', { title: t(section.title || '列表') })" clearable class="table-search" @keyup.enter="search" @clear="search">
         <template #prefix><Icon name="search" :size="14" /></template>
@@ -119,7 +119,7 @@ defineExpose({ reload: load })
           </div>
         </template>
       </el-table-column>
-      <template #empty><div class="table-empty"><Icon name="inbox" :size="28" /><strong>{{ s.query ? t('没有匹配的记录') : t('暂无记录') }}</strong><span>{{ s.query ? t('请调整关键词后重新搜索。') : t('记录生成后将显示在这里。') }}</span></div></template>
+      <template #empty><div class="table-empty">{{ s.query ? t('没有匹配的记录') : t('暂无记录') }}</div></template>
     </el-table>
     <el-pagination v-if="!s.error && s.total > 0" class="pager" :disabled="s.loading || runner?.busy" :pager-count="5" layout="total, sizes, prev, pager, next" :total="s.total" v-model:current-page="s.page"
       v-model:page-size="s.size" :page-sizes="[10, 20, 50, 100]" @current-change="load" @size-change="search" />
@@ -129,12 +129,8 @@ defineExpose({ reload: load })
 
 <style scoped>
 .table-section { padding:0; min-width:0; color:var(--lc-text); }
-.table-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
-.table-heading > div { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
-.heading-mark { color: var(--el-color-primary); flex-shrink: 0; }
-h3 { font-size: 15px; font-weight: 600; margin: 0; }
-.record-count { border-left: 1px solid var(--el-border-color); padding-left: 8px; font-size: 11px; color: var(--lc-text-soft); font-variant-numeric: tabular-nums; }
-.loading-label { font-size: 11px; color: var(--lc-text-soft); white-space: nowrap; }
+.table-heading { margin-bottom: 12px; }
+h2 { font-size: 15px; font-weight: 600; margin: 0; }
 .toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding-bottom:12px; margin-bottom:0; }
 .toolbar > :deep(.el-button) { margin:0; height:34px; padding:0 11px; font-size:13px; }
 .table-search { width: min(240px, 100%); }
@@ -144,12 +140,7 @@ h3 { font-size: 15px; font-weight: 600; margin: 0; }
 .table-section :deep(.el-table) { --el-table-border-color:var(--el-border-color-light); --el-table-header-bg-color:var(--el-fill-color-light); --el-table-header-text-color:var(--el-text-color-regular); --el-table-row-hover-bg-color:var(--el-fill-color-light); font-size:13px; border-radius:0; border-top:1px solid var(--el-border-color-light); }
 .table-section :deep(.el-table th.el-table__cell) { font-weight: 550; padding: 7px 0; }
 .table-section :deep(.el-table td.el-table__cell) { padding: 7px 0; }
-.table-section :deep(.el-button) { border-radius: 5px; transition: background-color 180ms, border-color 180ms; }
-.table-section :deep(.el-button:focus-visible) { outline: 2px solid var(--el-color-primary); outline-offset: 3px; }
-.table-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 12px; color: var(--lc-text-soft); line-height: 1.4; }
-.table-empty > :first-child { margin-bottom: 3px; opacity: .55; }
-.table-empty strong { font-size: 12px; font-weight: 500; }
-.table-empty span { font-size: 11px; }
+.table-empty { padding: 22px 12px; color: var(--lc-text-soft); line-height: 1.4; }
 .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 .row-actions :deep(.el-button) { margin: 0; flex: 0 0 auto; height: 25px; padding: 0 8px; }
 .pager { margin-top: 11px; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
