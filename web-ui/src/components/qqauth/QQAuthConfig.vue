@@ -266,8 +266,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}h2
 .config-section{padding:20px 0;min-width:0}
 .config-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-top:18px}
 .config-tabs button{padding:7px 11px;min-height:34px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--el-text-color-regular);font:inherit;font-size:12px;cursor:pointer}
-.config-tabs button.selected{border-color:var(--el-border-color);background:var(--lc-surface);color:var(--el-color-primary);font-weight:600}
-.config-tabs button:focus-visible{outline:2px solid var(--el-color-primary);outline-offset:2px}
+.config-tabs button.selected{border-color:transparent;background:var(--lc-selected-bg);color:var(--lc-text);box-shadow:var(--lc-selection-shadow);font-weight:600}
+.config-tabs button:focus-visible{outline:2px solid var(--lc-focus-ink);outline-offset:2px}
 .bridge-note{margin:0 0 18px}
 .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:24px}.field-grid :deep(.el-select),.field-grid :deep(.el-input-number){width:100%}
 .field-help{margin:6px 0 0;font-size:12px;line-height:1.6;color:var(--el-text-color-secondary);overflow-wrap:anywhere}

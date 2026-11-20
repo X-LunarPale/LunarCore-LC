@@ -23,7 +23,7 @@
   --el-fill-color-blank: #ffffff;
   --el-bg-color: #ffffff;
   --el-bg-color-overlay: #ffffff;
-  --el-border-radius-base: 6px;
+  --el-border-radius-base: 8px;
   --el-font-size-base: 13px;
   --lc-text: var(--el-text-color-primary);
   --lc-text-soft: var(--el-text-color-secondary);
@@ -32,6 +32,13 @@
   --lc-bg: var(--lc-surface);
   --lc-line: var(--el-border-color-light);
   --lc-accent: var(--el-color-primary);
+  --lc-radius-control: var(--el-border-radius-base);
+  --lc-focus-ink: #555963;
+  --lc-focus-halo: 0 0 0 3px #24283114, 0 2px 6px #24283112;
+  --lc-focus-field: inset 0 0 0 1px var(--lc-focus-ink), var(--lc-focus-halo);
+  --lc-selected-bg: #ebedf0;
+  --lc-selection-surface: #ffffff;
+  --lc-selection-shadow: inset 0 0 0 1px #24283112, 0 1px 3px #24283124;
   --lc-sidebar: #f8f9fa;
   --lc-sidebar-border: var(--lc-line);
   --lc-console-bg: #181a1d;
@@ -87,6 +94,11 @@ html.dark {
   --el-border-color-light: #303238;
   --el-border-color-lighter: #282a2e;
   --lc-sidebar: #1f2023;
+  --lc-focus-ink: #adafb6;
+  --lc-focus-halo: 0 0 0 3px #d7d9e327, 0 2px 6px #0005;
+  --lc-selected-bg: #34363b;
+  --lc-selection-surface: #383a40;
+  --lc-selection-shadow: inset 0 0 0 1px #f1f2fa12, 0 1px 3px #0006;
   --lc-console-bg: #121315;
   --lc-console-text: #dce1e8;
   color-scheme: dark;
@@ -97,12 +109,12 @@ body { line-height: 1.55; }
 button, input, textarea, select { font: inherit; letter-spacing: 0; }
 a { color: var(--lc-accent); text-underline-offset: 3px; }
 button:disabled { cursor: not-allowed; }
-::selection { color: var(--lc-text); background: var(--el-color-primary-light-8); }
-:where(a, button, input, textarea, select, [tabindex]):focus-visible { outline: 2px solid var(--lc-accent); outline-offset: 3px; }
+::selection { color: var(--lc-text); background: var(--el-fill-color-darker); }
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--lc-focus-ink); outline-offset: 3px; }
 .skip-link { position: fixed; top: -80px; left: 16px; z-index: 9999; padding: 10px 16px; border: 1px solid var(--lc-accent); border-radius: 5px; background: var(--lc-surface); color: var(--lc-accent); }
 .skip-link:focus { top: 10px; }
 .lc-icon { vertical-align: middle; flex-shrink: 0; }
-.lc-icon-button { display: inline-grid; place-items: center; flex: none; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--el-text-color-regular); cursor: pointer; transition: background-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
+.lc-icon-button { display: inline-grid; place-items: center; flex: none; width: 34px; height: 34px; padding: 0; border: 0; border-radius: var(--lc-radius-control); background: transparent; color: var(--el-text-color-regular); cursor: pointer; transition: background-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
 .lc-icon-button:hover { color: var(--lc-text); background: var(--el-fill-color); }
 .lc-icon-button:active { transform: scale(.9); transition-duration: 80ms; }
 
@@ -122,12 +134,11 @@ button:disabled { cursor: not-allowed; }
 .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; min-width: 0; }
 .toolbar .spacer { flex: 1; }
 .toolbar > .el-button + .el-button { margin-left: 0; }
-.workspace-tabs { display: flex; align-items: stretch; gap: 20px; margin-bottom: 24px; padding: 0; border-bottom: 1px solid var(--lc-line); overflow-x: auto; scrollbar-width: thin; }
-.workspace-tabs > button { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex: none; min-height: 42px; padding: 8px 1px; border: 0; background: none; color: var(--lc-text-soft); cursor: pointer; font-size: 13px; line-height: 1.5; white-space: nowrap; }
-.workspace-tabs > button::after { content: ''; position: absolute; inset: auto 0 0; height: 2px; background: var(--lc-accent); transform: scaleX(0); transition: transform var(--motion-standard) var(--motion-spring); }
-.workspace-tabs > button:hover { color: var(--lc-text); }
-.workspace-tabs > button:is([aria-selected="true"], .active, .selected) { color: var(--lc-text); font-weight: 600; }
-.workspace-tabs > button:is([aria-selected="true"], .active, .selected)::after { transform: scaleX(1); }
+.workspace-tabs { display: flex; align-items: stretch; gap: 6px; margin-bottom: 24px; padding: 3px 3px 8px; border-bottom: 1px solid var(--lc-line); overflow-x: auto; scrollbar-width: thin; }
+.workspace-tabs > button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex: none; min-height: 38px; padding: 8px 12px; border: 0; border-radius: var(--lc-radius-control); background: none; color: var(--lc-text-soft); cursor: pointer; font-size: 13px; font-weight: 500; line-height: 1.5; white-space: nowrap; transition: background-color var(--motion-fast), color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
+.workspace-tabs > button:hover { color: var(--lc-text); background: var(--el-fill-color-light); }
+.workspace-tabs > button:is([aria-selected="true"], .active, .selected) { color: var(--lc-text); background: var(--lc-selected-bg); box-shadow: var(--lc-selection-shadow); }
+.workspace-tabs > button:active { transform: scale(.97); }
 .workspace-tabs > button:focus-visible { outline-offset: -3px; }
 .workspace-section { min-width: 0; padding: 22px 0; border-bottom: 1px solid var(--lc-line); }
 .workspace-section:first-child { padding-top: 0; }
@@ -162,23 +173,34 @@ button:disabled { cursor: not-allowed; }
 .markdown th, .markdown td { padding: 8px 12px; border: 1px solid var(--lc-line); }
 
 /* Element Plus controls use the same density and focus treatment as native controls. */
-.el-card { border-radius: 6px; box-shadow: none !important; }
+.el-card { border-radius: var(--lc-radius-control); box-shadow: none !important; }
 .el-dialog { max-width: calc(100vw - 32px); padding: 24px; border: 1px solid var(--lc-line); border-radius: 8px; box-shadow: 0 16px 60px #161a2029; }
 .el-dialog__title { font-size: 18px; font-weight: 650; line-height: 1.5; }
 .el-dialog__header { margin-bottom: 18px; }
 .el-message-box { max-width: calc(100vw - 32px); border-radius: 8px; }
 .el-button { max-width: 100%; font-weight: 500; transition: color var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
+.el-button:focus-visible, .el-button.is-text:not(.is-disabled):focus-visible { outline-color: var(--lc-focus-ink); }
 .el-button:not(.is-disabled):active { transform: scale(.98); transition-duration: 80ms; }
 .el-button--primary { --el-button-hover-bg-color: var(--el-color-primary-dark-2); --el-button-hover-border-color: var(--el-color-primary-dark-2); }
 html.dark :is(.el-button--primary, .el-button--success, .el-button--warning, .el-button--danger):not(.is-plain):not(.is-text):not(.is-link) { --el-button-text-color: #18212e; --el-button-hover-text-color: #18212e; --el-button-active-text-color: #18212e; }
-html.dark .el-segmented { --el-segmented-item-selected-color: #18212e; }
-.el-segmented__item-selected { transition: transform var(--motion-standard) var(--motion-spring), width var(--motion-standard) var(--motion-spring), height var(--motion-standard) var(--motion-spring), background-color var(--motion-fast); }
+.el-segmented { --el-segmented-padding: 3px; --el-segmented-item-selected-color: var(--lc-text); --el-segmented-item-selected-bg-color: var(--lc-selection-surface); --el-segmented-item-selected-disabled-bg-color: var(--lc-selected-bg); }
+.el-segmented__item-selected { box-shadow: var(--lc-selection-shadow); transition: transform var(--motion-standard) var(--motion-spring), width var(--motion-standard) var(--motion-spring), height var(--motion-standard) var(--motion-spring), background-color var(--motion-fast); }
+.el-segmented__item-selected.is-focus-visible::before { outline-color: var(--lc-focus-ink); outline-offset: -2px; }
+.el-segmented__item.is-selected.is-disabled { color: var(--lc-text-soft); }
 .el-button > span { gap: 6px; min-width: 0; }
 .el-input__wrapper, .el-textarea__inner, .el-select__wrapper { transition: box-shadow var(--motion-fast), background-color var(--motion-fast); }
+.el-input__wrapper.is-focus, .el-textarea__inner:focus, .el-select__wrapper.is-focused { box-shadow: var(--lc-focus-field); }
+.el-select-dropdown__item.is-selected:not(.is-disabled), .el-dropdown-menu__item:not(.is-disabled):is(:focus, :hover) { color: var(--lc-text); background: var(--lc-selected-bg); }
+.el-select-dropdown.is-multiple .el-select-dropdown__item.is-selected::after { background-color: currentColor; }
 .el-dropdown-menu__item { gap: 8px; transition: color var(--motion-fast), background-color var(--motion-fast); }
+.el-popper.is-light, .el-dropdown-menu { border-radius: var(--lc-radius-control); }
+.el-dropdown-menu { padding-inline: 4px; }
+.el-dropdown-menu__item { border-radius: calc(var(--lc-radius-control) - 2px); }
 .el-tabs__nav-wrap::after { height: 1px; }
 .el-tabs__item { color: var(--lc-text-soft); }
 .el-tabs__item.is-active { color: var(--lc-text); }
+.el-tabs__item:focus-visible { box-shadow: inset 0 0 0 2px var(--lc-focus-ink); border-radius: var(--lc-radius-control); }
+.el-tabs__active-bar, .el-tabs__active-bar.is-hidden ~ .is-active::after { background-color: var(--lc-focus-ink); border-radius: 2px; }
 .el-tabs__active-bar { transition: transform var(--motion-standard) var(--motion-spring-soft), width var(--motion-standard) var(--motion-spring-soft); }
 .el-table { --el-table-header-bg-color: var(--lc-surface); --el-table-row-hover-bg-color: var(--el-fill-color-light); --el-table-header-text-color: var(--lc-text-soft); --el-table-tr-bg-color: var(--lc-surface); --el-table-bg-color: var(--lc-surface); --el-table-expanded-cell-bg-color: var(--lc-surface); font-size: 13px; }
 .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell { background: var(--el-fill-color-extra-light); }
@@ -190,6 +212,7 @@ html.dark .el-segmented { --el-segmented-item-selected-color: #18212e; }
 .el-tag { font-weight: 500; }
 .el-form-item__label { font-size: 13px; font-weight: 500; }
 .el-switch { --el-switch-off-color: #a4adba; }
+.el-switch__input:focus-visible ~ .el-switch__core, .el-radio__original:focus-visible + .el-radio__inner, .el-checkbox input:focus-visible + .el-checkbox__inner { outline-color: var(--lc-focus-ink); }
 .el-switch__core .el-switch__action { transition-timing-function: var(--motion-spring); }
 .el-empty { padding: 36px 0; }
 .el-empty__description p { color: var(--lc-text-soft); }
@@ -212,7 +235,7 @@ html.dark .el-segmented { --el-segmented-item-selected-color: #18212e; }
   .page-header { margin-bottom: 20px; }
   .lc-icon-button { width: 42px; height: 42px; }
   .section-grid > * { grid-column: span 24 !important; }
-  .workspace-tabs { gap: 20px; margin-bottom: 20px; }
+  .workspace-tabs { margin-bottom: 20px; }
   .workspace-tabs > button { min-height: 44px; }
   .workspace-section-header { flex-wrap: wrap; gap: 12px; }
 }
@@ -226,4 +249,8 @@ html.dark .el-segmented { --el-segmented-item-selected-color: #18212e; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .el-input__wrapper.is-focus, .el-textarea__inner:focus, .el-select__wrapper.is-focused { outline: 2px solid Highlight; outline-offset: -2px; }
+  .workspace-tabs > button[aria-selected="true"] { color: Highlight; }
 }

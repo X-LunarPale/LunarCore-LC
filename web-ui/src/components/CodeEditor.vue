@@ -78,7 +78,7 @@ function syncScroll() {
   background: var(--el-fill-color-blank);
   font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace; font-size: 13px; line-height: 20px;
 }
-.code-editor-wrap:focus-within { border-color: var(--el-color-primary); outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
+.code-editor-wrap:focus-within { border-color: var(--lc-focus-ink); box-shadow: var(--lc-focus-halo); }
 .gutter {
   overflow: hidden; padding: 8px 8px 8px 6px; text-align: right; min-width: 44px; user-select: none;
   color: var(--lc-text-soft); background: var(--el-fill-color-light); border-right: 1px solid var(--el-border-color-lighter);

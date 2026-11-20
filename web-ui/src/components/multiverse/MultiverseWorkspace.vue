@@ -464,7 +464,7 @@ onBeforeUnmount(() => {
 .world-option:active { transform:scale(.98); }
 .world-option:disabled { cursor:default; opacity:.65; }
 .world-option:hover { background:var(--el-fill-color-light); }
-.world-option.selected { border-color:var(--el-color-primary-light-8); background:var(--el-color-primary-light-9); }
+.world-option.selected { border-color:transparent; background:var(--lc-selected-bg); box-shadow:var(--lc-selection-shadow); }
 .world-option .world-state-dot.loaded,.load-state .world-state-dot.loaded { background:var(--el-color-success); }
 .world-option-copy { display:block; flex:1; min-width:0; }
 .world-option-copy strong,.world-option-copy small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -520,7 +520,7 @@ onBeforeUnmount(() => {
 .teleport-control :deep(.el-input) { max-width:300px; min-width:0; }
 .teleport-control :deep(.el-button) { flex-shrink:0; }
 .no-actions { padding:14px 0; border-top:1px solid var(--el-border-color-lighter); color:var(--lc-text-soft); font-size:11px; }
-button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
+button:focus-visible { outline:2px solid var(--lc-focus-ink); outline-offset:2px; }
 @media (min-width:901px) and (max-width:1180px) {
   .workspace-layout { grid-template-columns:210px minmax(0,1fr); }
   .world-editor { padding:18px 0 18px 18px; }

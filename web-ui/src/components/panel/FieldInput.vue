@@ -111,16 +111,16 @@ const textValue = computed({
 .number-controls { display:flex; align-items:center; gap:14px; }
 .number-slider { flex:1; min-width:0; accent-color:var(--el-color-primary); }
 .exact-number { box-sizing:border-box; width:112px; max-width:45%; padding:8px 10px; border:1px solid var(--el-border-color); border-radius:5px; background:var(--lc-surface); color:var(--lc-text); font:inherit; font-size:12px; }
-.exact-number:focus-visible,.number-slider:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:3px; }
+.exact-number:focus-visible,.number-slider:focus-visible { outline:2px solid var(--lc-focus-ink); outline-offset:3px; }
 .exact-number:invalid { border-color:var(--el-color-warning); }
 .hint { font-size: 11px; color: var(--lc-text-soft); line-height: 1.5; margin-top: 4px; }
-:deep(.el-input__wrapper), :deep(.el-select__wrapper), :deep(.el-textarea__inner) { border-radius: 5px; background: var(--lc-surface); box-shadow: 0 0 0 1px var(--el-border-color) inset; transition: box-shadow 180ms; }
+:deep(.el-input__wrapper), :deep(.el-select__wrapper), :deep(.el-textarea__inner) { border-radius: var(--lc-radius-control); background: var(--lc-surface); box-shadow: 0 0 0 1px var(--el-border-color) inset; transition: box-shadow 180ms; }
 :deep(.el-input__wrapper), :deep(.el-select__wrapper) { min-height: 32px; }
 :deep(.el-input__inner), :deep(.el-select__wrapper) { font-size: 12px; }
 :deep(.el-textarea__inner) { font-size: 12px; line-height: 1.6; padding: 8px 10px; }
-:deep(.el-input__wrapper.is-focus), :deep(.el-select__wrapper.is-focused), :deep(.el-textarea__inner:focus) { box-shadow: 0 0 0 1px var(--el-color-primary) inset, 0 0 0 3px var(--el-color-primary-light-9); }
-:deep(.el-input-number) { --el-input-border-radius: 5px; }
+:deep(.el-input__wrapper.is-focus), :deep(.el-select__wrapper.is-focused), :deep(.el-textarea__inner:focus) { box-shadow: var(--lc-focus-field); }
+:deep(.el-input-number) { --el-input-border-radius: var(--lc-radius-control); }
 :deep(.el-switch) { --el-switch-on-color: var(--el-color-primary); --el-switch-off-color: var(--el-border-color-darker); }
-:deep(.el-switch:focus-visible) { outline: 2px solid var(--el-color-primary); outline-offset: 3px; border-radius: 12px; }
+:deep(.el-switch:focus-visible) { outline: 2px solid var(--lc-focus-ink); outline-offset: 3px; border-radius: 12px; }
 @media (prefers-reduced-motion: reduce) { :deep(*) { transition: none !important; animation: none !important; } }
 </style>

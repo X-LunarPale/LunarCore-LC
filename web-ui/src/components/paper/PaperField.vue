@@ -65,13 +65,13 @@ code { font-size: 11px; color: var(--el-text-color-secondary); overflow-wrap: an
 .field-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 11px; color: var(--lc-text-soft); }
 .field-details { margin-top:8px; color:var(--lc-text-soft); font-size:12px; }
 .field-details summary { cursor:pointer; width:fit-content; }
-.field-details summary:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
+.field-details summary:focus-visible { outline:2px solid var(--lc-focus-ink); outline-offset:2px; }
 .field-details code { display:block; margin-top:8px; }
 .field-control { align-self: center; min-width: 0; }
 .numeric-control { display: flex; align-items: center; gap: 22px; }
 .numeric-control :deep(.el-slider) { flex: 1; min-width: 80px; margin-left: 8px; }
 .exact-input { width: 126px; max-width: 100%; box-sizing: border-box; border: 1px solid var(--el-border-color); background: var(--el-fill-color-blank); border-radius: 5px; color: var(--el-text-color-primary); padding: 8px 10px; font: inherit; font-size: 13px; }
-.exact-input:focus { outline: 2px solid var(--el-color-primary-light-5); outline-offset: 2px; }
+.exact-input:focus { outline: 2px solid var(--lc-focus-ink); outline-offset: 2px; }
 .exact-input:disabled { opacity: .65; cursor: not-allowed; }
 .range-help, .field-note { font-size: 11px; line-height: 1.7; color: var(--lc-text-soft); margin: 8px 0 0; }
 .range-help span { display: block; }

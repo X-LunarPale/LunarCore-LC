@@ -8,7 +8,6 @@ import { t } from '../i18n'
 
 const data = ref(null)
 const tab = ref('performance')
-const trend = ref('tps')
 const loading = ref(false)
 const clock = ref(performance.now())
 const uptimeBase = ref(null)
@@ -80,33 +79,20 @@ const cards = computed(() => {
     { label: t('运行时长'), value: uptimeDisplay.value }
   ]
 })
-const trendOptions = computed(() => [
-  { label: 'TPS', value: 'tps' },
-  { label: 'MSPT', value: 'mspt' },
-  { label: t('内存'), value: 'memory' },
-  { label: 'CPU', value: 'cpu' },
-  { label: t('在线玩家'), value: 'online' }
-])
-const trendValues = computed(() => history.value.map((point) => point[trend.value]))
-const trendConfig = computed(() => {
-  const d = data.value
-  if (trend.value === 'tps') return {
-    max: 20, format: v => Number(v).toFixed(1),
-    summary: d.tps ? d.tps.map(x => Number(x).toFixed(1)).join(' / ') + t(' · 1 / 5 / 15 分钟') : t('暂无采样')
-  }
-  if (trend.value === 'mspt') return {
-    color: 'var(--el-color-warning)', format: v => v < 0 ? 'N/A' : Number(v).toFixed(1) + ' ms',
-    summary: d.mspt >= 0 ? (d.mspt < 50 ? t('运行流畅') : t('负载较高')) : t('非 Paper 服务端')
-  }
-  if (trend.value === 'memory') return {
-    max: d.memoryMax || null, format: formatBytes, summary: `${formatBytes(d.memoryUsed)} / ${formatBytes(d.memoryMax)}`
-  }
-  if (trend.value === 'cpu') return {
-    max: 100, color: 'var(--el-color-success)', format: v => v < 0 ? 'N/A' : Number(v).toFixed(1) + '%',
-    summary: t('系统 {percent} · {cores} 核', { percent: d.cpuSystem >= 0 ? d.cpuSystem.toFixed(1) + '%' : '-', cores: d.cores })
-  }
-  return {}
-})
+const trendSeries = [
+  { key: 'tps', label: 'TPS', max: () => 20, format: v => Number(v).toFixed(1),
+    detail: d => d?.tps ? d.tps.map(v => Number(v).toFixed(1)).join(' / ') + t(' · 1 / 5 / 15 分钟') : '' },
+  { key: 'mspt', label: 'MSPT', color: 'var(--el-color-warning)', format: v => v < 0 ? 'N/A' : Number(v).toFixed(1) + ' ms' },
+  { key: 'memory', label: '内存', max: d => d?.memoryMax || null, format: formatBytes,
+    detail: d => d ? `${formatBytes(d.memoryUsed)} / ${formatBytes(d.memoryMax)}` : '' },
+  { key: 'cpu', label: 'CPU', max: () => 100, color: 'var(--el-color-success)', format: v => v < 0 ? 'N/A' : Number(v).toFixed(1) + '%',
+    detail: d => d ? t('系统 {percent} · {cores} 核', { percent: d.cpuSystem >= 0 ? d.cpuSystem.toFixed(1) + '%' : '-', cores: d.cores }) : '' },
+  { key: 'online', label: '在线玩家', color: 'var(--lc-focus-ink)' }
+]
+const trends = computed(() => trendSeries.map(series => ({
+  ...series,
+  values: history.value.map(point => point[series.key])
+})))
 </script>
 
 <template>
@@ -131,12 +117,14 @@ const trendConfig = computed(() => {
       </dl>
       <el-tabs v-model="tab">
         <el-tab-pane :label="t('性能趋势')" name="performance">
-          <section class="trend" :aria-label="t('性能趋势')">
-            <el-segmented v-model="trend" :options="trendOptions" :aria-label="t('关键运行指标')" />
-            <div :key="trend" class="trend-sample" :class="{ 'lc-pane-in': tab === 'performance' }">
-              <p class="trend-summary">{{ trendConfig.summary }}</p>
-              <Sparkline :height="176" :values="trendValues" :min="0" :max="trendConfig.max" :color="trendConfig.color || 'var(--lc-accent)'" :format="trendConfig.format" />
-            </div>
+          <section class="trend-grid" :class="{ 'lc-pane-in': tab === 'performance' }" :aria-label="t('性能趋势')">
+            <article v-for="series in trends" :key="series.key" class="trend-sample" :aria-labelledby="`trend-${series.key}`">
+              <header class="trend-heading">
+                <h2 :id="`trend-${series.key}`">{{ t(series.label) }}</h2>
+                <span v-if="series.detail">{{ series.detail(data) }}</span>
+              </header>
+              <Sparkline :height="120" :values="series.values" :min="0" :max="series.max?.(data)" :color="series.color || 'var(--lc-accent)'" :format="series.format" />
+            </article>
           </section>
         </el-tab-pane>
         <el-tab-pane :label="t('世界与区块')" name="worlds" lazy :class="{ 'lc-pane-in': tab === 'worlds' }">
@@ -169,9 +157,11 @@ const trendConfig = computed(() => {
 .section-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 12px; color: var(--lc-text-soft); }
 .status-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
 .status-label i { width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
-.trend { min-width: 0; padding-block: 4px 14px; }
-.trend .el-segmented { max-width: 100%; }
-.trend-summary { margin: 12px 0 8px; min-height: 1.55em; color: var(--lc-text-soft); font-size: 12px; }
+.trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, max(258px, (100% - 48px) / 3)), 1fr)); gap: 22px 24px; padding-block: 4px 14px; }
+.trend-sample { min-width: 0; padding: 12px 0 0; border-top: 1px solid var(--lc-line); }
+.trend-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 3px 10px; margin-bottom: 6px; }
+.trend-heading h2 { margin: 0; font-size: 13px; font-weight: 600; }
+.trend-heading span { color: var(--lc-text-soft); font-size: 11px; overflow-wrap: anywhere; }
 .trend-sample :deep(stop:first-child) { stop-opacity: .13; }
 .server-summary { max-width: 740px; margin: 0; }
 .server-summary > div { display: grid; grid-template-columns: minmax(94px, 1fr) 3fr; gap: 16px; padding-block: 12px; border-bottom: 1px solid var(--lc-line); }
@@ -183,6 +173,5 @@ const trendConfig = computed(() => {
   .metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .metric { padding-block: 9px; }
   .metric dd { font-size: 20px; }
-  .trend :deep(.el-segmented__item) { padding-inline: 7px; }
 }
 </style>
