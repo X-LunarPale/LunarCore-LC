@@ -15,21 +15,24 @@ const route = useRoute()
 const app = useApp()
 const panel = computed(() => app.findPanel(route.params.ns, route.params.id))
 const panelKey = computed(() => `${route.params.ns}/${route.params.id}`)
-const activeGroup = ref('overview')
+const activeGroup = ref('')
 const menuLoading = ref(false)
 const menuError = ref('')
+const sections = computed(() => panel.value?.sections || [])
+const stats = computed(() => sections.value.filter(section => section.type === 'stats'))
 const groupOf = section => ({ form: 'settings', table: 'records', text: 'help' })[section.type] || 'overview'
 const groups = computed(() => [
-  { id: 'overview', label: '运行概览', icon: 'activity' },
   { id: 'records', label: '数据记录', icon: 'table-2' },
   { id: 'settings', label: '设置', icon: 'sliders-horizontal' },
+  { id: 'overview', label: '运行概览', icon: 'activity' },
   { id: 'help', label: '说明', icon: 'book-open' }
 ].map(group => ({
   ...group,
   panelId: `module-content-${group.id}`,
-  sections: (panel.value?.sections || []).filter(section => groupOf(section) === group.id)
+  sections: sections.value.filter(section => section.type !== 'stats' && groupOf(section) === group.id)
 })).filter(group => group.sections.length))
-watch(panelKey, () => { activeGroup.value = groups.value[0]?.id || 'overview' }, { immediate: true })
+const showStats = computed(() => activeGroup.value !== 'help' || groups.value.length === 1)
+watch(panelKey, () => { activeGroup.value = groups.value[0]?.id || '' }, { immediate: true })
 watch(groups, available => {
   if (available.length && !available.some(group => group.id === activeGroup.value)) activeGroup.value = available[0].id
 })
@@ -85,14 +88,18 @@ async function refreshMenu() {
       <component :is="workspace" v-if="workspace" :key="panelKey" :panel="panel" :namespace="route.params.ns" :id="route.params.id" />
       <template v-else>
         <header class="page-header"><h1 class="page-title">{{ t(panel.title) }}</h1></header>
+        <div v-if="stats.length" v-show="showStats" :class="{ 'panel-metrics-spaced': groups.length }" class="panel-sections">
+          <section v-for="(section, index) in stats" :key="sectionKey(section, index)" :style="spanStyle(section)" class="panel-section">
+            <StatsSection :section="section" :namespace="panel.namespace" :active="showStats" />
+          </section>
+        </div>
         <WorkspaceTabs v-if="groups.length > 1" v-model="activeGroup" :items="groups" label="模块内容分区" id="module-content" />
         <div v-for="group in groups" v-show="group.id === activeGroup" :id="group.panelId" :key="group.id"
-          class="panel-sections" :role="groups.length > 1 ? 'tabpanel' : undefined"
+          class="panel-sections lc-pane-in" :role="groups.length > 1 ? 'tabpanel' : undefined"
           :aria-labelledby="groups.length > 1 ? `module-content-tab-${group.id}` : undefined">
           <section v-for="(section, index) in group.sections" :key="sectionKey(section, index)" :style="spanStyle(section)" class="panel-section">
             <TableSection v-if="section.type === 'table'" :section="section" :namespace="panel.namespace" :active="group.id === activeGroup" />
             <FormSection v-else-if="section.type === 'form'" :section="section" :namespace="panel.namespace" :active="group.id === activeGroup" />
-            <StatsSection v-else-if="section.type === 'stats'" :section="section" :namespace="panel.namespace" :active="group.id === activeGroup" />
             <template v-else-if="section.type === 'iframe'">
               <h2 v-if="section.title" class="section-title">{{ t(section.title) }}</h2>
               <iframe v-if="group.id === activeGroup" :src="iframeSrc(section.url)" :title="t(section.title || '扩展视图')" :style="{ height: (section.height || 600) + 'px' }" class="frame" />
@@ -116,6 +123,7 @@ async function refreshMenu() {
 <style scoped>
 .module-page { color:var(--lc-text); }
 .panel-sections { display:grid; grid-template-columns:repeat(24,minmax(0,1fr)); gap:24px 8px; }
+.panel-metrics-spaced { margin-bottom:20px; }
 .panel-section { min-width:0; }
 .section-title { margin:0 0 16px; font-size:15px; font-weight:600; }
 .frame { width:100%; border:1px solid var(--el-border-color-light); border-radius:6px; background:var(--lc-surface); }

@@ -128,7 +128,7 @@ defineExpose({ run, busy })
 .action-form :deep(.el-form-item__content) { gap: 4px; }
 :global(.panel-action-dialog .el-dialog__footer) { padding-top: 13px; margin-top: 16px; border-top: 1px solid var(--el-border-color-light); }
 :global(.panel-action-dialog .el-button) { border-radius: 5px; font-size: 12px; }
-:global(.panel-action-dialog .el-button:focus-visible) { outline: 2px solid var(--el-color-primary); outline-offset: 3px; }
+:global(.panel-action-dialog .el-button:focus-visible) { outline: 2px solid var(--lc-focus-ink); outline-offset: 3px; }
 @media (max-width: 600px) { .action-form { grid-template-columns: minmax(0, 1fr); } :global(.panel-action-dialog) { padding: 16px; } }
 @media (prefers-reduced-motion: reduce) { :global(.panel-action-dialog), .action-form :deep(*) { transition: none !important; animation: none !important; } }
 .action-form :deep(.el-form-item__label) { height: auto; font-size: 12px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; padding-bottom: 5px; }

@@ -288,8 +288,8 @@ onUnmounted(() => {
 .brand:hover { background: var(--el-fill-color); }
 .brand-logo { width: 24px; height: 24px; flex: none; object-fit: contain; }
 .brand-name, .header-brand { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; font-size: 13px; }
-.navigation-search { display: flex; align-items: center; gap: 8px; height: 33px; flex: none; margin: 5px 12px 14px; padding: 0 9px; border: 1px solid var(--lc-line); border-radius: 6px; color: var(--lc-text-soft); background: var(--lc-surface); }
-.navigation-search:focus-within { border-color: var(--lc-accent); box-shadow: 0 0 0 2px var(--el-color-primary-light-9); }
+.navigation-search { display: flex; align-items: center; gap: 8px; height: 33px; flex: none; margin: 5px 12px 14px; padding: 0 9px; border: 1px solid var(--lc-line); border-radius: var(--lc-radius-control); color: var(--lc-text-soft); background: var(--lc-surface); }
+.navigation-search:focus-within { border-color: var(--lc-focus-ink); box-shadow: var(--lc-focus-halo); }
 .navigation-search input { min-width: 0; width: 100%; border: 0; outline: none; background: transparent; color: var(--lc-text); font-size: 12px; }
 .navigation-search input::placeholder { color: var(--lc-text-soft); }
 .navigation-search button { flex: none; display: grid; place-items: center; width: 22px; height: 24px; padding: 0; border: 0; color: inherit; background: none; cursor: pointer; }
@@ -302,13 +302,12 @@ onUnmounted(() => {
 .navigation-fold { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--motion-standard) var(--motion-spring-soft), opacity var(--motion-fast); }
 .navigation-fold.is-open { grid-template-rows: 1fr; opacity: 1; }
 .navigation-items { list-style: none; min-height: 0; overflow: hidden; padding: 0; margin: 0; }
-.navigation-link { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 33px; padding: 6px 8px; border-radius: 6px; color: var(--el-text-color-regular); text-decoration: none; font-size: 13px; line-height: 1.45; transition: color var(--motion-fast), background-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
+.navigation-link { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 33px; padding: 6px 8px; border-radius: var(--lc-radius-control); color: var(--el-text-color-regular); text-decoration: none; font-size: 13px; line-height: 1.45; transition: color var(--motion-fast), background-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
 .navigation-link .lc-icon { color: var(--lc-text-soft); }
 .navigation-link > span { min-width: 0; overflow-wrap: anywhere; }
 .navigation-link:hover { color: var(--lc-text); background: var(--el-fill-color-light); }
-.navigation-link[aria-current="page"] { color: var(--lc-text); background: var(--el-fill-color); font-weight: 600; }
-.navigation-link[aria-current="page"] .lc-icon { color: var(--lc-accent); animation: lc-selection-in var(--motion-standard) var(--motion-spring) both; }
-.navigation-link[aria-current="page"]::after { content: ''; width: 3px; height: 13px; flex: none; margin-inline-start: auto; border-radius: 3px; background: var(--lc-accent); animation: lc-selection-in var(--motion-standard) var(--motion-spring) both; }
+.navigation-link[aria-current="page"] { color: var(--lc-text); background: var(--lc-selected-bg); box-shadow: var(--lc-selection-shadow); font-weight: 600; }
+.navigation-link[aria-current="page"] .lc-icon { color: var(--lc-text); animation: lc-selection-in var(--motion-standard) var(--motion-spring) both; }
 @keyframes lc-selection-in { from { opacity: .3; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
 .navigation-link:active { transform: scale(.98); transition-duration: 80ms; }
 .navigation-link:focus-visible, .group-toggle:focus-visible { outline-offset: -2px; }
@@ -322,7 +321,6 @@ onUnmounted(() => {
 .navigation-collapsed .sidebar-heading { justify-content: center; padding: 0; }
 .navigation-collapsed .navigation { padding-top: 5px; }
 .navigation-collapsed .navigation-link { justify-content: center; padding: 9px; min-height: 36px; }
-.navigation-collapsed .navigation-link::after { display: none; }
 .app-body { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .app-header { height: var(--lc-header-height); flex: none; display: flex; align-items: center; gap: 12px; padding: 0 var(--lc-page-gutter); border-bottom: 1px solid var(--lc-line); background: var(--lc-surface); }
 .header-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; flex: none; }

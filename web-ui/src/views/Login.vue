@@ -144,9 +144,7 @@ async function submit() {
 .login-brand span { min-width: 0; overflow-wrap: anywhere; }
 .login-main { display: flex; align-items: flex-start; justify-content: center; flex: 1; min-height: 0; padding: max(40px, calc((100svh - 540px) / 2)) 24px 48px; }
 .login-form { width: 100%; max-width: 340px; min-width: 0; }
-.login-modes { margin-bottom: 24px; --el-segmented-item-selected-bg-color: var(--lc-surface); }
-.login-page .login-modes { --el-segmented-item-selected-color: var(--lc-text); }
-:deep(.login-modes .el-segmented__item-selected) { box-shadow: 0 0 0 1px var(--lc-line), 0 1px 3px #10111214; }
+.login-modes { margin-bottom: 24px; }
 .login-error { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 20px; padding: 10px 12px; border: 1px solid var(--el-color-danger-light-7); border-radius: 5px; color: var(--el-color-danger); background: var(--el-color-danger-light-9); font-size: 13px; overflow-wrap: anywhere; }
 .login-error .lc-icon { margin-top: 2px; }
 .login-fields { display: flow-root; }

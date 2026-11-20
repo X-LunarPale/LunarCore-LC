@@ -195,7 +195,7 @@ onBeforeUnmount(() => { beginAccounts(); beginStats() })
 .qq-pager { display: flex; justify-content: flex-end; margin-top: 15px; }
 .configuration-note { margin-top: 24px; border-top: 1px solid var(--el-border-color-light); padding: 14px 0; font-size: 12px; }
 .configuration-note summary { color: var(--lc-text-soft); cursor: pointer; font-weight: 600; width: fit-content; }
-.configuration-note summary:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 3px; }
+.configuration-note summary:focus-visible { outline: 2px solid var(--lc-focus-ink); outline-offset: 3px; }
 .configuration-note p { margin: 10px 0 0; max-width: 80ch; color: var(--lc-text-soft); line-height: 1.7; }
 @container (max-width: 780px) { .section-heading { align-items: flex-start; flex-wrap: wrap; }.list-header { display: none; }.account-row, .account-row.readonly { grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; padding: 12px 0; }.identity .uuid { white-space: normal; overflow-wrap: anywhere; }.created { display: flex; gap: 6px; flex-wrap: wrap; white-space: normal; }.state-label { display: inline; color: var(--lc-text-soft); font-size: 11px; }.account-state .state-label { display: none; }.row-actions { flex-wrap: wrap; } }
 @container (max-width: 420px) { .account-row, .account-row.readonly { grid-template-columns: minmax(0, 1fr); }.row-actions { justify-content: flex-start; }.qq-pager { justify-content: center; } }

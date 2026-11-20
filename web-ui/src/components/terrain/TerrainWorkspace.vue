@@ -435,7 +435,7 @@ fieldset { padding:0; margin:0; border:0; min-width:0; }
 .world-table { width:100%; border-collapse:collapse; text-align:left; font-size:12px; }
 .world-table th { color:var(--lc-text-soft); font-weight:500; white-space:nowrap; }
 .world-table td,.world-table th { padding:11px 10px; border-bottom:1px solid var(--el-border-color-light); }
-.world-table tr.selected { background:var(--el-color-primary-light-9); }
+.world-table tr.selected { background:var(--lc-selected-bg); }
 .world-table td { font-variant-numeric:tabular-nums; white-space:nowrap; }
 .world-select { padding:3px 0; border:0; color:var(--el-color-primary); background:none; cursor:pointer; font-size:12px; max-width:180px; overflow-wrap:anywhere; white-space:normal; text-align:left; }
 .state.ready { color:var(--el-color-success); }.state.failed,.state.delete-failed { color:var(--el-color-danger); }.state.running,.state.queued,.state.deleting { color:var(--el-color-warning); }
@@ -455,10 +455,10 @@ dt { color:var(--lc-text-soft); font-size:11px; }dd { margin:4px 0 0; font-size:
 .spawn-coordinates label > span { display:block; margin-bottom:5px; }
 .spawn-coordinates input { box-sizing:border-box; width:100%; min-width:0; height:32px; padding:6px 8px; border:1px solid var(--el-border-color); border-radius:5px; background:var(--lc-surface); color:var(--lc-text); font:inherit; font-size:12px; }
 .spawn-coordinates input:disabled { opacity:.6; cursor:not-allowed; }
-.spawn-coordinates input:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
+.spawn-coordinates input:focus-visible { outline:2px solid var(--lc-focus-ink); outline-offset:2px; }
 .spawn-hint { margin:8px 0 12px; line-height:1.65; }
 .teleport-form { border-top:1px solid var(--el-border-color-light); padding-top:16px; }
 .teleport-form > div { display:flex; gap:8px; min-width:0; }.teleport-form :deep(.el-input) { flex:1; min-width:0; }.teleport-form :deep(.el-button) { margin:0; flex-shrink:0; }
 @media(max-width:760px) { .scale-fields { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }.world-table { table-layout:fixed; }.world-table td,.world-table th { padding:10px 6px; white-space:normal; overflow-wrap:anywhere; }.world-select { max-width:100%; }.generator-status .working { margin-left:0; } }
-button:focus-visible { outline:2px solid var(--el-color-primary); outline-offset:2px; }
+button:focus-visible { outline:2px solid var(--lc-focus-ink); outline-offset:2px; }
 </style>
