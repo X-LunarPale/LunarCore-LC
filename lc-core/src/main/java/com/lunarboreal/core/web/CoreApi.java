@@ -10,6 +10,7 @@ import com.lunarboreal.api.player.PlayerCache;
 import com.lunarboreal.api.web.HttpException;
 import com.lunarboreal.api.web.WebHandler;
 import com.lunarboreal.core.LunarCorePlugin;
+import com.lunarboreal.core.command.LcCommandRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -81,7 +82,7 @@ final class CoreApi {
         perm("core.players.view", "查看玩家");
         perm("core.players.manage", "管理玩家（踢出/私信/执行命令）");
         perm("core.console.view", "查看控制台日志");
-        perm("core.console.execute", "执行控制台命令");
+        perm("core.console.execute", "执行控制台命令（协管受命令规则限制）");
         perm("core.modules.view", "查看模块");
         perm("core.modules.manage", "管理模块与模块市场");
         perm("core.plugins.view", "查看插件列表");
@@ -634,7 +635,6 @@ final class CoreApi {
         WebContextImpl ctx = (WebContextImpl) c;
         String cmd = stripSlash(ctx.required("command"));
         boolean asConsole = Json.bool(ctx.bodyMap(), "asConsole", false);
-        // 以玩家身份执行会继承该玩家（可能是 OP）的全部权限，与控制台执行同样危险，统一要求 core.console.execute
         if (!ctx.user().hasPermission("core.console.execute")) {
             throw HttpException.forbidden("执行命令需要 core.console.execute 权限");
         }
@@ -644,11 +644,10 @@ final class CoreApi {
             if (!asConsole && !superUser && (p.isOp() || p.hasPermission("lc.admin"))) {
                 throw HttpException.forbidden("目标玩家是 OP/管理员，只有 Web 管理员可以代其执行命令");
             }
-            if (asConsole) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("{player}", p.getName()).replace("%player%", p.getName()));
-            } else {
-                p.performCommand(cmd);
-            }
+            String command = asConsole ? cmd.replace("{player}", p.getName()).replace("%player%", p.getName()) : cmd;
+            checkWebCommand(ctx, command);
+            if (asConsole) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            else p.performCommand(command);
             return p.getName();
         });
         web.audit(ctx, "player.command", name + (asConsole ? " [控制台] " : " [玩家] ") + cmd);
@@ -662,17 +661,21 @@ final class CoreApi {
         return s;
     }
 
+    private void checkWebCommand(WebContextImpl ctx, String command) {
+        WebCommandPolicy.check(ctx.userImpl(), command, plugin.getConfig(), () -> LcCommandRegistry.commandMap()::getCommand);
+    }
+
     // =================================================================== console
 
     private void exec(com.lunarboreal.api.web.WebContext c) throws Exception {
         WebContextImpl ctx = (WebContextImpl) c;
-        // 注意：core.console.execute 等同于服务器完全控制权（可执行任意控制台命令），只应授予可信管理员
         String cmd = stripSlash(ctx.required("command"));
-        web.audit(ctx, "console.exec", cmd);
         boolean ok = ctx.sync(() -> {
+            checkWebCommand(ctx, cmd);
             plugin.getLogger().info("[Web] " + ctx.user().username() + " 执行控制台命令：/" + cmd);
             return Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
         });
+        web.audit(ctx, "console.exec", cmd);
         ctx.json(Json.of("ok", ok, "message", ok ? "已执行" : "未知命令或执行失败"));
     }
 
@@ -803,21 +806,30 @@ final class CoreApi {
         String submitted = ctx.required("content");
         String err = validateYaml(submitted);
         if (err != null) throw HttpException.badRequest("YAML 格式错误：" + err);
-        File f = configFile();
-        String original = f.exists() ? Files.readString(f.toPath(), StandardCharsets.UTF_8) : "";
-        // 敏感字段仍为脱敏占位符时还原原值
-        String content = SecretMask.unmask(submitted, original);
-        String oldWeb = webSection(original);
-        if (f.exists()) Files.copy(f.toPath(), new File(plugin.getDataFolder(), "config.yml.bak").toPath(), StandardCopyOption.REPLACE_EXISTING);
-        File tmp = new File(plugin.getDataFolder(), "config.yml.tmp");
-        Files.writeString(tmp.toPath(), content, StandardCharsets.UTF_8);
-        Files.move(tmp.toPath(), f.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        String content;
+        boolean webChanged;
+        synchronized (this) {
+            File f = configFile();
+            String original = f.exists() ? Files.readString(f.toPath(), StandardCharsets.UTF_8) : "";
+            content = SecretMask.unmask(submitted, original);
+            if (!ctx.userImpl().isSuper()) {
+                YamlConfiguration previous = new YamlConfiguration();
+                previous.loadFromString(original);
+                YamlConfiguration updated = new YamlConfiguration();
+                updated.loadFromString(content);
+                WebCommandPolicy.checkConfigEdit(ctx.userImpl(), previous, updated);
+            }
+            webChanged = !webSection(original).equals(webSection(content));
+            if (f.exists()) Files.copy(f.toPath(), new File(plugin.getDataFolder(), "config.yml.bak").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            File tmp = new File(plugin.getDataFolder(), "config.yml.tmp");
+            Files.writeString(tmp.toPath(), content, StandardCharsets.UTF_8);
+            Files.move(tmp.toPath(), f.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        }
         ctx.sync(() -> {
             plugin.reloadCore();
             return null;
         });
         web.audit(ctx, "config.save", "保存核心配置 config.yml（" + content.length() + " 字符）");
-        boolean webChanged = !oldWeb.equals(webSection(content));
         ctx.json(Json.of("ok", true, "message", webChanged
                 ? "已保存并重载核心配置。web 段已变更，请执行 /lc web reload 使其生效"
                 : "已保存并重载核心配置", "webChanged", webChanged));
