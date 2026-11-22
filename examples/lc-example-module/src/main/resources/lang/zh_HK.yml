@@ -1,0 +1,4 @@
+# key 為 hello.<路徑>；模組內用 msg(sender, "greet", ...) 引用
+greet: "<prefix>{greeting}"
+reward: "<prefix><green>獲得問候獎勵 <gold>{amount}</gold>"
+count: "<prefix><gray>你已經打了 <yellow>{count}</yellow> 次招呼。"

@@ -20,7 +20,9 @@ Keep the one-time recovery codes. A normal password change does not disable veri
 
 Save or reset the name and logo separately under **Server settings → Branding**. Logos support PNG/JPEG, up to 256 KiB and 1024 pixels in each dimension. Branding appears publicly on the login page.
 
-Switch Chinese and English on the login page or panel toolbar. Player input, configuration contents and console logs keep their original text.
+On your first visit, the panel uses the first browser preference that matches Simplified Chinese, Traditional Chinese (Hong Kong), or English. It uses Simplified Chinese when none match. Use the language menu on the login page or panel toolbar to choose a language or return to **Follow system**. The browser remembers your choice. Player input, configuration contents and console logs keep their original text.
+
+For in-game LunarCore messages, set `language: zh_HK` in `plugins/LunarCore/config.yml` and run `/lc reload`. The language files are written to `plugins/LunarCore/lang/zh_HK/`.
 
 ## Maintenance Scheduling
 

@@ -15,9 +15,24 @@ const loadError = ref('')
 const busy = ref(false)
 const query = ref('')
 const category = ref('all')
-const name = m => (locale.value === 'en_US' ? m.nameEn : m.name) || m.name || m.id
-const description = m => (locale.value === 'en_US' ? m.descriptionEn : m.description) || m.description || ''
-const errorText = message => String(message || '').split(' / ')[locale.value === 'en_US' ? 1 : 0] || message
+function moduleText(source, english) {
+  if (locale.value === 'en_US') return english || source || ''
+  return t(source)
+}
+
+const name = module => moduleText(module.name, module.nameEn) || module.id
+const description = module => moduleText(module.description, module.descriptionEn)
+
+function errorText(message) {
+  const [source, english] = String(message || '').split(' / ')
+  if (locale.value === 'en_US') return english || t(message)
+  if (locale.value === 'zh_HK') {
+    const translation = t(source)
+    return translation === source ? message : translation
+  }
+  return source || message
+}
+
 const categories = { survival: '生存', players: '玩家', security: '保护', server: '服务器' }
 const locked = computed(() => busy.value || loading.value || data.value.state === 'downloading' || data.value.pending.length > 0)
 const shown = computed(() => data.value.items.filter(m => (category.value === 'all' || category.value === m.category)
@@ -33,12 +48,12 @@ async function load() {
   try {
     const response = requireSuccess(await api.get('/api/market'))
     if (!Array.isArray(response?.items) || !Array.isArray(response?.pending))
-      throw new Error(t('模块市场返回格式错误'))
+      throw new Error('模块市场返回格式错误')
     data.value = response
     loaded.value = true
     loadError.value = ''
   }
-  catch (e) { loadError.value = errorText(e.message) }
+  catch (e) { loadError.value = e.message }
   finally { loading.value = false }
 }
 
@@ -86,7 +101,7 @@ useAutoRefresh(() => { if (!busy.value) return load() }, { immediate: true, seco
       <el-button :loading="loading" :disabled="busy" :title="t('刷新')" :aria-label="t('刷新')" @click="load"><Icon name="refresh-cw" :size="15" /></el-button>
       <small v-if="data.version" class="market-version">{{ formatVersion(data.version) }}</small>
     </div>
-    <el-alert v-if="loadError" :title="t('模块市场加载失败')" :description="loadError" type="error" :closable="false" show-icon />
+    <el-alert v-if="loadError" :title="t('模块市场加载失败')" :description="errorText(loadError)" type="error" :closable="false" show-icon />
     <el-alert v-if="data.state === 'failed'" :title="errorText(data.error)" type="error" :closable="false" show-icon />
     <div v-if="data.state === 'downloading'" class="market-status" role="status">
       <Icon name="download" :size="16" /> {{ t('正在下载模块') }} · {{ data.current }}

@@ -1,0 +1,261 @@
+# 基礎指令模組（essentials）語言檔案，MiniMessage 格式；{xxx} 為佔位符
+usage: "<red>用法：<yellow>{usage}"
+player-only: "<red>只有玩家可以執行此指令。"
+player-not-found: "<red>找不到在線上的玩家 <yellow>{player}</yellow>。"
+no-permission-others: "<red>你沒有權限對其他玩家執行此操作。"
+no-permission-sub: "<red>你沒有權限使用 <yellow>{sub}</yellow>。"
+invalid-number: "<red>無效的數字：<yellow>{value}"
+invalid-item: "<red>未知物品：<yellow>{item}"
+world-not-found: "<red>找不到世界：<yellow>{world}"
+hand-empty: "<red>你的手上沒有物品。"
+data-loading: "<yellow>你的資料仍在載入中，請稍後再試。"
+
+state:
+  on: "<green>開啟</green>"
+  off: "<red>關閉</red>"
+
+gamemode:
+  set: "<white>已將 <aqua>{player}</aqua> 的遊戲模式設為 <gold>{mode}</gold>。"
+  notify: "<white>你的遊戲模式已被設為 <gold>{mode}</gold>。"
+  no-mode-permission: "<red>你沒有權限切換到 {mode} 模式。"
+  names:
+    survival: "生存"
+    creative: "創造"
+    adventure: "冒險"
+    spectator: "旁觀"
+
+fly:
+  set: "<white><aqua>{player}</aqua> 的飛行模式：{state}"
+  notify: "<white>你的飛行模式：{state}"
+god:
+  set: "<white><aqua>{player}</aqua> 的上帝模式：{state}"
+  notify: "<white>你的上帝模式：{state}"
+heal:
+  done: "<green>已治療 <aqua>{player}</aqua>。"
+  notify: "<green>你已被治癒。"
+feed:
+  done: "<green>已餵飽 <aqua>{player}</aqua>。"
+  notify: "<green>你的飢餓已被滿足。"
+speed:
+  set: "<white>已將 <aqua>{player}</aqua> 的{type}速度設為 <gold>{speed}</gold>。"
+  notify: "<white>你的{type}速度已被設為 <gold>{speed}</gold>。"
+  range: "<red>速度必須在 0 到 {max} 之間。"
+  type-walk: "行走"
+  type-fly: "飛行"
+afk:
+  broadcast-on: "<white>* <yellow>{player}</yellow> 暫時離開了。"
+  broadcast-off: "<white>* <yellow>{player}</yellow> 回來了。"
+  self-on: "<white>你現在處於暫離狀態。"
+  self-off: "<white>你已不再暫離。"
+  kick: "<red>你因長時間暫離被踢出伺服器。"
+vanish:
+  set: "<white><aqua>{player}</aqua> 的隱身：{state}"
+  notify: "<white>你的隱身：{state}"
+  fake-join: "<yellow>{player} 加入了遊戲"
+  fake-quit: "<yellow>{player} 退出了遊戲"
+kill:
+  done: "<white>已殺死 <aqua>{player}</aqua>。"
+  exempt: "<red>{player} 不能被殺死。"
+suicide:
+  done: "<white>再見，殘酷的世界……"
+burn:
+  done: "<white>已點燃 <aqua>{player}</aqua> {seconds} 秒。"
+ext:
+  done: "<white>已為 <aqua>{player}</aqua> 滅火。"
+lightning:
+  done: "<white>閃電劈向了 <aqua>{target}</aqua>！"
+invsee:
+  self: "<red>不能檢視自己的背包。"
+  open: "<white>正在檢視 <aqua>{player}</aqua> 的背包（可編輯）。"
+  open-readonly: "<white>正在檢視 <aqua>{player}</aqua> 的背包（只讀）。"
+clear:
+  done: "<white>已清空 <aqua>{player}</aqua> 的背包。"
+  notify: "<white>你的背包已被清空。"
+exp:
+  show: "<aqua>{player}</aqua> <white>等級 <gold>{level}</gold>，總經驗 <gold>{total}</gold>。"
+  done: "<white>已修改 <aqua>{player}</aqua> 的經驗：等級 <gold>{level}</gold>，總經驗 <gold>{total}</gold>。"
+ping: "<aqua>{player}</aqua> <white>的延遲：<gold>{ping}ms"
+getpos: "<aqua>{player}</aqua> <white>位於 <gold>{world}</gold> <white>X:{x} Y:{y} Z:{z}</white> <aqua>(yaw {yaw}, pitch {pitch})"
+depth:
+  above: "<white>你在海平面以上 <gold>{blocks}</gold> 格。"
+  below: "<white>你在海平面以下 <gold>{blocks}</gold> 格。"
+  at: "<white>你正處於海平面。"
+compass: "<white>你面朝 <gold>{direction}</gold> <aqua>({yaw}°)"
+compass-dir:
+  N: "北"
+  NE: "東北"
+  E: "東"
+  SE: "東南"
+  S: "南"
+  SW: "西南"
+  W: "西"
+  NW: "西北"
+near:
+  list: "<white>{radius} 格內的玩家：<white>{players}"
+  none: "<white>{radius} 格內沒有其他玩家。"
+jump:
+  done: "<white>嗖！"
+  no-block: "<red>視線範圍內沒有方塊。"
+sudo:
+  done: "<white>已讓 <aqua>{player}</aqua> 執行：<white>{command}"
+  exempt: "<red>不能對 {player} 使用 sudo。"
+
+give:
+  done: "<white>已給予 <aqua>{player}</aqua> <gold>{amount}</gold> 個 <yellow>{item}</yellow>。"
+  received: "<white>你獲得了 <gold>{amount}</gold> 個 <yellow>{item}</yellow>。"
+  blacklisted: "<red>物品 {item} 被禁止給予。"
+more:
+  done: "<white>手中物品已補滿至 <gold>{amount}</gold>。"
+repair:
+  hand: "<green>已修復 <yellow>{item}</yellow>。"
+  all: "<green>已修復 <gold>{count}</gold> 件物品。"
+  cannot: "<red>該物品無法修復或無需修復。"
+enchant:
+  list: "<white>可用附魔：<white>{list}"
+  unknown: "<red>未知附魔：{name}"
+  done: "<white>已附魔 <light_purple>{enchant} {level}</light_purple>。"
+  removed: "<white>已移除附魔 <light_purple>{enchant}</light_purple>。"
+  unsafe: "<red>該附魔不適用於此物品或等級超過上限 {max}。"
+  too-high: "<red>附魔等級不能超過 {max}。"
+hat:
+  done: "<white>享受你的新帽子吧！"
+  removed: "<white>已摘下帽子。"
+  none: "<red>你沒有戴帽子。"
+skull:
+  done: "<white>你獲得了 <yellow>{name}</yellow> 的頭顱。"
+  invalid: "<red>無效的玩家名：{name}"
+itemname:
+  done: "<white>已重新命名手中物品。"
+  reset: "<white>已重置手中物品名稱。"
+lore:
+  done: "<white>已更新物品描述。"
+  bad-line: "<red>行號無效（目前共 {max} 行）。"
+book:
+  unlocked: "<white>成書已解鎖為書與筆。"
+  locked: "<white>已簽署書本 <yellow>{title}</yellow>。"
+  author: "<white>作者已改為 <yellow>{author}</yellow>。"
+  title: "<white>標題已修改。"
+  not-owner: "<red>這不是你寫的書。"
+  not-book: "<red>請手持成書或書與筆。"
+condense:
+  done: "<white>已壓縮出 <gold>{count}</gold> 個方塊/物品。"
+  none: "<white>沒有可以壓縮的物品。"
+unbreakable: "<white>手中物品無法破壞：{state}"
+powertool:
+  set: "<white>已將 <yellow>{item}</yellow> 綁定指令：<white>{command}"
+  list: "<yellow>{item}</yellow> <white>綁定的指令：<white>{commands}"
+  empty: "<white>該物品沒有綁定指令。"
+  cleared: "<white>已清除 <yellow>{item}</yellow> 的綁定指令。"
+  cleared-all: "<white>已清除所有強力工具。"
+disposal:
+  title: "<aqua>垃圾桶（關閉後清空）"
+worth:
+  show: "<yellow>{item}</yellow> <white>單價 <gold>{price}</gold>，{amount} 個共 <gold>{total}</gold>。"
+  none: "<red>{item} 沒有設定價格。"
+  set: "<white>已設定 <yellow>{item}</yellow> 單價為 <gold>{price}</gold>。"
+sell:
+  done: "<green>出售了 <gold>{count}</gold> 個物品，獲得 <gold>{money}</gold>。"
+  cannot: "<red>沒有可以出售的物品。"
+  failed: "<red>出售失敗：{error}"
+  no-economy: "<red>經濟系統不可用。"
+  creative: "<red>創造或旁觀模式下不能出售物品。"
+
+time:
+  show: "<white>世界 <gold>{world}</gold> 目前時間 <yellow>{time}</yellow> <aqua>({ticks} ticks)"
+  set: "<white>已將 <gold>{world}</gold> 的時間設為 <yellow>{time}</yellow>。"
+  added: "<white>已為 <gold>{world}</gold> 增加 <yellow>{time}</yellow> ticks。"
+  invalid: "<red>無效的時間：{value}"
+weather:
+  set: "<white>已將 <gold>{world}</gold> 的天氣設為 <yellow>{weather}</yellow>。"
+  names:
+    sun: "晴天"
+    rain: "雨天"
+    storm: "雷暴"
+ptime:
+  set: "<white>已將 <aqua>{player}</aqua> 的個人時間設為 <yellow>{time}</yellow>。"
+  reset: "<white>已重置 <aqua>{player}</aqua> 的個人時間。"
+pweather:
+  set: "<white>已將 <aqua>{player}</aqua> 的個人天氣設為 <yellow>{weather}</yellow>。"
+  reset: "<white>已重置 <aqua>{player}</aqua> 的個人天氣。"
+spawnmob:
+  done: "<white>已生成 <gold>{count}</gold> 隻 <yellow>{mob}</yellow>。"
+  unknown: "<red>未知或不可生成的生物：{mob}"
+  blacklisted: "<red>生物 {mob} 被禁止生成。"
+butcher:
+  done: "<white>已清除 <gold>{count}</gold> 個實體（{type}）。"
+tree:
+  done: "<white>已生成樹（{type}）。"
+  failed: "<red>無法在此處生成樹。"
+  unknown: "<red>未知樹種：{type}"
+recipe:
+  none: "<red>{item} 沒有可展示的配方。"
+  title: "<dark_aqua>配方：{item} <aqua>({page}/{pages})"
+  arrow: "<white>→"
+  prev: "<yellow>上一個配方 <white>({page}/{pages})"
+  next: "<yellow>下一個配方 <white>({page}/{pages})"
+  options: "<white>可用 {count} 種物品之一"
+  fuel: "<white>燒製 {time} 秒，經驗 {exp}"
+  type:
+    crafting: "<gold>有序合成"
+    shapeless: "<gold>無序合成"
+    furnace: "<gold>熔爐"
+    blasting: "<gold>高爐"
+    smoking: "<gold>煙燻爐"
+    campfire: "<gold>營火"
+    stonecutting: "<gold>切石機"
+    smithing: "<gold>鍛造台"
+    other: "<gold>其他"
+
+seen:
+  online: "<aqua>{player}</aqua> <green>上線</green><white>，已上線 <yellow>{time}</yellow>。"
+  offline: "<aqua>{player}</aqua> <red>離線</red><white>，最後上線於 <yellow>{time}</yellow> 前 <aqua>({date})"
+  never: "<red>玩家 {player} 從未進入過伺服器。"
+  ip: "<white>最後 IP：<white>{ip}"
+whois:
+  header: "<gold>======== <yellow>{player}</yellow> ========"
+  uuid: "<white>UUID：<white>{uuid}"
+  health: "<white>生命：<red>{health}</red>  飽食：<gold>{food}"
+  exp: "<white>等級：<green>{level}</green>  總經驗：<green>{total}"
+  location: "<white>位置：<white>{world} {x}, {y}, {z}"
+  gamemode: "<white>模式：<white>{mode}"
+  states: "<white>上帝：{god}  飛行：{fly}  暫離：{afk}  隱身：{vanish}  OP：{op}"
+  ping: "<white>延遲：<white>{ping}ms"
+  ip: "<white>IP：<white>{ip}"
+  offline: "<white>狀態：<red>離線</red>，最後上線 <white>{date}"
+  times: "<white>首次進服：<white>{first}</white>  遊戲時長：<white>{playtime}"
+list:
+  header: "<white>目前上線 <gold>{count}</gold>/<gold>{max}</gold> 名玩家："
+  group: "<yellow>{group}</yellow> <aqua>({count})</aqua><white>：<white>{players}"
+  default-group: "玩家"
+  afk-tag: "<yellow>[暫離]</yellow>"
+  vanish-tag: "<light_purple>[隱身]</light_purple>"
+gc:
+  uptime: "<white>運行時間：<white>{time}"
+  tps: "<white>TPS (1m, 5m, 15m)：{tps}"
+  mspt: "<white>平均 tick 耗時：<white>{mspt} ms"
+  memory: "<white>記憶體：<white>{used}MB</white> 已用 / <white>{allocated}MB</white> 已分配 / <white>{max}MB</white> 最大"
+  world: "<white> - <gold>{world}</gold> <aqua>({env})</aqua>：區塊 <white>{chunks}</white>，實體 <white>{entities}</white>，玩家 <white>{players}</white>"
+
+kit:
+  received: "<green>你領取了禮包 <yellow>{kit}</yellow>！"
+  given: "<white>已將禮包 <yellow>{kit}</yellow> 發給 <aqua>{player}</aqua>。"
+  not-found: "<red>禮包 {kit} 不存在。"
+  no-permission: "<red>你沒有權限領取禮包 {kit}。"
+  already: "<yellow>禮包 {kit} 為一次性禮包，你已領取。"
+  cooldown: "<yellow>禮包 {kit} 還需等待 {time} 後才能再次領取。"
+  list: "<white>可用禮包：<white>{kits}"
+  list-empty: "<white>沒有可用的禮包。"
+  created: "<green>已建立禮包 <yellow>{kit}</yellow>（{count} 件物品，冷卻 {cooldown}）。"
+  updated: "<green>已更新禮包 <yellow>{kit}</yellow>（{count} 件物品，冷卻 {cooldown}）。"
+  deleted: "<white>已刪除禮包 <yellow>{kit}</yellow>。"
+  invalid-name: "<red>禮包名只能包含字母、數字、底線和短橫線（最長 32）。"
+  invalid-cooldown: "<red>無效的冷卻時間：{value}（例如：1d、12h、30m）"
+  empty-inventory: "<red>你的背包是空的。"
+  no-cooldown: "無"
+  gui-title: "<dark_aqua>禮包清單"
+  preview-title: "<dark_aqua>禮包預覽：{kit}"
+  gui-available: "<green>可領取"
+  gui-claimed: "<yellow>已領取（一次性）"
+  gui-cooldown: "<yellow>可再次領取：{time} 後"
+  gui-items: "<white>包含 {count} 件物品"
+  gui-hint: "<aqua>左鍵領取 · 右鍵預覽"

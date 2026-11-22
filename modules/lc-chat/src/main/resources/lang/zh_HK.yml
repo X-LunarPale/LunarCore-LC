@@ -1,0 +1,56 @@
+prefix: "<aqua>[</aqua><aqua><bold>聊天</bold></aqua><aqua>]</aqua> "
+usage: "<prefix><white>用法：<yellow>{usage}"
+player-not-found: "<prefix><red>找不到玩家 <white>{player}"
+only-player: "<prefix><red>該指令只能由玩家執行"
+reloaded: "<prefix><green>聊天模組設定已重載"
+filter:
+  cooldown: "<prefix><yellow>發言間隔過短，請稍後再發送。"
+  duplicate: "<prefix><yellow>訊息與近期內容相同，請勿重複發送。"
+  advertising: "<prefix><red>訊息包含廣告或連結，已被攔截"
+  global-muted: "<prefix><yellow>公共聊天暫時關閉，請等待管理員恢復。"
+  muted: "<prefix><red>你已被禁言，無法發送私聊"
+chatmute:
+  on: "<prefix><red>管理員 <white>{actor}</white> 開啟了全服禁言"
+  off: "<prefix><green>管理員 <white>{actor}</white> 關閉了全服禁言"
+msg:
+  self: "<prefix><red>不能給自己發私聊"
+  disabled: "<prefix><red>{player} 關閉了私聊"
+  ignored: "<prefix><red>{player} 已封鎖你的訊息"
+  no-reply: "<prefix><yellow>目前沒有可回覆的私聊，請先使用 /msg 聯絡玩家。"
+  toggle-on: "<prefix><green>已開啟私聊接收"
+  toggle-off: "<prefix><yellow>已關閉私聊接收"
+socialspy:
+  on: "<prefix><green>社交監聽已開啟"
+  off: "<prefix><yellow>社交監聽已關閉"
+ignore:
+  added: "<prefix><yellow>已封鎖 <white>{player}</white> 的訊息"
+  removed: "<prefix><green>已解除封鎖 <white>{player}"
+  self: "<prefix><red>不能封鎖自己"
+  exempt: "<prefix><red>無法封鎖該玩家"
+  list: "<prefix><white>已封鎖：<white>{list}"
+  none: "<prefix><white>你沒有封鎖任何人"
+mail:
+  sent: "<prefix><green>郵件已發送給 <white>{player}"
+  sent-all: "<prefix><green>已向 <white>{count}</white> 名玩家發送郵件"
+  header: "<prefix><gold>你的郵件（{count} 封）："
+  entry: "<yellow>[{time}]</yellow> <aqua>{sender}</aqua>: <white>{message}"
+  empty: "<prefix><white>沒有郵件"
+  cleared: "<prefix><green>郵件已清空"
+  unread: "<prefix><yellow>你有 <white>{count}</white> 封未讀郵件，<click:run_command:'/mail read'><hover:show_text:'按此查看'><aqua>[按此查看]</aqua></hover></click>"
+  help: "<prefix><white>/mail read | send <玩家> <內容> | sendall <內容> | clear"
+nick:
+  set: "<prefix><green>暱稱已設定為 <white>{nick}"
+  set-other: "<prefix><green>已將 {player} 的暱稱設定為 <white>{nick}"
+  reset: "<prefix><green>暱稱已重置"
+  too-long: "<prefix><red>暱稱長度須為 {min}-{max} 個字元"
+  taken: "<prefix><red>該暱稱已被使用"
+  realname: "<prefix><white>{nick} <aqua>→</aqua> <white>{player}"
+  realname-none: "<prefix><red>沒有玩家使用該暱稱"
+staffchat:
+  on: "<prefix><green>已切換到管理頻道，再次輸入 /sc 切回"
+  off: "<prefix><yellow>已切回公共聊天"
+helpop:
+  sent: "<prefix><green>你的求助已發送給上線管理員"
+clearchat:
+  done: "<prefix><white>聊天已被 <white>{actor}</white> 清空"
+me: "<white>* <white>{player}</white> {message}"

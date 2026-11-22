@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { api } from '../../api'
-import { t } from '../../i18n'
+import { localeTag, t } from '../../i18n'
 import { requireSuccess } from '../../utils/panel'
 import { useAutoRefresh } from '../../utils/autoRefresh'
 import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
@@ -330,7 +330,7 @@ onBeforeUnmount(() => {
           <label v-if="keyConfigured" class="clear-key"><el-checkbox v-model="clearApiKey" :disabled="busy || !!apiKey" />{{ t('清除已保存密钥') }}</label>
           <div class="upstream-actions"><el-button :disabled="busy || dirty || !keyConfigured" :loading="upstreamBusy === 'models:primary'" @click="queryUpstream('models', primary)">{{ t('获取上游模型') }}</el-button><el-button v-if="form.providerType !== 'custom'" :disabled="busy || dirty || !keyConfigured" :loading="upstreamBusy === 'balance:primary'" @click="queryUpstream('balance', primary)">{{ t('查询余额') }}</el-button></div>
           <el-checkbox v-model="liveBalance" :disabled="busy || dirty">{{ t('每分钟自动查询余额') }}</el-checkbox>
-          <p v-if="balances.primary" class="balance-line">{{ t('余额查询时间') }}: {{ new Date(balances.primary.fetchedAt).toLocaleString() }} · {{ t(balances.primary.available ? '可用' : '不可用') }}<span v-for="entry in balances.primary.balances || []" :key="entry.currency"> · {{ entry.remaining }} {{ entry.currency }}</span><span v-if="balances.primary.remaining !== undefined"> · {{ balances.primary.remaining }} {{ balances.primary.currency || 'USD' }}</span><span v-if="balances.primary.remaining === undefined && !balances.primary.balances?.length"> · {{ t('上游未提供可用余额数字') }}</span></p>
+          <p v-if="balances.primary" class="balance-line">{{ t('余额查询时间') }}: {{ new Date(balances.primary.fetchedAt).toLocaleString(localeTag) }} · {{ t(balances.primary.available ? '可用' : '不可用') }}<span v-for="entry in balances.primary.balances || []" :key="entry.currency"> · {{ entry.remaining }} {{ entry.currency }}</span><span v-if="balances.primary.remaining !== undefined"> · {{ balances.primary.remaining }} {{ balances.primary.currency || 'USD' }}</span><span v-if="balances.primary.remaining === undefined && !balances.primary.balances?.length"> · {{ t('上游未提供可用余额数字') }}</span></p>
         </section>
       </div>
 

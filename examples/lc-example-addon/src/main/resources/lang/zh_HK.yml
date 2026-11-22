@@ -1,0 +1,10 @@
+# 透過 api.messages().registerBundle("example", classLoader) 註冊外部插件的語言包。
+# 使用 "example.<路徑>" 引用訊息。核心會將檔案匯出至 plugins/LunarCore/lang/zh_HK/example.yml，供服主修改。
+usage: "<prefix><gray>用法：<yellow>/lcexample <hello|click|top>"
+hello: "<prefix><aqua>你好，<white>{player}</white>！這條訊息來自外部插件 <gold>LcExampleAddon</gold>。"
+click: "<prefix><green>點擊成功！你的點數：<gold>{points}</gold>"
+cooldown: "<prefix><red>點得太快了，請 {seconds} 秒後再試。"
+announce: "<prefix><light_purple><white>{player}</white> 的點數達到了 <gold>{points}</gold>！"
+top-header: "<gold>===== 點擊排行 ====="
+top-entry: "<gray>#{rank} <white>{player}</white> - <gold>{points}"
+web-message: "<prefix><yellow>[Web 廣播] <white>{message}"

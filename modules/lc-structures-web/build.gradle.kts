@@ -12,6 +12,7 @@ val buildWeb by tasks.registering(Exec::class) {
     commandLine(npmCommand, "run", "build")
     inputs.dir(webDir.dir("src"))
     inputs.files(webDir.file("index.html"), webDir.file("vite.config.js"), webDir.file("package-lock.json"))
+    inputs.file(rootProject.layout.projectDirectory.file("web-ui/src/utils/locale-preference.js"))
     outputs.dir(webDir.dir("dist"))
 }
 tasks.processResources {

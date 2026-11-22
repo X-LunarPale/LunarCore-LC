@@ -5,7 +5,7 @@ import { ElMessageBox } from 'element-plus'
 import { api } from '../../api'
 import { useAuth } from '../../stores/auth'
 import { requireSuccess } from '../../utils/panel'
-import { t, locale } from '../../i18n'
+import { t, localeTag } from '../../i18n'
 import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
 
 const auth = useAuth()
@@ -20,7 +20,8 @@ const searchDraft = ref('')
 const selected = ref(null)
 const saved = ref(null)
 const bridge = ref('')
-const updatedAt = ref('')
+const updatedAt = ref(null)
+const updatedTime = computed(() => updatedAt.value?.toLocaleTimeString(localeTag.value, { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
 const loading = ref(false)
 const pending = ref('')
 const error = ref('')
@@ -66,7 +67,7 @@ function applySelection(world) {
 }
 
 function updateTimestamp() {
-  updatedAt.value = new Date().toLocaleTimeString(locale.value === 'en_US' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  updatedAt.value = new Date()
 }
 
 function parseWorlds(result) {
@@ -312,7 +313,7 @@ onBeforeUnmount(() => {
   <div class="multiverse-workspace" :aria-busy="busy">
     <header class="page-header">
       <h1 class="page-title">{{ t('多世界管理') }}</h1>
-      <el-button :loading="loading" :disabled="busy" :aria-label="t('重新读取')" :title="updatedAt ? t('更新于 {time}', { time: updatedAt }) : t('重新读取')" @click="load()">
+      <el-button :loading="loading" :disabled="busy" :aria-label="t('重新读取')" :title="updatedTime ? t('更新于 {time}', { time: updatedTime }) : t('重新读取')" @click="load()">
         <Icon name="refresh-cw" :size="15" />
       </el-button>
     </header>

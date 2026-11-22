@@ -1,0 +1,107 @@
+# ==========================================================
+#   LunarCore 琉月核心訊息
+#   格式：MiniMessage（https://docs.advntr.dev/minimessage/format.html），相容 & 顏色碼
+#   <prefix> 為目前命名空間前綴；{name} 為佔位符；值為清單時按多行發送；值為空字串時不發送
+# ==========================================================
+
+prefix: "<aqua>[<bold>LC</bold>]</aqua> "
+
+word-yes: "<green>是"
+word-no: "<red>否"
+
+no-permission: "<prefix><red>沒有執行此操作的權限。<yellow>需要：{permission}"
+player-only: "<prefix><red>該指令只能由玩家執行。"
+command-error: "<prefix><red>執行指令時發生內部錯誤，請聯絡管理員檢視控制台。"
+unknown-subcommand: "<prefix><red>未知子指令，輸入 <yellow>/{label} help</yellow> 檢視幫助。"
+player-not-found: "<prefix><red>找不到玩家 <yellow>{player}</yellow>。"
+web-offline: "<red>未啟動"
+web-usage: "<prefix><white>用法：<yellow>/{label} web <子指令></yellow>"
+
+help:
+  - "<gradient:#7ec8ff:#b98cff><bold>LunarCore 琉月</bold></gradient> <aqua>— 指令幫助"
+  - "<yellow>/{label} info</yellow> <aqua>- <white>檢視版本、平台、資料庫與模組資訊"
+  - "<yellow>/{label} reload</yellow> <aqua>- <white>重載核心設定、語言與支援即時重載的模組設定"
+  - "<yellow>/{label} m list</yellow> <aqua>- <white>檢視全部模組狀態"
+  - "<yellow>/{label} module enable|disable|reload|info <模組></yellow> <aqua>- <white>管理模組"
+  - "<yellow>/{label} web</yellow> <aqua>- <white>Web 管理面板相關指令"
+  - "<yellow>/{label} debug</yellow> <aqua>- <white>切換偵錯輸出"
+
+info:
+  - "<gradient:#7ec8ff:#b98cff><bold>LunarCore 琉月</bold></gradient> <white>v{version}"
+  - "<aqua>平台：<white>{platform}</white> <aqua>(Paper: {paper})"
+  - "<aqua>Minecraft：<white>{minecraft}</white> <aqua>| Java：<white>{java}"
+  - "<aqua>資料庫：<white>{database}</white> <aqua>| 語言：<white>{language}"
+  - "<aqua>模組：<green>{modules}</green><aqua>/<white>{discovered}</white> <white>已啟用"
+  - "<aqua>PlaceholderAPI：{papi}"
+  - "<aqua>Web 面板：<white>{web}"
+
+reload:
+  done: "<prefix><green>已重載核心設定、語言與 <yellow>{modules}</yellow> 個模組設定。<aqua>({time}ms)"
+  restart-required: "<prefix><yellow>以下模組的設定未重載：{modules}。請逐個執行 <gold>/lc m reload <模組></gold> 套用設定。"
+  failed: "<prefix><red>有 {count} 個模組設定重載失敗：{modules}。請檢視控制台日誌。"
+
+debug:
+  enabled: "<prefix><yellow>偵錯模式已開啟（僅本次運行有效）。"
+  disabled: "<prefix><white>偵錯模式已關閉。"
+
+module:
+  usage: "<prefix><white>用法：<yellow>/{label} module <list|enable|disable|reload|info> [模組ID]"
+  list-header: "<prefix><white>模組清單（已啟用 <green>{count}</green>/<white>{total}</white>）："
+  list-entry: " <aqua>• <white>{name}</white> <white>({id}) <aqua>v{version} {status}"
+  status:
+    enabled: "<green>● 已啟用"
+    failed: "<red>✖ 啟用失敗"
+    disabled: "<white>○ 已按設定停用"
+    stopped: "<yellow>○ 未啟用"
+  not-found: "<prefix><red>未找到模組 <yellow>{id}</yellow>（modules/ 目錄中沒有該模組）。"
+  already-enabled: "<prefix><yellow>模組 {id} 已經是啟用狀態。"
+  not-enabled: "<prefix><yellow>模組 {id} 目前未啟用。"
+  enabled: "<prefix><green>模組 <yellow>{id}</yellow> 已啟用。"
+  enable-failed: "<prefix><red>模組 <yellow>{id}</yellow> 啟用失敗：<white>{reason}"
+  disabled: "<prefix><green>模組 <yellow>{id}</yellow> 已停用，重啟後會恢復。加上 <white>--save</white> 即可將停用狀態儲存至設定。"
+  disabled-saved: "<prefix><green>模組 <yellow>{id}</yellow> 已停用並寫入 modules.disabled。"
+  reloaded: "<prefix><green>模組 <yellow>{id}</yellow> 已重新載入。"
+  reload-failed: "<prefix><red>模組 <yellow>{id}</yellow> 重新載入失敗：<white>{reason}"
+  info:
+    - "<gradient:#7ec8ff:#b98cff>模組資訊</gradient> <white>{name}</white> <white>({id})"
+    - "<aqua>版本：<white>{version}</white> <aqua>| 狀態：{status}"
+    - "<aqua>描述：<white>{description}"
+    - "<aqua>作者：<white>{authors}"
+    - "<aqua>必要依賴：<white>{depends}</white> <aqua>| 選用依賴：<white>{softdepends}"
+    - "<aqua>檔案：<white>{file}"
+    - "<aqua>最近錯誤：<red>{error}"
+
+# /lc web 子指令（由 Web 面板使用）
+web:
+  no-permission: "<prefix><red>你沒有權限管理 Web 面板。"
+  usage:
+    - "<gradient:#7dd3fc:#e0f2fe><bold>LunarCore 琉月面板</bold></gradient>"
+    - "<white>/lc web status <aqua>- <white>檢視面板狀態"
+    - "<white>/lc web url <aqua>- <white>顯示網址"
+    - "<white>/lc web reload <aqua>- <white>重載 web 設定並重啟面板"
+    - "<white>/lc web user list|add <名> <密碼> [角色]|remove <名>|passwd <名> <密碼>|role <名> <角色>"
+    - "<white>/lc web resetadmin <aqua>- <white>重置 admin 密碼（輸出到控制台）"
+    - "<white>/lc web bind <aqua>- <white>取得遊戲帳戶登入或綁定驗證碼"
+  status:
+    - "<prefix><aqua>Web 面板狀態：{state}"
+    - "<aqua>地址：<white><click:open_url:'{url}'><u>{url}</u></click></white> <aqua>連接埠：<white>{port}"
+    - "<aqua>帳戶：<white>{users}</white> <aqua>WebSocket 連接：<white>{ws}</white> <aqua>介面：<white>{routes}</white> <aqua>擴展面板：<white>{panels}"
+  url: "<prefix><white>Web 面板地址：<aqua><click:open_url:'{url}'><u>{url}</u></click>"
+  reload-start: "<prefix><white>正在重載 Web 面板..."
+  reload-done: "<prefix><green>Web 面板已重載：<aqua>{url}"
+  reload-failed: "<prefix><red>Web 面板重載後未能啟動，請檢視控制台日誌（連接埠是否被佔用 / web.enabled 是否為 false）。"
+  not-ready: "<prefix><red>Web 面板帳戶系統尚未就緒（面板未啟用或啟動失敗）。"
+  error: "<prefix><red>操作失敗：{message}"
+  user-list-header: "<prefix><aqua>Web 帳戶（{count}）："
+  user-list-entry: "<aqua> - <white>{user}</white> <gold>[{role}]</gold> <white>遊戲帳戶：{mc}"
+  user-added: "<prefix><green>已建立 Web 帳戶 <white>{user}</white>，角色 <aqua>{role}</aqua>。"
+  user-removed: "<prefix><green>已刪除 Web 帳戶 <white>{user}</white>。"
+  user-passwd: "<prefix><green>已重置 <white>{user}</white> 的密碼。"
+  user-role: "<prefix><green>已將 <white>{user}</white> 的角色設為 <aqua>{role}</aqua>。"
+  console-only: "<prefix><red>該指令只能由控制台或 OP 執行。"
+  resetadmin: "<prefix><yellow>管理員帳戶 <white>{user}</white> 新密碼：<aqua><click:copy_to_clipboard:'{password}'>{password}</click></aqua> <white>（按此複製，請登入後立即修改）"
+  resetadmin-console: "<prefix><yellow>admin 密碼已重置，新密碼見上方控制台輸出。"
+  player-only: "<prefix><red>該指令只能由玩家執行。"
+  bind-code:
+    - "<prefix><aqua>你的 Web 驗證碼：<white><bold><click:copy_to_clipboard:'{code}'>{code}</click></bold> <white>（{minutes} 分鐘內有效，按此複製）"
+    - "<white>在網頁登入頁選擇「遊戲帳戶登入」輸入此碼；首次使用需先用密碼登入，在「個人設定」中輸入此碼綁定。"

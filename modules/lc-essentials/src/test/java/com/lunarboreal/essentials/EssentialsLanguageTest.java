@@ -12,7 +12,7 @@ class EssentialsLanguageTest {
 
     @Test
     void defaultMessagesDoNotIncludeModulePrefix() throws Exception {
-        for (String locale : new String[]{"zh_CN", "en_US"}) {
+        for (String locale : new String[]{"zh_CN", "zh_HK", "en_US"}) {
             try (InputStream input = getClass().getResourceAsStream("/lang/" + locale + ".yml")) {
                 assertNotNull(input, locale);
                 String messages = new String(input.readAllBytes(), StandardCharsets.UTF_8);

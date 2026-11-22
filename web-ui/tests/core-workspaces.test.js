@@ -5,7 +5,7 @@ import { parse, compileScript } from '@vue/compiler-sfc'
 import * as vue from 'vue'
 import * as panel from '../src/utils/panel.js'
 import * as format from '../src/utils/format.js'
-import { formatVersion, locale, t } from '../src/i18n.js'
+import { formatVersion, locale, setLocale, t } from '../src/i18n.js'
 
 const renderer = vue.createRenderer({
   createElement: type => ({ type, children: [] }), createText: text => ({ text }), createComment: text => ({ text }),
@@ -128,6 +128,23 @@ test('market removal confirmation blocks competing installs and releases the loc
   await changing
   assert.equal(writes, 0)
   assert.equal(env.state.busy, false)
+})
+
+test('market translates bundled module text and known errors when switching to Hong Kong Chinese', async context => {
+  const env = await mount(context, 'ModuleMarket')
+  const previousLocale = locale.value
+  context.after(() => setLocale(previousLocale))
+  const entry = { id: 'economy', name: '经济', nameEn: 'Economy', description: '余额、转账与交易记录。' }
+  const error = '模块下载失败，请检查网络与发布附件 / Download failed; check network and release assets'
+  setLocale('en_US')
+  assert.equal(env.state.name(entry), 'Economy')
+  assert.equal(env.state.errorText(error), 'Download failed; check network and release assets')
+  setLocale('zh_HK')
+  assert.equal(env.state.name(entry), '經濟')
+  assert.equal(env.state.description(entry), '結餘、轉帳與交易記錄。')
+  assert.equal(env.state.errorText(error), '模組下載失敗，請檢查網絡與發佈附件')
+  assert.equal(env.state.name({ id: 'custom', name: '自定义模块' }), '自定义模块')
+  assert.equal(env.state.errorText('远端返回 / Custom'), '远端返回 / Custom')
 })
 
 test('a slow player-history response cannot replace a newer search result', async context => {

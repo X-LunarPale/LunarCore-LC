@@ -8,7 +8,7 @@ import { renderMarkdown } from '../../utils/markdown'
 import TableSection from '../panel/TableSection.vue'
 import FormSection from '../panel/FormSection.vue'
 import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
-import { t, locale } from '../../i18n'
+import { t, localeTag } from '../../i18n'
 
 const props = defineProps({ panel: { type: Object, required: true } })
 const namespace = 'antixray'
@@ -20,7 +20,8 @@ const configVisited = ref(false)
 const stats = ref([])
 const statsError = ref('')
 const statsLoading = ref(false)
-const updatedAt = ref('')
+const updatedAt = ref(null)
+const updatedTime = computed(() => updatedAt.value?.toLocaleTimeString(localeTag.value, { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
 const begin = latestRequest()
 
 const sections = computed(() => props.panel.sections || [])
@@ -71,7 +72,7 @@ async function loadStats() {
     if (!current()) return
     stats.value = Array.isArray(result) ? result : result.items
     statsError.value = ''
-    updatedAt.value = new Date().toLocaleTimeString(locale.value === 'en_US' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    updatedAt.value = new Date()
   } catch (error) {
     if (current()) statsError.value = error.message
   } finally {
@@ -96,7 +97,7 @@ onBeforeUnmount(() => begin())
         <div v-for="(item, index) in stats" :key="`${item.label}-${index}`" class="health-metric"><dt>{{ item.label }}</dt><dd>{{ item.value ?? '—' }}</dd></div>
       </dl>
       <span v-else class="empty-health">{{ t(statsLoading ? '正在读取运行状态…' : statsError ? '运行状态暂不可用' : '暂无运行数据') }}</span>
-      <button class="icon-button" type="button" :disabled="statsLoading" :aria-label="t('刷新运行概览')" :title="updatedAt ? `${t('刷新运行概览')}: ${updatedAt}` : t('刷新运行概览')" @click="loadStats"><Icon name="refresh-cw" :size="15" /></button>
+      <button class="icon-button" type="button" :disabled="statsLoading" :aria-label="t('刷新运行概览')" :title="updatedTime ? `${t('刷新运行概览')}: ${updatedTime}` : t('刷新运行概览')" @click="loadStats"><Icon name="refresh-cw" :size="15" /></button>
     </section>
     <div v-if="statsError" class="stats-error" role="alert">{{ statsError }}<span v-if="stats.length"> · {{ t('当前显示上次成功读取的数据') }}</span></div>
 

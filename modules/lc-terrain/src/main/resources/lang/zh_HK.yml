@@ -1,0 +1,21 @@
+world:
+  ready: "<prefix><green>地形世界 {name} 已就緒。"
+  failed: "<prefix><red>地形世界 {name} 載入失敗：{error}"
+command:
+  usage: "<yellow>/tectonic debug [世界] | /tectonic locate <地形> [世界]"
+  world-required: "<red>請進入地形世界，或在指令最後填寫已載入的地形世界名。"
+  not-terrain: "<red>該世界未使用 LunarCore 的 Tectonic 生成器。"
+  unknown-target: "<red>可查找的地形：{targets}"
+  disabled-target: "<red>該世界未開啟 {target}。"
+  busy: "<yellow>已有地形查詢正在進行。"
+  searching: "<white>正在查找 {target}…"
+  not-found: "<yellow>附近 25600 格內未找到 {target}。"
+  found: "<green>{target}：{world}，距離約 {distance} 格。"
+  coordinates-hover: "按此填寫傳送指令；傳送前確認落腳位置。"
+  debug: "<white>{world} | 區域 {region} | 侵蝕 {erosion} | 區域選擇 {selector} | 洞穴截斷 {cutoff}"
+  failed: "<red>地形查詢失敗：{error}"
+multiverse:
+  no-permission: "<red>沒有執行此世界操作的權限。"
+  loading: "<green>已提交地形世界 {world} 的載入請求。"
+  unloaded: "<green>地形世界 {world} 已儲存並卸載。"
+  failed: "<red>地形世界操作失敗：{error}"

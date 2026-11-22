@@ -1,0 +1,213 @@
+# 處罰系統語言檔案（MiniMessage）
+prefix: "<aqua>處罰 » </aqua>"
+# 常用佔位符：{id} {player} {ip} {reason} {operator} {type} {date} {expires} {remaining} {duration} {appeal} {server}
+
+words:
+  permanent: "永久"
+  active: "<green>生效中"
+  revoked: "<white>已撤銷（{operator}）"
+  inactive: "<aqua>已失效"
+
+types:
+  ban: "封禁"
+  ban-temp: "臨時封禁"
+  ipban: "IP 封禁"
+  ipban-temp: "臨時 IP 封禁"
+  mute: "禁言"
+  mute-temp: "臨時禁言"
+  warn: "警告"
+  kick: "踢出"
+
+operators:
+  console: "控制台"
+  anticheat: "反作弊"
+  warning-ladder: "{operator} · 自動處罰"
+
+anticheat-reasons:
+  timer: "客戶端計時異常"
+  ground: "落地狀態異常"
+  fall: "下落狀態異常"
+  movement: "移動校驗異常"
+  knockback: "擊退響應異常"
+  order: "操作順序異常"
+  packets: "封包異常"
+  reach: "攻擊距離異常"
+  hitbox: "攻擊判定異常"
+  vehicle: "載具移動異常"
+  slowdown: "移動減速異常"
+  sprint: "疾跑狀態異常"
+  actions: "同時執行不相容操作"
+  place: "方塊放置異常"
+  break: "方塊破壞異常"
+  pathfinding: "自動尋路異常"
+  elytra: "鞘翅飛行異常"
+  chat: "聊天行為異常"
+  exploit: "非法交互"
+  interaction: "交互行為異常"
+  aim: "瞄準行為異常"
+  clicks: "點擊頻率異常"
+  other: "檢測到異常行為"
+
+# 被拒絕登入 / 被踢出時顯示的介面（可寫成清單表示多行）
+screen:
+  ban:
+    - "<gradient:#7ec8ff:#b98cff><bold>{server}</bold></gradient>"
+    - ""
+    - "<red><bold>你已被永久封禁</bold>"
+    - ""
+    - "<white>原因：<white>{reason}"
+    - "<white>執行者：<white>{operator}"
+    - "<white>封禁時間：<white>{date}"
+    - "<white>處罰編號：<white>#{id}"
+    - ""
+    - "<white>申訴：<aqua>{appeal}"
+  tempban:
+    - "<gradient:#7ec8ff:#b98cff><bold>{server}</bold></gradient>"
+    - ""
+    - "<red><bold>你已被臨時封禁</bold>"
+    - ""
+    - "<white>原因：<white>{reason}"
+    - "<white>執行者：<white>{operator}"
+    - "<white>到期時間：<white>{expires}"
+    - "<white>剩餘時間：<yellow>{remaining}"
+    - "<white>處罰編號：<white>#{id}"
+    - ""
+    - "<white>申訴：<aqua>{appeal}"
+  ipban:
+    - "<gradient:#7ec8ff:#b98cff><bold>{server}</bold></gradient>"
+    - ""
+    - "<red><bold>你的 IP 已被永久封禁</bold>"
+    - ""
+    - "<white>原因：<white>{reason}"
+    - "<white>執行者：<white>{operator}"
+    - "<white>處罰編號：<white>#{id}"
+    - ""
+    - "<white>申訴：<aqua>{appeal}"
+  tempipban:
+    - "<gradient:#7ec8ff:#b98cff><bold>{server}</bold></gradient>"
+    - ""
+    - "<red><bold>你的 IP 已被臨時封禁</bold>"
+    - ""
+    - "<white>原因：<white>{reason}"
+    - "<white>到期時間：<white>{expires}"
+    - "<white>剩餘時間：<yellow>{remaining}"
+    - "<white>處罰編號：<white>#{id}"
+    - ""
+    - "<white>申訴：<aqua>{appeal}"
+  kick:
+    - "<gradient:#7ec8ff:#b98cff><bold>{server}</bold></gradient>"
+    - ""
+    - "<yellow><bold>你已被踢出伺服器</bold>"
+    - ""
+    - "<white>原因：<white>{reason}"
+    - "<white>執行者：<white>{operator}"
+
+notify:
+  muted:
+    - "<gold>禁言 » </gold><white>你已被永久禁言"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  tempmuted:
+    - "<gold>禁言 » </gold><white>你已被禁言 <yellow>{duration}</yellow>"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  warned:
+    - "<gold>警告 » </gold><white>你收到一次警告（累計 <yellow>{count}</yellow> 次）"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  unmuted: "<gold>禁言 » </gold><green>你的禁言已解除"
+  muted-chat:
+    - "<gold>禁言 » </gold><white>你處於禁言狀態，剩餘 <yellow>{remaining}</yellow>"
+    - "<aqua>原因：<white>{reason}"
+  muted-command: "<gold>禁言 » </gold><white>禁言期間無法使用該指令，剩餘 <yellow>{remaining}</yellow>"
+
+broadcast:
+  ban:
+    - "<red>封禁 » </red><yellow>{player}</yellow><white> 已被永久封禁"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  ban-temp:
+    - "<red>封禁 » </red><yellow>{player}</yellow><white> 已被封禁 <yellow>{duration}</yellow>"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  ipban:
+    - "<red>封禁 » </red><yellow>{player}</yellow><white> 已被永久 IP 封禁"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  ipban-temp:
+    - "<red>封禁 » </red><yellow>{player}</yellow><white> 已被 IP 封禁 <yellow>{duration}</yellow>"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  mute:
+    - "<gold>禁言 » </gold><yellow>{player}</yellow><white> 已被永久禁言"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  mute-temp:
+    - "<gold>禁言 » </gold><yellow>{player}</yellow><white> 已被禁言 <yellow>{duration}</yellow>"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  warn:
+    - "<gold>警告 » </gold><yellow>{player}</yellow><white> 收到一次警告（累計 <yellow>{count}</yellow> 次）"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  kick:
+    - "<yellow>踢出 » {player}</yellow><white> 已被踢出伺服器"
+    - "<aqua>原因：<white>{reason}</white> · 來源：<white>{operator}"
+  silent-prefix: "<light_purple>[靜默]</light_purple> {message}"
+  unban: "<red>封禁 » </red><yellow>{player}</yellow><green> 的封禁已解除 <aqua>· 來源：<white>{operator}"
+  unbanip: "<red>封禁 » </red><yellow>{player}</yellow><green> 的 IP 封禁已解除 <aqua>· 來源：<white>{operator}"
+  unmute: "<gold>禁言 » </gold><yellow>{player}</yellow><green> 的禁言已解除 <aqua>· 來源：<white>{operator}"
+
+warn:
+  auto-reason: "警告次數達到 {count} 次"
+
+error:
+  usage: "<prefix><red>用法：<white>{usage}"
+  player-not-found: "<prefix><red>找不到玩家 <white>{player}</white>（該玩家從未進入過伺服器）。"
+  no-ip: "<prefix><red>無法取得 <white>{player}</white> 的 IP 地址。"
+  not-online: "<prefix><red>玩家 <white>{player}</white> 已離線。"
+  exempt: "<prefix><red>{player} 擁有處罰豁免權限。"
+  self: "<prefix><red>你不能處罰自己。"
+  invalid-duration: "<prefix><red>無效的處罰時限 <white>{input}</white>。例如：30m、12h、7d、1mo、perm"
+  duration-limit: "<prefix><red>你最多只能設定 <white>{max}</white> 的時長。"
+  no-silent: "<prefix><red>你沒有使用 -s 靜默處罰的權限。"
+  not-banned: "<prefix><red>{player} 目前沒有被封禁。"
+  not-ipbanned: "<prefix><red>IP {ip} 目前沒有被封禁。"
+  not-muted: "<prefix><red>{player} 目前沒有被禁言。"
+  no-warns: "<prefix><red>{player} 沒有有效的警告。"
+  no-permission: "<prefix><red>你沒有權限這樣做。"
+  database: "<prefix><red>查詢資料庫失敗，請檢視控制台。"
+
+notice:
+  replaced: "<prefix><yellow>{player} 已有同類型處罰，舊處罰將被覆蓋。"
+
+command:
+  done: "<prefix><green>已執行 {type}：<white>{player}</white> <white>(#{id})"
+  unwarned: "<prefix><green>已撤銷 {player} 的 {count} 條警告，剩餘 {remaining} 條。"
+  reloaded: "<prefix><green>封禁設定已重載。"
+
+command-desc:
+  ban: "永久封禁玩家"
+  tempban: "臨時封禁玩家"
+  ipban: "永久封禁 IP"
+  tempipban: "臨時封禁 IP"
+  mute: "永久禁言玩家"
+  tempmute: "臨時禁言玩家"
+  warn: "警告玩家"
+  kick: "踢出玩家"
+  unban: "解除封禁"
+  unbanip: "解除 IP 封禁"
+  unmute: "解除禁言"
+  unwarn: "撤銷警告"
+  history: "檢視處罰歷史"
+  banlist: "檢視封禁清單"
+  checkban: "查詢玩家封禁狀態"
+  reload: "重載封禁設定"
+
+history:
+  empty: "<prefix><white>{player} 沒有任何處罰記錄。"
+  header: "<prefix><aqua>{player} 的處罰記錄 <white>（第 {page}/{pages} 頁，共 {total} 條）"
+  entry: "<white>#{id} <white>{type}</white> <aqua>|</aqua> {date} <aqua>|</aqua> <white>{reason}</white> <aqua>|</aqua> {operator} <aqua>|</aqua> 到期 {expires} {state}"
+
+banlist:
+  empty: "<prefix><white>目前沒有生效的封禁。"
+  header: "<prefix><aqua>生效中的封禁 <white>（第 {page}/{pages} 頁，共 {total} 條）"
+  entry: "<white>#{id} <red>{player}</red> <white>{type}</white> <aqua>|</aqua> {reason} <aqua>|</aqua> 剩餘 <yellow>{remaining}"
+
+check:
+  header: "<prefix><aqua>{player} <white>的處罰狀態（IP：{ip}）"
+  ban: "<white> - <red>{type}</red> #{id}：<white>{reason}</white>，執行者 {operator}，剩餘 <yellow>{remaining}"
+  ipban: "<white> - <red>{type}</red> #{id}：<white>{reason}</white>，執行者 {operator}，剩餘 <yellow>{remaining}"
+  mute: "<white> - <gold>{type}</gold> #{id}：<white>{reason}</white>，執行者 {operator}，剩餘 <yellow>{remaining}"
+  clean: "<white> - <green>沒有生效中的封禁或禁言"
+  warns: "<white> - 有效警告：<yellow>{count}</yellow> 次"

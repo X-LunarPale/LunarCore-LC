@@ -53,12 +53,12 @@ async function load(reset = false) {
       updateRestart(null)
       status.value = draft.value = baseline.value = null
       absent.value = true
-      error.value = t(result.message)
+      error.value = result.message || ''
       return
     }
     result.active = parseConfig(result.active)
     result.saved = parseConfig(result.saved)
-    if (!Array.isArray(result.worlds) || typeof result.restartRequired !== 'boolean') throw new Error(t('结构状态格式无效'))
+    if (!Array.isArray(result.worlds) || typeof result.restartRequired !== 'boolean') throw new Error('结构状态格式无效')
     if (disposed) return
     status.value = result
     updateRestart(result)
@@ -76,7 +76,7 @@ async function load(reset = false) {
     }
     updateRestart(null)
     absent.value = e.status === 404 || e.status === 503
-    error.value = t(e.message)
+    error.value = e.message
     if ([401, 403, 404, 503].includes(e.status)) status.value = draft.value = baseline.value = null
   } finally { loading.value = false; lastLoad = Date.now() }
 }
@@ -111,7 +111,7 @@ async function save() {
     if (!pending) ElMessage.success(t('结构设置已保存'))
   } catch (e) {
     ElMessage.error(t(e.message))
-    if ([401, 403, 503].includes(e.status)) { error.value = t(e.message); status.value = draft.value = baseline.value = null }
+    if ([401, 403, 503].includes(e.status)) { error.value = e.message; status.value = draft.value = baseline.value = null }
   }
   finally { saving.value = false }
   if (pending) await offerRestart()
@@ -165,8 +165,8 @@ onUnmounted(() => { disposed = true; clearInterval(timer) })
     </div>
     <p class="section-description">{{ t('为每类结构选择原版或 YUNG’s 生成方式，只在新生成的区块和新建世界中生效，保存后完整重启服务器。') }}</p>
     <el-alert v-if="absent" :closable="false" type="info" :title="t('结构生成插件不可用')"
-      :description="`${error}。${t('从独立插件仓库下载 LunarCoreStructures.jar，放入 plugins 文件夹后完整重启。')}`" />
-    <el-alert v-if="error && !absent" :closable="false" type="error" :title="error" />
+      :description="`${t(error)}。${t('从独立插件仓库下载 LunarCoreStructures.jar，放入 plugins 文件夹后完整重启。')}`" />
+    <el-alert v-if="error && !absent" :closable="false" type="error" :title="t(error)" />
     <el-alert v-if="restartNotice" :closable="false" :type="restartTone" :title="t(restartNotice)" />
     <template v-if="draft">
       <div class="structure-toolbar">
@@ -199,7 +199,7 @@ onUnmounted(() => { disposed = true; clearInterval(timer) })
             @change="value => setFlags(draft, scopes, family.id, value)" />
         </div>
       </div>
-      <el-alert v-for="world in status.worlds.filter(w => w.error)" :key="world.key" :closable="false" type="error" :title="`${world.name}: ${world.error}`" />
+      <el-alert v-for="world in status.worlds.filter(w => w.error)" :key="world.key" :closable="false" type="error" :title="`${world.name}: ${t(world.error)}`" />
       <div class="structure-actions">
         <span class="muted">{{ dirty ? t('有未保存的结构设置') : t('已生成的建筑保留，关闭开关仅改变后续生成。') }}</span>
         <el-button :disabled="busy" @click="load(true)">{{ t('重新读取') }}</el-button>

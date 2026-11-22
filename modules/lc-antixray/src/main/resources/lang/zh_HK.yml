@@ -1,0 +1,70 @@
+# 反礦透語言檔案（MiniMessage）
+prefix: "<gold>[<bold>礦透檢測</bold>]</gold> "
+command-desc: "反礦透管理"
+help:
+  - "<prefix><aqua>反礦透指令："
+  - "<white>/antixray stats <玩家> <aqua>- <white>檢視挖礦統計"
+  - "<white>/antixray alerts [玩家] [頁] <aqua>- <white>檢視警告記錄"
+  - "<white>/antixray top <aqua>- <white>可疑玩家排行"
+  - "<white>/antixray paper [世界|defaults] [預設|show|set <鍵> <值>] <aqua>- <white>Paper anti-xray 設定"
+  - "<white>/antixray fakeore <aqua>- <white>假礦方案狀態"
+  - "<white>/antixray reload <aqua>- <white>重載設定"
+
+words:
+  on: "<green>已開啟"
+  off: "<red>未開啟"
+
+types:
+  direct: "直線命中"
+  dense: "密集挖礦"
+  ratio: "礦石比率異常"
+  unknown: "未知"
+
+# 警告詳情（寫入資料庫與通知）
+detail:
+  direct: "{minutes} 分鐘內 {count} 次直接挖向未暴露礦脈（{ore}）"
+  dense: "{minutes} 分鐘內挖到 {veins} 條稀有礦脈（加權 {weight}）"
+  ratio: "{minutes} 分鐘內 {veins} 條礦脈僅挖 {stone} 個普通方塊（每條 {per}）"
+
+alert:
+  notify: "<prefix><gold><bold>礦透檢測</bold></gold> <yellow>{player}</yellow> <white>{type}：<white>{detail}</white> <aqua>({world} {x},{y},{z})"
+
+fakeore:
+  status: "<prefix><white>假礦方案：{enabled} <white>| 緩存區塊 <white>{chunks}</white> <white>| 偽裝中的礦石 <white>{hidden}"
+
+reloaded: "<prefix><green>反礦透設定已重載。"
+usage: "<prefix><red>用法：<white>{usage}"
+player-not-found: "<prefix><red>找不到玩家 <white>{player}</white>。"
+database-error: "<prefix><red>查詢資料庫失敗，請檢視控制台。"
+no-permission: "<prefix><red>你沒有權限這樣做。"
+
+stats:
+  header: "<prefix><aqua>{player} <white>的挖礦統計：普通方塊 <white>{stone}</white>，稀有礦 <white>{rare}</white>（每千 {per}），歷史警告 <red>{alerts}"
+  entry: "<white> - {ore}：<white>{amount}"
+  window: "<white> 最近 {minutes} 分鐘：礦脈 <white>{veins}</white>（加權 {weight}），普通方塊 <white>{stone}</white>，直線命中 <white>{direct}</white>，本次在線警告 <red>{alerts}"
+  offline: "<white> （玩家已離線，無實時時段資料）"
+
+alerts:
+  empty: "<prefix><white>沒有警告記錄。"
+  header: "<prefix><aqua>礦透警告 <white>（第 {page} 頁）"
+  entry: "<white>#{id} {time} <yellow>{player}</yellow> <red>{type}</red> <white>{detail}</white> <aqua>{world} {x},{y},{z}"
+
+top:
+  empty: "<prefix><white>暫時沒有資料。"
+  header: "<prefix><aqua>可疑玩家排行（前 10）"
+  entry: "<white>{rank}. <yellow>{player}</yellow> 分數 <red>{score}</red> | 警告 {alerts} | 每千石頭稀有礦 {per} | 稀有 {rare} / 普通 {stone}"
+
+paper:
+  unavailable: "<prefix><red>目前伺服器不是 Paper，內置 anti-xray 不可用。可在設定中開啟 fake-ore（方案二）。"
+  list-header: "<prefix><aqua>Paper anti-xray 設定："
+  list-entry: "<white> - <white>{target}</white>：{summary}"
+  presets: "<white>可用預設：<white>{presets}"
+  no-world: "<prefix><red>世界 {world} 不存在（全局預設請用 defaults）。"
+  show-header: "<prefix><aqua>{target} <white>的 anti-xray 設定（{file}）："
+  show-entry: "<white> - {key}：<white>{value}</white> {inherit}"
+  inherited: "<aqua>(繼承預設)"
+  show-list: "<white> - {key}：<white>{value}"
+  bad-key: "<prefix><red>可修改的鍵：{keys}"
+  bad-preset: "<prefix><red>未知操作或預設，可用預設：{presets}"
+  saved: "<prefix><green>已修改 {target}：{change}。<yellow>Paper 只在啟動時讀取該設定，請重啟伺服器生效。"
+  io-error: "<prefix><red>讀寫設定檔案失敗：{error}"
