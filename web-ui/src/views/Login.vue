@@ -145,7 +145,7 @@ async function submit() {
 .login-main { display: flex; align-items: flex-start; justify-content: center; flex: 1; min-height: 0; padding: max(40px, calc((100svh - 540px) / 2)) 24px 48px; }
 .login-form { width: 100%; max-width: 340px; min-width: 0; }
 .login-modes { margin-bottom: 24px; }
-.login-error { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 20px; padding: 10px 12px; border: 1px solid var(--el-color-danger-light-7); border-radius: 5px; color: var(--el-color-danger); background: var(--el-color-danger-light-9); font-size: 13px; overflow-wrap: anywhere; }
+.login-error { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 20px; padding: 10px 12px; border: 1px solid var(--el-color-danger-light-7); border-radius: var(--lc-radius-control); color: var(--el-color-danger); background: var(--el-color-danger-light-9); font-size: 13px; overflow-wrap: anywhere; }
 .login-error .lc-icon { margin-top: 2px; }
 .login-fields { display: flow-root; }
 .login-submit { width: 100%; margin-top: 8px; }

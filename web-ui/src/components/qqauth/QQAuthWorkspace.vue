@@ -28,8 +28,8 @@ const moduleReady = computed(() => !state.error && state.loaded)
 const tab = ref('accounts')
 const configVisited = ref(false)
 const tabs = computed(() => [
-  { id: 'accounts', label: '认证账号', icon: 'users' },
-  ...(canManage.value ? [{ id: 'config', label: '认证设置', icon: 'sliders-horizontal' }] : [])
+  { id: 'accounts', label: '认证账号', icon: 'users', panelId: 'qqauth-accounts' },
+  ...(canManage.value ? [{ id: 'config', label: '认证设置', icon: 'sliders-horizontal', panelId: 'qqauth-config' }] : [])
 ])
 watch(tab, value => { if (value === 'config') configVisited.value = true })
 
@@ -115,15 +115,15 @@ onBeforeUnmount(() => { beginAccounts(); beginStats() })
     </div>
 
     <WorkspaceTabs v-model="tab" :items="tabs" label="认证管理分区" id="qqauth" />
-    <section v-show="tab === 'accounts'" class="account-section" aria-labelledby="account-title">
+    <section v-show="tab === 'accounts'" id="qqauth-accounts" class="account-section" role="tabpanel" aria-labelledby="qqauth-tab-accounts">
       <div class="section-heading">
-        <div><h2 id="account-title">{{ t('游戏认证账号') }}</h2><span v-if="state.loaded" class="count">{{ t('共 {count} 个账号', { count: state.total }) }}</span></div>
-        <div class="search-tools">
-          <el-input v-model="searchInput" clearable :placeholder="t('搜索玩家名称')" :aria-label="t('搜索玩家名称')" @keyup.enter="search" @clear="search">
+        <form class="search-tools" @submit.prevent="search">
+          <el-input v-model="searchInput" clearable :placeholder="t('搜索玩家名称')" :aria-label="t('搜索玩家名称')" @clear="search">
             <template #prefix><Icon name="search" :size="15" /></template>
           </el-input>
-          <el-button type="primary" plain @click="search">{{ t('搜索') }}</el-button>
-        </div>
+          <el-button native-type="submit" :title="t('搜索')" :aria-label="t('搜索')"><Icon name="arrow-right" :size="15" /></el-button>
+        </form>
+        <span v-if="state.loaded && state.q" class="count">{{ t('共 {count} 个账号', { count: state.total }) }}</span>
       </div>
 
       <p v-if="state.error" class="qq-error" role="alert">{{ state.error }} <el-button link type="primary" @click="refresh">{{ t('重试') }}</el-button></p>
@@ -152,11 +152,13 @@ onBeforeUnmount(() => { beginAccounts(); beginStats() })
       <el-pagination v-if="!state.error && state.total > state.size" v-model:current-page="state.page" class="qq-pager" :page-size="state.size" :total="state.total" :pager-count="5" layout="prev, pager, next" @current-change="loadAccounts" />
     </section>
 
-    <QQAuthConfig v-if="canManage && configVisited" v-show="tab === 'config'" />
-    <details v-if="configuration" v-show="tab === 'config'" class="configuration-note">
-      <summary>{{ t(configuration.title || '配置与迁移') }}</summary>
-      <p>{{ panelText(configuration.markdown, configuration.markdownKey) }}</p>
-    </details>
+    <section v-if="canManage" v-show="tab === 'config'" id="qqauth-config" role="tabpanel" aria-labelledby="qqauth-tab-config">
+      <QQAuthConfig v-if="configVisited" />
+      <details v-if="configuration" class="configuration-note">
+        <summary>{{ t(configuration.title || '配置与迁移') }}</summary>
+        <p>{{ panelText(configuration.markdown, configuration.markdownKey) }}</p>
+      </details>
+    </section>
     <ActionRunner ref="runner" namespace="qqauth" :columns="table?.columns || []" @done="actionDone" />
   </div>
 </template>
@@ -169,9 +171,7 @@ onBeforeUnmount(() => { beginAccounts(); beginStats() })
 .status-label, .count { color: var(--lc-text-soft); }.qq-status strong { font-weight: 650; }
 .status-divider { height: 14px; width: 1px; background: var(--el-border-color); margin: 0 8px; }
 .account-section { margin-top:0; container-type: inline-size; }
-.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 14px; }
-.section-heading > div:first-child { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.section-heading h2 { margin: 0; font-size: 16px; font-weight: 650; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .count { font-size: 12px; }
 .search-tools { display: flex; gap: 8px; align-items: center; width: min(420px, 100%); }
 .search-tools :deep(.el-input) { min-width: 0; }

@@ -36,25 +36,23 @@ const points = computed(() => {
 const line = computed(() => points.value.map((p) => p.join(',')).join(' '))
 const area = computed(() => (points.value.length ? `0,${props.height} ${line.value} ${W},${props.height}` : ''))
 const gid = 'g' + Math.random().toString(36).slice(2)
-const last = computed(() => (props.values.length ? props.values[props.values.length - 1] : null))
 </script>
 
 <template>
   <div class="spark">
-    <svg :viewBox="`0 0 ${W} ${height}`" preserveAspectRatio="none" :style="{ height: height + 'px' }">
+    <svg aria-hidden="true" :viewBox="`0 0 ${W} ${height}`" preserveAspectRatio="none" :style="{ height: height + 'px' }">
       <defs>
         <linearGradient :id="gid" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" :stop-color="color" stop-opacity="0.35" />
+          <stop offset="0" :stop-color="color" stop-opacity="0.13" />
           <stop offset="1" :stop-color="color" stop-opacity="0" />
         </linearGradient>
       </defs>
       <polygon v-if="area" :points="area" :fill="`url(#${gid})`" />
       <polyline v-if="line" :points="line" fill="none" :stroke="color" stroke-width="2" vector-effect="non-scaling-stroke" />
     </svg>
-    <div class="legend">
-      <span>{{ t('最低') }} {{ format(stats.vals.length ? Math.min(...stats.vals) : 0) }}</span>
-      <span>{{ t('当前') }} <b>{{ last === null ? '-' : format(last) }}</b></span>
-      <span>{{ t('最高') }} {{ format(stats.vals.length ? Math.max(...stats.vals) : 0) }}</span>
+    <div v-if="stats.vals.length" class="legend">
+      <span>{{ t('最低') }} {{ format(Math.min(...stats.vals)) }}</span>
+      <span>{{ t('最高') }} {{ format(Math.max(...stats.vals)) }}</span>
     </div>
     <div v-if="values.length < 2" class="empty">{{ t('数据采集中…') }}</div>
   </div>
@@ -63,6 +61,6 @@ const last = computed(() => (props.values.length ? props.values[props.values.len
 <style scoped>
 .spark { position: relative; }
 svg { width: 100%; display: block; }
-.legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--lc-text-soft); margin-top: 6px; }
+.legend { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; font-size: 11px; color: var(--lc-text-soft); margin-top: 6px; }
 .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--lc-text-soft); font-size: 13px; }
 </style>
