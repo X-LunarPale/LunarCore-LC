@@ -127,7 +127,7 @@ onBeforeUnmount(() => {
 <template>
   <section class="form-surface" v-loading="loading" :aria-busy="loading || saving">
     <header class="surface-header">
-      <h2>{{ t(section.title || '设置') }}</h2>
+      <h2><Icon name="sliders-horizontal" :size="15" />{{ t(section.title || '设置') }}</h2>
       <span v-if="dirty" class="dirty-state" role="status">{{ t('尚未保存') }}</span>
     </header>
     <div v-if="section.saveEndpoint && !canSave" class="read-only"><Icon name="lock-keyhole" :size="14" />{{ t('当前账号仅可查看此配置。') }}</div>
@@ -158,9 +158,10 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .form-surface { padding:0; color:var(--lc-text); min-width:0; container-type:inline-size; }
-.surface-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-h2 { font-size: 15px; font-weight: 600; line-height: 1.5; margin: 0; }
-.dirty-state { font-size: 12px; color: var(--el-color-warning); }
+.surface-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-bottom: 10px; border-bottom: 1px solid var(--lc-line); margin-bottom: 16px; }
+h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; line-height: 1.5; margin: 0; }
+h2 :deep(svg) { flex: none; color: var(--lc-text-soft); }
+.dirty-state { padding: 2px 7px; border-radius: 6px; background: var(--el-color-warning-light-9); font-size: 12px; color: var(--el-color-warning-dark-2); }
 .read-only { display: flex; align-items: center; gap: 7px; padding: 8px 10px; background: var(--el-fill-color-light); border-radius: 6px; font-size: 12px; margin-bottom: 12px; color: var(--lc-text-soft); }
 .initial-loading { min-height: 72px; display: grid; place-items: center; color: var(--lc-text-soft); font-size: 12px; }
 .help { font-size: 12px; color: var(--lc-text-soft); line-height: 1.6; width: 100%; overflow-wrap: anywhere; }

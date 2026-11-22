@@ -109,7 +109,7 @@ onMounted(loadWl)
         <section class="broadcast-layout">
           <el-form label-position="top" @submit.prevent="broadcast">
             <el-form-item :label="t('广播内容')">
-              <el-input v-model="broadcastText" type="textarea" :rows="5" :disabled="sending" />
+              <el-input v-model="broadcastText" type="textarea" :rows="5" :disabled="sending" :placeholder="t('请输入广播内容')" />
             </el-form-item>
             <el-button type="primary" native-type="submit" :loading="sending" :disabled="!broadcastText.trim()"><Icon name="send" :size="15" />{{ t('发送广播') }}</el-button>
           </el-form>
@@ -121,9 +121,10 @@ onMounted(loadWl)
           <header class="section-heading">
             <div class="whitelist-state">
               <el-switch :model-value="wl.enabled" :disabled="whitelistBusy || wl.loading" :aria-label="t('白名单')" @change="toggleWl" />
-              <span>{{ t(wl.enabled ? '已开启' : '已关闭') }}</span>
+              <strong>{{ t(wl.enabled ? '已开启' : '已关闭') }}</strong>
               <el-tag v-if="wl.enforced" type="warning" size="small">{{ t('强制模式') }}</el-tag>
             </div>
+            <span v-if="!whitelistError" class="list-count">{{ t('共 {count} 人', { count: wl.items.length }) }}</span>
           </header>
           <el-alert v-if="whitelistError" :title="whitelistError" type="error" show-icon :closable="false" />
           <div class="toolbar whitelist-toolbar">
@@ -138,7 +139,6 @@ onMounted(loadWl)
             <el-table-column label="UUID" min-width="290"><template #default="{ row }"><span class="mono muted">{{ row.uuid }}</span></template></el-table-column>
             <el-table-column :label="t('操作')" width="90"><template #default="{ row }"><el-button size="small" type="danger" text :disabled="whitelistBusy" @click="removeWl(row)">{{ t('移除') }}</el-button></template></el-table-column>
           </el-table>
-          <div class="list-count">{{ t('共 {count} 人', { count: wl.items.length }) }}</div>
         </section>
       </el-tab-pane>
     </el-tabs>
@@ -150,14 +150,17 @@ onMounted(loadWl)
 .page-header .el-button, .toolbar .el-button, .broadcast-layout .el-button { gap: 7px; }
 .broadcast-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .8fr); align-items: start; gap: 24px; max-width: 960px; padding-top: 4px; }
 .broadcast-layout > * { min-width: 0; }
+.broadcast-layout .minecraft-preview { margin-top: 0; }
+.broadcast-layout :deep(.preview-label) { font-size: 13px; line-height: 22px; margin-bottom: 8px; }
 .whitelist-section { padding-top: 8px; min-width: 0; }
-.section-heading { margin: 0 0 12px; font-size: 13px; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; font-size: 13px; }
 .whitelist-state { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.whitelist-state strong { font-weight: 600; }
 .whitelist-toolbar { margin: 12px 0; }
 .whitelist-toolbar .el-input { width: 220px; min-width: 0; }
 .whitelist-toolbar .el-button { margin-left: 0; }
 .refresh-button { width: 34px; padding: 0; }
-.list-count { margin-top: 10px; color: var(--lc-text-soft); font-size: 12px; }
+.list-count { color: var(--lc-text-soft); font-size: 12px; font-variant-numeric: tabular-nums; }
 .el-alert { margin-bottom: 14px; }
 @media (max-width: 850px) { .broadcast-layout { grid-template-columns: 1fr; gap: 24px; }.whitelist-toolbar .spacer { flex-basis: 100%; }.whitelist-toolbar .el-input { flex: 1; width: auto; }.whitelist-toolbar { gap: 8px; } }
 @media (max-width: 480px) { .whitelist-state { gap: 8px; } }

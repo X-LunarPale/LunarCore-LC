@@ -3,9 +3,11 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { api, socket } from '../api'
 import { useAutoRefresh } from '../utils/autoRefresh'
 import { formatBytes } from '../utils/format'
+import { useAuth } from '../stores/auth'
 import Sparkline from '../components/Sparkline.vue'
 import { t } from '../i18n'
 
+const auth = useAuth()
 const data = ref(null)
 const tab = ref('performance')
 const loading = ref(false)
@@ -66,6 +68,12 @@ onUnmounted(() => {
 })
 
 const tpsColor = (t) => (t >= 18 ? 'var(--el-color-success)' : t >= 15 ? 'var(--el-color-warning)' : 'var(--el-color-danger)')
+const serverHealth = computed(() => {
+  const tps = data.value?.tps?.[0]
+  if (!Number.isFinite(tps) || error.value) return { label: '暂无采样', icon: 'activity' }
+  if (tps >= 18) return { label: '运行正常', icon: 'circle-check', color: tpsColor(tps) }
+  return { label: tps >= 15 ? '性能波动' : '负载较高', icon: 'triangle-alert', color: tpsColor(tps) }
+})
 const trends = computed(() => {
   const d = data.value
   if (!d || !d.time) return []
@@ -79,7 +87,7 @@ const trends = computed(() => {
     },
     {
       key: 'mspt', label: 'MSPT', value: formatMspt(d.mspt),
-      color: 'var(--el-color-warning)', format: formatMspt
+      color: 'var(--el-color-warning)', format: formatMspt, detail: t('每刻耗时')
     },
     {
       key: 'memory', label: '内存', max: d.memoryMax || null, value: `${memPct}%`, format: formatBytes,
@@ -90,7 +98,7 @@ const trends = computed(() => {
       color: 'var(--lc-focus-ink)', format: formatPercent,
       detail: t('系统 {percent} · {cores} 核', { percent: d.cpuSystem >= 0 ? formatPercent(d.cpuSystem) : '-', cores: d.cores })
     },
-    { key: 'online', label: '在线玩家', value: `${d.online} / ${d.maxPlayers}` }
+    { key: 'online', label: '在线玩家', value: `${d.online} / ${d.maxPlayers}`, detail: t('当前在线 / 人数上限') }
   ].map(series => ({ ...series, values: history.value.map(point => point[series.key]) }))
 })
 const formatMspt = value => Number.isFinite(value) && value >= 0 ? value.toFixed(1) + ' ms' : 'N/A'
@@ -101,24 +109,41 @@ const formatPercent = value => Number.isFinite(value) && value >= 0 ? value.toFi
   <div class="page dashboard-page">
     <header class="page-header">
       <h1 class="page-title">{{ t('运行总览') }}</h1>
-      <div class="page-actions">
-        <span v-if="data?.tps?.[0] < 18 && !error" class="status-label" :style="{ color: tpsColor(data.tps[0]) }">
-          <Icon name="activity" :size="14" />{{ t(data.tps[0] >= 15 ? '性能波动' : '负载较高') }}
-        </span>
-        <span v-if="data?.uptime != null" class="uptime" :title="t('运行时长')">
-          <Icon name="clock" :size="14" /><span :aria-label="`${t('运行时长')} ${uptimeDisplay}`">{{ uptimeDisplay }}</span>
-        </span>
-        <el-tooltip :content="t('刷新')"><el-button :aria-label="t('刷新')" :loading="loading" @click="load"><Icon name="refresh-cw" :size="15" /></el-button></el-tooltip>
-      </div>
+      <el-tooltip :content="t('刷新')"><el-button :aria-label="t('刷新')" :loading="loading" @click="load"><Icon name="refresh-cw" :size="15" /></el-button></el-tooltip>
     </header>
     <el-alert v-if="error" type="error" :title="error" show-icon :closable="false" class="load-error" />
     <el-skeleton v-if="!data && !error" :rows="6" animated />
+    <dl v-if="trends.length" class="overview-strip" :aria-label="t('关键运行指标')">
+      <div>
+        <dt>{{ t('服务器进程') }}</dt>
+        <dd :style="{ color: serverHealth.color }"><Icon :name="serverHealth.icon" :size="16" />{{ t(serverHealth.label) }}</dd>
+      </div>
+      <div>
+        <dt>{{ t('运行时长') }}</dt>
+        <dd><Icon name="clock" :size="16" />{{ uptimeDisplay }}</dd>
+      </div>
+      <div>
+        <dt>{{ t('世界与区块') }}</dt>
+        <dd>
+          <button type="button" class="overview-link" @click="tab = 'worlds'">
+            <Icon name="globe" :size="16" />
+            {{ t('{worlds} 个世界 · {chunks} 个区块', { worlds: data.worldCount, chunks: data.chunks }) }}
+            <Icon name="chevron-right" :size="14" />
+          </button>
+        </dd>
+      </div>
+    </dl>
     <el-tabs v-if="trends.length" v-model="tab">
       <el-tab-pane :label="t('性能趋势')" name="performance">
         <section class="trend-grid" :class="{ 'lc-pane-in': tab === 'performance' }" :aria-label="t('性能趋势')">
-          <article v-for="series in trends" :key="series.key" class="trend-sample" :aria-labelledby="`trend-${series.key}`">
+          <article v-for="series in trends" :key="series.key" class="trend-sample" :class="{ 'trend-sample-wide': series.key === 'online' }" :aria-labelledby="`trend-${series.key}`">
             <header class="trend-heading">
-              <h2 :id="`trend-${series.key}`">{{ t(series.label) }}</h2>
+              <h2 :id="`trend-${series.key}`">
+                <RouterLink v-if="series.key === 'online' && auth.can('core.players.view')" :to="{ name: 'players' }" class="overview-link">
+                  {{ t(series.label) }}<Icon name="chevron-right" :size="14" />
+                </RouterLink>
+                <template v-else>{{ t(series.label) }}</template>
+              </h2>
               <strong :style="{ color: series.valueColor }">{{ series.value }}</strong>
             </header>
             <Sparkline :height="108" :values="series.values" :min="0" :max="series.max" :color="series.color || 'var(--lc-accent)'" :format="series.format" />
@@ -145,13 +170,20 @@ const formatPercent = value => Number.isFinite(value) && value >= 0 ? value.toFi
 </template>
 
 <style scoped>
+.dashboard-page { container-type: inline-size; }
 .page-header { align-items: center; }
 .page-header .el-button { width: 34px; padding: 0; }
 .load-error { margin-bottom: 16px; }
 .section-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 12px; color: var(--lc-text-soft); }
-.status-label, .uptime { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
-.uptime { color: var(--lc-text-soft); font-variant-numeric: tabular-nums; }
-.trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, max(238px, (100% - 48px) / 3)), 1fr)); gap: 24px; padding-block: 6px 14px; }
+.overview-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.4fr); gap: 16px; margin: 0 0 18px; padding: 14px 16px; border-radius: var(--lc-radius-control); background: var(--lc-surface-muted); }
+.overview-strip > div { min-width: 0; }
+.overview-strip > div + div { padding-inline-start: 16px; border-inline-start: 1px solid var(--lc-line); }
+.overview-strip dt { margin-bottom: 5px; color: var(--lc-text-soft); font-size: 12px; }
+.overview-strip dd { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.overview-link { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; font: inherit; text-align: start; text-decoration: none; cursor: pointer; overflow-wrap: anywhere; }
+.overview-link:hover { color: var(--lc-text); text-decoration: underline; text-underline-offset: 3px; }
+.overview-link > .lc-icon:last-child { color: var(--lc-text-soft); }
+.trend-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 6px 14px; }
 .trend-sample { min-width: 0; padding: 12px 0 0; border-top: 1px solid var(--lc-line); }
 .trend-heading { display: grid; gap: 3px; margin-bottom: 12px; }
 .trend-heading h2 { margin: 0; color: var(--lc-text-soft); font-size: 13px; font-weight: 500; }
@@ -161,4 +193,15 @@ const formatPercent = value => Number.isFinite(value) && value >= 0 ? value.toFi
 .server-summary > div { display: grid; grid-template-columns: minmax(94px, 1fr) 3fr; gap: 16px; padding-block: 12px; border-bottom: 1px solid var(--lc-line); }
 .server-summary dt { color: var(--lc-text-soft); }
 .server-summary dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+@container (min-width: 440px) {
+  .trend-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trend-sample-wide { grid-column: span 2; }
+}
+@container (min-width: 660px) {
+  .trend-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container (max-width: 460px) {
+  .overview-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .overview-strip > div:last-child { grid-column: 1 / -1; padding: 10px 0 0; border-inline-start: 0; border-top: 1px solid var(--lc-line); }
+}
 </style>

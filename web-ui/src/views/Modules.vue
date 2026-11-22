@@ -81,38 +81,49 @@ useAutoRefresh(() => { if (!loading.value && !busy.value) return load() }, {
     <el-tabs v-model="tab" class="catalog-tabs">
       <el-tab-pane :label="t('已安装')" name="installed">
         <div class="toolbar">
-        <el-input v-model="q" :placeholder="t('搜索模块')" :aria-label="t('搜索模块')" clearable><template #prefix><Icon name="search" :size="14" /></template></el-input>
-        <el-select v-model="stateFilter" :aria-label="t('模块状态')"><el-option :label="t('全部状态')" value="all" /><el-option :label="t('已启用')" value="enabled" /><el-option :label="t('未启用')" value="disabled" /></el-select>
-        <el-button :loading="loading" :disabled="!!busy" :title="t('刷新')" :aria-label="t('刷新')" @click="load"><Icon name="refresh-cw" :size="15" /></el-button>
+          <el-input v-model="q" :placeholder="t('搜索模块')" :aria-label="t('搜索模块')" clearable><template #prefix><Icon name="search" :size="14" /></template></el-input>
+          <el-select v-model="stateFilter" :aria-label="t('模块状态')"><el-option :label="t('全部状态')" value="all" /><el-option :label="t('已启用')" value="enabled" /><el-option :label="t('未启用')" value="disabled" /></el-select>
+          <el-button :loading="loading" :disabled="!!busy" :title="t('刷新')" :aria-label="t('刷新')" @click="load"><Icon name="refresh-cw" :size="15" /></el-button>
         </div>
         <div v-if="error" class="load-error">
-        <el-alert :title="loaded ? t('模块列表更新失败，正在显示上次读取的内容。') : t('模块列表加载失败')" :description="error" type="error" show-icon :closable="false" />
-        <el-button :disabled="loading || !!busy" @click="load">{{ t('重试') }}</el-button>
+          <el-alert :title="loaded ? t('模块列表更新失败，正在显示上次读取的内容。') : t('模块列表加载失败')" :description="error" type="error" show-icon :closable="false" />
+          <el-button :disabled="loading || !!busy" @click="load">{{ t('重试') }}</el-button>
+        </div>
+        <div v-if="loaded" class="list-summary">
+          <span>{{ t('已安装 {count} 个模块', { count: items.length }) }}</span>
+          <span v-if="shown.length !== items.length">{{ t('当前显示 {count} 项', { count: shown.length }) }}</span>
         </div>
         <div v-loading="loading && !loaded" class="module-list" :aria-busy="loading || !!busy">
-        <article v-for="m in shown" :key="m.id" class="module-row">
-          <div class="module-main">
-            <details class="module-details">
-              <summary><h2>{{ m.name || m.id }} <small v-if="m.version">v{{ m.version }}</small></h2></summary>
-              <div class="module-meta">
-                <code>{{ m.id }}</code>
-                <span v-if="m.authors?.length">{{ t('作者') }}: {{ m.authors.join(', ') }}</span>
-                <span v-if="m.depends?.length">{{ t('依赖') }}: {{ m.depends.join(', ') }}</span>
-                <span v-if="m.softDepends?.length">{{ t('可选') }}: {{ m.softDepends.join(', ') }}</span>
+          <article v-for="m in shown" :key="m.id" class="module-row">
+            <div class="module-main">
+              <Icon class="module-icon" name="package" :size="17" />
+              <div class="module-copy">
+                <div class="module-heading">
+                  <h2>{{ m.name || m.id }}</h2>
+                  <span v-if="m.version" class="module-version">v{{ m.version }}</span>
+                </div>
+                <div v-if="m.name && m.name !== m.id" class="module-id"><code>{{ m.id }}</code></div>
+                <p v-if="m.description" class="module-description">{{ m.description }}</p>
+                <details v-if="m.authors?.length || m.depends?.length || m.softDepends?.length" class="module-details">
+                  <summary>{{ t('模块信息') }}</summary>
+                  <div class="module-meta">
+                    <span v-if="m.authors?.length">{{ t('作者') }}: {{ m.authors.join(', ') }}</span>
+                    <span v-if="m.depends?.length">{{ t('依赖') }}: {{ m.depends.join(', ') }}</span>
+                    <span v-if="m.softDepends?.length">{{ t('可选') }}: {{ m.softDepends.join(', ') }}</span>
+                  </div>
+                </details>
               </div>
-            </details>
-            <p v-if="m.description" class="module-description">{{ m.description }}</p>
-          </div>
-          <span class="module-state" :class="{ enabled: m.enabled }">{{ t(m.enabled ? '已启用' : m.loaded ? '已加载' : '未启用') }}</span>
-          <div v-if="auth.can('core.modules.manage')" class="ops">
-            <el-button v-if="!m.enabled" size="small" :loading="busy === m.id + 'enable'" :disabled="!!busy || loading" @click="op(m, 'enable')">{{ t('启用') }}</el-button>
-            <template v-else>
-              <el-button size="small" :loading="busy === m.id + 'reload'" :disabled="!!busy || loading" @click="op(m, 'reload')"><Icon name="rotate-cw" :size="13" />{{ t('重载') }}</el-button>
-              <el-button size="small" type="danger" plain :loading="busy === m.id + 'disable'" :disabled="!!busy || loading" @click="op(m, 'disable')">{{ t('禁用') }}</el-button>
-            </template>
-          </div>
-        </article>
-        <el-empty v-if="loaded && !loading && !shown.length" :description="t('没有找到模块')" :image-size="48" />
+            </div>
+            <span class="module-state" :class="{ enabled: m.enabled }">{{ t(m.enabled ? '已启用' : m.loaded ? '已加载' : '未启用') }}</span>
+            <div v-if="auth.can('core.modules.manage')" class="ops">
+              <el-button v-if="!m.enabled" size="small" :loading="busy === m.id + 'enable'" :disabled="!!busy || loading" @click="op(m, 'enable')">{{ t('启用') }}</el-button>
+              <template v-else>
+                <el-button size="small" :loading="busy === m.id + 'reload'" :disabled="!!busy || loading" @click="op(m, 'reload')"><Icon name="rotate-cw" :size="13" />{{ t('重载') }}</el-button>
+                <el-button size="small" type="danger" plain :loading="busy === m.id + 'disable'" :disabled="!!busy || loading" @click="op(m, 'disable')">{{ t('禁用') }}</el-button>
+              </template>
+            </div>
+          </article>
+          <el-empty v-if="loaded && !loading && !shown.length" :description="t('没有找到模块')" :image-size="48" />
         </div>
       </el-tab-pane>
       <el-tab-pane :label="t('模块市场')" name="market" :disabled="!!busy">
@@ -131,14 +142,18 @@ useAutoRefresh(() => { if (!loading.value && !busy.value) return load() }, {
 .load-error { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; }
 .load-error :deep(.el-alert) { flex: 1; min-width: 0; }
 .load-error :deep(.el-alert__description) { overflow-wrap: anywhere; }
+.list-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; padding-bottom: 9px; color: var(--lc-text-soft); font-size: 12px; }
 .module-list { min-height: 90px; border-top: 1px solid var(--lc-line); }
 .module-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, .22fr) auto; align-items: start; gap: 12px 24px; padding: 14px 0; border-bottom: 1px solid var(--lc-line); }
-.module-main { min-width: 0; overflow-wrap: anywhere; }
+.module-main { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.module-icon { box-sizing: content-box; flex: none; padding: 7px; border-radius: 8px; background: var(--el-fill-color-light); color: var(--lc-text-soft); }
+.module-copy { min-width: 0; overflow-wrap: anywhere; }
+.module-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.module-heading h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.module-id, .module-version { color: var(--lc-text-soft); font-size: 12px; }
 .module-description { margin: 4px 0 0; font-size: 13px; color: var(--lc-text-soft); }
-.module-details { font-size: 12px; color: var(--lc-text-soft); }
+.module-details { margin-top: 4px; font-size: 12px; color: var(--lc-text-soft); }
 .module-details summary { cursor: pointer; width: fit-content; }
-.module-details h2 { display: inline; margin: 0; font-size: 14px; font-weight: 600; color: var(--lc-text); }
-.module-details small { margin-inline-start: 4px; font-size: 12px; font-weight: 400; color: var(--lc-text-soft); }
 .module-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; padding-top: 6px; }
 .module-state { display: inline-flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--lc-text-soft); }
 .module-state::before { content: ""; flex: 0 0 6px; height: 6px; border-radius: 50%; background: currentColor; }

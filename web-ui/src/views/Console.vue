@@ -168,7 +168,7 @@ onUnmounted(() => {
         <span class="log-status" role="status" :class="{ paused: paused || !connected }">
           <i aria-hidden="true" />{{ paused ? t('已暂停显示') : connected ? t('实时接收') : t('连接已断开') }}
         </span>
-        <span v-if="filter.trim() || level !== 'ALL'" class="log-count">{{ t('已显示 {shown} / {total} 条', { shown: shown.length, total: lines.length }) }}</span>
+        <span class="log-count">{{ t('已显示 {shown} / {total} 条', { shown: shown.length, total: lines.length }) }}</span>
         <div class="log-jump">
           <el-tooltip v-if="!autoScroll" :content="t('回到底部')"><el-button text size="small" class="lc-pane-in" :aria-label="t('回到底部')" @click="(autoScroll = true), scroll()"><Icon name="chevron-down" :size="15" /></el-button></el-tooltip>
         </div>
@@ -210,9 +210,8 @@ onUnmounted(() => {
 .cmd .el-input { min-width: 0; flex: 1; }
 .cmd .el-button { flex: none; }
 .log-footer { display: flex; align-items: center; gap: 10px; min-height: 35px; padding: 2px 12px; color: var(--lc-text-soft); font-size: 12px; }
-.log-count { margin-inline-start: auto; }
-.log-jump { width: 28px; margin-inline-start: auto; flex: none; }
-.log-count + .log-jump { margin-inline-start: 0; }
+.log-count { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+.log-jump { width: 28px; flex: none; }
 .log-jump .el-button { width: 28px; padding: 0; }
 .el-alert { margin-bottom: 12px; flex-shrink: 0; }
 @media (max-width: 600px) {
