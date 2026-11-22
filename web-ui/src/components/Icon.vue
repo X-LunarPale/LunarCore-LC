@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import {
   Activity, AppWindow, ArrowRight, Award, BookOpen, Bot, Box, Blocks, Brain,
   CalendarCheck, ChartNoAxesCombined, CheckCheck, ChevronDown, ChevronRight,
-  CircleAlert, CircleCheck, CircleUserRound, Coins, Compass, Download, Eraser, FileCog,
+  CircleAlert, CircleCheck, CircleUserRound, Clock, Coins, Compass, Download, Eraser, FileCog,
   FilePenLine, FileText, Filter, FolderDown, FolderUp, Gamepad2, Gavel, Globe,
   HardDrive, Hourglass, ImageUp, Inbox, Info, KeyRound, Landmark, Languages,
   Layers, LayoutDashboard, Link, ListChecks, Lock, LockKeyhole, LogOut, Map,
@@ -19,7 +19,7 @@ import {
 const icons = {
   Activity, AppWindow, ArrowRight, Award, BookOpen, Bot, Box, Blocks, Brain,
   CalendarCheck, ChartNoAxesCombined, CheckCheck, ChevronDown, ChevronRight,
-  CircleAlert, CircleCheck, CircleUserRound, Coins, Compass, Download, Eraser, FileCog,
+  CircleAlert, CircleCheck, CircleUserRound, Clock, Coins, Compass, Download, Eraser, FileCog,
   FilePenLine, FileText, Filter, FolderDown, FolderUp, Gamepad2, Gavel, Globe,
   HardDrive, Hourglass, ImageUp, Inbox, Info, KeyRound, Landmark, Languages,
   Layers, LayoutDashboard, Link, ListChecks, Lock, LockKeyhole, LogOut, Map,

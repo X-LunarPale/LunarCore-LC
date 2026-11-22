@@ -93,7 +93,7 @@ export default {
   '更换 Base URL 时需重填密钥，或关闭 AI 后清除旧密钥。': 'When changing the Base URL, enter a new key or disable AI and remove the saved key.',
   '清除已保存密钥': 'Remove saved key',
   '人格设定': 'Character persona',
-  '描述语气、身份与回答边界。玩家聊天会发送给选定的外部服务。': 'Describe the character, tone, and boundaries. Player chat is sent to the selected external service.',
+  '玩家聊天会发送给选定的外部服务。': 'Player chat is sent to the selected external service.',
   '聊天示意': 'Chat example',
   '有人在游戏聊天中说：@{name} 你好': 'A player says in game chat: @{name} hello',
   '你好！今天在服务器里想做些什么？': 'Hi! What would you like to do on the server today?',

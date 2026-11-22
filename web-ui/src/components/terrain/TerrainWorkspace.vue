@@ -27,8 +27,8 @@ const customHeight = reactive({ minY: -64, maxY: 640 })
 const tab = ref('worlds')
 const confirming = ref(false)
 const tabs = computed(() => [
-  { id: 'worlds', label: '地形世界', icon: 'map', count: worlds.value.length },
-  ...(canManage.value ? [{ id: 'create', label: '创建世界', icon: 'plus', dirty: dirty.value }] : [])
+  { id: 'worlds', label: '地形世界', icon: 'map', count: worlds.value.length, panelId: 'terrain-worlds' },
+  ...(canManage.value ? [{ id: 'create', label: '创建世界', icon: 'plus', dirty: dirty.value, panelId: 'terrain-create' }] : [])
 ])
 let baseline = copyConfig(defaultConfig)
 let initialized = false
@@ -287,8 +287,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
     <p v-if="snapshot && !snapshot.supported" class="feedback warning">{{ t('地形生成器不可用，请检查启动参数与启动日志。') }}</p>
     <WorkspaceTabs v-model="tab" :items="tabs" label="地形管理分区" id="terrain" />
     <div class="terrain-layout">
-      <section v-show="tab === 'create'" class="creation-section" aria-labelledby="terrain-create">
-        <h2 id="terrain-create">{{ t('创建地形世界') }}</h2>
+      <section v-if="canManage" v-show="tab === 'create'" id="terrain-create" class="creation-section" role="tabpanel" aria-labelledby="terrain-tab-create">
         <p class="creation-scope">{{ t('Tectonic 参数只作用于新建专属地形世界的新区块，不会改变原主世界或已生成区块。') }}</p>
         <form novalidate @submit.prevent="submit('create')">
           <fieldset :disabled="blocked || !canManage">
@@ -335,8 +334,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
           <p v-if="draft.name && validation" class="validation">{{ t(validation) }}</p>
         </form>
       </section>
-      <section v-show="tab === 'worlds'" class="worlds-section" aria-labelledby="terrain-worlds">
-        <header class="section-heading"><h2 id="terrain-worlds">{{ t('地形世界') }}</h2><span>{{ t('{count} 个世界', { count: worlds.length }) }}</span></header>
+      <section v-show="tab === 'worlds'" id="terrain-worlds" class="worlds-section" role="tabpanel" aria-labelledby="terrain-tab-worlds">
         <div class="world-table-scroll">
           <table class="world-table">
             <thead><tr><th>{{ t('世界名称') }}</th><th>{{ t('生成状态') }}</th><th>{{ t('可用高度') }}</th><th>{{ t('在线玩家') }}</th></tr></thead>
@@ -345,7 +343,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
         </div>
         <p v-if="!worlds.length" class="empty" role="status">{{ t(loading ? '正在读取世界列表…' : snapshot ? '尚未创建地形世界。' : '世界状态尚未读取。') }}</p>
         <template v-if="selected">
-          <div class="selected-heading"><h3>{{ selected.name }}</h3><span>{{ t(selected.loaded ? '已加载' : '未加载') }}</span></div>
+          <div class="selected-heading"><h2>{{ selected.name }}</h2><span>{{ t(selected.loaded ? '已加载' : '未加载') }}</span></div>
           <dl class="world-details"><div><dt>{{ t('世界种子') }}</dt><dd><code>{{ selected.seed }}</code></dd></div><div><dt>{{ t('世界总高度') }}</dt><dd>{{ selected.config.height }}</dd></div><div><dt>{{ t('山体高度倍率') }}</dt><dd>{{ selected.config.verticalScale }}</dd></div><div><dt>{{ t('地形水平倍率') }}</dt><dd>{{ selected.config.horizontalScale }}</dd></div><div><dt>{{ t('服务器启动时自动加载') }}</dt><dd>{{ t(selected.autoLoad ? '开启' : '关闭') }}</dd></div><div v-for="item in toggles" :key="item.key"><dt>{{ t(item.label) }}</dt><dd>{{ t(selected.config[item.key] ? '开启' : '关闭') }}</dd></div></dl>
           <details v-if="advancedGroups.length" class="saved-advanced"><summary>{{ t('完整生成参数') }}</summary><section v-for="group in advancedGroups" :key="group.name"><h4>{{ t(group.name) }}</h4><dl class="world-details"><div v-for="field in group.fields" :key="field.key"><dt>{{ t(field.label) }}</dt><dd>{{ field.type === 'boolean' ? t(selected.config.advanced[field.key] ? '开启' : '关闭') : selected.config.advanced[field.key] }}</dd></div></dl></section></details>
           <p v-if="selected.error" class="feedback failure" role="alert">{{ selected.error }}</p>
@@ -380,12 +378,12 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); window.removeEvent
 <style scoped>
 .terrain-workspace { min-width:0; max-width:1380px; letter-spacing:0; }
 .terrain-workspace :deep(.el-button > span) { display:inline-flex; align-items:center; gap:5px; }
-.section-heading,.selected-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.selected-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 h2 { margin:0 0 18px; font-size:15px; letter-spacing:0; }
 h3 { font-size:15px; margin:0; overflow-wrap:anywhere; }
 .generator-status { display:flex; gap:9px 14px; align-items:center; flex-wrap:wrap; padding:11px 0; margin-bottom:18px; border-top:1px solid var(--el-border-color); border-bottom:1px solid var(--el-border-color); font-size:12px; }
 .generator-status > svg { color:var(--el-color-primary); }
-.generator-status > span,.section-heading > span,.selected-heading > span { color:var(--lc-text-soft); font-size:12px; }
+.generator-status > span,.selected-heading > span { color:var(--lc-text-soft); font-size:12px; }
 .generator-status .working { color:var(--el-color-warning); margin-left:auto; }
 .feedback { margin:0 0 14px; padding:10px 12px; border:1px solid var(--el-border-color-light); border-radius:5px; font-size:12px; overflow-wrap:anywhere; }
 .failure,.validation { color:var(--el-color-danger); }
@@ -430,7 +428,6 @@ fieldset { padding:0; margin:0; border:0; min-width:0; }
 .create-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding-top:18px; }
 .create-actions > span,.world-actions > span,.validation,.muted { font-size:11px; }
 .create-actions > span,.world-actions > span { color:var(--lc-text-soft); }
-.section-heading { margin-bottom:12px; }.section-heading h2 { margin:0; }
 .world-table-scroll { overflow-x:auto; max-width:100%; }
 .world-table { width:100%; border-collapse:collapse; text-align:left; font-size:12px; }
 .world-table th { color:var(--lc-text-soft); font-weight:500; white-space:nowrap; }

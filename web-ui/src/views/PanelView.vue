@@ -87,7 +87,9 @@ async function refreshMenu() {
     <template v-if="panel">
       <component :is="workspace" v-if="workspace" :key="panelKey" :panel="panel" :namespace="route.params.ns" :id="route.params.id" />
       <template v-else>
-        <header class="page-header"><h1 class="page-title">{{ t(panel.title) }}</h1></header>
+        <header class="page-header">
+          <h1 class="page-title"><Icon :name="panel.icon || 'box'" :size="20" />{{ t(panel.title) }}</h1>
+        </header>
         <div v-if="stats.length" v-show="showStats" :class="{ 'panel-metrics-spaced': groups.length }" class="panel-sections">
           <section v-for="(section, index) in stats" :key="sectionKey(section, index)" :style="spanStyle(section)" class="panel-section">
             <StatsSection :section="section" :namespace="panel.namespace" :active="showStats" />

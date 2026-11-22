@@ -33,13 +33,15 @@
   --lc-line: var(--el-border-color-light);
   --lc-accent: var(--el-color-primary);
   --lc-radius-control: var(--el-border-radius-base);
+  --lc-radius-shell: 14px;
   --lc-focus-ink: #555963;
-  --lc-focus-halo: 0 0 0 3px #24283114, 0 2px 6px #24283112;
+  --lc-focus-halo: 0 0 0 2px #2428311a;
   --lc-focus-field: inset 0 0 0 1px var(--lc-focus-ink), var(--lc-focus-halo);
-  --lc-selected-bg: #ebedf0;
-  --lc-selection-surface: #ffffff;
-  --lc-selection-shadow: inset 0 0 0 1px #24283112, 0 1px 3px #24283124;
-  --lc-sidebar: #f8f9fa;
+  --lc-selected-bg: #e8e9ec;
+  --lc-selection-surface: #fafafc;
+  --lc-selection-shadow: inset 0 -1px 0 #24283122;
+  --lc-overlay-shadow: 0 2px 6px #171a2214, 0 12px 30px #171a221a;
+  --lc-sidebar: #f3f4f6;
   --lc-sidebar-border: var(--lc-line);
   --lc-console-bg: #181a1d;
   --lc-console-text: #e1e5eb;
@@ -53,10 +55,11 @@
   --lc-space-6: 32px;
   --lc-page-gutter: 32px;
   --lc-page-width: 1440px;
-  --motion-fast: 140ms;
-  --motion-standard: 280ms;
-  --motion-spring: cubic-bezier(.2, 1.2, .32, 1);
-  --motion-spring-soft: cubic-bezier(.2, 1.08, .32, 1);
+  --motion-fast: 130ms;
+  --motion-standard: 260ms;
+  --motion-spring: cubic-bezier(.22, 1.48, .42, 1);
+  --motion-spring-soft: cubic-bezier(.2, 1.04, .3, 1);
+  --motion-press: 80ms ease-out;
   --motion-out: cubic-bezier(.4, 0, 1, 1);
   --motion-ease: var(--motion-spring-soft);
   --el-transition-function-fast-bezier: var(--motion-spring-soft);
@@ -65,8 +68,8 @@
 @supports (animation-timing-function: linear(0, 1)) {
   :root {
     /* Sampled spring responses with separate overshoot for controls and panels. */
-    --motion-spring: linear(0, .28 12%, .71 27%, .96 43%, 1.045 58%, 1.022 73%, 1 93%, 1);
-    --motion-spring-soft: linear(0, .23 10%, .65 24%, .93 40%, 1.018 57%, 1.01 72%, 1);
+    --motion-spring: linear(0, .38 14%, .84 28%, 1.09 46%, 1.12 55%, 1.03 73%, .99 88%, 1);
+    --motion-spring-soft: linear(0, .38 14%, .8 32%, .98 52%, 1.015 67%, 1);
   }
 }
 html.dark {
@@ -93,12 +96,13 @@ html.dark {
   --el-border-color: #3d3f46;
   --el-border-color-light: #303238;
   --el-border-color-lighter: #282a2e;
-  --lc-sidebar: #1f2023;
+  --lc-sidebar: #131416;
   --lc-focus-ink: #adafb6;
-  --lc-focus-halo: 0 0 0 3px #d7d9e327, 0 2px 6px #0005;
-  --lc-selected-bg: #34363b;
-  --lc-selection-surface: #383a40;
-  --lc-selection-shadow: inset 0 0 0 1px #f1f2fa12, 0 1px 3px #0006;
+  --lc-focus-halo: 0 0 0 2px #d7d9e32b;
+  --lc-selected-bg: #323439;
+  --lc-selection-surface: #3a3c41;
+  --lc-selection-shadow: inset 0 1px 0 #f1f2fa16;
+  --lc-overlay-shadow: 0 2px 6px #0003, 0 12px 30px #0005;
   --lc-console-bg: #121315;
   --lc-console-text: #dce1e8;
   color-scheme: dark;
@@ -116,7 +120,7 @@ button:disabled { cursor: not-allowed; }
 .lc-icon { vertical-align: middle; flex-shrink: 0; }
 .lc-icon-button { display: inline-grid; place-items: center; flex: none; width: 34px; height: 34px; padding: 0; border: 0; border-radius: var(--lc-radius-control); background: transparent; color: var(--el-text-color-regular); cursor: pointer; transition: background-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
 .lc-icon-button:hover { color: var(--lc-text); background: var(--el-fill-color); }
-.lc-icon-button:active { transform: scale(.9); transition-duration: 80ms; }
+.lc-icon-button:active { transform: scale(.91); transition: transform var(--motion-press); }
 
 /* Page sections share one reading axis; only repeated items and tools are framed. */
 .page { padding: 28px var(--lc-page-gutter) 40px; width: 100%; max-width: var(--lc-page-width); min-width: 0; margin: 0 auto; }
@@ -124,7 +128,6 @@ button:disabled { cursor: not-allowed; }
 .page-header > * { min-width: 0; }
 .page-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 24px; line-height: 1.35; font-weight: 650; letter-spacing: 0; overflow-wrap: anywhere; }
 .page-title > .lc-icon { color: var(--lc-text-soft); width: 19px; height: 19px; }
-.page-sub { color: var(--lc-text-soft); font-size: 13px; margin-top: 5px; line-height: 1.6; max-width: 80ch; overflow-wrap: anywhere; }
 .page-actions, .workspace-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .page-actions > .el-button + .el-button, .workspace-actions > .el-button + .el-button { margin-left: 0; }
 .card { min-width: 0; padding: 20px 0; border: 0; border-top: 1px solid var(--lc-line); border-radius: 0; background: transparent; box-shadow: none; }
@@ -134,12 +137,13 @@ button:disabled { cursor: not-allowed; }
 .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; min-width: 0; }
 .toolbar .spacer { flex: 1; }
 .toolbar > .el-button + .el-button { margin-left: 0; }
-.workspace-tabs { display: flex; align-items: stretch; gap: 6px; margin-bottom: 24px; padding: 3px 3px 8px; border-bottom: 1px solid var(--lc-line); overflow-x: auto; scrollbar-width: thin; }
+.workspace-tabs { display: flex; align-items: stretch; gap: 4px; margin-bottom: 20px; padding-block: 2px 6px; overflow-x: auto; scrollbar-width: thin; }
 .workspace-tabs > button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex: none; min-height: 38px; padding: 8px 12px; border: 0; border-radius: var(--lc-radius-control); background: none; color: var(--lc-text-soft); cursor: pointer; font-size: 13px; font-weight: 500; line-height: 1.5; white-space: nowrap; transition: background-color var(--motion-fast), color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
 .workspace-tabs > button:hover { color: var(--lc-text); background: var(--el-fill-color-light); }
 .workspace-tabs > button:is([aria-selected="true"], .active, .selected) { color: var(--lc-text); background: var(--lc-selected-bg); box-shadow: var(--lc-selection-shadow); }
-.workspace-tabs > button:active { transform: scale(.97); }
+.workspace-tabs > button:active { transform: scale(.96, .91); transition: transform var(--motion-press); }
 .workspace-tabs > button:focus-visible { outline-offset: -3px; }
+.workspace-tabs > button[aria-selected="true"] > .lc-icon { animation: lc-selection-in var(--motion-standard) var(--motion-spring) both; }
 .workspace-section { min-width: 0; padding: 22px 0; border-bottom: 1px solid var(--lc-line); }
 .workspace-section:first-child { padding-top: 0; }
 .workspace-section-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
@@ -174,13 +178,13 @@ button:disabled { cursor: not-allowed; }
 
 /* Element Plus controls use the same density and focus treatment as native controls. */
 .el-card { border-radius: var(--lc-radius-control); box-shadow: none !important; }
-.el-dialog { max-width: calc(100vw - 32px); padding: 24px; border: 1px solid var(--lc-line); border-radius: 8px; box-shadow: 0 16px 60px #161a2029; }
+.el-dialog { max-width: calc(100vw - 32px); padding: 24px; border: 1px solid var(--lc-line); border-radius: var(--lc-radius-shell); box-shadow: var(--lc-overlay-shadow); }
 .el-dialog__title { font-size: 18px; font-weight: 650; line-height: 1.5; }
 .el-dialog__header { margin-bottom: 18px; }
-.el-message-box { max-width: calc(100vw - 32px); border-radius: 8px; }
+.el-message-box { border-radius: var(--lc-radius-shell); box-shadow: var(--lc-overlay-shadow); }
 .el-button { max-width: 100%; font-weight: 500; transition: color var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
 .el-button:focus-visible, .el-button.is-text:not(.is-disabled):focus-visible { outline-color: var(--lc-focus-ink); }
-.el-button:not(.is-disabled):active { transform: scale(.98); transition-duration: 80ms; }
+.el-button:not(.is-disabled):active { transform: scale(.97, .92); transition: transform var(--motion-press); }
 .el-button--primary { --el-button-hover-bg-color: var(--el-color-primary-dark-2); --el-button-hover-border-color: var(--el-color-primary-dark-2); }
 html.dark :is(.el-button--primary, .el-button--success, .el-button--warning, .el-button--danger):not(.is-plain):not(.is-text):not(.is-link) { --el-button-text-color: #18212e; --el-button-hover-text-color: #18212e; --el-button-active-text-color: #18212e; }
 .el-segmented { --el-segmented-padding: 3px; --el-segmented-item-selected-color: var(--lc-text); --el-segmented-item-selected-bg-color: var(--lc-selection-surface); --el-segmented-item-selected-disabled-bg-color: var(--lc-selected-bg); }
@@ -194,6 +198,7 @@ html.dark :is(.el-button--primary, .el-button--success, .el-button--warning, .el
 .el-select-dropdown.is-multiple .el-select-dropdown__item.is-selected::after { background-color: currentColor; }
 .el-dropdown-menu__item { gap: 8px; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .el-popper.is-light, .el-dropdown-menu { border-radius: var(--lc-radius-control); }
+.el-popper.is-light[role="menu"] { box-shadow: var(--lc-overlay-shadow); }
 .el-dropdown-menu { padding-inline: 4px; }
 .el-dropdown-menu__item { border-radius: calc(var(--lc-radius-control) - 2px); }
 .el-tabs__nav-wrap::after { height: 1px; }
@@ -218,15 +223,16 @@ html.dark :is(.el-button--primary, .el-button--success, .el-button--warning, .el
 .el-empty__description p { color: var(--lc-text-soft); }
 
 /* Motion answers navigation and explicit actions. */
+@keyframes lc-selection-in { from { scale: .78; } to { scale: 1; } }
 .route-enter-active, .lc-pane-in { animation: lc-pane-in var(--motion-standard) var(--motion-spring-soft) both; }
-@keyframes lc-pane-in { from { opacity: .35; translate: 0 9px; } to { opacity: 1; translate: 0 0; } }
+@keyframes lc-pane-in { from { opacity: .55; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 .el-popper[role="menu"] { animation: lc-menu-in var(--motion-standard) var(--motion-spring) both; }
-@keyframes lc-menu-in { from { opacity: .35; scale: .96; } to { opacity: 1; scale: 1; } }
+@keyframes lc-menu-in { from { opacity: .35; scale: .94; } to { opacity: 1; scale: 1; } }
 .dialog-fade-enter-active { animation-duration: var(--motion-standard); }
 .dialog-fade-enter-active .el-dialog { animation: lc-dialog-in var(--motion-standard) var(--motion-spring) both; }
 .dialog-fade-leave-active { animation-duration: var(--motion-fast); }
 .dialog-fade-leave-active .el-dialog { animation: lc-dialog-out var(--motion-fast) var(--motion-out) both; }
-@keyframes lc-dialog-in { from { opacity: .3; translate: 0 -12px; scale: .96; } to { opacity: 1; translate: 0 0; scale: 1; } }
+@keyframes lc-dialog-in { from { opacity: .4; translate: 0 -8px; scale: .95; } to { opacity: 1; translate: 0 0; scale: 1; } }
 @keyframes lc-dialog-out { from { opacity: 1; } to { opacity: 0; translate: 0 -5px; } }
 @media (max-width: 1100px) { :root { --lc-page-gutter: 24px; } }
 @media (max-width: 899px) {
@@ -252,5 +258,5 @@ html.dark :is(.el-button--primary, .el-button--success, .el-button--warning, .el
 }
 @media (forced-colors: active) {
   .el-input__wrapper.is-focus, .el-textarea__inner:focus, .el-select__wrapper.is-focused { outline: 2px solid Highlight; outline-offset: -2px; }
-  .workspace-tabs > button[aria-selected="true"] { color: Highlight; }
+  .workspace-tabs > button[aria-selected="true"], .navigation-link[aria-current="page"] { box-shadow: none; color: Highlight; }
 }

@@ -71,6 +71,18 @@ modules:
 commands:
   # 禁用的命令（不会注册），如 [fly, god]
   disabled: []
+  # 协管可执行的 Web 命令。按完整词匹配开头，可带命名空间和子命令。
+  # 仅面板管理员可更改。空列表表示关闭协管的命令执行。
+  web-allow:
+    - 'minecraft:list'
+    - 'minecraft:say'
+    - 'minecraft:kick'
+    - 'minecraft:tell'
+    - 'lunarcore:lc version'
+    - 'lunarcore:lc m list'
+    - 'lunarcore:lc web status'
+  # 禁止列表优先。例：['minecraft:say'] 可禁止广播。
+  web-deny: []
 
 # 按游戏事件播放 Minecraft 提示音；执行 /lc reload 后生效。
 # 每项可设置 enabled、sound、volume（0–1）、pitch（0.5–2）、cooldown-ms（默认 1000）。

@@ -4,14 +4,14 @@
   "nameEn": "Structure upgrades management",
   "description": "LunarCoreStructures 的 Web 管理桥接。需另装管理 API v1 的生成插件到 plugins/，核心须含 NativeGeneratorDelegate API；本模块放入 LunarCore/modules/。",
   "descriptionEn": "Web bridge for LunarCoreStructures. Install the API-v1 generation plugin separately in plugins/ and use a core exposing NativeGeneratorDelegate; install this module in LunarCore/modules/.",
-  "version": "0.0.9-pre.1",
+  "version": "0.1.0-pre.1",
   "coreVersions": [
-    "0.0.9-pre.1"
+    "0.1.0-pre.1"
   ],
   "author": "rtiags",
-  "source": "https://github.com/X-LunarPale/LunarCore-LC/tree/v0.0.9-pre.1/modules/lc-structures-web",
-  "download": "https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.0.9-pre.1/lc-structures-web.jar",
+  "source": "https://github.com/X-LunarPale/LunarCore-LC/tree/v0.1.0-pre.1/modules/lc-structures-web",
+  "download": "https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-structures-web.jar",
   "license": "GPL-3.0-only",
-  "sha256": "20c3eff88634ecea95ed703a9fc15ca90eaa30d550c63f2d9e2a260cace63f86",
+  "sha256": "bbb9ccc1ee3d9c1fc139b62f100e306c2a22e0e6fb2aa13c6c19f12f09a1d21c",
   "depends": []
 }
