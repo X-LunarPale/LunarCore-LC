@@ -39,7 +39,8 @@ let disposed = false
 const canConfigure = computed(() => auth.can('multiverse.configure'))
 const canManageLifecycle = computed(() => auth.can('multiverse.lifecycle'))
 const canTeleport = computed(() => auth.can('multiverse.teleport'))
-const busy = computed(() => loading.value || !!pending.value || confirming.value)
+const operationInProgress = computed(() => !!pending.value || confirming.value)
+const busy = computed(() => loading.value || operationInProgress.value)
 const dirty = computed(() => !!saved.value && configKeys.some(key => draft[key] !== saved.value[key]))
 const configReady = computed(() => !!selected.value &&
   typeof selected.value.alias === 'string' &&
@@ -279,8 +280,8 @@ async function executeWorldAction(operation) {
 }
 
 async function leave() {
-  if (busy.value) {
-    await ElMessageBox.alert(t('当前操作尚未结束，请完成后再离开。'), t('操作进行中'))
+  if (operationInProgress.value) {
+    await ElMessageBox.alert(t('当前操作尚未结束，请完成后再离开。'), t('操作进行中')).catch(() => {})
     return false
   }
   if (uncertain.value) return confirmDiscard(t('操作结果尚未核对。仍要离开此页面吗？'))
@@ -289,7 +290,7 @@ async function leave() {
 }
 
 function beforeUnload(event) {
-  if (dirty.value || busy.value || uncertain.value) {
+  if (dirty.value || operationInProgress.value || uncertain.value) {
     event.preventDefault()
     event.returnValue = ''
   }
