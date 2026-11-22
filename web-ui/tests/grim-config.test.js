@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { locale, setLocale } from '../src/i18n.js'
 import { copyConfigValue, grimChanges, grimFieldError, grimFieldGroups, parseGrimSnapshot, parsePunishmentCommand, updatePunishmentCommand } from '../src/utils/grim-config.js'
 
 test('punishment commands preserve valid original values and accept intervals larger than thresholds', () => {
@@ -65,6 +66,17 @@ test('Chinese names, raw keys, and groups are searchable without changing field 
   assert.deepEqual(grimFieldGroups(fields, '移动').map(group => group.fields.map(field => field.key)), [['Simulation.threshold', 'Simulation.max-advantage']])
   assert.deepEqual(grimFieldGroups(fields, 'REACH').map(group => group.fields[0].key), ['Reach.threshold'])
   assert.deepEqual(grimFieldGroups(fields, '阈值', '攻击检测').map(group => group.fields[0].key), ['Reach.threshold'])
+})
+
+test('search accepts translated labels and groups in Hong Kong Chinese', context => {
+  const previousLocale = locale.value
+  context.after(() => setLocale(previousLocale))
+  const field = { key: 'client-brand.ignored-clients', label: '忽略的客户端品牌', group: '客户端品牌' }
+  setLocale('zh_HK')
+  const expected = [{ name: field.group, fields: [field] }]
+  for (const query of ['忽略的客戶端', '客戶端品牌', '客户端品牌', 'client-brand.ignored-clients']) {
+    assert.deepEqual(grimFieldGroups([field], query), expected)
+  }
 })
 
 test('client validation catches nonfinite numbers, wrong types, and out-of-range values', () => {

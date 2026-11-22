@@ -88,12 +88,9 @@ public final class LcMessageService implements MessageService {
         remove.forEach(this::unregisterBundle);
     }
 
-    private static URL findResource(ClassLoader loader, String path) {
-        // 优先只在自身 jar 中查找，避免父加载器（core 插件 jar）中的同名资源遮蔽
-        if (loader instanceof URLClassLoader u) {
-            URL url = u.findResource(path);
-            if (url != null) return url;
-        }
+    static URL findResource(ClassLoader loader, String path) {
+        // 模块缺少译文时，应回退到自己的默认语言包。
+        if (loader instanceof URLClassLoader u) return u.findResource(path);
         return loader.getResource(path);
     }
 

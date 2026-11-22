@@ -1,0 +1,4 @@
+# 本模組透過 Web 面板操作。
+prefix: "<green>[<bold>世界管理</bold>]</green> "
+status:
+  ready: "世界管理已就緒"

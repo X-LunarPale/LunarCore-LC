@@ -1,3 +1,5 @@
+import { t } from '../i18n.js'
+
 const COMMAND = /^(\d+):(\d+)[ \t]+([^\r\n]+)$/
 const EDITABLE_TYPES = new Set(['bool', 'number', 'text', 'textarea', 'select', 'string-list', 'punishment-commands'])
 
@@ -70,7 +72,12 @@ export function grimFieldGroups(fields, query = '', group = '') {
   const result = new Map()
   for (const field of fields || []) {
     const name = field.group || '其他设置'
-    if (group && group !== name || needle && ![field.label, field.key, field.help, name].join(' ').toLocaleLowerCase().includes(needle)) continue
+    if (group && group !== name) continue
+    if (needle) {
+      const labels = [field.label, field.help, name]
+      const searchable = [field.key, ...labels, ...labels.map(label => t(label))]
+      if (!searchable.join(' ').toLocaleLowerCase().includes(needle)) continue
+    }
     if (!result.has(name)) result.set(name, [])
     result.get(name).push(field)
   }

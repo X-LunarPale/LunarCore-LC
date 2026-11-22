@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import enShell from './locales/en-shell.js'
 import enCoreViews from './locales/en-core-views.js'
 import enAdminViews from './locales/en-admin-views.js'
@@ -17,29 +17,45 @@ import enMaintenanceRewrite from './locales/en-maintenance-rewrite.js'
 import enShellRewrite from './locales/en-shell-rewrite.js'
 import enViewsRewrite from './locales/en-views-rewrite.js'
 import enPanelsRewrite from './locales/en-panels-rewrite.js'
+import zhHk from './locales/zh-hk.js'
+import { AUTO_LOCALE, LOCALE_STORAGE_KEY, LOCALE_TAGS, readLocalePreference, resolveLocale } from './utils/locale-preference.js'
 
-const STORAGE_KEY = 'lc-locale'
-const translations = { ...enCoreViews, ...enAdminViews, ...enWorkspaces, ...enPanel, ...enBranding, ...enSurvival, ...enTerrain, ...enAiChat, ...enQQAuth, ...enGrimConfig, ...enGrimSchema, ...enSecurity, ...enMarket, ...enShell, ...enMaintenanceRewrite, ...enShellRewrite, ...enViewsRewrite, ...enPanelsRewrite }
+const en = { ...enCoreViews, ...enAdminViews, ...enWorkspaces, ...enPanel, ...enBranding, ...enSurvival, ...enTerrain, ...enAiChat, ...enQQAuth, ...enGrimConfig, ...enGrimSchema, ...enSecurity, ...enMarket, ...enShell, ...enMaintenanceRewrite, ...enShellRewrite, ...enViewsRewrite, ...enPanelsRewrite }
+const dictionaries = { zh_HK: zhHk, en_US: en }
 
-function storedLocale() {
-  try { return localStorage.getItem(STORAGE_KEY) === 'en_US' ? 'en_US' : 'zh_CN' }
-  catch { return 'zh_CN' }
+export const localePreference = ref(readLocalePreference())
+export const locale = ref(resolveLocale(localePreference.value))
+export const localeTag = computed(() => LOCALE_TAGS[locale.value])
+watch(localeTag, tag => {
+  if (typeof document !== 'undefined') document.documentElement.lang = tag
+}, { immediate: true, flush: 'sync' })
+
+function applyLocale(preference = localePreference.value) {
+  localePreference.value = preference
+  locale.value = resolveLocale(preference)
 }
 
-export const locale = ref(storedLocale())
-if (typeof document !== 'undefined') document.documentElement.lang = locale.value === 'en_US' ? 'en' : 'zh-CN'
+if (globalThis.window?.addEventListener) {
+  window.addEventListener('languagechange', () => applyLocale())
+  window.addEventListener('storage', event => {
+    if (event.key === LOCALE_STORAGE_KEY || event.key === null) applyLocale(readLocalePreference())
+  })
+}
 
 export function setLocale(value) {
-  if (value !== 'zh_CN' && value !== 'en_US') return
-  locale.value = value
-  if (typeof document !== 'undefined') document.documentElement.lang = value === 'en_US' ? 'en' : 'zh-CN'
-  try { localStorage.setItem(STORAGE_KEY, value) } catch { /* storage unavailable */ }
+  if (value !== AUTO_LOCALE && !Object.hasOwn(LOCALE_TAGS, value)) return
+  applyLocale(value)
+  try {
+    if (value === AUTO_LOCALE) localStorage.removeItem(LOCALE_STORAGE_KEY)
+    else localStorage.setItem(LOCALE_STORAGE_KEY, value)
+  } catch { /* storage unavailable */ }
 }
 
 export function t(source, params = {}) {
   if (source == null) return ''
   const text = String(source)
-  const message = locale.value === 'en_US' ? translations[text] || text : text
+  const messages = dictionaries[locale.value]
+  const message = messages && Object.hasOwn(messages, text) ? messages[text] : text
   return message.replace(/\{(\w+)\}/g, (match, key) => params[key] == null ? match : String(params[key]))
 }
 

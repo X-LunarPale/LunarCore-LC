@@ -56,6 +56,7 @@ export default {
   '中文': 'Chinese',
   'English': 'English',
   '语言': 'Language',
+  '跟随系统': 'Follow system',
   '服务器管理控制台': 'Server Management Console',
   '集中管理，': 'Manage centrally,',
   '有序运行。': 'run smoothly.',

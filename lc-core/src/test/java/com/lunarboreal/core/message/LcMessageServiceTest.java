@@ -1,13 +1,35 @@
 package com.lunarboreal.core.message;
 
+import com.lunarboreal.core.module.ModuleClassLoader;
 import org.junit.jupiter.api.Test;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LcMessageServiceTest {
+
+    @Test
+    void missingModuleTranslationDoesNotInheritTheCoreBundle(@TempDir Path temp) throws Exception {
+        var core = Files.createDirectories(temp.resolve("core/lang"));
+        var module = Files.createDirectories(temp.resolve("module/lang"));
+        var coreHk = Files.writeString(core.resolve("zh_HK.yml"), "core-message: core\n");
+        var moduleDefault = Files.writeString(module.resolve("zh_CN.yml"), "module-message: module\n");
+        try (var parent = new URLClassLoader(new URL[]{core.getParent().toUri().toURL()}, null);
+             var loader = new ModuleClassLoader("test", module.getParent().toUri().toURL(), parent)) {
+            assertEquals(coreHk.toUri().toURL(), loader.getResource("lang/zh_HK.yml"));
+            assertNull(LcMessageService.findResource(loader, "lang/zh_HK.yml"));
+            assertEquals(moduleDefault.toUri().toURL(), LcMessageService.findResource(loader, "lang/zh_CN.yml"));
+        }
+    }
 
     @Test
     void migratesSavedCoreHelpAndDefaultBrandingWithoutReplacingCustomText() {

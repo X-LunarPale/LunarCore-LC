@@ -1,4 +1,4 @@
-import { locale, t } from '../i18n.js'
+import { localeTag, t } from '../i18n.js'
 
 export function pad(n) {
   return String(n).padStart(2, '0')
@@ -60,14 +60,14 @@ export function formatNumber(v) {
   if (v === null || v === undefined || v === '') return '-'
   const n = Number(v)
   if (isNaN(n)) return String(v)
-  return n.toLocaleString(locale.value === 'en_US' ? 'en-US' : 'zh-CN', { maximumFractionDigits: 2 })
+  return n.toLocaleString(localeTag.value, { maximumFractionDigits: 2 })
 }
 
 export function formatMoney(v) {
   if (v === null || v === undefined || v === '') return '-'
   const n = Number(v)
   if (isNaN(n)) return String(v)
-  return n.toLocaleString(locale.value === 'en_US' ? 'en-US' : 'zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return n.toLocaleString(localeTag.value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 /** "1d2h30m" / "90s" / "2w" → 毫秒；纯数字视为秒。 */

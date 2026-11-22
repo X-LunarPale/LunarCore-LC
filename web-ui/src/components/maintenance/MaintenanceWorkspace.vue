@@ -9,7 +9,7 @@ import { useAuth } from '../../stores/auth'
 import { requireSuccess } from '../../utils/panel'
 import { useAutoRefresh } from '../../utils/autoRefresh'
 import { checkSettings, checkStatus, controlKeys, whitelistKeys, messageKeys, maintenanceKeys, motdKeys, normalKeys, normalizeWhitelist, pick, same, validateText, validateSchedule, effectiveEnabled, toLocalTime, fromLocalTime } from './maintenance'
-import { t, locale } from '../../i18n'
+import { t, localeTag } from '../../i18n'
 
 defineProps({ panel: { type: Object, required: true } })
 const auth = useAuth()
@@ -28,7 +28,8 @@ const error = ref('')
 const statusError = ref('')
 const notice = ref('')
 const uncertain = ref(false)
-const updatedAt = ref('')
+const updatedAt = ref(null)
+const updatedTime = computed(() => updatedAt.value?.toLocaleTimeString(localeTag.value))
 let disposed = false
 let refreshingStatus = false
 let statusReadAt = 0
@@ -62,7 +63,7 @@ const scheduleLabel = computed(() => t({
 }[status.value?.schedulePhase] || (savedMaintenance.value?.scheduleEnabled ? '等待更新' : '手动控制')))
 const formatTime = value => {
   const date = new Date(value)
-  return !value || Number.isNaN(date.getTime()) ? t('未设置') : date.toLocaleString(locale.value === 'en_US' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' })
+  return !value || Number.isNaN(date.getTime()) ? t('未设置') : date.toLocaleString(localeTag.value, { dateStyle: 'short', timeStyle: 'short' })
 }
 const endpoint = name => `/api/ext/motd/${name}`
 const message = cause => cause.status === 403 ? t('当前账号无权执行此操作。请联系管理员。') : t(cause.message || '操作失败，请稍后重试')
@@ -81,8 +82,8 @@ async function refreshStatus() {
     if (disposed) return
     status.value = row
     statusError.value = ''
-    statusReadAt = Date.now()
-    updatedAt.value = new Date().toLocaleTimeString(locale.value === 'en_US' ? 'en-US' : 'zh-CN')
+    updatedAt.value = new Date()
+    statusReadAt = updatedAt.value.getTime()
   } catch (cause) {
     if (!disposed) statusError.value = message(cause)
   } finally { refreshingStatus = false }
@@ -251,7 +252,7 @@ onBeforeUnmount(() => { disposed = true; window.removeEventListener('beforeunloa
             </fieldset>
             <aside class="maintenance-actions">
               <h2>{{ t('在线玩家操作') }}</h2>
-              <dl :title="updatedAt ? t('更新于 {time}', { time: updatedAt }) : undefined"><div><dt>{{ t('可踢出人数') }}</dt><dd>{{ status && !statusError ? status.eligible : '—' }}</dd></div><div><dt>{{ t('已保存白名单') }}</dt><dd>{{ savedMaintenance.whitelist.split('\n').filter(Boolean).length }}</dd></div></dl>
+              <dl :title="updatedTime ? t('更新于 {time}', { time: updatedTime }) : undefined"><div><dt>{{ t('可踢出人数') }}</dt><dd>{{ status && !statusError ? status.eligible : '—' }}</dd></div><div><dt>{{ t('已保存白名单') }}</dt><dd>{{ savedMaintenance.whitelist.split('\n').filter(Boolean).length }}</dd></div></dl>
               <el-button type="danger" plain :loading="pending === 'kick'" :disabled="locked || !liveActive || !!statusError" @click="kick"><Icon name="log-out" :size="15" />{{ t('立即踢出') }}</el-button>
               <p v-if="!liveActive" class="field-help">{{ t('维护开启后可执行。') }}</p>
               <p v-else-if="dirty" class="warning-text">{{ t('此次操作不会使用未保存修改。') }}</p>

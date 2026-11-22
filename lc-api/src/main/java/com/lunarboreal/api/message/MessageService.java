@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * 多语言消息服务。
  * <ul>
- *   <li>语言文件：模块 jar 内 lang/zh_CN.yml、lang/en_US.yml，core 释放到 plugins/LunarCore/lang/&lt;locale&gt;/&lt;moduleId&gt;.yml 供服主修改。</li>
+ *   <li>语言文件：模块 jar 内的 lang/zh_CN.yml、lang/zh_HK.yml、lang/en_US.yml。可在 plugins/LunarCore/lang/&lt;locale&gt;/&lt;moduleId&gt;.yml 自定义。</li>
  *   <li>key 全称为 "&lt;moduleId&gt;.&lt;path&gt;"，例如 economy.balance.self。core 自身命名空间为 "core"。</li>
  *   <li>文本格式为 MiniMessage，支持 &lt;prefix&gt; 标签：每个命名空间使用自身语言文件的 prefix，缺省回退为 [命名空间]；{name} 为占位符。</li>
  *   <li>若值为列表则按多行发送。</li>

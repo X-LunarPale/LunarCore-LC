@@ -1,0 +1,63 @@
+# 簽到模組語言檔案（MiniMessage 格式），引用 key：signin.<路徑>
+prefix: "<yellow>[<bold>簽到</bold>]</yellow> "
+usage: "<prefix><white>用法：<yellow>/signin</yellow> 開啟簽到日曆，<yellow>/signin sign</yellow> 直接簽到，<yellow>/signin top [streak|total] [頁]</yellow> 排行榜"
+usage-admin: "<prefix><white>用法：<yellow>/signin admin reset <玩家>"
+
+sign:
+  success: "<prefix><green>簽到成功！已連續簽到 <gold>{streak}</gold> 天，累計 <gold>{total}</gold> 天。<white>獎勵：</white>{reward}"
+  already: "<prefix><yellow>你今天已經簽到過了（連續 {streak} 天，累計 {total} 天）。"
+  streak-reward: "<prefix><light_purple>連續簽到 {days} 天額外獎勵：</light_purple>{reward}"
+  milestone-reward: "<prefix><aqua>累計簽到 {days} 天里程碑獎勵：</aqua>{reward}"
+  broadcast: "<prefix><white>{player} 完成今日簽到，已連續 <gold>{streak}</gold> 天。使用 <click:run_command:'/signin'><yellow><u>/signin</u></yellow></click> 檢視簽到日曆。"
+
+makeup:
+  success: "<prefix><green>已補簽 <white>{date}</white>（花費 <gold>{cost}</gold>），目前連續 <gold>{streak}</gold> 天，累計 <gold>{total}</gold> 天，本月剩餘補簽 {left} 次。"
+  disabled: "<prefix><red>補簽功能未開啟或你沒有權限。"
+  invalid-date: "<prefix><red>只能補簽本月今天之前的日期。"
+  already: "<prefix><yellow>該日期已經簽到過了。"
+  limit: "<prefix><red>本月補簽次數已用完（上限 {limit} 次）。"
+  no-economy: "<prefix><red>經濟模組未啟用，無法補簽。"
+  no-money: "<prefix><red>餘額不足，補簽需要 <gold>{cost}</gold>，你只有 <gold>{balance}</gold>。"
+
+remind:
+  join: "<prefix><yellow>今日尚未簽到。<click:run_command:'/signin'><green><u>[按此簽到]</u></green></click>"
+  new-day: "<prefix><yellow>新一天的簽到已開放。<click:run_command:'/signin'><green><u>[按此簽到]</u></green></click>"
+
+top:
+  header-streak: "<gold>===== 連續簽到排行 <white>(第 {page} 頁)</white> ====="
+  header-total: "<gold>===== 累計簽到排行 <white>(第 {page} 頁)</white> ====="
+  entry: "<white>#{rank} <white>{player}</white> <aqua>-</aqua> 連續 <gold>{streak}</gold> 天 / 累計 <yellow>{total}</yellow> 天"
+  empty: "<white>暫時沒有資料。"
+
+admin:
+  reset: "<prefix><green>已重置 <white>{player}</white> 的全部簽到資料。"
+
+error:
+  no-permission: "<prefix><red>你沒有權限這樣做。"
+  player-not-found: "<prefix><red>找不到玩家 <white>{player}</white>。"
+  database: "<prefix><red>資料庫操作失敗，請稍後再試。"
+  loading: "<prefix><yellow>簽到資料載入中，請稍後再試。"
+
+gui:
+  title: "<dark_aqua>每日簽到 · {year} 年 {month} 月"
+  filler: "<white> "
+  close: "<red>關閉"
+  info: "<gold>我的簽到"
+  info-lore: "<white>連續簽到：<gold>{streak}</gold> 天\n<white>累計簽到：<gold>{total}</gold> 天\n<white>本月簽到：<gold>{month}</gold> 天\n<white>本月剩餘補簽：<gold>{left}</gold>/{limit} 次\n<aqua>日曆每行從週一開始"
+  sign-button: "<green><b>按此簽到"
+  sign-done: "<green>今日已簽到"
+  rewards: "<light_purple>獎勵一覽"
+  rewards-streak-line: "<white>連續 <gold>{days}</gold> 天：</white>{reward}"
+  rewards-milestone-line: "<white>累計 <aqua>{days}</aqua> 天：</white>{reward}"
+  day:
+    signed: "<green>{date} 已簽到"
+    signed-lore: "<white>✔ 已完成"
+    makeup-signed: "<yellow>{date} 已補簽"
+    makeup-signed-lore: "<white>✔ 補簽完成"
+    today: "<gold><b>{date} 今天"
+    today-lore: "<yellow>按此簽到\n<white>獎勵：</white>{reward}"
+    missed: "<red>{date} 未簽到"
+    missed-lore: "<yellow>按此補簽\n<white>花費：<gold>{cost}</gold>\n<white>本月剩餘補簽：<gold>{left}</gold> 次"
+    locked: "<dark_red>{date} 未簽到"
+    locked-lore: "<white>本月補簽次數已用完或補簽未開啟"
+    future: "<white>{date}"
