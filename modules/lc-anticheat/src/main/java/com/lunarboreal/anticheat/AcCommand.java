@@ -10,12 +10,12 @@ public final class AcCommand extends LcCommand {
     public AcCommand(AntiCheatModule module) {
         super("ac", "lc.anticheat.command", "anticheat");
         this.module = module;
-        description("GrimAC 桥接管理");
+        description("GrimAC / LightningGrim 桥接管理");
         usage("/ac [status|reload]");
     }
     @Override public void execute(CommandSender sender, String label, String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
-            module.msg(sender, "command.status", "status", module.bridge().status(),
+            module.msg(sender, "command.status", "backend", module.bridge().backend(), "status", module.bridge().status(),
                     "version", module.bridge().version(), "count", module.recent().size());
         } else if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("lc.anticheat.reload")) { module.msg(sender, "command.no-permission"); return; }

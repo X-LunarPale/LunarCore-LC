@@ -22,10 +22,13 @@ final class GrimConfigSchema {
             Map.entry("AirLiquidPlace", "空气与液体放置"), Map.entry("FabricatedPlace", "伪造方块放置"),
             Map.entry("FarPlace", "远距离放置"), Map.entry("PositionPlace", "异常位置放置"),
             Map.entry("RotationPlace", "异常视角放置"), Map.entry("NoSlow", "使用物品减速"),
+            Map.entry("FastBreak", "快速挖掘"), Map.entry("GroundSpoof", "伪造落地状态"),
+            Map.entry("NoFall", "异常落地数据包"),
             Map.entry("Knockback", "攻击击退"), Map.entry("Explosion", "爆炸击退"),
             Map.entry("TimerA", "客户端计时"), Map.entry("TimerLimit", "计时延迟限制"),
             Map.entry("NegativeTimer", "慢速计时"), Map.entry("VehicleTimer", "载具计时"),
             Map.entry("PacketOrderI", "数据包顺序"), Map.entry("Reach", "攻击距离"),
+            Map.entry("WallHit", "穿墙攻击"), Map.entry("EntityPierce", "穿透实体攻击"),
             Map.entry("Post", "操作时序"), Map.entry("BadPackets", "异常数据包"),
             Map.entry("Hitboxes", "实体碰撞箱"), Map.entry("Misc", "其他行为"),
             Map.entry("Combat", "战斗行为"), Map.entry("Autoclicker", "自动点击"));
@@ -70,7 +73,8 @@ final class GrimConfigSchema {
                 if (min != null && decimal.compareTo(BigDecimal.valueOf(min)) < 0
                         || max != null && decimal.compareTo(BigDecimal.valueOf(max)) > 0)
                     throw bad(label + "超出允许范围");
-                if ((key.endsWith(".immediate-setback-threshold") || key.endsWith(".max-advantage"))
+                if ((key.endsWith(".immediate-setback-threshold") || key.endsWith(".max-advantage")
+                        || key.endsWith(".setbackvl"))
                         && decimal.signum() < 0 && decimal.compareTo(BigDecimal.valueOf(-1)) != 0)
                     throw bad(label + "只允许非负数或 -1");
                 if (step != null && step == 1d) {
@@ -171,10 +175,11 @@ final class GrimConfigSchema {
         if (type.equals("number")) {
             String suffix = key.substring(key.lastIndexOf('.') + 1);
             boolean integer = !Set.of("threshold", "setback-decay-multiplier", "immediate-setback-threshold",
-                    "max-advantage", "max-ceiling", "decay").contains(suffix);
+                    "max-advantage", "max-ceiling", "decay", "break-threshold", "delay-threshold", "setbackvl").contains(suffix);
             step = integer ? 1d : 0.0001;
             min = 0d; max = (double) Integer.MAX_VALUE;
-            if (key.endsWith(".immediate-setback-threshold") || key.endsWith(".max-advantage")) min = -1d;
+            if (key.endsWith(".immediate-setback-threshold") || key.endsWith(".max-advantage")
+                    || key.endsWith(".setbackvl")) min = -1d;
             if (key.equals("update-permission-ticks") || key.equals("max-ping-out-of-flying")
                     || key.equals("max-ping-firework-boost") || key.endsWith(".ping-abuse-limit-threshold"))
                 min = -1d;
@@ -243,7 +248,8 @@ final class GrimConfigSchema {
             if (key.equals("client-brand.ignored-clients") || key.equals("spectators.allowed-worlds")) return "string-list";
             if (key.startsWith("exploit.")) return leaf.equals("distance-to-check-if-ghostblocks") ? "number" : "bool";
             String prefix = key.contains(".") ? key.substring(0, key.indexOf('.')) : "";
-            if (CHECKS.containsKey(prefix)) return Set.of("exempt-placing-while-digging", "block-impossible-hits", "enable-post-packet")
+            if (CHECKS.containsKey(prefix)) return Set.of("exempt-placing-while-digging", "block-impossible-hits",
+                    "enable-post-packet", "ignore-non-player-targets")
                     .contains(leaf) ? "bool" : "number";
             return Set.of("max-transaction-time", "packet-spam-threshold", "max-ping-out-of-flying",
                     "max-ping-firework-boost", "update-permission-ticks").contains(key) ? "number" : "bool";
@@ -313,11 +319,14 @@ final class GrimConfigSchema {
         return switch (key) {
             case "setback-decay-multiplier" -> "累计优势衰减倍率"; case "threshold" -> "检测容差（格）";
             case "immediate-setback-threshold" -> "立即拉回阈值（-1 关闭）"; case "max-advantage" -> "累计优势拉回阈值（-1 关闭）";
-            case "max-ceiling" -> "累计优势封顶"; case "setback-violation-threshold", "setbackvl" -> "拉回所需违规值";
+            case "max-ceiling" -> "累计优势封顶"; case "setback-violation-threshold" -> "拉回所需违规值";
+            case "setbackvl" -> "拉回所需违规值（-1 关闭）";
             case "cancelvl" -> "取消操作所需违规值"; case "decay" -> "违规衰减量"; case "drift" -> "允许时间偏差（毫秒）";
+            case "break-threshold" -> "挖掘速度容差（毫秒）"; case "delay-threshold" -> "连续挖掘间隔容差（毫秒）";
             case "ping-abuse-limit-threshold" -> "延迟限制阈值（毫秒，-1 关闭）";
             case "exempt-placing-while-digging" -> "挖掘时放置方块豁免";
             case "block-impossible-hits" -> "取消不可能命中的攻击";
+            case "ignore-non-player-targets" -> "忽略非玩家攻击目标";
             case "enable-post-packet" -> "每刻发送额外检测数据包"; default -> null;
         };
     }
@@ -351,6 +360,7 @@ final class GrimConfigSchema {
                 Map.entry("exploit.allow-building-on-ghostblocks", "允许在假方块上继续搭建"),
                 Map.entry("exploit.distance-to-check-if-ghostblocks", "假方块检查距离（格）"),
                 Map.entry("debug-pipeline-on-join", "加入时输出网络管道调试"), Map.entry("experimental-checks", "启用实验性检测"),
+                Map.entry("test-mode", "检测测试模式"),
                 Map.entry("experimental-chunk-sharing", "实验性区块内存共享"),
                 Map.entry("reset-item-usage-on-item-update", "物品更新时重置使用状态"), Map.entry("reset-item-usage-on-attack", "攻击时重置使用状态"),
                 Map.entry("reset-item-usage-on-slot-change", "切换物品槽时重置使用状态"), Map.entry("reset-item-usage-on-item-use", "使用物品时重置使用状态"),

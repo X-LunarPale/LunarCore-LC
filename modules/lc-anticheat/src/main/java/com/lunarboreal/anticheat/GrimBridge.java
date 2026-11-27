@@ -2,19 +2,23 @@ package com.lunarboreal.anticheat;
 
 import org.bukkit.plugin.Plugin;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-/** Uses only Grim's public API, resolved from its Bukkit plugin classloader. */
+/** Uses the public API shared by GrimAC and LightningGrim, resolved from the plugin classloader. */
 public final class GrimBridge implements AutoCloseable {
     private final AntiCheatModule module;
     private final Consumer<Runnable> async;
     private long reloadOperation;
     private volatile Binding binding;
+    private volatile String backend = "GrimAC";
     private volatile String status = "未连接 GrimAC";
     private volatile String version = "";
     private final AtomicBoolean reloading = new AtomicBoolean();
@@ -29,7 +33,8 @@ public final class GrimBridge implements AutoCloseable {
     }
     public synchronized void bind(Plugin plugin) {
         close();
-        if (plugin == null || !plugin.isEnabled()) { status = "GrimAC 未安装或未启用"; return; }
+        if (plugin != null) backend = backendName(plugin);
+        if (plugin == null || !plugin.isEnabled()) { status = backend + " 未安装或未启用"; return; }
         Object bus = null, owner = null, listener = null;
         Method unregister = null;
         AtomicBoolean active = new AtomicBoolean(false);
@@ -70,7 +75,7 @@ public final class GrimBridge implements AutoCloseable {
             active.set(false);
             if (unregister != null && listener != null) try { unregister.invoke(bus, owner, listener); } catch (ReflectiveOperationException ignored) { }
             binding = null;
-            status = "GrimAC API 不兼容或尚未就绪";
+            status = backend + " API 不兼容或尚未就绪";
             module.logger().warning(status + ": " + e.getClass().getSimpleName());
         }
     }
@@ -92,14 +97,16 @@ public final class GrimBridge implements AutoCloseable {
         reloading.set(false);
         reloadStatus = "尚未重载";
         version = "";
-        status = "未连接 GrimAC";
+        status = "未连接 " + backend;
         if (old != null) {
             old.active.set(false);
             try { old.unregister.invoke(old.bus, old.owner, old.listener); }
-            catch (ReflectiveOperationException | RuntimeException e) { module.logger().warning("注销 GrimAC 桥接监听器失败: " + e.getClass().getSimpleName()); }
+            catch (ReflectiveOperationException | RuntimeException e) { module.logger().warning("注销 " + backend + " 桥接监听器失败: " + e.getClass().getSimpleName()); }
         }
     }
     public boolean connected() { return binding != null; }
+    public String backend() { return backend; }
+    public boolean lightningGrim() { return backend.equals("LightningGrim"); }
     public String status() { return status; }
     public String version() { return version; }
     public boolean reloading() { return reloading.get(); }
@@ -111,8 +118,8 @@ public final class GrimBridge implements AutoCloseable {
         long operation;
         synchronized (this) {
             current = binding;
-            if (current == null || !current.active.get()) throw new IllegalStateException("GrimAC 尚未连接");
-            if (!reloading.compareAndSet(false, true)) throw new IllegalStateException("GrimAC 正在重载");
+            if (current == null || !current.active.get()) throw new IllegalStateException(backend + " 尚未连接");
+            if (!reloading.compareAndSet(false, true)) throw new IllegalStateException(backend + " 正在重载");
             operation = ++reloadOperation;
             reloadStatus = "正在重载";
         }
@@ -120,7 +127,7 @@ public final class GrimBridge implements AutoCloseable {
             async.accept(() -> invokeReload(current, operation, completed));
         } catch (RuntimeException e) {
             finishReload(current, operation, false, completed);
-            throw new IllegalStateException("无法启动 GrimAC 重载", e);
+            throw new IllegalStateException("无法启动 " + backend + " 重载", e);
         }
     }
 
@@ -145,6 +152,19 @@ public final class GrimBridge implements AutoCloseable {
         reloadStatus = success ? "重载成功" : "重载失败";
         reloading.set(false);
         completed.accept(reloadStatus);
+    }
+
+    static String backendName(Plugin plugin) {
+        // Lightning keeps GrimAC's plugin name and version format. Its own build metadata identifies the fork.
+        try (InputStream resource = plugin.getResource("grimac.properties")) {
+            if (resource != null) {
+                Properties properties = new Properties();
+                properties.load(resource);
+                if (properties.getProperty("git.repo", "").trim().equalsIgnoreCase("LightningGrim"))
+                    return "LightningGrim";
+            }
+        } catch (IOException | IllegalArgumentException ignored) { }
+        return "GrimAC";
     }
 
     static final class SnapshotReader {

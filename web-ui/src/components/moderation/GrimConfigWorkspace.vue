@@ -9,7 +9,11 @@ import { copyConfigValue, grimChanges, grimFieldError, grimFieldGroups, parseGri
 import GrimConfigField from './GrimConfigField.vue'
 import { t } from '../../i18n'
 
-const props = defineProps({ active: { type: Boolean, default: true } })
+const props = defineProps({
+  active: { type: Boolean, default: true },
+  backend: { type: String, default: 'GrimAC' }
+})
+function backendText(message) { return t(message).replaceAll('GrimAC', props.backend) }
 const auth = useAuth()
 const files = ref([])
 const snapshot = ref(null)
@@ -78,7 +82,7 @@ async function readReloadStatus() {
       savedFiles.value = savedFiles.value.filter(id => restartFiles.value.includes(id))
     } else if (health.reloadStatus === '重载失败' || health.connected === false) {
       reloadPending.value = false
-      reloadError.value = t(health.reloadStatus === '重载失败' ? 'GrimAC 重载失败，配置文件已保留，请检查服务器日志。' : 'GrimAC 连接已断开，请检查插件状态。')
+      reloadError.value = backendText(health.reloadStatus === '重载失败' ? 'GrimAC 重载失败，配置文件已保留，请检查服务器日志。' : 'GrimAC 连接已断开，请检查插件状态。')
     } else if (reloadReads >= 30) {
       reloadPending.value = false
       reloadError.value = t('重载结果尚未确认，请查看运行状态后再操作。')
@@ -125,7 +129,7 @@ async function loadDirectory() {
   try {
     const result = requireSuccess(await api.get('/api/ext/anticheat/grim/config'))
     if (disposed || current !== generation || !canManage.value) return
-    if (!Array.isArray(result.files)) throw new Error(t('GrimAC 配置响应不完整，请重新读取。'))
+    if (!Array.isArray(result.files)) throw new Error(backendText('GrimAC 配置响应不完整，请重新读取。'))
     files.value = result.files
     if (result.selected) applySnapshot(result.selected, result.selected.id)
     initialized = true
@@ -194,7 +198,7 @@ async function save() {
     applySnapshot(result.snapshot, id)
     savedFiles.value = [...new Set([...savedFiles.value, id])]
     if (result.snapshot.restartRequired) restartFiles.value = [...new Set([...restartFiles.value, id])]
-    ElMessage.success(t(result.message || 'GrimAC 配置已保存'))
+    ElMessage.success(backendText(result.message || 'GrimAC 配置已保存'))
   } catch (cause) {
     if (disposed || current !== generation) return
     error.value = t(cause.message)
@@ -206,15 +210,15 @@ async function save() {
 }
 async function reloadGrim() {
   if (!canManage.value || busy.value || dirty.value || conflict.value || uncertain.value) return
-  const confirmed = await ElMessageBox.confirm(t('重载 GrimAC 将应用已保存的配置。数据库重载期间历史记录写入可能短暂中断。'), t('重载 GrimAC'), {
-    type: 'warning', confirmButtonText: t('重载 GrimAC'), cancelButtonText: t('取消')
+  const confirmed = await ElMessageBox.confirm(backendText('重载 GrimAC 将应用已保存的配置。数据库重载期间历史记录写入可能短暂中断。'), backendText('重载 GrimAC'), {
+    type: 'warning', confirmButtonText: backendText('重载 GrimAC'), cancelButtonText: t('取消')
   }).then(() => true, () => false)
   if (!confirmed || disposed || !canManage.value || busy.value || dirty.value) return
   reloadSubmitting.value = true
   reloadError.value = ''
   const current = ++reloadGeneration
   try {
-    requireSuccess(await api.post('/api/ext/anticheat/grim/reload'), t('GrimAC 重载请求失败'))
+    requireSuccess(await api.post('/api/ext/anticheat/grim/reload'), backendText('GrimAC 重载请求失败'))
     if (disposed || current !== reloadGeneration || !canManage.value) return
     reloadPending.value = true
     reloadStatus.value = '正在重载'
@@ -274,25 +278,25 @@ onBeforeUnmount(() => {
 <template>
   <div class="grim-config-workspace">
     <div v-if="dirty" class="change-notice" role="status"><Icon name="circle" :size="9" />{{ t('{count} 项未保存', { count: changedCount }) }}</div>
-    <el-alert v-if="!canManage" :title="t('当前账号没有管理 GrimAC 配置的权限')" type="info" :closable="false" />
+    <el-alert v-if="!canManage" :title="backendText('当前账号没有管理 GrimAC 配置的权限')" type="info" :closable="false" />
     <template v-else>
       <div class="config-layout">
-        <aside class="config-files" :aria-label="t('GrimAC 配置文件')">
+        <aside class="config-files" :aria-label="backendText('GrimAC 配置文件')">
           <button v-for="file in files" :key="file.id" type="button" :data-config-file="file.id" :class="{ selected: selectedId === file.id }" :aria-pressed="selectedId === file.id" :disabled="busy || file.available === false" @click="chooseFile(file)"><Icon name="file-cog" :size="16" /><span><strong>{{ t(file.label) }}</strong><small>{{ file.name }}</small></span><span v-if="savedFiles.includes(file.id)" class="file-pending" :title="t('配置已保存，尚未应用')" /></button>
         </aside>
         <div class="config-main" v-loading="loading" :aria-busy="busy">
-          <el-alert v-if="error" class="config-alert" type="error" :title="t(conflict ? '配置文件已被修改，请重新读取' : uncertain ? '保存结果需要核对' : 'GrimAC 配置操作失败')" :description="error + (conflict || uncertain ? t('当前草稿已保留，重新读取前请核对修改。') : '')" :closable="false" show-icon />
-          <el-alert v-if="reloadError" class="config-alert" type="error" :title="t('GrimAC 重载未完成')" :description="reloadError" :closable="false" show-icon />
-          <div v-if="savedFiles.length || reloadStatus" class="apply-status" role="status"><Icon :name="reloadPending ? 'hourglass' : needsReload || restartFiles.length ? 'circle-alert' : 'circle-check'" :size="16" /><span>{{ reloadPending ? t('正在重载 GrimAC，请等待结果…') : needsReload ? t('配置已保存，重载 GrimAC 后生效。') : restartFiles.length ? t('部分配置已保存，需重启服务器后生效。') : reloadStatus ? t(reloadStatus) : '' }}</span><span v-if="needsReload && restartFiles.length" class="secondary-status">{{ t('另有设置需要重启服务器。') }}</span></div>
+          <el-alert v-if="error" class="config-alert" type="error" :title="backendText(conflict ? '配置文件已被修改，请重新读取' : uncertain ? '保存结果需要核对' : 'GrimAC 配置操作失败')" :description="backendText(error) + (conflict || uncertain ? t('当前草稿已保留，重新读取前请核对修改。') : '')" :closable="false" show-icon />
+          <el-alert v-if="reloadError" class="config-alert" type="error" :title="backendText('GrimAC 重载未完成')" :description="reloadError" :closable="false" show-icon />
+          <div v-if="savedFiles.length || reloadStatus" class="apply-status" role="status"><Icon :name="reloadPending ? 'hourglass' : needsReload || restartFiles.length ? 'circle-alert' : 'circle-check'" :size="16" /><span>{{ reloadPending ? backendText('正在重载 GrimAC，请等待结果…') : needsReload ? backendText('配置已保存，重载 GrimAC 后生效。') : restartFiles.length ? t('部分配置已保存，需重启服务器后生效。') : reloadStatus ? t(reloadStatus) : '' }}</span><span v-if="needsReload && restartFiles.length" class="secondary-status">{{ t('另有设置需要重启服务器。') }}</span></div>
           <template v-if="snapshot">
             <el-alert v-if="snapshot.notice" class="config-alert" type="info" :description="t(snapshot.notice)" :closable="false" show-icon />
             <header class="file-heading"><div><h3>{{ t(snapshot.label) }}</h3><span>{{ snapshot.name }}</span></div><el-tooltip :content="t('重新读取配置文件')"><el-button class="icon-button" :disabled="busy" :aria-label="t('重新读取')" @click="reloadFile"><Icon name="rotate-ccw" :size="16" /></el-button></el-tooltip></header>
-            <div class="config-toolbar"><el-input v-model="search" clearable :placeholder="t('搜索中文名称或配置键')" :aria-label="t('搜索 GrimAC 配置')"><template #prefix><Icon name="search" :size="14" /></template></el-input><el-select v-model="group" clearable :placeholder="t('全部分组')" :aria-label="t('GrimAC 配置分组')"><el-option v-for="name in groups" :key="name" :label="t(name)" :value="name" /></el-select><span class="result-count">{{ t('{shown} / {total} 项', { shown: shownCount, total: fields.length }) }}</span></div>
+            <div class="config-toolbar"><el-input v-model="search" clearable :placeholder="t('搜索中文名称或配置键')" :aria-label="backendText('搜索 GrimAC 配置')"><template #prefix><Icon name="search" :size="14" /></template></el-input><el-select v-model="group" clearable :placeholder="t('全部分组')" :aria-label="backendText('GrimAC 配置分组')"><el-option v-for="name in groups" :key="name" :label="t(name)" :value="name" /></el-select><span class="result-count">{{ t('{shown} / {total} 项', { shown: shownCount, total: fields.length }) }}</span></div>
             <section v-for="section in sections" :key="section.name" class="config-group"><h4>{{ t(section.name) }}</h4><div class="config-fields"><GrimConfigField v-for="field in section.fields" :key="`${selectedId}-${field.key}`" :field="field" :model-value="draft[field.key]" :disabled="disabled" :secret-edited="!!touchedSecrets[field.key]" @update:model-value="updateField(field, $event)" @edit-secret="editSecret(field)" @reset-secret="resetSecret(field)" /></div></section>
             <el-empty v-if="!shownCount" :description="t('没有匹配的设置')" />
-            <footer class="config-actions"><div><span v-if="errors.length" class="validation-error">{{ t('请修正 {count} 项无效配置。', { count: errors.length }) }}</span><span v-else>{{ t(snapshot.restartRequired ? '本文件的部分设置需要重启服务器。' : '保存配置后需重载 GrimAC；部分设置或旧版本可能需重启。') }}</span></div><div class="action-buttons"><el-button :loading="reloadSubmitting || reloadPending" :disabled="busy || dirty || conflict || uncertain" @click="reloadGrim"><Icon name="refresh-cw" :size="14" />{{ t('重载 GrimAC') }}</el-button><el-button type="primary" :loading="saving" :disabled="disabled || !dirty || !!errors.length" @click="save"><Icon name="save" :size="14" />{{ t('保存配置') }}</el-button></div></footer>
+            <footer class="config-actions"><div><span v-if="errors.length" class="validation-error">{{ t('请修正 {count} 项无效配置。', { count: errors.length }) }}</span><span v-else>{{ backendText(snapshot.restartRequired ? '本文件的部分设置需要重启服务器。' : '保存配置后需重载 GrimAC；部分设置或旧版本可能需重启。') }}</span></div><div class="action-buttons"><el-button :loading="reloadSubmitting || reloadPending" :disabled="busy || dirty || conflict || uncertain" @click="reloadGrim"><Icon name="refresh-cw" :size="14" />{{ backendText('重载 GrimAC') }}</el-button><el-button type="primary" :loading="saving" :disabled="disabled || !dirty || !!errors.length" @click="save"><Icon name="save" :size="14" />{{ t('保存配置') }}</el-button></div></footer>
           </template>
-          <div v-else class="config-empty"><Icon name="file-cog" :size="25" /><p>{{ t(loading ? '正在读取 GrimAC 配置…' : '暂无可读取的 GrimAC 配置') }}</p><el-button v-if="!loading" @click="reloadFile">{{ t('重新读取') }}</el-button></div>
+          <div v-else class="config-empty"><Icon name="file-cog" :size="25" /><p>{{ backendText(loading ? '正在读取 GrimAC 配置…' : '暂无可读取的 GrimAC 配置') }}</p><el-button v-if="!loading" @click="reloadFile">{{ t('重新读取') }}</el-button></div>
         </div>
       </div>
     </template>

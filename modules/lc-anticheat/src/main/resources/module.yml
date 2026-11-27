@@ -2,7 +2,7 @@ id: anticheat
 name: 反作弊
 version: '${version}'
 main: com.lunarboreal.anticheat.AntiCheatModule
-description: GrimAC 可选桥接、近期违规记录与后台管理；检测及处罚由 GrimAC 提供
+description: GrimAC 与 LightningGrim 可选桥接、近期违规记录及后台管理
 authors: [琉月·冰澜]
 depends: []
 softdepends: []
