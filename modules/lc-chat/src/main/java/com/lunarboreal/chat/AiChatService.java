@@ -195,7 +195,23 @@ final class AiChatService {
     Map<String, Object> models(String id) throws IOException, InterruptedException {
         Bot bot = configuredBot(id);
         if (bot.apiKey().isBlank()) throw HttpException.badRequest("请先保存该角色的 API Key");
-        return Map.of("bot", bot.id(), "models", AiGateway.models(client(), bot), "fetchedAt", System.currentTimeMillis());
+        return Map.of("bot", bot.id(), "models", AiGateway.models(client(), bot.baseUrl(), bot.apiKey()),
+                "fetchedAt", System.currentTimeMillis());
+    }
+
+    Map<String, Object> previewModels(Map<String, Object> body) throws IOException, InterruptedException {
+        if (!body.keySet().equals(Set.of("baseUrl", "apiKey"))) throw HttpException.badRequest("AI 配置包含未知字段");
+        String baseUrl = text(body, "baseUrl", "");
+        String key = text(body, "apiKey", "");
+        if (baseUrl.length() > 2_048) throw HttpException.badRequest("Base URL 过长");
+        if (key.isBlank()) throw HttpException.badRequest("API Key 无效");
+        try {
+            endpoint(baseUrl);
+            validateKey(key);
+        } catch (IllegalArgumentException ex) {
+            throw HttpException.badRequest(ex.getMessage());
+        }
+        return Map.of("models", AiGateway.models(client(), baseUrl, key), "fetchedAt", System.currentTimeMillis());
     }
 
     Map<String, Object> balance(String id) throws IOException, InterruptedException {

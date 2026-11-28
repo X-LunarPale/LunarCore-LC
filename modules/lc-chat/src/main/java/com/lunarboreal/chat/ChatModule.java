@@ -458,6 +458,11 @@ public final class ChatModule extends LcModule implements Listener {
                     catch (HttpException ex) { throw ex; }
                     catch (Exception ex) { throw new HttpException(502, "上游模型列表暂不可用（" + ex.getClass().getSimpleName() + "）"); }
                 })
+                .post("/ai/models", "chat.ai.manage", ctx -> {
+                    try { ctx.json(aiChat.previewModels(ctx.bodyMap())); }
+                    catch (HttpException ex) { throw ex; }
+                    catch (Exception ex) { throw new HttpException(502, "上游模型列表暂不可用（" + ex.getClass().getSimpleName() + "）"); }
+                })
                 .get("/ai/balance", "chat.ai.manage", ctx -> {
                     try { ctx.json(aiChat.balance(ctx.query("bot"))); }
                     catch (HttpException ex) { throw ex; }

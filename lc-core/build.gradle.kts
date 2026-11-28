@@ -7,8 +7,9 @@ val officialModuleProjects = moduleProjects.filter { it.name != "lc-structures-w
 val basicModules = setOf("lc-essentials")
 
 repositories {
-    maven("https://repo.extendedclip.com/releases/") {
-        content { includeGroup("me.clip") }
+    exclusiveContent {
+        forRepository { maven("https://repo.extendedclip.com/releases/") }
+        filter { includeModule("me.clip", "placeholderapi") }
     }
 }
 

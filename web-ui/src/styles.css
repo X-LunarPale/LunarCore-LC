@@ -37,9 +37,9 @@
   --lc-focus-ink: #555963;
   --lc-focus-halo: 0 0 0 2px #2428311a;
   --lc-focus-field: inset 0 0 0 1px var(--lc-focus-ink), var(--lc-focus-halo);
-  --lc-selected-bg: #e8e9ec;
+  --lc-selected-bg: #dfe1e4;
   --lc-selection-surface: #fafafc;
-  --lc-selection-shadow: inset 0 -1px 0 #24283122;
+  --lc-selection-shadow: inset 0 0 0 1px #24283112, inset 0 1px 0 #ffffff75;
   --lc-overlay-shadow: 0 2px 6px #171a2214, 0 12px 30px #171a221a;
   --lc-sidebar: #f3f4f6;
   --lc-sidebar-border: var(--lc-line);
@@ -99,9 +99,9 @@ html.dark {
   --lc-sidebar: #131416;
   --lc-focus-ink: #adafb6;
   --lc-focus-halo: 0 0 0 2px #d7d9e32b;
-  --lc-selected-bg: #323439;
+  --lc-selected-bg: #37393e;
   --lc-selection-surface: #3a3c41;
-  --lc-selection-shadow: inset 0 1px 0 #f1f2fa16;
+  --lc-selection-shadow: inset 0 0 0 1px #f1f2fa15, inset 0 1px 0 #f1f2fa0d;
   --lc-overlay-shadow: 0 2px 6px #0003, 0 12px 30px #0005;
   --lc-console-bg: #121315;
   --lc-console-text: #dce1e8;

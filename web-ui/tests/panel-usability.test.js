@@ -31,7 +31,8 @@ const CodeEditor = {
 }
 
 async function component(name, overrides = {}, render = false) {
-  const { descriptor } = parse(await readFile(new URL(`../src/components/panel/${name}.vue`, import.meta.url), 'utf8'))
+  const directory = name === 'PanelView' ? 'views' : 'components/panel'
+  const { descriptor } = parse(await readFile(new URL(`../src/${directory}/${name}.vue`, import.meta.url), 'utf8'))
   const script = compileScript(descriptor, { id: name, genDefaultAs: '__component' })
   const scope = {
     ...vue, ...panel, ...format, api, resolveEndpoint, t, formContextKey,
@@ -41,6 +42,7 @@ async function component(name, overrides = {}, render = false) {
     ElMessage: { success() {}, error() {}, warning() {} },
     ElMessageBox: { confirm: async () => true },
     ActionRunner: {}, CellValue: {}, FieldInput: {}, MinecraftTextPreview: {}, SectionError: {},
+    TableSection: {}, FormSection: {}, StatsSection: {}, WorkspaceTabs: {},
     ...overrides
   }
   const names = Object.keys(script.imports)
@@ -96,6 +98,80 @@ test('tables respect disabled polling and keep draft search text out of requests
   state.s.q = 'different draft'
   await refresh.callback()
   assert.equal(requests[2].q, 'draft')
+})
+
+test('empty tables retain toolbar actions, restore search when populated and keep a submitted filter clearable', async context => {
+  let items = []
+  context.mock.method(api, 'get', async () => ({ items, total: items.length }))
+  const definition = await component('TableSection')
+  const action = { id: 'add', label: '添加', endpoint: 'add' }
+  const section = { endpoint: 'records', toolbarActions: [action], rowActions: [action] }
+  const { state } = mount(context, definition, { namespace: 'demo', section })
+  await state.load()
+  assert.equal(state.searchable, false)
+  assert.deepEqual(state.toolbarActions, [action])
+
+  items = [{ id: 'record-1' }]
+  await state.load()
+  assert.equal(state.searchable, true)
+  assert.deepEqual(state.rowActions, [action])
+
+  items = []
+  state.s.q = 'missing'
+  state.search()
+  await settle()
+  assert.equal(state.searchable, true)
+  assert.equal(state.s.query, 'missing')
+
+  const { state: preview } = mount(context, definition, { namespace: 'demo', section, preview: true })
+  assert.deepEqual(preview.toolbarActions, [])
+  assert.deepEqual(preview.rowActions, [])
+  assert.equal(preview.searchable, false)
+})
+
+test('signin and teleport open on their overview while preserving visible forms and full lists', async context => {
+  const route = vue.reactive({ params: { ns: 'signin', id: 'signin' } })
+  const permissions = vue.reactive(new Set(['signin.manage']))
+  const stats = { type: 'stats', endpoint: 'stats' }
+  const records = { type: 'table', endpoint: 'records' }
+  const config = { type: 'form', loadEndpoint: 'config' }
+  const rewards = { type: 'form', loadEndpoint: 'rewards' }
+  const warps = { type: 'table', endpoint: 'warps', columns: [
+    { key: 'name' }, { key: 'location' }, { key: 'creator' }
+  ] }
+  const panels = {
+    'signin/signin': { sections: [stats, records, config, rewards] },
+    'teleport/teleport': { sections: [stats, warps, records, config] },
+    'extension/extension': { sections: [stats, records, config] }
+  }
+  const definition = await component('PanelView', {
+    useRoute: () => route,
+    useApp: () => ({ findPanel: (namespace, id) => panels[`${namespace}/${id}`] }),
+    useAuth: () => ({ can: permission => !permission || permissions.has(permission) }),
+    url: value => value,
+    renderMarkdown: value => value
+  })
+  const { state } = mount(context, definition, {})
+
+  assert.equal(state.activeGroup, 'overview')
+  assert.deepEqual(state.groups.map(group => group.id), ['overview', 'records', 'settings'])
+  permissions.add('signin.rewards')
+  await settle()
+  assert.deepEqual(state.groups.map(group => group.id), ['overview', 'records', 'rewards', 'settings'])
+  assert.deepEqual(state.groups.find(group => group.id === 'rewards').sections, [rewards])
+
+  route.params = { ns: 'teleport', id: 'teleport' }
+  await settle()
+  assert.equal(state.activeGroup, 'overview')
+  assert.deepEqual(state.groups.map(group => group.id), ['overview', 'warps', 'records', 'settings'])
+  assert.equal(state.warpPreview.pageSize, 5)
+  assert.deepEqual(state.warpPreview.columns.map(column => column.key), ['name', 'location'])
+  assert.deepEqual(state.groups.find(group => group.id === 'warps').sections, [warps])
+
+  route.params = { ns: 'extension', id: 'extension' }
+  await settle()
+  assert.equal(state.activeGroup, 'records')
+  assert.deepEqual(state.groups.map(group => group.id), ['records', 'settings'])
 })
 
 test('an open or executing row action pauses table refresh and exposes its busy state', async context => {

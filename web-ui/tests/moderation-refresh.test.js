@@ -50,7 +50,7 @@ async function settle() {
 
 const command = id => ({ id, label: id, supported: true, permission: 'anticheat.view', args: [] })
 
-async function environment(context) {
+async function environment(context, requestedTab = 'tools', can = () => true) {
   const document = Object.assign(new TrackedTarget(), { hidden: false })
   globalThis.document = document
   let sequence = 0
@@ -61,8 +61,10 @@ async function environment(context) {
     return id
   })
   context.mock.method(globalThis, 'clearInterval', id => timers.delete(id))
+  const route = vue.reactive({ path: '/panel/anticheat/anticheat', query: { tab: requestedTab }, hash: '' })
+  const router = { push: async target => Object.assign(route, target) }
   const api = {
-    get: async () => ({ output: [], pending: false }),
+    get: async path => path.endsWith('/commands') ? { commands: [command('list')] } : { output: [], pending: false },
     post: async () => ({ executionId: 'run-a', output: [] })
   }
   const socket = {
@@ -77,7 +79,9 @@ async function environment(context) {
   const messageBox = { confirm: async () => true }
   const scope = {
     ...vue, api, socket, resolveEndpoint: path => path, requireSuccess, t,
-    useAuth: () => ({ can: () => true }),
+    useAuth: () => ({ can }),
+    useRoute: () => route,
+    useRouter: () => router,
     useApp: () => ({ panels: [] }),
     useAutoRefresh() {},
     ElMessageBox: messageBox,
@@ -90,7 +94,6 @@ async function environment(context) {
   app.mount({ children: [] })
   context.after(() => { if (app._instance) app.unmount() })
   const state = app._instance.setupState
-  state.tab = 'tools'
   await settle()
   async function start(id = 'list') {
     state.chooseCommand(command(id))
@@ -104,8 +107,25 @@ async function environment(context) {
     document.hidden = hidden
     document.dispatchEvent(new Event('visibilitychange'))
   }
-  return { app, state, api, socket, document, messageBox, timers, start, fireIntervals, visibility }
+  return { app, state, api, socket, document, messageBox, route, timers, start, fireIntervals, visibility }
 }
+
+test('tab links activate available panels and clearing the query restores the default', async context => {
+  const env = await environment(context, 'grim-config')
+  assert.equal(env.state.tab, 'grim-config')
+  assert.equal(env.state.configVisited, true)
+  await env.state.selectTab('violations')
+  assert.equal(env.route.query.tab, 'violations')
+  env.route.query = {}
+  assert.equal(env.state.tab, 'violations')
+  assert.equal(env.state.configVisited, true)
+})
+
+test('a view-only account cannot activate the configuration from a direct link', async context => {
+  const env = await environment(context, 'grim-config', permission => permission === 'anticheat.view')
+  assert.equal(env.state.tab, 'violations')
+  assert.equal(env.state.configVisited, false)
+})
 
 test('a command response arriving after unmount cannot create an output timer', async context => {
   const env = await environment(context)
@@ -191,10 +211,10 @@ test('hidden pages and other tabs suspend output polling and resume pending runs
   assert.equal(reads, 0)
   env.visibility(false)
   assert.equal(env.timers.size, 1)
-  env.state.tab = 'punishments'
+  env.route.query.tab = 'violations'
   await settle()
   assert.equal(env.timers.size, 0)
-  env.state.tab = 'tools'
+  env.route.query.tab = 'tools'
   await settle()
   assert.equal(env.timers.size, 1)
   env.fireIntervals()

@@ -3,6 +3,7 @@ package com.lunarboreal.chat;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lunarboreal.api.module.ModuleDescription;
+import com.lunarboreal.api.web.HttpException;
 import com.sun.net.httpserver.HttpServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -183,6 +184,39 @@ class AiChatServiceTest {
                         List.of(), List.of(), List.of()), directory.toFile(),
                 AiChatServiceTest.class.getClassLoader(), Logger.getAnonymousLogger());
         return new AiChatService(module);
+    }
+
+    @Test void modelPreviewUsesOnlyTheDraftConnection(@TempDir Path directory) throws Exception {
+        AiChatService service = service(directory);
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        AtomicReference<String> authorization = new AtomicReference<>();
+        server.createContext("/v1/models", exchange -> {
+            authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
+            byte[] body = "{\"data\":[{\"id\":\"draft-model\"}]}".getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+        try {
+            var saved = service.settings();
+            String base = "http://127.0.0.1:" + server.getAddress().getPort() + "/v1";
+            for (var invalid : List.of(
+                    Map.<String, Object>of("baseUrl", base),
+                    Map.<String, Object>of("baseUrl", base, "apiKey", "bad key"),
+                    Map.<String, Object>of("baseUrl", base + "?x=1", "apiKey", "draft-key"))) {
+                assertEquals(400, assertThrows(HttpException.class, () -> service.previewModels(invalid)).status());
+            }
+            assertNull(authorization.get());
+            var result = service.previewModels(Map.of("baseUrl", base, "apiKey", "draft-key"));
+            assertEquals(List.of("draft-model"), result.get("models"));
+            assertEquals("Bearer draft-key", authorization.get());
+            assertFalse(result.toString().contains("draft-key"));
+            assertSame(saved, service.settings());
+        } finally {
+            server.stop(0);
+            service.stop();
+        }
     }
 
     @Test void mockProviderUsesAuthorizationAndBoundsUntrustedReply() throws Exception {

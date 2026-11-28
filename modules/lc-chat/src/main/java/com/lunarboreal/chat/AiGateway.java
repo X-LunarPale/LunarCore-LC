@@ -29,8 +29,8 @@ final class AiGateway {
 
     private AiGateway() {}
 
-    static List<String> models(HttpClient client, AiChatService.Bot bot) throws IOException, InterruptedException {
-        JsonObject data = fetch(client, uri(bot.baseUrl(), "/models"), bot.apiKey(), null);
+    static List<String> models(HttpClient client, String baseUrl, String key) throws IOException, InterruptedException {
+        JsonObject data = fetch(client, uri(baseUrl, "/models"), key, null);
         JsonArray entries = data.getAsJsonArray("data");
         if (entries == null) throw new IOException("模型列表格式无效");
         List<String> models = new ArrayList<>();

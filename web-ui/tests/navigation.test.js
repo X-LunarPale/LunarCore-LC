@@ -37,6 +37,18 @@ test('anti-cheat merges only when the ban workspace is available to the account'
   assert.equal(merged[0].items[0].title, '封禁与反作弊')
 })
 
+test('search links to the available anti-cheat tab for each role and module combination', () => {
+  const anticheat = panel('anticheat', '安全')
+  const ban = { ...panel('ban', '安全'), id: 'punishments' }
+  const view = permission => permission === 'anticheat.view'
+  const search = (panels, can, text) => buildNavigation([], panels, can, undefined, text)[0]?.items[0]
+  assert.equal(search([ban, anticheat], () => true, 'Lightning Grim').to, '/panel/ban/punishments?tab=grim-config')
+  assert.equal(search([anticheat], () => true, '反作弊設定').to, '/panel/anticheat/anticheat?tab=grim-config')
+  assert.equal(search([ban, anticheat], view, 'GrimAC').to, '/panel/ban/punishments?tab=violations')
+  assert.equal(search([ban, anticheat], () => false, 'GrimAC'), undefined)
+  assert.equal(search([ban], () => true, 'GrimAC'), undefined)
+})
+
 test('search finds collapsed groups in either language and retains source group aliases', () => {
   const panels = [{ ...panel('land', '经济'), title: '领地系统' }, panel('journal', '生存')]
   const translate = text => ({ 生存玩法: 'Survival', 领地系统: 'Claims' })[text] || text

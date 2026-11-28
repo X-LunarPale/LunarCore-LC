@@ -1,14 +1,14 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { api } from '../../api'
 import { localeTag, t } from '../../i18n'
 import { requireSuccess } from '../../utils/panel'
-import { useAutoRefresh } from '../../utils/autoRefresh'
 import WorkspaceTabs from '../panel/WorkspaceTabs.vue'
 
-const endpoint = '/api/ext/chat/ai/settings'
+const endpoint = '/api/ext/chat/ai'
+const balanceInterval = 60_000
 const form = reactive({
   enabled: false,
   name: '小月',
@@ -31,17 +31,15 @@ const loaded = ref(false)
 const loading = ref(false)
 const saving = ref(false)
 const keyConfigured = ref(false)
-const savedBaseUrl = ref('')
 const apiKey = ref('')
 const clearApiKey = ref(false)
 const embeddingApiKey = ref('')
 const embeddingKeyConfigured = ref(false)
 const clearEmbeddingApiKey = ref(false)
 const savedEmbeddingBaseUrl = ref('')
-const savedBotUrls = ref({})
-const models = ref({})
-const balances = ref({})
-const upstreamBusy = ref('')
+const savedConnections = ref(new Map())
+const modelLookups = ref(Object.create(null))
+const balanceLookups = ref(Object.create(null))
 const liveBalance = ref(false)
 const memoryPlayer = ref('')
 const baseline = ref('')
@@ -59,8 +57,11 @@ const tabs = [
   { id: 'messages', label: '回复与预览', icon: 'message-circle', panelId: 'ai-messages' }
 ]
 let disposed = false
+let balanceTimer
+let balancePolling = false
+let nextBalanceAt = 0
 
-const busy = computed(() => loading.value || saving.value || memoryClearing.value || !!upstreamBusy.value)
+const busy = computed(() => loading.value || saving.value || memoryClearing.value)
 const dirty = computed(() => loaded.value &&
   (JSON.stringify(form) !== baseline.value || !!apiKey.value || clearApiKey.value ||
     !!embeddingApiKey.value || clearEmbeddingApiKey.value))
@@ -70,7 +71,19 @@ const providers = [
   { value: 'sub2api', label: 'sub2API 中转站' }
 ]
 const primary = computed(() => ({ id: 'primary', baseUrl: form.baseUrl, providerType: form.providerType,
-  model: form.model, keyConfigured: keyConfigured.value }))
+  apiKey: apiKey.value, clearApiKey: clearApiKey.value, keyConfigured: keyConfigured.value }))
+const connections = computed(() => [primary.value, ...form.bots])
+
+watch(() => new Map(connections.value.map(bot => [bot.id, [
+  bot.baseUrl, bot.providerType, bot.apiKey, bot.clearApiKey, bot.keyConfigured
+]])), (current, previous) => {
+  for (const [id, fields] of previous) {
+    if (fields.every((value, index) => current.get(id)?.[index] === value)) continue
+    delete modelLookups.value[id]
+    delete balanceLookups.value[id]
+  }
+}, { flush: 'sync' })
+
 function validBaseUrl(baseUrl) {
   try {
     const value = new URL(baseUrl)
@@ -93,7 +106,7 @@ const validation = computed(() => {
   if (!baseUrl) return '请填写 Base URL'
   if (baseUrl.length > 2048) return 'Base URL 不能超过 2048 字符'
   if (!validBaseUrl(baseUrl)) return 'Base URL 须为无账号、查询参数和锚点的 HTTP(S) 地址，路径不可包含 ..'
-  if (baseUrl !== savedBaseUrl.value && keyConfigured.value && !apiKey.value.trim() && !clearApiKey.value) {
+  if (baseUrl !== savedConnections.value.get('primary')?.baseUrl && keyConfigured.value && !apiKey.value.trim() && !clearApiKey.value) {
     return '更换 Base URL 时请重新填写 API Key，或关闭 AI 后清除旧密钥'
   }
   if (form.model.length > 128 || /[\r\n]/.test(form.model)) return '模型 ID 不能超过 128 字符或包含换行'
@@ -112,7 +125,7 @@ const validation = computed(() => {
     if (!providers.some(item => item.value === bot.providerType) || !validBaseUrl(bot.baseUrl) || bot.baseUrl.length > 2048) return '附加角色上游地址无效'
     if (bot.model.length > 128 || /[\r\n]/.test(bot.model) || bot.fallbackModel.length > 128 || /[\r\n]/.test(bot.fallbackModel)) return '附加角色模型 ID 无效'
     if (!validKey(bot.apiKey) || (bot.clearApiKey && bot.apiKey)) return '附加角色 API Key 无效'
-    if (savedBotUrls.value[bot.id] && savedBotUrls.value[bot.id] !== bot.baseUrl && bot.keyConfigured && !bot.apiKey && !bot.clearApiKey) return '更换角色 Base URL 时需重新填写 API Key'
+    if (bot.keyConfigured && savedConnections.value.get(bot.id)?.baseUrl !== bot.baseUrl && !bot.apiKey && !bot.clearApiKey) return '更换角色 Base URL 时需重新填写 API Key'
     if (form.enabled && bot.enabled && (bot.model.trim() === '' || (!bot.keyConfigured && !bot.apiKey) || bot.clearApiKey)) return '启用附加角色前需填写模型和 API Key'
   }
   if (form.embeddingBaseUrl.length > 2048 || !validBaseUrl(form.embeddingBaseUrl)) return '嵌入 Base URL 无效'
@@ -132,15 +145,14 @@ function applySettings(data) {
   form.bots = (data.bots || []).map(bot => ({ ...bot, apiKey: '', clearApiKey: false }))
   keyConfigured.value = data.keyConfigured === true
   embeddingKeyConfigured.value = data.embeddingKeyConfigured === true
-  savedBaseUrl.value = form.baseUrl
   savedEmbeddingBaseUrl.value = form.embeddingBaseUrl
-  savedBotUrls.value = Object.fromEntries(form.bots.map(bot => [bot.id, bot.baseUrl]))
+  savedConnections.value = new Map(connections.value.map(({ id, baseUrl, providerType }) => [id, { baseUrl, providerType }]))
   apiKey.value = ''
   clearApiKey.value = false
   embeddingApiKey.value = ''
   clearEmbeddingApiKey.value = false
-  models.value = {}
-  balances.value = {}
+  modelLookups.value = Object.create(null)
+  balanceLookups.value = Object.create(null)
   baseline.value = JSON.stringify(form)
   savedIdentity.value = { enabled: form.enabled, name: form.name, model: form.model }
   loaded.value = true
@@ -164,7 +176,7 @@ async function load(force = false) {
   error.value = ''
   notice.value = ''
   try {
-    const data = requireSuccess(await api.get(endpoint))
+    const data = requireSuccess(await api.get(`${endpoint}/settings`))
     if (disposed) return false
     applySettings(data)
     return true
@@ -200,7 +212,7 @@ async function save() {
   if (embeddingApiKey.value.trim()) body.embeddingApiKey = embeddingApiKey.value.trim()
   if (clearEmbeddingApiKey.value) body.clearEmbeddingApiKey = true
   try {
-    requireSuccess(await api.post(endpoint, body), t('保存 AI 配置失败'))
+    requireSuccess(await api.post(`${endpoint}/settings`, body), t('保存 AI 配置失败'))
     apiKey.value = ''
     clearApiKey.value = false
     embeddingApiKey.value = ''
@@ -223,7 +235,9 @@ async function save() {
 
 function addBot() {
   if (form.bots.length >= 4 || busy.value) return
-  form.bots.push({ id: crypto.randomUUID(), enabled: false, name: '', persona: form.persona,
+  const id = crypto.randomUUID?.() ?? Array.from(crypto.getRandomValues(new Uint8Array(16)),
+    byte => byte.toString(16).padStart(2, '0')).join('')
+  form.bots.push({ id, enabled: false, name: '', persona: form.persona,
     providerType: 'custom', baseUrl: 'https://api.openai.com/v1', model: '', fallbackModel: '',
     keyConfigured: false, apiKey: '', clearApiKey: false })
 }
@@ -232,23 +246,87 @@ function selectProvider(target, value) {
   if (value === 'deepseek' && (!target.baseUrl || target.baseUrl === 'https://api.openai.com/v1'))
     target.baseUrl = 'https://api.deepseek.com/v1'
 }
-async function queryUpstream(kind, bot) {
-  if (dirty.value || busy.value) return
-  upstreamBusy.value = `${kind}:${bot.id}`
-  error.value = ''
-  try {
-    const result = requireSuccess(await api.get(`/api/ext/chat/ai/${kind}?bot=${encodeURIComponent(bot.id)}`))
-    if (disposed) return
-    if (kind === 'models') models.value = { ...models.value, [bot.id]: result.models || [] }
-    else balances.value = { ...balances.value, [bot.id]: result }
-  } catch (cause) { if (!disposed) error.value = cause.message || t('上游查询失败') }
-  finally { upstreamBusy.value = '' }
+function hasSavedKey(bot) {
+  return bot.keyConfigured && bot.baseUrl.trim() === savedConnections.value.get(bot.id)?.baseUrl
 }
-useAutoRefresh(async () => {
-  for (const bot of [primary.value, ...form.bots]) {
-    if (bot.providerType !== 'custom' && bot.keyConfigured) await queryUpstream('balance', bot)
+
+function canQueryModels(bot) {
+  const baseUrl = bot.baseUrl.trim()
+  const key = bot.apiKey.trim()
+  return !busy.value && !uncertain.value && !bot.clearApiKey && baseUrl.length <= 2048 &&
+    validBaseUrl(baseUrl) && (key ? validKey(key) : hasSavedKey(bot))
+}
+
+function hasSavedBalanceConnection(bot) {
+  return bot.providerType !== 'custom' && bot.providerType === savedConnections.value.get(bot.id)?.providerType &&
+    !bot.clearApiKey && !bot.apiKey.trim() && hasSavedKey(bot)
+}
+
+function canQueryBalance(bot) {
+  return !busy.value && !uncertain.value && hasSavedBalanceConnection(bot)
+}
+
+async function queryUpstream(kind, bot) {
+  const { id } = bot
+  const lookups = kind === 'models' ? modelLookups : balanceLookups
+  if (lookups.value[id]?.pending || !(kind === 'models' ? canQueryModels(bot) : canQueryBalance(bot))) return
+  const lookup = reactive({ pending: true, result: lookups.value[id]?.result ?? null, error: '' })
+  lookups.value[id] = lookup
+  const current = () => !disposed && lookups.value[id] === lookup
+  const key = bot.apiKey.trim()
+  try {
+    const result = requireSuccess(await (kind === 'models' && key
+      ? api.post(`${endpoint}/models`, { baseUrl: bot.baseUrl.trim(), apiKey: key })
+      : api.get(`${endpoint}/${kind}`, { bot: id })))
+    if (!current()) return
+    if (kind === 'models' ? !Array.isArray(result?.models) : typeof result?.available !== 'boolean') {
+      throw new Error(t('上游查询失败'))
+    }
+    lookup.result = result
+  } catch (cause) {
+    if (current()) lookup.error = cause.message || t('上游查询失败')
+  } finally {
+    if (current()) lookup.pending = false
   }
-}, { seconds: () => 60, active: () => liveBalance.value && loaded.value && !dirty.value && !busy.value })
+}
+
+const autoBalanceActive = computed(() => liveBalance.value && loaded.value && !busy.value && !dirty.value &&
+  !uncertain.value && connections.value.some(hasSavedBalanceConnection))
+
+function scheduleBalanceRefresh() {
+  clearTimeout(balanceTimer)
+  if (!disposed && autoBalanceActive.value && !document.hidden && !balancePolling) {
+    balanceTimer = setTimeout(refreshBalances, Math.max(0, nextBalanceAt - Date.now()))
+  }
+}
+
+async function refreshBalances() {
+  if (disposed || !autoBalanceActive.value || document.hidden || balancePolling) return
+  balancePolling = true
+  try {
+    for (const bot of connections.value) {
+      if (disposed || !autoBalanceActive.value || document.hidden) break
+      await queryUpstream('balance', bot)
+    }
+  } finally {
+    balancePolling = false
+    nextBalanceAt = Date.now() + balanceInterval
+    scheduleBalanceRefresh()
+  }
+}
+watch(autoBalanceActive, scheduleBalanceRefresh)
+
+function balanceText(result) {
+  const parts = [t(result.available ? '可用' : '不可用')]
+  if (Number.isFinite(result.fetchedAt)) {
+    parts.unshift(`${t('余额查询时间')} ${new Date(result.fetchedAt).toLocaleString(localeTag.value)}`)
+  }
+  for (const { remaining, currency } of result.balances || []) parts.push(`${remaining} ${currency}`)
+  if (result.remaining !== undefined) parts.push(`${result.remaining} ${result.currency || 'USD'}`)
+  if (result.remaining === undefined && !result.balances?.length) parts.push(t('上游未提供可用余额数字'))
+  return parts.join(' · ')
+}
+
 async function clearMemory() {
   if (busy.value || dirty.value) return
   memoryClearing.value = true
@@ -256,7 +334,7 @@ async function clearMemory() {
     const confirmed = await ElMessageBox.confirm(t(memoryPlayer.value ? '确定清除该玩家的所有 AI 记忆？' : '确定清空全部玩家的 AI 记忆？'), t('清理 AI 记忆'), { type: 'warning' }).then(() => true, () => false)
     if (!confirmed || disposed) return
     const body = memoryPlayer.value.trim() ? { playerUuid: memoryPlayer.value.trim() } : {}
-    const result = requireSuccess(await api.post('/api/ext/chat/ai/memory/clear', body))
+    const result = requireSuccess(await api.post(`${endpoint}/memory/clear`, body))
     if (!disposed) notice.value = t('已删除 {count} 条记忆', { count: result.removed })
   } catch (cause) { if (!disposed) error.value = cause.message || t('清理 AI 记忆失败') }
   finally { memoryClearing.value = false }
@@ -272,10 +350,13 @@ onBeforeRouteLeave(confirmDiscard)
 onBeforeRouteUpdate((to, from) => to.fullPath === from.fullPath || confirmDiscard())
 onMounted(() => {
   window.addEventListener('beforeunload', beforeUnload)
+  document.addEventListener('visibilitychange', scheduleBalanceRefresh)
   load(true)
 })
 onBeforeUnmount(() => {
   disposed = true
+  clearTimeout(balanceTimer)
+  document.removeEventListener('visibilitychange', scheduleBalanceRefresh)
   apiKey.value = ''
   embeddingApiKey.value = ''
   form.bots.forEach(bot => { bot.apiKey = '' })
@@ -323,14 +404,27 @@ onBeforeUnmount(() => {
         <section v-show="tab === 'connection'" id="ai-connection" class="settings-block" role="tabpanel" aria-labelledby="ai-chat-tab-connection">
           <div class="field"><label for="ai-provider">{{ t('上游供应商') }}</label><el-select id="ai-provider" :model-value="form.providerType" :disabled="busy" @update:model-value="selectProvider(form, $event)"><el-option v-for="item in providers" :key="item.value" :value="item.value" :label="t(item.label)" /></el-select></div>
           <div class="field"><label for="ai-base-url">{{ t('Base URL') }}</label><el-input id="ai-base-url" v-model="form.baseUrl" maxlength="2048" placeholder="https://api.openai.com/v1" :disabled="busy" /></div>
-          <div class="field"><label for="ai-model">{{ t('模型 ID') }}</label><el-input id="ai-model" v-model="form.model" maxlength="128" :disabled="busy" /></div>
-          <div v-if="models.primary?.length" class="field"><label for="ai-model-list">{{ t('上游可用模型') }}</label><el-select id="ai-model-list" v-model="form.model" filterable :disabled="busy"><el-option v-for="item in models.primary" :key="item" :value="item" :label="item" /></el-select></div>
-          <div class="field"><label for="ai-fallback">{{ t('回退模型 ID') }}</label><el-input id="ai-fallback" v-model="form.fallbackModel" maxlength="128" :disabled="busy" /><small>{{ t('限流、模型不存在或上游故障时尝试一次；鉴权或余额错误不回退。留空关闭。') }}</small></div>
           <div class="field"><label for="ai-key">{{ t('API Key') }}</label><el-input id="ai-key" v-model="apiKey" maxlength="512" type="password" show-password autocomplete="new-password" :disabled="busy || clearApiKey" /><small :class="{ 'key-present': keyConfigured }">{{ t(keyConfigured ? '已保存密钥（不会返回浏览器）' : '尚未保存密钥') }}<span class="key-hint">{{ t('留空保持现有密钥；输入新值会替换。') }}</span><span class="key-hint">{{ t('更换 Base URL 时需重填密钥，或关闭 AI 后清除旧密钥。') }}</span></small></div>
           <label v-if="keyConfigured" class="clear-key"><el-checkbox v-model="clearApiKey" :disabled="busy || !!apiKey" />{{ t('清除已保存密钥') }}</label>
-          <div class="upstream-actions"><el-button :disabled="busy || dirty || !keyConfigured" :loading="upstreamBusy === 'models:primary'" @click="queryUpstream('models', primary)">{{ t('获取上游模型') }}</el-button><el-button v-if="form.providerType !== 'custom'" :disabled="busy || dirty || !keyConfigured" :loading="upstreamBusy === 'balance:primary'" @click="queryUpstream('balance', primary)">{{ t('查询余额') }}</el-button></div>
-          <el-checkbox v-model="liveBalance" :disabled="busy || dirty">{{ t('每分钟自动查询余额') }}</el-checkbox>
-          <p v-if="balances.primary" class="balance-line">{{ t('余额查询时间') }}: {{ new Date(balances.primary.fetchedAt).toLocaleString(localeTag) }} · {{ t(balances.primary.available ? '可用' : '不可用') }}<span v-for="entry in balances.primary.balances || []" :key="entry.currency"> · {{ entry.remaining }} {{ entry.currency }}</span><span v-if="balances.primary.remaining !== undefined"> · {{ balances.primary.remaining }} {{ balances.primary.currency || 'USD' }}</span><span v-if="balances.primary.remaining === undefined && !balances.primary.balances?.length"> · {{ t('上游未提供可用余额数字') }}</span></p>
+          <div class="upstream-actions">
+            <el-button :disabled="!canQueryModels(primary)" :loading="modelLookups.primary?.pending" @click="queryUpstream('models', primary)">{{ t('获取上游模型') }}</el-button>
+          </div>
+          <p v-if="modelLookups.primary?.error" class="lookup-error" role="alert">{{ modelLookups.primary.error }}</p>
+          <p v-else-if="modelLookups.primary?.result?.models.length === 0" class="balance-line" role="status">{{ t('上游未返回模型') }}</p>
+          <div v-if="modelLookups.primary?.result?.models.length" class="field">
+            <label for="ai-model-list">{{ t('上游可用模型') }}</label>
+            <el-select id="ai-model-list" v-model="form.model" filterable :disabled="busy">
+              <el-option v-for="item in modelLookups.primary.result.models" :key="item" :value="item" :label="item" />
+            </el-select>
+          </div>
+          <div class="field"><label for="ai-model">{{ t('模型 ID') }}</label><el-input id="ai-model" v-model="form.model" maxlength="128" :disabled="busy" /></div>
+          <div class="field"><label for="ai-fallback">{{ t('回退模型 ID') }}</label><el-input id="ai-fallback" v-model="form.fallbackModel" maxlength="128" :disabled="busy" /><small>{{ t('限流、模型不存在或上游故障时尝试一次；鉴权或余额错误不回退。留空关闭。') }}</small></div>
+          <div class="upstream-actions">
+            <el-button v-if="form.providerType !== 'custom'" :disabled="!canQueryBalance(primary)" :loading="balanceLookups.primary?.pending" @click="queryUpstream('balance', primary)">{{ t('查询余额') }}</el-button>
+            <el-checkbox v-model="liveBalance">{{ t('每分钟自动查询余额') }}</el-checkbox>
+          </div>
+          <p v-if="balanceLookups.primary?.error" class="lookup-error">{{ balanceLookups.primary.error }}</p>
+          <p v-if="balanceLookups.primary?.result" class="balance-line">{{ balanceText(balanceLookups.primary.result) }}</p>
         </section>
       </div>
 
@@ -342,13 +436,39 @@ onBeforeUnmount(() => {
             <div class="field"><label :for="`bot-name-${bot.id}`">{{ t('角色名称') }}</label><el-input :id="`bot-name-${bot.id}`" v-model="bot.name" maxlength="24" :disabled="busy" /></div>
             <div class="field"><label :for="`bot-provider-${bot.id}`">{{ t('上游供应商') }}</label><el-select :id="`bot-provider-${bot.id}`" :model-value="bot.providerType" :disabled="busy" @update:model-value="selectProvider(bot, $event)"><el-option v-for="item in providers" :key="item.value" :value="item.value" :label="t(item.label)" /></el-select></div>
             <div class="field"><label :for="`bot-url-${bot.id}`">{{ t('Base URL') }}</label><el-input :id="`bot-url-${bot.id}`" v-model="bot.baseUrl" maxlength="2048" :disabled="busy" /></div>
-            <div class="field"><label :for="`bot-model-${bot.id}`">{{ t('模型 ID') }}</label><el-input :id="`bot-model-${bot.id}`" v-model="bot.model" maxlength="128" :disabled="busy" /></div>
-            <div v-if="models[bot.id]?.length" class="field"><label :for="`bot-model-list-${bot.id}`">{{ t('上游可用模型') }}</label><el-select :id="`bot-model-list-${bot.id}`" v-model="bot.model" filterable :disabled="busy"><el-option v-for="item in models[bot.id]" :key="item" :value="item" :label="item" /></el-select></div>
-            <div class="field"><label :for="`bot-fallback-${bot.id}`">{{ t('回退模型 ID') }}</label><el-input :id="`bot-fallback-${bot.id}`" v-model="bot.fallbackModel" maxlength="128" :disabled="busy" /></div>
-            <div class="field"><label :for="`bot-key-${bot.id}`">{{ t('API Key') }}</label><el-input :id="`bot-key-${bot.id}`" v-model="bot.apiKey" type="password" show-password autocomplete="new-password" maxlength="512" :disabled="busy || bot.clearApiKey" /><small>{{ t(bot.keyConfigured ? '已保存密钥（不会返回浏览器）' : '尚未保存密钥') }}</small></div>
-            <div class="field"><label>{{ t('上游操作') }}</label><div class="upstream-actions"><el-button :disabled="busy || dirty || !bot.keyConfigured" :loading="upstreamBusy === `models:${bot.id}`" @click="queryUpstream('models', bot)">{{ t('获取上游模型') }}</el-button><el-button v-if="bot.providerType !== 'custom'" :disabled="busy || dirty || !bot.keyConfigured" :loading="upstreamBusy === `balance:${bot.id}`" @click="queryUpstream('balance', bot)">{{ t('查询余额') }}</el-button></div><p v-if="balances[bot.id]" class="balance-line">{{ t(balances[bot.id].available ? '可用' : '不可用') }}<span v-for="entry in balances[bot.id].balances || []" :key="entry.currency"> · {{ entry.remaining }} {{ entry.currency }}</span><span v-if="balances[bot.id].remaining !== undefined"> · {{ balances[bot.id].remaining }} {{ balances[bot.id].currency || 'USD' }}</span></p></div>
+            <div class="field">
+              <label :for="`bot-key-${bot.id}`">{{ t('API Key') }}</label>
+              <el-input :id="`bot-key-${bot.id}`" v-model="bot.apiKey" type="password" show-password autocomplete="new-password" maxlength="512" :disabled="busy || bot.clearApiKey" />
+              <small>{{ t(bot.keyConfigured ? '已保存密钥（不会返回浏览器）' : '尚未保存密钥') }}</small>
+              <label v-if="bot.keyConfigured" class="clear-key"><el-checkbox v-model="bot.clearApiKey" :disabled="busy || !!bot.apiKey" />{{ t('清除已保存密钥') }}</label>
+            </div>
+            <div class="field">
+              <div class="upstream-actions">
+                <el-button :disabled="!canQueryModels(bot)" :loading="modelLookups[bot.id]?.pending" @click="queryUpstream('models', bot)">{{ t('获取上游模型') }}</el-button>
+              </div>
+              <p v-if="modelLookups[bot.id]?.error" class="lookup-error" role="alert">{{ modelLookups[bot.id].error }}</p>
+              <p v-else-if="modelLookups[bot.id]?.result?.models.length === 0" class="balance-line" role="status">{{ t('上游未返回模型') }}</p>
+              <div v-if="modelLookups[bot.id]?.result?.models.length" class="field">
+                <label :for="`bot-model-list-${bot.id}`">{{ t('上游可用模型') }}</label>
+                <el-select :id="`bot-model-list-${bot.id}`" v-model="bot.model" filterable :disabled="busy">
+                  <el-option v-for="item in modelLookups[bot.id].result.models" :key="item" :value="item" :label="item" />
+                </el-select>
+              </div>
+              <label :for="`bot-model-${bot.id}`">{{ t('模型 ID') }}</label>
+              <el-input :id="`bot-model-${bot.id}`" v-model="bot.model" maxlength="128" :disabled="busy" />
+            </div>
+            <div class="field">
+              <label :for="`bot-fallback-${bot.id}`">{{ t('回退模型 ID') }}</label>
+              <el-input :id="`bot-fallback-${bot.id}`" v-model="bot.fallbackModel" maxlength="128" :disabled="busy" />
+            </div>
           </div>
-          <label v-if="bot.keyConfigured" class="clear-key"><el-checkbox v-model="bot.clearApiKey" :disabled="busy || !!bot.apiKey" />{{ t('清除已保存密钥') }}</label>
+          <div v-if="bot.providerType !== 'custom'" class="field">
+            <div class="upstream-actions">
+              <el-button :disabled="!canQueryBalance(bot)" :loading="balanceLookups[bot.id]?.pending" @click="queryUpstream('balance', bot)">{{ t('查询余额') }}</el-button>
+            </div>
+            <p v-if="balanceLookups[bot.id]?.error" class="lookup-error">{{ balanceLookups[bot.id].error }}</p>
+            <p v-if="balanceLookups[bot.id]?.result" class="balance-line">{{ balanceText(balanceLookups[bot.id].result) }}</p>
+          </div>
           <div class="field bot-persona"><label :for="`bot-persona-${bot.id}`">{{ t('人格设定') }}</label><el-input :id="`bot-persona-${bot.id}`" v-model="bot.persona" type="textarea" :rows="3" maxlength="4000" :disabled="busy" /></div>
         </div>
       </section>
@@ -407,10 +527,10 @@ h2 :deep(svg) { color: var(--el-color-primary); }
 .probability-control > span { color: var(--lc-text-soft); font-size: 12px; }
 .toggle-line { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; padding: 0 0 14px; border-bottom: 1px solid var(--el-border-color-lighter); }
 .toggle-line > label { margin: 0; }
-.clear-key { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; cursor: pointer; }
-.upstream-actions { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
-.upstream-actions :deep(.el-button + .el-button) { margin-left:0; }
-.balance-line { font-size:11px; line-height:1.6; color:var(--lc-text-soft); overflow-wrap:anywhere; }
+.clear-key, .field > label.clear-key { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 400; cursor: pointer; }
+.upstream-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:12px 0; }
+.balance-line, .lookup-error { font-size:12px; line-height:1.6; color:var(--lc-text-soft); overflow-wrap:anywhere; }
+.lookup-error { color:var(--el-color-danger); }
 .identity-grid { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.2fr); align-items:start; gap:32px; max-width:940px; }
 .persona-block { min-width:0; }
 .persona-block :deep(textarea) { font-size: 13px; line-height: 1.6; }
