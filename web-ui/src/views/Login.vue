@@ -102,7 +102,7 @@ async function submit() {
       <AppearanceControls />
     </header>
     <main class="login-main">
-      <section class="login-form lc-pane-in" data-lc-glass aria-labelledby="login-title">
+      <section class="login-form lc-pane-in" data-lc-glass="clear" aria-labelledby="login-title">
         <GlassSurface v-if="app.liquidGlassEnabled" />
         <h1 id="login-title" class="login-brand"><img :src="logo" alt="" /><span>{{ challenge ? t('两步验证') : brandName }}</span></h1>
         <el-segmented v-if="!challenge" v-model="mode" :aria-label="t('登录')" :disabled="loading" :options="[{ label: t('密码'), value: 'password' }, { label: t('游戏验证码'), value: 'game' }]" block class="login-modes" />

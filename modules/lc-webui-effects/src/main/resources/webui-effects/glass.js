@@ -2,6 +2,7 @@ import { LiquidGlassEngine } from './quick-liquid.mjs'
 
 export function mountGlass(element, dark) {
   const solidSurfaces = matchMedia('(forced-colors: active), (prefers-contrast: more), (prefers-reduced-transparency: reduce)')
+  const clear = element.parentElement?.dataset.lcGlass === 'clear'
   let engine
 
   function clearGlass() {
@@ -20,17 +21,18 @@ export function mountGlass(element, dark) {
       engine.updateConfig({ appearance })
       return
     }
-    const borderRadius = parseFloat(getComputedStyle(element).borderTopRightRadius) || 0
+    const borderRadius = parseFloat(getComputedStyle(element).borderTopRightRadius) || 18
     engine = new LiquidGlassEngine(element, {
       appearance,
       borderRadius,
-      material: 'thin',
+      material: 'clear',
       quality: 'medium',
-      blur: 7,
-      saturation: 1.2,
-      refractionStrength: 18,
-      bezelWidth: 16,
-      dispersionMode: 'mono',
+      blur: clear ? 2 : 6,
+      refractionStrength: clear ? 38 : 28,
+      bezelWidth: clear ? 24 : 17,
+      lightAngle: -60,
+      specularStrength: 0.75,
+      chromaticAberration: clear ? 0.18 : 0,
       elevation: 0
     })
     element.classList.add('optical-glass')

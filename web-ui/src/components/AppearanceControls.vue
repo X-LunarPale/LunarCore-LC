@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import GlassSurface from './GlassSurface.vue'
 import { useApp } from '../stores/app'
 import { localePreference, setLocale, t } from '../i18n'
 import { AUTO_LOCALE } from '../utils/locale-preference'
@@ -47,6 +48,7 @@ function closeEffects() {
         <Icon name="sparkles" :size="17" />
       </button>
     </template>
+    <GlassSurface v-if="app.liquidGlassEnabled" />
     <div class="appearance-effects" role="group" :aria-label="t('外观效果')" @keydown.esc.stop="closeEffects">
       <div class="appearance-effect">
         <span>{{ t('液态玻璃') }}</span>
