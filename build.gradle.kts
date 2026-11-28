@@ -48,7 +48,9 @@ allprojects {
     version = lcVersion
 
     repositories {
-        mavenCentral()
+        mavenCentral {
+            content { excludeGroup("io.papermc.paper") }
+        }
         maven("https://repo.papermc.io/repository/maven-public/")
         maven("https://jitpack.io") {
             content { includeGroup("com.github.MilkBowl") }
