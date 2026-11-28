@@ -48,12 +48,23 @@ allprojects {
     version = lcVersion
 
     repositories {
-        mavenCentral {
-            content { excludeGroup("io.papermc.paper") }
+        mavenCentral()
+        // Paperweight also registers repositories; keep Paper's artifacts on its public Maven repository.
+        exclusiveContent {
+            forRepository { maven("https://repo.papermc.io/repository/maven-public/") }
+            filter {
+                includeGroupAndSubgroups("io.papermc")
+                includeGroup("ca.spottedleaf.leafpile")
+                includeGroup("com.mojang")
+                includeModule("com.velocitypowered", "velocity-native")
+                includeModule("me.lucko", "spark-api")
+                includeModule("me.lucko", "spark-paper")
+                includeModule("net.md-5", "bungeecord-chat")
+            }
         }
-        maven("https://repo.papermc.io/repository/maven-public/")
-        maven("https://jitpack.io") {
-            content { includeGroup("com.github.MilkBowl") }
+        exclusiveContent {
+            forRepository { maven("https://jitpack.io") }
+            filter { includeModule("com.github.MilkBowl", "VaultAPI") }
         }
     }
 }
