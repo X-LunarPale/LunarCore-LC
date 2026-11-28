@@ -5,7 +5,7 @@ import { parse, compileScript } from '@vue/compiler-sfc'
 import * as vue from 'vue'
 import * as panel from '../src/utils/panel.js'
 import * as format from '../src/utils/format.js'
-import { t } from '../src/i18n.js'
+import { localeTag, t } from '../src/i18n.js'
 
 class TrackedTarget extends EventTarget {
   listeners = new Map()
@@ -80,15 +80,15 @@ function environment(context) {
     event.detail = { namespace }
     window.dispatchEvent(event)
   }
-  return { timers, tick, mount, poll, changed }
+  return { timers, tick, mount, poll, changed, now: () => now }
 }
 
 async function scriptComponent(path) {
   const { descriptor } = parse(await readFile(new URL(`../src/${path}`, import.meta.url), 'utf8'))
   const script = compileScript(descriptor, { id: path, genDefaultAs: '__component' })
   const scope = {
-    ...vue, ...panel, ...format, api, resolveEndpoint, useAutoRefresh, t,
-    SectionError: {}, FieldInput: {}, PlayerCell: {}, ChatAppearance: {},
+    ...vue, ...panel, ...format, api, resolveEndpoint, useAutoRefresh, localeTag, t,
+    SectionError: {}, FieldInput: {}, PlayerCell: {}, ChatAppearance: {}, WorkspaceTabs: {},
     useAuth: () => ({ can: () => true }),
     onBeforeRouteLeave() {}, onBeforeRouteUpdate() {},
     ElMessage: { success() {}, error() {}, warning() {} },
@@ -410,4 +410,110 @@ test('players fetch history on first visit and suspend online polling in hidden 
   state.tab = 'history'
   await settle()
   assert.equal(calls.filter(path => path.endsWith('/history')).length, 1)
+})
+
+const savedAiSettings = {
+  enabled: true, name: 'Test bot', persona: 'Friendly', baseUrl: 'https://provider.example/v1',
+  providerType: 'sub2api', model: 'saved-model', keyConfigured: true
+}
+
+test('AI balance polling waits a minute without blocking the form and pauses while hidden or dirty', async context => {
+  const env = environment(context)
+  context.mock.method(Date, 'now', env.now)
+  const component = await scriptComponent('components/ai/AiChatWorkspace.vue')
+  let queries = 0, finish
+  context.mock.method(api, 'get', path => {
+    if (path.endsWith('/settings')) return Promise.resolve(savedAiSettings)
+    assert.ok(path.endsWith('/balance'))
+    queries++
+    return new Promise(resolve => { finish = resolve })
+  })
+
+  const { setupState: state } = env.mount(component)._instance
+  await settle()
+  state.liveBalance = true
+  await settle()
+  env.tick(0)
+  assert.equal(queries, 1)
+  assert.equal(state.balanceLookups.primary.pending, true)
+  assert.equal(state.busy, false)
+
+  state.form.name = 'Unsaved draft'
+  await settle()
+  finish({ available: true, fetchedAt: 0, remaining: 12 })
+  await settle()
+  assert.equal(state.form.name, 'Unsaved draft')
+  assert.equal(state.balanceLookups.primary.result.remaining, 12)
+  env.tick(310)
+  assert.equal(queries, 1)
+  assert.equal(env.timers.size, 0)
+
+  state.form.name = savedAiSettings.name
+  await settle()
+  env.tick(59_689)
+  assert.equal(queries, 1)
+  document.hidden = true
+  document.dispatchEvent(new Event('visibilitychange'))
+  env.tick(60_000)
+  assert.equal(queries, 1)
+  document.hidden = false
+  document.dispatchEvent(new Event('visibilitychange'))
+  env.tick(0)
+  assert.equal(queries, 2)
+  finish({ available: true, fetchedAt: env.now(), remaining: 11 })
+  await settle()
+  env.tick(59_999)
+  assert.equal(queries, 2)
+  env.tick(1)
+  assert.equal(queries, 3)
+  finish({ available: true, fetchedAt: env.now(), remaining: 10 })
+  await settle()
+})
+
+test('AI model lookup uses draft credentials for either role and drops the previous connection result', async context => {
+  const env = environment(context)
+  const component = await scriptComponent('components/ai/AiChatWorkspace.vue')
+  const requests = []
+  let finish
+  context.mock.method(api, 'get', async (path, query) => {
+    if (path.endsWith('/settings')) return savedAiSettings
+    requests.push({ path, query })
+    return { models: ['saved-model'] }
+  })
+  context.mock.method(api, 'post', (path, body) => {
+    requests.push({ path, body })
+    if (body.apiKey === 'old-draft-key') return new Promise(resolve => { finish = resolve })
+    return Promise.resolve({ models: ['new-model'] })
+  })
+
+  const { setupState: state } = env.mount(component)._instance
+  await settle()
+  await state.queryUpstream('models', state.primary)
+  assert.deepEqual(requests.shift(), { path: '/api/ext/chat/ai/models', query: { bot: 'primary' } })
+  assert.deepEqual(state.modelLookups.primary.result.models, ['saved-model'])
+
+  state.form.baseUrl = 'https://different.example/v1'
+  assert.equal(state.canQueryModels(state.primary), false)
+  assert.equal(state.modelLookups.primary, undefined)
+  state.apiKey = 'old-draft-key'
+  const stale = state.queryUpstream('models', state.primary)
+  assert.equal(state.busy, false)
+  state.apiKey = 'current-draft-key'
+  await state.queryUpstream('models', state.primary)
+  finish({ models: ['outdated-model'] })
+  await stale
+  assert.deepEqual(state.modelLookups.primary.result.models, ['new-model'])
+  assert.equal(state.form.model, savedAiSettings.model)
+  assert.equal(state.dirty, true)
+
+  state.addBot()
+  const bot = state.form.bots[0]
+  bot.apiKey = 'additional-draft-key'
+  await state.queryUpstream('models', bot)
+  assert.deepEqual(state.modelLookups[bot.id].result.models, ['new-model'])
+  assert.deepEqual(requests, [
+    { path: '/api/ext/chat/ai/models', body: { baseUrl: 'https://different.example/v1', apiKey: 'old-draft-key' } },
+    { path: '/api/ext/chat/ai/models', body: { baseUrl: 'https://different.example/v1', apiKey: 'current-draft-key' } },
+    { path: '/api/ext/chat/ai/models', body: { baseUrl: 'https://api.openai.com/v1', apiKey: 'additional-draft-key' } }
+  ])
 })

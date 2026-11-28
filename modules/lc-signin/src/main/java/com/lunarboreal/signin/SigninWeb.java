@@ -79,7 +79,7 @@ public final class SigninWeb {
                 .rowAction(new WebPanel.Action("reset", "重置", "players/{uuid}/reset").style("danger")
                         .permission("signin.manage").confirm("确定清空该玩家的全部签到记录？"));
 
-        WebPanel.Form form = new WebPanel.Form("签到配置", "config", "config");
+        WebPanel.Form form = new WebPanel.Form("签到配置", "config", "config").savePermission("signin.manage");
         for (Cfg c : CONFIG) {
             WebPanel.Field f = new WebPanel.Field(c.key(), c.label(), c.type());
             if (c.help() != null) f.help(c.help());
@@ -87,6 +87,7 @@ public final class SigninWeb {
         }
         // 奖励单独一个表单，需要 signin.rewards（commands 以控制台身份执行）
         WebPanel.Form rewardsForm = new WebPanel.Form("签到奖励", "rewards", "rewards")
+                .savePermission("signin.rewards")
                 .field(new WebPanel.Field("rewards", "奖励配置", "code")
                         .help("按每日签到、连续签到和累计签到设置奖励。支持金币、经验、物品和控制台命令；编辑时请保留现有配置结构。"));
 
@@ -106,6 +107,7 @@ public final class SigninWeb {
     private static Map<String, Object> stat(String label, Object value, String icon) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("label", label);
+        m.put("labelKey", label);
         m.put("value", String.valueOf(value));
         m.put("icon", icon);
         return m;
@@ -113,11 +115,16 @@ public final class SigninWeb {
 
     private void stats(WebContext ctx) throws Exception {
         SigninStore st = m.store();
-        LocalDate today = m.settings().today();
+        SigninSettings settings = m.settings();
+        LocalDate today = settings.today();
         YearMonth ym = YearMonth.from(today);
         String t = today.toString();
         List<Map<String, Object>> out = new ArrayList<>();
         out.add(stat("今日签到人数", st.countRecords(t, t, null), "calendar-check"));
+        String rewardStatus = settings.daily.isEmpty() ? "未设置" : "已配置";
+        var dailyRewardStat = stat("每日奖励", rewardStatus, "award");
+        dailyRewardStat.put("valueKey", rewardStatus);
+        out.add(dailyRewardStat);
         out.add(stat("本月补签次数", st.countRecords(ym.atDay(1).toString(), ym.atEndOfMonth().toString(), true), "calendar-plus"));
         out.add(stat("本月签到人次", st.countRecords(ym.atDay(1).toString(), ym.atEndOfMonth().toString(), null), "calendar"));
         out.add(stat("连续签到中玩家", st.countPlayers(true, today), "flame"));

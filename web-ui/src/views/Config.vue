@@ -22,6 +22,8 @@ const canEditCore = computed(() => auth.can('core.config.edit'))
 const content = ref('')
 const original = ref('')
 const path = ref('')
+const fingerprint = ref('')
+const conflict = ref(false)
 const loading = ref(false)
 const saving = ref(false)
 const validating = ref(false)
@@ -42,18 +44,21 @@ async function load() {
       if (!discard) return
     }
     const r = requireSuccess(await api.get('/api/config'))
-    if (typeof r?.content !== 'string') throw new Error(t('配置返回格式错误'))
+    if (typeof r?.content !== 'string' || typeof r.fingerprint !== 'string' || !r.fingerprint) {
+      throw new Error(t('配置返回格式错误'))
+    }
     if (revision !== loadRevision) return
     loaded.value = true
     loadError.value = null
     content.value = r.content
     original.value = r.content
     path.value = r.path
+    fingerprint.value = r.fingerprint
+    conflict.value = false
     validation.value = null
   } catch (e) {
     if (revision === loadRevision) {
       loadError.value = e.message
-      loaded.value = false
       ElMessage.error(e.message)
     }
   } finally {
@@ -76,20 +81,25 @@ async function validate() {
 }
 
 async function save() {
-  if (!canEditCore.value || saving.value || loading.value || validating.value || !loaded.value) return
+  if (!canEditCore.value || saving.value || loading.value || validating.value || !loaded.value || conflict.value) return
   saving.value = true
   if (!dirty.value) { saving.value = false; return ElMessage.info(t('没有修改')) }
   const ok = await ElMessageBox.confirm(t('保存并重载核心配置？'), t('保存配置'), { type: 'warning' }).then(() => true).catch(() => false)
   if (!ok) { saving.value = false; return }
   const submitted = content.value
+  validation.value = null
   try {
-    const r = requireSuccess(await api.post('/api/config', { content: submitted }))
+    const r = requireSuccess(await api.post('/api/config', { content: submitted, fingerprint: fingerprint.value }))
+    if (typeof r?.fingerprint !== 'string' || !r.fingerprint) {
+      conflict.value = true
+      return
+    }
     original.value = submitted
-    validation.value = null
+    fingerprint.value = r.fingerprint
     ElMessage({ type: r.webChanged ? 'warning' : 'success', message: r.message, duration: r.webChanged ? 8000 : 3000 })
   } catch (e) {
-    validation.value = { ok: false, error: e.message }
-    ElMessage.error(e.message)
+    if (e.status === 409) conflict.value = true
+    else ElMessage.error(e.message)
   } finally {
     saving.value = false
   }
@@ -124,6 +134,7 @@ watch(content, () => { validation.value = null })
       <el-tab-pane name="branding" lazy><template #label>{{ t('品牌设置') }}<el-tag v-if="brandDirty" class="tab-state" size="small" type="warning">{{ t('未保存') }}</el-tag></template><BrandingSettings @dirty-change="brandDirty = $event" @busy-change="brandBusy = $event" /></el-tab-pane>
       <el-tab-pane v-if="canEditCore" name="core" lazy><template #label>{{ t('核心配置') }}<el-tag v-if="dirty" class="tab-state" size="small" type="warning">{{ t('未保存') }}</el-tag></template>
     <el-alert v-if="loadError" class="config-alert" type="error" :title="t('配置加载失败')" :description="loadError" show-icon :closable="false" />
+    <el-alert v-if="conflict" class="config-alert" type="warning" :title="t('保存前请重新读取配置')" :description="t('当前草稿已保留，重新读取前请核对修改。')" show-icon :closable="false" />
     <el-alert v-if="validation && !validation.ok" class="config-alert" type="error" :title="t('YAML 校验未通过')" :description="validation.error" show-icon />
     <section class="editor-panel" v-loading="loading">
       <div class="editor-toolbar">
@@ -131,7 +142,7 @@ watch(content, () => { validation.value = null })
         <div class="editor-actions">
           <el-tooltip :content="t('重新加载')"><el-button class="icon-button" :aria-label="t('重新加载')" :disabled="loading || saving || validating" @click="load"><Icon name="rotate-ccw" :size="15" /></el-button></el-tooltip>
           <el-tooltip :content="t('校验')"><el-button class="icon-button" :aria-label="t('校验')" :loading="validating" :disabled="!loaded || loading || saving" @click="validate"><Icon name="check-check" :size="15" /></el-button></el-tooltip>
-          <el-button type="primary" :loading="saving" :disabled="!dirty || !loaded || loading || validating" @click="save"><Icon name="save" :size="14" />{{ t('保存并重载') }}</el-button>
+          <el-button type="primary" :loading="saving" :disabled="!dirty || !loaded || loading || validating || conflict" @click="save"><Icon name="save" :size="14" />{{ t('保存并重载') }}</el-button>
         </div>
       </div>
       <div class="editor-body"><CodeEditor v-model="content" :readonly="loading || saving || !loaded" height="clamp(360px, calc(100dvh - 310px), 860px)" @save="save" /></div>

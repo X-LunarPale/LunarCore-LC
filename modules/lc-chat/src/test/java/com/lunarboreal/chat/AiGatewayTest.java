@@ -30,7 +30,7 @@ class AiGatewayTest {
         try (HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build()) {
             String base = "http://127.0.0.1:" + server.getAddress().getPort() + "/v1";
             var bot = new AiChatService.Bot("primary", true, "月灵", "persona", "sub2api", base, "chat-a", "", "fixture-key");
-            assertEquals(List.of("chat-a", "chat-b"), AiGateway.models(client, bot));
+            assertEquals(List.of("chat-a", "chat-b"), AiGateway.models(client, bot.baseUrl(), bot.apiKey()));
             assertEquals(8, AiGateway.embedding(client, base, "fixture-key", "embed", "hello").length);
             var balance = AiGateway.balance(client, bot);
             assertEquals(12.5, balance.get("remaining"));

@@ -15,6 +15,8 @@ const byLegacyGroup = new Map([
   ['经济', 'survival'], ['玩法', 'survival'], ['生存', 'survival'], ['生存玩法', 'survival'],
   ['安全', 'security'], ['系统', 'system']
 ])
+const anticheatAliases = ['GrimAC config', 'LightningGrim config', 'anti-cheat configuration', '反作弊配置', '反作弊設定', 'GrimAC 配置', 'GrimAC 設定', '反外掛']
+const normalizeSearch = value => value.toLocaleLowerCase().replace(/[\s_-]+/g, '')
 
 export function navigationGroup(item) {
   return byKey.get(item.namespace || item.path)
@@ -24,17 +26,26 @@ export function navigationGroup(item) {
 
 export function buildNavigation(coreMenus, panels, can, translate = value => value, query = '') {
   const groups = new Map(definitions.map(group => [group.id, { ...group, items: [] }]))
-  const hasBan = panels.some(panel => panel.namespace === 'ban')
+  const ban = panels.find(panel => panel.namespace === 'ban')
+  const anticheat = panels.find(panel => panel.namespace === 'anticheat')
+  const needle = query.trim().toLocaleLowerCase()
+  const compact = normalizeSearch(needle)
+  const anticheatResult = anticheat && can('anticheat.view') && compact.length >= 2
+    && anticheatAliases.some(alias => normalizeSearch(alias).startsWith(compact))
+    ? ban || anticheat : null
   const seen = new Set()
   const add = (source, key) => {
     if (seen.has(key)) return
     seen.add(key)
     const group = navigationGroup(source)
-    const title = source.namespace === 'ban' && hasBan && panels.some(panel => panel.namespace === 'anticheat')
-      ? '封禁与反作弊' : source.title
+    const direct = source === anticheatResult
+    const canConfigure = direct && can('anticheat.manage')
+    const title = direct ? (canConfigure ? '反作弊配置' : '反作弊违规记录')
+      : source === ban && anticheat ? '封禁与反作弊' : source.title
     const rank = group.keys.indexOf(source.namespace || source.path)
     groups.get(group.id).items.push({
-      key, title: translate(title), icon: source.icon || 'box',
+      key, title: translate(title), icon: direct ? (canConfigure ? 'file-cog' : 'scan-search') : source.icon || 'box',
+      ...(direct ? { to: `${key}?tab=${canConfigure ? 'grim-config' : 'violations'}` } : {}),
       rank: rank < 0 ? group.keys.length : rank,
       order: Number.isFinite(source.order) ? source.order : 100,
       search: [title, translate(title), source.group, translate(source.group || ''), source.namespace || '', key].join(' ').toLocaleLowerCase()
@@ -44,14 +55,13 @@ export function buildNavigation(coreMenus, panels, can, translate = value => val
     if (can(menu.perm)) add(menu, menu.path)
   }
   for (const panel of panels) {
-    if (panel.namespace === 'anticheat' && hasBan) continue
+    if (panel.namespace === 'anticheat' && ban) continue
     add(panel, `/panel/${panel.namespace}/${panel.id}`)
   }
-  const needle = query.trim().toLocaleLowerCase()
   return [...groups.values()].map(group => ({
     id: group.id, title: translate(group.title), icon: group.icon,
     items: group.items
       .sort((a, b) => a.rank - b.rank || a.order - b.order || a.key.localeCompare(b.key))
-      .filter(item => !needle || `${group.title} ${translate(group.title)} ${item.search}`.toLocaleLowerCase().includes(needle))
+      .filter(item => !needle || item.to || `${group.title} ${translate(group.title)} ${item.search}`.toLocaleLowerCase().includes(needle))
   })).filter(group => group.items.length)
 }

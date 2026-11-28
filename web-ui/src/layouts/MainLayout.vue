@@ -45,7 +45,8 @@ const groups = computed(() => menuQuery.value.trim()
   : navigation.value)
 const active = computed(() => {
   if (route.name === 'panel') {
-    if (route.params.ns === 'anticheat' && app.panels.some(panel => panel.namespace === 'ban')) return '/panel/ban/ban'
+    const ban = route.params.ns === 'anticheat' && app.panels.find(panel => panel.namespace === 'ban')
+    if (ban) return `/panel/${ban.namespace}/${ban.id}`
     return `/panel/${route.params.ns}/${route.params.id}`
   }
   return route.path || '/'
@@ -113,6 +114,14 @@ function onNavigationClick(event, key) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
   event.preventDefault()
   return onSelect(key)
+}
+function openFirstResult(event) {
+  if (event.isComposing || !menuQuery.value.trim()) return
+  const item = groups.value[0]?.items[0]
+  if (item) {
+    event.preventDefault()
+    onSelect(item.to || item.key)
+  }
 }
 async function logout() {
   const confirmed = await ElMessageBox.confirm(t('确定要退出登录吗？'), t('退出'), { type: 'warning' }).then(() => true).catch(() => false)
@@ -216,7 +225,7 @@ onUnmounted(() => {
       </div>
       <div v-if="!collapsed" class="navigation-search">
         <Icon name="search" :size="15" />
-        <input ref="searchInput" v-model="menuQuery" :aria-label="t('搜索管理功能')" :placeholder="t('搜索')" />
+        <input ref="searchInput" v-model="menuQuery" :aria-label="t('搜索管理功能')" :placeholder="t('搜索')" @keydown.enter="openFirstResult" />
         <button v-if="menuQuery" type="button" :aria-label="t('清除搜索')" @click="menuQuery = ''"><Icon name="x" :size="14" /></button>
       </div>
       <nav id="primary-navigation" ref="menuScroll" class="navigation" :aria-label="t('主导航')" @keydown="onNavigationKeydown">
@@ -228,7 +237,10 @@ onUnmounted(() => {
           <div :id="`navigation-${group.id}`" class="navigation-fold" :class="{ 'is-open': groupOpen(group.id) }" :inert="!groupOpen(group.id) || undefined">
             <ul class="navigation-items">
               <li v-for="item in group.items" :key="item.key">
-                <a :href="router.resolve(item.key).href" class="navigation-link" :aria-current="item.key === active ? 'page' : undefined" :aria-label="collapsed ? item.title : undefined" :title="collapsed ? item.title : undefined" @click="event => onNavigationClick(event, item.key)">
+                <a :href="router.resolve(item.to || item.key).href" class="navigation-link"
+                  :aria-current="(item.to ? route.fullPath === item.to : item.key === active) ? 'page' : undefined"
+                  :aria-label="collapsed ? item.title : undefined" :title="collapsed ? item.title : undefined"
+                  @click="event => onNavigationClick(event, item.to || item.key)">
                   <Icon :name="item.icon" :size="16" />
                   <span v-if="!collapsed">{{ item.title }}</span>
                 </a>
@@ -271,7 +283,7 @@ onUnmounted(() => {
       </header>
       <main id="main-content" ref="main" class="app-main" tabindex="-1">
         <router-view v-slot="{ Component, route: current }">
-          <Transition name="route"><component :is="Component" :key="current.fullPath" /></Transition>
+          <Transition name="route"><component :is="Component" :key="current.name === 'panel' ? current.path : current.fullPath" /></Transition>
         </router-view>
       </main>
     </div>
@@ -294,18 +306,21 @@ onUnmounted(() => {
 .navigation-search button { flex: none; display: grid; place-items: center; width: 22px; height: 24px; padding: 0; border: 0; color: inherit; background: none; cursor: pointer; }
 .navigation { flex: 1; min-height: 0; padding: 0 10px 20px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; overscroll-behavior: contain; }
 .navigation-group + .navigation-group { margin-top: 10px; }
-.group-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 28px; padding: 0 9px; border: 0; border-radius: var(--lc-radius-control); color: var(--lc-text-soft); background: none; cursor: pointer; font-size: 12px; font-weight: 550; text-align: left; }
+.group-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 28px; padding: 0 9px; border: 0; border-radius: var(--lc-radius-control); color: var(--lc-text-soft); background: none; cursor: pointer; font-size: 12px; font-weight: 550; text-align: left; transition: color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
 .group-toggle:hover { color: var(--lc-text); }
+.group-toggle:active { transform: scale(.98, .94); transition: transform var(--motion-press); }
 .group-toggle .lc-icon { transition: transform var(--motion-standard) var(--motion-spring); }
 .group-toggle .closed { transform: rotate(-90deg); }
 .navigation-fold { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--motion-standard) var(--motion-spring-soft), opacity var(--motion-fast); }
 .navigation-fold.is-open { grid-template-rows: 1fr; opacity: 1; }
 .navigation-items { display: grid; gap: 2px; list-style: none; min-height: 0; overflow: hidden; padding: 0; margin: 0; }
-.navigation-link { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 34px; padding: 6px 9px; border-radius: var(--lc-radius-control); color: var(--el-text-color-regular); text-decoration: none; font-size: 13px; line-height: 1.45; transition: color var(--motion-fast), background-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
+.navigation-link { position: relative; display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 34px; padding: 6px 9px 6px 12px; border-radius: var(--lc-radius-control); color: var(--el-text-color-regular); text-decoration: none; font-size: 13px; line-height: 1.45; transition: color var(--motion-fast), background-color var(--motion-fast), transform var(--motion-standard) var(--motion-spring); }
 .navigation-link .lc-icon { color: var(--lc-text-soft); }
 .navigation-link > span { min-width: 0; overflow-wrap: anywhere; }
 .navigation-link:hover { color: var(--lc-text); background: var(--el-fill-color); }
 .navigation-link[aria-current="page"] { color: var(--lc-text); background: var(--lc-selected-bg); box-shadow: var(--lc-selection-shadow); font-weight: 600; }
+.navigation-link[aria-current="page"]::before { content: ""; position: absolute; inset-inline-start: 3px; top: 50%; width: 3px; height: 16px; border-radius: 2px; background: var(--lc-focus-ink); translate: 0 -50%; animation: lc-nav-marker-in var(--motion-standard) var(--motion-spring) both; }
+@keyframes lc-nav-marker-in { from { opacity: .4; scale: 1 .52; } to { opacity: 1; scale: 1; } }
 .navigation-link[aria-current="page"] .lc-icon { color: var(--lc-text); animation: lc-selection-in var(--motion-standard) var(--motion-spring) both; }
 .navigation-link:active { transform: scale(.97, .92); transition: transform var(--motion-press); }
 .navigation-link:focus-visible, .group-toggle:focus-visible { outline-offset: -2px; }

@@ -114,7 +114,7 @@ useAutoRefresh(() => load(true), {
   immediate: true
 })
 onBeforeRouteLeave(confirmDiscard)
-onBeforeRouteUpdate((to, from) => to.fullPath === from.fullPath || confirmDiscard())
+onBeforeRouteUpdate((to, from) => to.path === from.path || confirmDiscard())
 onMounted(() => {
   window.addEventListener('beforeunload', beforeUnload)
 })

@@ -19,7 +19,7 @@ const defaults = {
   '/api/users': { items: [] }, '/api/roles': { items: [] }, '/api/permissions': [],
   '/api/server/whitelist': { enabled: false, enforced: true, items: [] },
   '/api/market': { items: [], pending: [], state: 'idle' },
-  '/api/config': { content: 'language: zh_CN\n', path: 'config.yml' },
+  '/api/config': { content: 'language: zh_CN\n', path: 'config.yml', fingerprint: 'initial-version' },
   '/api/console/history': []
 }
 const deferred = () => {
@@ -40,6 +40,7 @@ async function mount(context, name) {
     del: async () => ({ ok: true, message: 'Saved' })
   }
   const auth = { user: { username: 'admin' }, can: () => true, fetchMe: async () => {}, setToken() {} }
+  const appStore = { loadPanels: async () => {} }
   const messageBox = { confirm: async () => true }
   const message = Object.assign(options => messages[options.type].push(options.message),
     Object.fromEntries(Object.keys(messages).map(level => [level, text => messages[level].push(text)])))
@@ -47,10 +48,10 @@ async function mount(context, name) {
   globalThis.window = new EventTarget()
   const scope = {
     ...vue, ...panel, ...format, api, formatVersion, locale, t,
-    useAuth: () => auth, useApp: () => ({}), onBeforeRouteLeave() {},
+    useAuth: () => auth, useApp: () => appStore, onBeforeRouteLeave() {},
     ElMessage: message,
     ElMessageBox: messageBox,
-    PlayerCell: {}, MinecraftTextPreview: {}, CodeEditor: {}, TotpSettings: {},
+    PlayerCell: {}, MinecraftTextPreview: {}, CodeEditor: {}, TotpSettings: {}, ModuleMarket: {},
     useAutoRefresh(callback, options) { if (options.immediate) vue.onMounted(callback) },
     socket: { connected: true, onStatus: () => () => {}, subscribe: () => () => {} }
   }
@@ -62,7 +63,7 @@ async function mount(context, name) {
   app.mount({ children: [] })
   context.after(() => { app.unmount(); globalThis.window = previousWindow })
   await settle()
-  return { state: app._instance.setupState, api, auth, messages, messageBox }
+  return { state: app._instance.setupState, api, auth, appStore, messages, messageBox }
 }
 
 test('broadcasts reject repeat clicks and keep a newer draft after the request completes', async context => {
@@ -128,6 +129,30 @@ test('market removal confirmation blocks competing installs and releases the loc
   await changing
   assert.equal(writes, 0)
   assert.equal(env.state.busy, false)
+})
+
+test('QQAuth reload warns about disconnecting players and only submits after confirmation', async context => {
+  const env = await mount(context, 'Modules')
+  const qqauth = { id: 'qqauth', name: 'QQAuth' }
+  const confirmations = [], writes = []
+  let panelReads = 0
+  env.api.post = async path => { writes.push(path); return { ok: true } }
+  env.appStore.loadPanels = async () => { panelReads++ }
+  const confirmation = deferred()
+  env.messageBox.confirm = message => { confirmations.push(message); return confirmation.promise }
+  const pending = env.state.op(qqauth, 'reload')
+  await env.state.op(qqauth, 'reload')
+  assert.deepEqual(confirmations, [t('重载 QQauth 会撤销在线玩家认证并断开连接。')])
+  assert.deepEqual(writes, [])
+  confirmation.reject(new Error('cancel'))
+  await pending
+  assert.deepEqual(writes, [])
+  assert.equal(env.state.busy, '')
+
+  env.messageBox.confirm = async () => true
+  await env.state.op(qqauth, 'reload')
+  assert.deepEqual(writes, ['/api/modules/qqauth/reload'])
+  assert.equal(panelReads, 1)
 })
 
 test('market translates bundled module text and known errors when switching to Hong Kong Chinese', async context => {
@@ -211,6 +236,42 @@ test('configuration reload locks its confirmation and keeps the draft on cancell
   assert.equal(env.state.content, 'language: en_US\n')
   assert.equal(env.state.loaded, true)
   assert.equal(env.state.loading, false)
+})
+
+test('a config conflict keeps the draft and blocks saving until the latest copy is read', async context => {
+  const env = await mount(context, 'Config')
+  env.state.activeTab = 'core'
+  await settle()
+  const submitted = 'language: en_US\n'
+  const writes = []
+  env.state.content = submitted
+  env.api.post = async (_, body) => {
+    writes.push(body)
+    if (writes.length === 1) throw Object.assign(new Error('Conflict'), { status: 409 })
+    return { ok: true, message: 'Saved', fingerprint: 'saved-version' }
+  }
+  await env.state.save()
+  assert.deepEqual(writes, [{ content: submitted, fingerprint: 'initial-version' }])
+  assert.equal(env.state.conflict, true)
+  assert.equal(env.state.content, submitted)
+  assert.equal(env.state.dirty, true)
+  await env.state.save()
+  assert.equal(writes.length, 1)
+
+  env.api.get = async () => { throw new Error('Read unavailable') }
+  await env.state.load()
+  assert.equal(env.state.conflict, true)
+  assert.equal(env.state.loaded, true)
+  assert.equal(env.state.content, submitted)
+  env.api.get = async () => ({ content: 'language: zh_HK\n', path: 'config.yml', fingerprint: 'latest-version' })
+  await env.state.load()
+  assert.equal(env.state.conflict, false)
+  assert.equal(env.state.content, 'language: zh_HK\n')
+  env.state.content = submitted
+  await env.state.save()
+  assert.deepEqual(writes[1], { content: submitted, fingerprint: 'latest-version' })
+  assert.equal(env.state.fingerprint, 'saved-version')
+  assert.equal(env.state.dirty, false)
 })
 
 test('console rejection retains the command for correction and repeat execution is blocked', async context => {

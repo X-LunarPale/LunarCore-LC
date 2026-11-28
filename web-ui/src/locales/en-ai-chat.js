@@ -9,6 +9,7 @@ export default {
   '回退模型 ID': 'Fallback model ID',
   '限流、模型不存在或上游故障时尝试一次；鉴权或余额错误不回退。留空关闭。': 'Try once on rate limits, a missing model, or upstream failure. No fallback for authentication or balance errors. Leave blank to disable.',
   '获取上游模型': 'Fetch models',
+  '上游未返回模型': 'The provider returned no models',
   '查询余额': 'Query balance',
   '余额查询时间': 'Balance checked',
   '可用': 'Available',

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api, socket, resolveEndpoint } from '../../api'
 import { useAuth } from '../../stores/auth'
 import TableSection from '../panel/TableSection.vue'
@@ -14,7 +15,10 @@ import { t } from '../../i18n'
 
 const props = defineProps({ panel: { type: Object, required: true }, namespace: { type: String, required: true }, id: { type: String, required: true } })
 const auth = useAuth()
-const tab = ref(props.namespace === 'anticheat' || props.id === 'anticheat' ? 'violations' : 'punishments')
+const route = useRoute()
+const router = useRouter()
+const app = useApp()
+const defaultTab = props.namespace === 'anticheat' || props.id === 'anticheat' ? 'violations' : 'punishments'
 const stats = ref([])
 const statsError = ref('')
 const connected = ref(socket.connected)
@@ -80,39 +84,44 @@ function startOutputPolling() {
   outputPolling = true
   syncOutputPolling()
 }
-watch(tab, syncOutputPolling)
-
-const canViewBan = computed(() => auth.can('ban.view'))
-const canManageBan = computed(() => auth.can('ban.manage'))
-const canViewAnti = computed(() => auth.can('anticheat.view'))
-const canManageAnti = computed(() => auth.can('anticheat.manage'))
+const panelFor = namespace => app.panels.find(panel => panel.namespace === namespace)
+  || (props.namespace === namespace ? props.panel : null)
+const canViewBan = computed(() => !!panelFor('ban') && auth.can('ban.view'))
+const canViewAnti = computed(() => !!panelFor('anticheat') && auth.can('anticheat.view'))
+const canManageAnti = computed(() => canViewAnti.value && auth.can('anticheat.manage'))
 const backend = computed(() => stats.value.find(item => item.label === '检测后端')?.value || 'GrimAC')
 function backendText(message) { return t(message).replaceAll('GrimAC', backend.value) }
-const app = useApp()
-const canManage = computed(() => canViewAnti.value)
 const allSections = computed(() => ['ban', 'anticheat'].flatMap(namespace => {
-  const panel = app.panels.find(p => p.namespace === namespace) || (props.namespace === namespace ? props.panel : null)
-  return (panel?.sections || []).map(s => ({ ...s, ownerNamespace: namespace }))
+  return (panelFor(namespace)?.sections || []).map(s => ({ ...s, ownerNamespace: namespace }))
 }))
 const settingsSections = computed(() => allSections.value.filter(s => s.type === 'form' && auth.can(`${s.ownerNamespace}.view`)))
 const violationSections = computed(() => allSections.value.filter(s => s.ownerNamespace === 'anticheat' && s.type === 'table').map(s => ({ ...s, toolbarActions: [] })))
 const punishmentSections = computed(() => allSections.value.filter(s => s.ownerNamespace === 'ban' && s.type === 'table'))
-const primarySections = violationSections
 const commandFields = computed(() => (command.value?.args || []).map(a => ({ ...a, key: a.name, label: t(({target:'玩家名称或 UUID',page:'页码',session:'会话编号',name:'检测名称',match:'匹配条件',grep:'详情筛选',detailed:'详细记录',verbose:'详细信息',delete:'完成后删除源数据',flagId:'违规日志编号',message:'告警内容',src:'源存储',dst:'目标存储',here:'保留当前位置'})[a.name] || a.label || a.name), type: a.type === 'int' ? 'number' : a.type === 'enum' ? 'select' : a.type === 'bool' ? 'bool' : 'text', options: (a.options || []).map(value => ({value,label:value})) })))
 const visibleTabs = computed(() => [
   { id: 'punishments', label: '处罚记录', icon: 'shield-ban', visible: canViewBan.value },
   { id: 'violations', label: 'GrimAC 违规', icon: 'scan-search', visible: canViewAnti.value },
-  { id: 'tools', label: '管理工具', icon: 'wrench', visible: canManage.value },
+  { id: 'tools', label: '管理工具', icon: 'wrench', visible: canViewAnti.value },
   { id: 'grim-config', label: 'GrimAC 配置', icon: 'file-cog', visible: canManageAnti.value },
   { id: 'settings', label: '设置', icon: 'settings-2', visible: canViewAnti.value || canViewBan.value }
 ].filter(t => t.visible))
+const tab = computed(() => {
+  const available = visibleTabs.value
+  const requested = route.query.tab || defaultTab
+  return available.find(item => item.id === requested)?.id
+    || available.find(item => item.id === defaultTab)?.id
+    || available[0]?.id
+})
 const filteredCommands = computed(() => commands.value.filter(item =>
   `${backendText(item.label)} ${item.command} ${item.id}`.toLocaleLowerCase().includes(toolQuery.value.trim().toLocaleLowerCase())))
 watch(filteredCommands, available => {
   if (available.length && !available.some(item => item.id === command.value?.id)) chooseCommand(available[0])
 })
-watch(visibleTabs, available => {
-  if (available.length && !available.some(item => item.id === tab.value)) tab.value = available[0].id
+watch(tab, id => {
+  syncOutputPolling()
+  if (id === 'settings') settingsVisited.value = true
+  if (id === 'grim-config') configVisited.value = true
+  if (id === 'tools' && !commands.value.length) loadCommands()
 }, { immediate: true })
 
 async function loadStats() {
@@ -128,7 +137,7 @@ async function loadStats() {
   finally { statsPending = false }
 }
 async function loadCommands() {
-  if (!canManage.value || commandsLoading.value || disposed) return
+  if (!canViewAnti.value || commandsLoading.value || disposed) return
   commandsLoading.value = true
   commandsError.value = ''
   try {
@@ -178,20 +187,20 @@ async function runCommand() {
   }
 }
 function sectionTitle(s) { return s.title || t(({ table: '数据列表', form: '配置设置' }[s.type] || '管理内容')) }
-function onTab(id) {
-  tab.value = id
-  if (id === 'settings') settingsVisited.value = true
-  if (id === 'grim-config') configVisited.value = true
-  if (id === 'tools' && !commands.value.length) loadCommands()
+function selectTab(id) {
+  if (id !== tab.value) {
+    return router.push({ path: route.path, query: { ...route.query, tab: id }, hash: route.hash })
+  }
 }
-function onTabKeydown(event, index) {
+async function onTabKeydown(event, index) {
   const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
   if (!direction && event.key !== 'Home' && event.key !== 'End') return
   event.preventDefault()
   const last = visibleTabs.value.length - 1
   const next = event.key === 'Home' ? 0 : event.key === 'End' ? last : (index + direction + last + 1) % (last + 1)
-  onTab(visibleTabs.value[next].id)
-  event.currentTarget.parentElement.children[next]?.focus()
+  const target = event.currentTarget.parentElement.children[next]
+  const failure = await selectTab(visibleTabs.value[next].id)
+  if (!failure) target?.focus()
 }
 function onStatus(value) { connected.value = value }
 onMounted(() => {
@@ -220,14 +229,14 @@ onBeforeUnmount(() => {
       <div v-else class="health-muted">{{ t('等待状态数据') }}</div>
     </section>
     <nav class="workspace-tabs" :aria-label="t('封禁管理分区')" role="tablist">
-      <button v-for="(item, index) in visibleTabs" :key="item.id" :class="{ active: tab === item.id }" :aria-selected="tab === item.id" :tabindex="tab === item.id ? 0 : -1" role="tab" type="button" @click="onTab(item.id)" @keydown="onTabKeydown($event, index)"><Icon :name="item.icon" :size="15" />{{ backendText(item.label) }}</button>
+      <button v-for="(item, index) in visibleTabs" :key="item.id" :class="{ active: tab === item.id }" :aria-selected="tab === item.id" :tabindex="tab === item.id ? 0 : -1" role="tab" type="button" @click="selectTab(item.id)" @keydown="onTabKeydown($event, index)"><Icon :name="item.icon" :size="15" />{{ backendText(item.label) }}</button>
     </nav>
     <main class="workspace-content">
-      <section v-show="tab === 'punishments'" class="tab-panel">
+      <section v-show="tab === 'punishments'" class="tab-panel" :class="{ 'lc-pane-in': tab === 'punishments' }">
         <div class="section-stack"><TableSection v-for="(section, index) in punishmentSections" :key="index" :section="section" :namespace="section.ownerNamespace" :active="tab === 'punishments'" /></div>
         <el-empty v-if="!punishmentSections.length" :description="t('暂无可查看的处罚内容')" />
       </section>
-      <section v-show="tab === 'violations'" class="tab-panel">
+      <section v-show="tab === 'violations'" class="tab-panel" :class="{ 'lc-pane-in': tab === 'violations' }">
         <div class="section-stack"><TableSection v-for="(section, index) in violationSections" :key="index" :section="section" :namespace="section.ownerNamespace" :active="tab === 'violations'" /></div>
         <el-empty v-if="!violationSections.length" :description="t('暂无违规记录')" />
       </section>

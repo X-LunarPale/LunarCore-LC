@@ -20,6 +20,8 @@ export default {
   '安全': 'Security',
   '扩展模块': 'Extensions',
   '封禁与反作弊': 'Moderation & Anti-Cheat',
+  '反作弊配置': 'Anti-Cheat Configuration',
+  '反作弊违规记录': 'Anti-Cheat Violations',
   '性能': 'Performance',
   '计分板显示': 'Scoreboard',
   '全服玩法投票': 'Server Polls',

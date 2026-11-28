@@ -77,7 +77,7 @@ final class WebSetup {
                 .get("/rtp", VIEW, this::rtpWorlds)
                 .post("/rtp/{world}/edit", MANAGE, this::editRtp));
 
-        WebPanel.Form form = new WebPanel.Form("传送配置", "config", "config");
+        WebPanel.Form form = new WebPanel.Form("传送配置", "config", "config").savePermission(MANAGE);
         for (Opt o : opts) {
             String type = switch (o.type()) {
                 case "bool" -> "bool";
@@ -138,6 +138,10 @@ final class WebSetup {
         long homes = m.db().queryOne("SELECT COUNT(*) FROM " + m.homes().table(), rs -> rs.getLong(1)).orElse(0L);
         int pending = ctx.sync(() -> m.tpa().pendingCount());
         List<Map<String, Object>> out = new ArrayList<>();
+        StoredLoc hub = m.spawns().stored();
+        var hubStat = stat("主城", hub == null ? "未设置" : hub.display(), "landmark");
+        if (hub == null) hubStat.put("valueKey", "未设置");
+        out.add(hubStat);
         out.add(stat("地标", m.warps().count(), "map-pin"));
         out.add(stat("家总数", homes, "home"));
         out.add(stat("待处理 tpa", pending, "send"));
@@ -148,6 +152,7 @@ final class WebSetup {
     private static Map<String, Object> stat(String label, Object value, String icon) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("label", label);
+        m.put("labelKey", label);
         m.put("value", String.valueOf(value));
         m.put("icon", icon);
         return m;

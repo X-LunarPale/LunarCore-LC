@@ -54,6 +54,12 @@ async function op(m, action) {
       const ok = await ElMessageBox.confirm(t('确定禁用模块「{name}」吗？依赖它的模块也会被禁用。', { name: m.name }), t('禁用模块'), { type: 'warning' }).then(() => true).catch(() => false)
       if (!ok) return
     }
+    if (action === 'reload' && m.id === 'qqauth') {
+      const confirmed = await ElMessageBox.confirm(t('重载 QQauth 会撤销在线玩家认证并断开连接。'), t('重载'), {
+        type: 'warning', confirmButtonText: t('重载'), cancelButtonText: t('取消')
+      }).then(() => true, () => false)
+      if (!confirmed) return
+    }
     const r = requireSuccess(await api.post(`/api/modules/${encodeURIComponent(m.id)}/${action}`))
     ElMessage.success(r?.message || t({ enable: '已启用', disable: '已禁用', reload: '已重载' }[action]))
     await load()

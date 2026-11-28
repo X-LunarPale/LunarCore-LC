@@ -10,7 +10,7 @@ import { latestRequest, requireSuccess, rowActionVisible } from '../../utils/pan
 import { t } from '../../i18n'
 const begin = latestRequest()
 
-const props = defineProps({ section: Object, namespace: String, active: { type: Boolean, default: true } })
+const props = defineProps({ section: Object, namespace: String, active: { type: Boolean, default: true }, preview: Boolean })
 const auth = useAuth()
 const runner = ref(null)
 
@@ -23,6 +23,7 @@ const s = reactive({
   query: '',
   sort: '',
   order: '',
+  loaded: false,
   loading: false,
   error: null
 })
@@ -31,9 +32,10 @@ const columns = computed(() => (props.section.columns || []).map(column => ({
   ...column,
   valueLabels: props.section.valueLabels?.[column.key] ?? column.valueLabels
 })))
-const rowActions = computed(() => (props.section.rowActions || []).filter((a) => auth.can(a.permission)))
-const toolbarActions = computed(() => (props.section.toolbarActions || []).filter((a) => auth.can(a.permission)))
-const searchable = computed(() => props.section.searchable !== false)
+const rowActions = computed(() => props.preview ? [] : (props.section.rowActions || []).filter((a) => auth.can(a.permission)))
+const toolbarActions = computed(() => props.preview ? [] : (props.section.toolbarActions || []).filter((a) => auth.can(a.permission)))
+const searchable = computed(() => !props.preview && props.section.searchable !== false &&
+  Boolean(s.total || s.items.length || s.query || s.q || s.error))
 const rowKey = computed(() => props.section.rowKey || 'id')
 const labelWidth = label => Array.from(t(label)).reduce((width, char) => width + (char.codePointAt(0) > 255 ? 12 : 7), 0)
 const actionWidth = computed(() => Math.min(320, 24 + rowActions.value.reduce((w, a) => w + 24 + labelWidth(a.label), 0) + Math.max(0, rowActions.value.length - 1) * 6))
@@ -56,6 +58,7 @@ async function load() {
       s.total = r?.total ?? s.items.length
     }
     s.error = null
+    s.loaded = true
   } catch (e) {
     if (!current()) return
     s.error = { status: e.status, message: e.message }
@@ -96,18 +99,19 @@ defineExpose({ reload: load })
 
 <template>
   <section class="table-section" :aria-busy="s.loading">
-    <header class="table-heading"><h2>{{ t(section.title || '数据列表') }}</h2></header>
-    <div class="toolbar">
-      <el-input v-if="searchable" v-model="s.q" :disabled="runner?.busy" :placeholder="t('搜索')" :aria-label="t('{title}搜索', { title: t(section.title || '列表') })" clearable class="table-search" @keyup.enter="search" @clear="search">
-        <template #prefix><Icon name="search" :size="14" /></template>
-      </el-input>
-      <el-button v-for="a in toolbarActions" :key="a.id" :disabled="!!s.error || s.loading || runner?.busy" :type="btnType(a.style)" :plain="a.style === 'danger' || a.style === 'warning'" @click="runner.run(a, {})"><Icon v-if="a.icon" :name="a.icon" :size="14" />{{ t(a.label) }}</el-button>
-      <div class="spacer" />
-      <el-button class="refresh-button" :disabled="s.loading || runner?.busy" @click="load" :title="t('刷新列表')" :aria-label="t('刷新列表')"><Icon name="refresh-cw" :size="14" /></el-button>
-    </div>
+    <header class="table-heading">
+      <h2>{{ t(section.title || '数据列表') }}</h2>
+      <div v-if="!preview || s.error" class="toolbar">
+        <el-input v-if="searchable" v-model="s.q" :disabled="runner?.busy" :placeholder="t('搜索')" :aria-label="t('{title}搜索', { title: t(section.title || '列表') })" clearable class="table-search" @keyup.enter="search" @clear="search">
+          <template #prefix><Icon name="search" :size="14" /></template>
+        </el-input>
+        <el-button v-for="a in toolbarActions" :key="a.id" :disabled="!!s.error || s.loading || runner?.busy" :type="btnType(a.style)" :plain="a.style === 'danger' || a.style === 'warning'" @click="runner.run(a, {})"><Icon v-if="a.icon" :name="a.icon" :size="14" />{{ t(a.label) }}</el-button>
+        <el-button class="refresh-button" :disabled="s.loading || runner?.busy" @click="load" :title="t('刷新列表')" :aria-label="t('刷新列表')"><Icon name="refresh-cw" :size="14" /></el-button>
+      </div>
+    </header>
     <SectionError :error="s.error" />
     <p v-if="s.error && s.items.length" class="stale-note" role="status">{{ t('当前显示上次成功读取的数据') }}</p>
-    <el-table v-if="!s.error || s.items.length" :data="s.items" v-loading="s.loading" :row-key="rowKey" @sort-change="onSort">
+    <el-table v-show="s.items.length" :data="s.items" v-loading="s.loading" :row-key="rowKey" @sort-change="onSort">
       <el-table-column v-for="c in columns" :key="c.key" :prop="c.key" :label="t(c.label)" :sortable="c.sortable ? 'custom' : false"
         :min-width="c.type === 'player' ? 170 : c.type === 'datetime' ? 165 : 110" show-overflow-tooltip>
         <template #default="{ row }"><CellValue :column="c" :row="row" /></template>
@@ -119,28 +123,29 @@ defineExpose({ reload: load })
           </div>
         </template>
       </el-table-column>
-      <template #empty><div class="table-empty">{{ s.query ? t('没有匹配的记录') : t('暂无记录') }}</div></template>
     </el-table>
-    <el-pagination v-if="!s.error && s.total > 0" class="pager" :disabled="s.loading || runner?.busy" :pager-count="5" layout="total, sizes, prev, pager, next" :total="s.total" v-model:current-page="s.page"
+    <div v-if="!s.items.length && !s.error" class="table-empty" v-loading="s.loading">
+      <span v-if="s.loaded">{{ s.query ? t('没有匹配的记录') : t('暂无记录') }}</span>
+    </div>
+    <el-pagination v-if="!preview && !s.error && s.total > 0" class="pager" :disabled="s.loading || runner?.busy" :pager-count="5" layout="total, sizes, prev, pager, next" :total="s.total" v-model:current-page="s.page"
       v-model:page-size="s.size" :page-sizes="[10, 20, 50, 100]" @current-change="load" @size-change="search" />
-    <ActionRunner ref="runner" :namespace="namespace" :columns="columns" @done="actionDone" />
+    <ActionRunner v-if="!preview" ref="runner" :namespace="namespace" :columns="columns" @done="actionDone" />
   </section>
 </template>
 
 <style scoped>
 .table-section { padding:0; min-width:0; color:var(--lc-text); }
-.table-heading { margin-bottom: 12px; }
+.table-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 8px; }
 h2 { font-size: 15px; font-weight: 600; margin: 0; }
-.toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding-bottom:12px; margin-bottom:0; }
+.toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; max-width:100%; }
 .toolbar > :deep(.el-button) { margin:0; height:34px; padding:0 11px; font-size:13px; }
 .table-search { width: min(240px, 100%); }
 .table-search :deep(.el-input__wrapper) { min-height:34px; }
 .table-search :deep(.el-input__inner) { height:32px; font-size:13px; }
-.spacer { flex: 1; }
 .table-section :deep(.el-table) { --el-table-border-color:var(--el-border-color-light); --el-table-header-bg-color:var(--el-fill-color-light); --el-table-header-text-color:var(--el-text-color-regular); --el-table-row-hover-bg-color:var(--el-fill-color-light); font-size:13px; border-radius:0; border-top:1px solid var(--el-border-color-light); }
 .table-section :deep(.el-table th.el-table__cell) { font-weight: 550; padding: 7px 0; }
 .table-section :deep(.el-table td.el-table__cell) { padding: 7px 0; }
-.table-empty { padding: 22px 12px; color: var(--lc-text-soft); line-height: 1.4; }
+.table-empty { display: flex; align-items: center; min-height: 42px; padding: 9px 0; border-block: 1px solid var(--lc-line); color: var(--lc-text-soft); font-size: 13px; }
 .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 .row-actions :deep(.el-button) { margin: 0; flex: 0 0 auto; height: 25px; padding: 0 8px; }
 .pager { margin-top: 11px; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
@@ -149,8 +154,7 @@ h2 { font-size: 15px; font-weight: 600; margin: 0; }
 @media (max-width: 700px) {
   .toolbar { gap: 6px; }
   .pager :deep(.el-pagination__sizes), .pager :deep(.el-pagination__jump) { display: none; }
-  .table-search { flex: 1; min-width: 150px; }
-  .spacer { display: none; }
+  .table-search { flex: 1; min-width: min(130px, 100%); }
   .refresh-button { margin-left: auto !important; }
   .pager { justify-content: flex-start; overflow-x: auto; }
 }

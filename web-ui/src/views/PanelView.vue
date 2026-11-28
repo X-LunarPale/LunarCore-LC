@@ -2,6 +2,7 @@
 import { computed, defineAsyncComponent, h, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApp } from '../stores/app'
+import { useAuth } from '../stores/auth'
 import { url } from '../api'
 import { renderMarkdown } from '../utils/markdown'
 import { panelText } from '../utils/panel'
@@ -13,24 +14,58 @@ import { t } from '../i18n'
 
 const route = useRoute()
 const app = useApp()
+const auth = useAuth()
 const panel = computed(() => app.findPanel(route.params.ns, route.params.id))
 const panelKey = computed(() => `${route.params.ns}/${route.params.id}`)
 const activeGroup = ref('')
 const menuLoading = ref(false)
 const menuError = ref('')
-const sections = computed(() => panel.value?.sections || [])
+const signin = computed(() => panelKey.value === 'signin/signin')
+const teleport = computed(() => panelKey.value === 'teleport/teleport')
+const overviewFirst = computed(() => signin.value || teleport.value)
+const signinFormPermissions = new Map([['config', 'signin.manage'], ['rewards', 'signin.rewards']])
+const sections = computed(() => (panel.value?.sections || []).filter(section => {
+  // These routes require the same permission for reading and saving, including on older modules.
+  return !signin.value || section.type !== 'form' || auth.can(signinFormPermissions.get(section.loadEndpoint))
+}))
 const stats = computed(() => sections.value.filter(section => section.type === 'stats'))
-const groupOf = section => ({ form: 'settings', table: 'records', text: 'help' })[section.type] || 'overview'
-const groups = computed(() => [
-  { id: 'records', label: '数据记录', icon: 'table-2' },
-  { id: 'settings', label: '设置', icon: 'sliders-horizontal' },
-  { id: 'overview', label: '运行概览', icon: 'activity' },
-  { id: 'help', label: '说明', icon: 'book-open' }
-].map(group => ({
-  ...group,
-  panelId: `module-content-${group.id}`,
-  sections: sections.value.filter(section => section.type !== 'stats' && groupOf(section) === group.id)
-})).filter(group => group.sections.length))
+const warps = computed(() => teleport.value
+  ? sections.value.find(section => section.type === 'table' && section.endpoint === 'warps')
+  : undefined)
+const warpPreview = computed(() => warps.value && {
+  ...warps.value,
+  title: '传送点',
+  columns: (warps.value.columns || []).filter(column => ['name', 'location'].includes(column.key)),
+  pageSize: 5,
+  refreshSeconds: 30
+})
+const groupByType = { form: 'settings', table: 'records', text: 'help' }
+function groupOf(section) {
+  if (section === warps.value) return 'warps'
+  if (signin.value && section.type === 'form' && section.loadEndpoint === 'rewards') return 'rewards'
+  return groupByType[section.type] || 'overview'
+}
+
+const groups = computed(() => {
+  const definitions = {
+    overview: { label: overviewFirst.value ? '概览' : '运行概览', icon: 'activity' },
+    warps: { label: '传送点', icon: 'map-pin' },
+    records: { label: signin.value ? '签到记录' : '数据记录', icon: 'table-2' },
+    rewards: { label: '签到奖励', icon: 'award' },
+    settings: { label: '设置', icon: 'sliders-horizontal' },
+    help: { label: '说明', icon: 'book-open' }
+  }
+  const order = overviewFirst.value
+    ? ['overview', 'warps', 'records', 'rewards', 'settings', 'help']
+    : ['records', 'settings', 'overview', 'help']
+  return order.map(id => ({
+    ...definitions[id],
+    id,
+    panelId: `module-content-${id}`,
+    sections: sections.value.filter(section => section.type !== 'stats' && groupOf(section) === id)
+  })).filter(group => group.sections.length ||
+    (group.id === 'overview' && overviewFirst.value && (stats.value.length || warpPreview.value)))
+})
 const showStats = computed(() => activeGroup.value !== 'help' || groups.value.length === 1)
 watch(panelKey, () => { activeGroup.value = groups.value[0]?.id || '' }, { immediate: true })
 watch(groups, available => {
@@ -90,15 +125,22 @@ async function refreshMenu() {
         <header class="page-header">
           <h1 class="page-title"><Icon :name="panel.icon || 'box'" :size="20" />{{ t(panel.title) }}</h1>
         </header>
-        <div v-if="stats.length" v-show="showStats" :class="{ 'panel-metrics-spaced': groups.length }" class="panel-sections">
+        <div v-if="stats.length && !overviewFirst" v-show="showStats" :class="{ 'panel-metrics-spaced': groups.length }" class="panel-sections">
           <section v-for="(section, index) in stats" :key="sectionKey(section, index)" :style="spanStyle(section)" class="panel-section">
             <StatsSection :section="section" :namespace="panel.namespace" :active="showStats" />
           </section>
         </div>
-        <WorkspaceTabs v-if="groups.length > 1" v-model="activeGroup" :items="groups" label="模块内容分区" id="module-content" />
+        <WorkspaceTabs v-if="groups.length > 1" v-model="activeGroup" :items="groups"
+          :class="{ 'overview-tabs': overviewFirst }" label="模块内容分区" id="module-content" />
         <div v-for="group in groups" v-show="group.id === activeGroup" :id="group.panelId" :key="group.id"
           class="panel-sections lc-pane-in" :role="groups.length > 1 ? 'tabpanel' : undefined"
           :aria-labelledby="groups.length > 1 ? `module-content-tab-${group.id}` : undefined">
+          <template v-if="overviewFirst && group.id === 'overview'">
+            <section v-for="(section, index) in stats" :key="sectionKey(section, index)" :style="spanStyle(section)" class="panel-section">
+              <StatsSection :section="section" :namespace="panel.namespace" :active="activeGroup === 'overview'" />
+            </section>
+            <TableSection v-if="warpPreview" :section="warpPreview" :namespace="panel.namespace" :active="activeGroup === 'overview'" preview class="panel-section overview-list" />
+          </template>
           <section v-for="(section, index) in group.sections" :key="sectionKey(section, index)" :style="spanStyle(section)" class="panel-section">
             <TableSection v-if="section.type === 'table'" :section="section" :namespace="panel.namespace" :active="group.id === activeGroup" />
             <FormSection v-else-if="section.type === 'form'" :section="section" :namespace="panel.namespace" :active="group.id === activeGroup" />
@@ -113,7 +155,7 @@ async function refreshMenu() {
             <p v-else class="muted">{{ t('不支持的区块类型：{type}', { type: section.type }) }}</p>
           </section>
         </div>
-        <el-empty v-if="!panel.sections?.length" :description="t('该面板没有内容')" />
+        <el-empty v-if="!sections.length" :description="t('该面板没有内容')" />
       </template>
     </template>
     <el-result v-else icon="warning" :title="t('面板不存在')" :sub-title="t('对应模块可能已被禁用，或你没有查看该面板的权限。')">
@@ -127,10 +169,13 @@ async function refreshMenu() {
 .panel-sections { display:grid; grid-template-columns:repeat(24,minmax(0,1fr)); gap:24px 8px; }
 .panel-metrics-spaced { margin-bottom:20px; }
 .panel-section { min-width:0; }
+#module-content-overview :deep(.stat-label) { white-space:normal; overflow-wrap:anywhere; }
+.overview-list { grid-column:1 / -1; max-width:720px; }
 .section-title { margin:0 0 16px; font-size:15px; font-weight:600; }
 .frame { width:100%; border:1px solid var(--el-border-color-light); border-radius:6px; background:var(--lc-surface); }
 .markdown { max-width:88ch; }
 :deep(.workspace-loading),:deep(.workspace-load-error) { min-height:180px; display:grid; place-content:center; justify-items:center; color:var(--lc-text-soft); font-size:13px; }
 :deep(.workspace-load-error button) { border:1px solid var(--el-border-color); border-radius:5px; background:var(--lc-surface); color:var(--el-color-primary); padding:7px 12px; cursor:pointer; }
 @media (max-width:760px) { .panel-sections { grid-template-columns:minmax(0,1fr); gap:20px; } .panel-section { grid-column:1/-1!important; } }
+@media (max-width:600px) { .overview-tabs { flex-wrap:wrap; overflow:visible; } }
 </style>

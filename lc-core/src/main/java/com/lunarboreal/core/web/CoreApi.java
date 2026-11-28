@@ -26,9 +26,12 @@ import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -141,6 +144,7 @@ final class CoreApi {
             synchronized (history) {
                 out.put("history", new ArrayList<>(history));
             }
+            out.put("serverTime", System.currentTimeMillis());
             ctx.json(out);
         });
 
@@ -789,7 +793,22 @@ final class CoreApi {
         File f = configFile();
         String content = f.exists() ? Files.readString(f.toPath(), StandardCharsets.UTF_8) : "";
         ctx.json(Json.of("content", SecretMask.mask(content), "path", "plugins/" + plugin.getName() + "/config.yml",
-                "modified", f.lastModified(), "masked", SecretMask.MASK));
+                "modified", f.lastModified(), "masked", SecretMask.MASK, "fingerprint", configFingerprint(content)));
+    }
+
+    static String configFingerprint(String content) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(content.getBytes(StandardCharsets.UTF_8));
+            return "sha256:" + HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    static void requireConfigFingerprint(String expected, String original) {
+        if (!configFingerprint(original).equals(expected)) {
+            throw new HttpException(409, "配置已被其他位置修改，请重新读取后核对");
+        }
     }
 
     static String validateYaml(String content) {
@@ -803,6 +822,7 @@ final class CoreApi {
 
     private void saveConfig(com.lunarboreal.api.web.WebContext c) throws Exception {
         WebContextImpl ctx = (WebContextImpl) c;
+        String expected = ctx.required("fingerprint");
         String submitted = ctx.required("content");
         String err = validateYaml(submitted);
         if (err != null) throw HttpException.badRequest("YAML 格式错误：" + err);
@@ -811,6 +831,7 @@ final class CoreApi {
         synchronized (this) {
             File f = configFile();
             String original = f.exists() ? Files.readString(f.toPath(), StandardCharsets.UTF_8) : "";
+            requireConfigFingerprint(expected, original);
             content = SecretMask.unmask(submitted, original);
             if (!ctx.userImpl().isSuper()) {
                 YamlConfiguration previous = new YamlConfiguration();
@@ -832,7 +853,7 @@ final class CoreApi {
         web.audit(ctx, "config.save", "保存核心配置 config.yml（" + content.length() + " 字符）");
         ctx.json(Json.of("ok", true, "message", webChanged
                 ? "已保存并重载核心配置。web 段已变更，请执行 /lc web reload 使其生效"
-                : "已保存并重载核心配置", "webChanged", webChanged));
+                : "已保存并重载核心配置", "webChanged", webChanged, "fingerprint", configFingerprint(content)));
     }
 
     private static String webSection(String content) {

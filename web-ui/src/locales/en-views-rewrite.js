@@ -28,6 +28,7 @@ export default {
   '控制台命令': 'Console command',
   '配置返回格式错误': 'The server returned an invalid configuration.',
   '保存并重载核心配置？': 'Save and reload the core configuration?',
+  '保存前请重新读取配置': 'Reload the configuration before saving',
   '配置说明': 'Configuration notes',
   '操作日志返回格式错误': 'The server returned invalid activity records.',
   '账号列表返回格式错误': 'The server returned invalid account data.',

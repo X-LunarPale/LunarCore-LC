@@ -260,7 +260,7 @@ watch(canManage, allowed => {
   initialized = false
 })
 onBeforeRouteLeave(confirmDiscard)
-onBeforeRouteUpdate((to, from) => to.fullPath === from.fullPath || confirmDiscard())
+onBeforeRouteUpdate((to, from) => to.path === from.path || confirmDiscard())
 onMounted(() => {
   window.addEventListener('beforeunload', beforeUnload)
   document.addEventListener('visibilitychange', scheduleReloadStatus)
