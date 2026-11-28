@@ -43,7 +43,8 @@ async function load() {
 const shown = computed(() => {
   const s = q.value.trim().toLowerCase()
   return items.value.filter(m => (stateFilter.value === 'all' || m.enabled === (stateFilter.value === 'enabled'))
-    && (!s || [m.id, m.name, m.description].some(x => String(x || '').toLowerCase().includes(s))))
+    && (!s || [m.id, m.name, m.description, t(m.name), t(m.description)]
+      .some(x => String(x || '').toLowerCase().includes(s))))
 })
 
 async function op(m, action) {
@@ -51,7 +52,7 @@ async function op(m, action) {
   busy.value = m.id + action
   try {
     if (action === 'disable') {
-      const ok = await ElMessageBox.confirm(t('确定禁用模块「{name}」吗？依赖它的模块也会被禁用。', { name: m.name }), t('禁用模块'), { type: 'warning' }).then(() => true).catch(() => false)
+      const ok = await ElMessageBox.confirm(t('确定禁用模块「{name}」吗？依赖它的模块也会被禁用。', { name: t(m.name) || m.id }), t('禁用模块'), { type: 'warning' }).then(() => true).catch(() => false)
       if (!ok) return
     }
     if (action === 'reload' && m.id === 'qqauth') {
@@ -62,6 +63,7 @@ async function op(m, action) {
     }
     const r = requireSuccess(await api.post(`/api/modules/${encodeURIComponent(m.id)}/${action}`))
     ElMessage.success(r?.message || t({ enable: '已启用', disable: '已禁用', reload: '已重载' }[action]))
+    if (m.id === 'webui-effects') await app.loadInfo()
     await load()
     try {
       await app.loadPanels()
@@ -105,11 +107,11 @@ useAutoRefresh(() => { if (!loading.value && !busy.value) return load() }, {
               <Icon class="module-icon" name="package" :size="17" />
               <div class="module-copy">
                 <div class="module-heading">
-                  <h2>{{ m.name || m.id }}</h2>
+                  <h2>{{ t(m.name) || m.id }}</h2>
                   <span v-if="m.version" class="module-version">v{{ m.version }}</span>
                 </div>
                 <div v-if="m.name && m.name !== m.id" class="module-id"><code>{{ m.id }}</code></div>
-                <p v-if="m.description" class="module-description">{{ m.description }}</p>
+                <p v-if="m.description" class="module-description">{{ t(m.description) }}</p>
                 <details v-if="m.authors?.length || m.depends?.length || m.softDepends?.length" class="module-details">
                   <summary>{{ t('模块信息') }}</summary>
                   <div class="module-meta">

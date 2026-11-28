@@ -57,8 +57,11 @@ def main():
             raise ValueError(f"Core must contain only essentials: {embedded}")
         catalog_bytes = archive.read("module-market.json")
         catalog = json.loads(catalog_bytes)
-    if catalog["version"] != version or len(catalog["modules"]) != 19:
-        raise ValueError("Unexpected market version or module count")
+    source_catalog = json.loads((ROOT / "module-market/catalog.json").read_text(encoding="utf-8"))
+    if catalog["version"] != version or [entry["id"] for entry in catalog["modules"]] != [
+        entry["id"] for entry in source_catalog
+    ]:
+        raise ValueError("Market catalog does not match the release version or source catalog")
 
     output = ROOT / "dist" / version
     output.mkdir(parents=True, exist_ok=True)
@@ -102,7 +105,7 @@ def main():
         legacy.validate_plugin(built, version, name)
         bridges.append(copy(built, f"{name}.jar"))
 
-    # Community bridge: shipped separately from the official 19-entry catalog.
+    # Community bridge: shipped separately from the official catalog.
     structure_bridge = copy(ROOT / "modules/lc-structures-web/build/libs/lc-structures-web.jar")
     with zipfile.ZipFile(structure_bridge) as archive:
         archive.getinfo("module.yml")

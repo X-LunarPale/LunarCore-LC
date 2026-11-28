@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppearanceControls from '../components/AppearanceControls.vue'
+import GlassSurface from '../components/GlassSurface.vue'
 import { useAuth } from '../stores/auth'
 import { useApp } from '../stores/app'
 import { url } from '../api'
@@ -101,7 +102,8 @@ async function submit() {
       <AppearanceControls />
     </header>
     <main class="login-main">
-      <section class="login-form lc-pane-in" aria-labelledby="login-title">
+      <section class="login-form lc-pane-in" data-lc-glass="clear" aria-labelledby="login-title">
+        <GlassSurface v-if="app.liquidGlassEnabled" />
         <h1 id="login-title" class="login-brand"><img :src="logo" alt="" /><span>{{ challenge ? t('两步验证') : brandName }}</span></h1>
         <el-segmented v-if="!challenge" v-model="mode" :aria-label="t('登录')" :disabled="loading" :options="[{ label: t('密码'), value: 'password' }, { label: t('游戏验证码'), value: 'game' }]" block class="login-modes" />
         <el-form :disabled="loading" label-position="top" size="large" :aria-describedby="error ? 'login-error' : undefined" @submit.prevent="submit">

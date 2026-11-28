@@ -1,0 +1,249 @@
+@media (prefers-reduced-motion: no-preference) {
+  html.lc-full-motion {
+    --lc-fx-surface: 320ms;
+    --lc-fx-control: 210ms;
+    --lc-fx-exit: 145ms;
+    --lc-fx-spring: cubic-bezier(.2, 1.52, .42, 1);
+    --lc-fx-soft: cubic-bezier(.2, 1.16, .38, 1);
+  }
+
+  @supports (animation-timing-function: linear(0, 1)) {
+    html.lc-full-motion {
+      --lc-fx-spring: linear(0, .24 11%, .66 23%, .98 37%, 1.14 53%, 1.08 67%, .98 86%, 1);
+      --lc-fx-soft: linear(0, .22 10%, .66 24%, .91 39%, 1.045 56%, 1.02 74%, 1);
+    }
+  }
+
+  html.lc-full-motion .route-enter-active {
+    animation: lc-fx-route-in var(--lc-fx-surface) ease-out;
+  }
+
+  html.lc-full-motion .route-enter-active > .page-header,
+  html.lc-full-motion .route-enter-active.login-fields {
+    animation: lc-fx-pane-in var(--lc-fx-surface) var(--lc-fx-soft);
+  }
+
+  html.lc-full-motion :is(.lc-pane-in, [role="tabpanel"], .tab-panel) {
+    animation: lc-fx-pane-in 270ms var(--lc-fx-soft);
+  }
+
+  /* Some tab panes already animate their contents. */
+  html.lc-full-motion .el-tab-pane:has(> .lc-pane-in) {
+    animation: none;
+  }
+
+  html.lc-full-motion :is(.module-row, .market-row):nth-child(-n + 4) {
+    animation: lc-fx-row-in 280ms var(--lc-fx-spring) var(--lc-fx-stagger, 0ms) backwards;
+  }
+
+  html.lc-full-motion :is(.trend-sample, .module-row, .market-row, .navigation-items > li):nth-child(2) {
+    --lc-fx-stagger: 24ms;
+  }
+
+  html.lc-full-motion :is(.trend-sample, .module-row, .market-row, .navigation-items > li):nth-child(3) {
+    --lc-fx-stagger: 48ms;
+  }
+
+  html.lc-full-motion :is(.trend-sample, .module-row, .market-row, .navigation-items > li):nth-child(n + 4) {
+    --lc-fx-stagger: 72ms;
+  }
+
+  html.lc-full-motion .navigation-group:not(.overview-group) .navigation-fold.is-open > .navigation-items > li:nth-child(-n + 4) {
+    animation: lc-fx-nav-in 255ms var(--lc-fx-spring) var(--lc-fx-stagger, 0ms) backwards;
+  }
+
+  html.lc-full-motion details[open] > :not(summary):nth-child(-n + 5) {
+    animation: lc-fx-row-in 240ms var(--lc-fx-spring);
+  }
+
+  html.lc-full-motion .spark-series {
+    transform-box: view-box;
+    transform-origin: center bottom;
+    animation: lc-fx-chart-in 350ms var(--lc-fx-spring) var(--lc-fx-stagger, 0ms) backwards;
+  }
+
+  /* Popper owns placement; only its menu content scales. */
+  html.lc-full-motion .el-popper[role="menu"] {
+    animation: none;
+  }
+
+  html.lc-full-motion .el-popper {
+    --lc-fx-menu-origin: center top;
+  }
+
+  html.lc-full-motion .el-popper[data-popper-placement^="top"] {
+    --lc-fx-menu-origin: center bottom;
+  }
+
+  html.lc-full-motion .el-popper :is(.el-dropdown-menu, .el-select-dropdown, .appearance-effects) {
+    transform-origin: var(--lc-fx-menu-origin);
+    animation: lc-fx-menu-in 240ms var(--lc-fx-spring);
+  }
+
+  html.lc-full-motion .backdrop-enter-active {
+    transition: opacity 240ms ease-out;
+  }
+
+  html.lc-full-motion .backdrop-leave-active {
+    transition: opacity var(--lc-fx-exit) ease-in;
+  }
+
+  @media (max-width: 899px) {
+    html.lc-full-motion .app-sidebar {
+      transition: transform 220ms ease-in;
+    }
+
+    html.lc-full-motion .app-sidebar.mobile-open {
+      transition: transform var(--lc-fx-surface) var(--lc-fx-soft);
+    }
+  }
+
+  html.lc-full-motion .dialog-fade-enter-active {
+    animation: modal-fade-in var(--lc-fx-surface) ease-out;
+  }
+
+  html.lc-full-motion .dialog-fade-leave-active {
+    animation: modal-fade-out var(--lc-fx-exit) ease-in;
+  }
+
+  html.lc-full-motion :is(.dialog-fade-enter-active, .dialog-fade-leave-active) .el-overlay-dialog,
+  html.lc-full-motion :is(.fade-in-linear-enter-active, .fade-in-linear-leave-active) .el-overlay-message-box {
+    animation: none;
+  }
+
+  html.lc-full-motion .el-overlay.is-message-box.fade-in-linear-enter-active {
+    transition: opacity var(--lc-fx-surface) ease-out;
+  }
+
+  html.lc-full-motion .el-overlay.is-message-box.fade-in-linear-leave-active {
+    transition: opacity var(--lc-fx-exit) ease-in;
+  }
+
+  html.lc-full-motion .dialog-fade-enter-active .el-dialog,
+  html.lc-full-motion .fade-in-linear-enter-active .el-message-box {
+    animation: lc-fx-panel-in var(--lc-fx-surface) var(--lc-fx-spring);
+  }
+
+  html.lc-full-motion .dialog-fade-leave-active .el-dialog,
+  html.lc-full-motion .fade-in-linear-leave-active .el-message-box {
+    animation: lc-fx-panel-out var(--lc-fx-exit) ease-in;
+  }
+
+  html.lc-full-motion .el-message.el-message-fade-enter-active,
+  html.lc-full-motion .el-message.el-message-fade-leave-active {
+    transition: none;
+  }
+
+  html.lc-full-motion .el-message.el-message-fade-enter-active {
+    animation: lc-fx-toast-in 280ms var(--lc-fx-spring);
+  }
+
+  html.lc-full-motion .el-message-fade-enter-active .el-message__icon {
+    animation: lc-fx-selection-in 280ms var(--lc-fx-spring);
+  }
+
+  html.lc-full-motion .el-message.el-message-fade-leave-active {
+    animation: lc-fx-toast-out var(--lc-fx-exit) ease-in;
+  }
+
+  html.lc-full-motion .el-message.is-bottom {
+    --lc-fx-toast-start: 10px;
+  }
+
+  html.lc-full-motion .el-message:is(.el-message-fade-enter-from, .el-message-fade-leave-to):is(.is-left, .is-right, .is-center) {
+    transform: none;
+  }
+
+  html.lc-full-motion .el-message:is(.el-message-fade-enter-from, .el-message-fade-leave-to).is-center {
+    transform: translateX(-50%);
+  }
+
+  html.lc-full-motion :is(.el-button, .lc-icon-button, .brand, .account-control, .group-toggle, .navigation-link, .workspace-tabs > button):not(:disabled, .is-disabled, .is-loading, [aria-disabled="true"]) {
+    transition:
+      color var(--motion-fast),
+      background-color var(--motion-fast),
+      border-color var(--motion-fast),
+      box-shadow var(--motion-fast),
+      scale var(--lc-fx-control) var(--lc-fx-spring);
+  }
+
+  html.lc-full-motion :is(.el-button, .lc-icon-button, .brand, .account-control, .group-toggle, .navigation-link, .workspace-tabs > button):not(:disabled, .is-disabled, .is-loading, [aria-disabled="true"]):active {
+    transform: none;
+    scale: .95 .90;
+    transition: scale 85ms ease-out;
+  }
+
+  html.lc-full-motion .workspace-tabs > button[aria-selected="true"] > .lc-icon,
+  html.lc-full-motion .navigation-link[aria-current="page"] > .lc-icon {
+    animation: lc-fx-selection-in 255ms var(--lc-fx-spring);
+  }
+
+  html.lc-full-motion .el-switch:not(.is-disabled) .el-switch__core {
+    transition:
+      background-color var(--motion-fast),
+      border-color var(--motion-fast),
+      scale var(--lc-fx-control) var(--lc-fx-spring);
+  }
+
+  html.lc-full-motion .el-switch:not(.is-disabled):active .el-switch__core {
+    scale: .95 .89;
+    transition-duration: 85ms;
+  }
+
+  html.lc-full-motion .el-switch.is-checked:not(.is-disabled) .el-switch__action,
+  html.lc-full-motion .el-checkbox__input.is-checked:not(.is-disabled) .el-checkbox__inner {
+    animation: lc-fx-selection-in 240ms var(--lc-fx-spring);
+  }
+
+  @keyframes lc-fx-route-in {
+    from { opacity: .86; }
+  }
+
+  @keyframes lc-fx-pane-in {
+    from { opacity: .84; translate: 0 13px; }
+    to { opacity: 1; translate: 0 0; }
+  }
+
+  @keyframes lc-fx-row-in {
+    from { opacity: .78; translate: 0 8px; }
+    to { opacity: 1; translate: 0 0; }
+  }
+
+  @keyframes lc-fx-nav-in {
+    from { opacity: .72; translate: -10px 0; }
+    to { opacity: 1; translate: 0 0; }
+  }
+
+  @keyframes lc-fx-chart-in {
+    from { opacity: .65; scale: 1 .86; }
+    to { opacity: 1; scale: 1; }
+  }
+
+  @keyframes lc-fx-menu-in {
+    from { opacity: .76; scale: .97 .87; }
+    to { opacity: 1; scale: 1; }
+  }
+
+  @keyframes lc-fx-panel-in {
+    from { translate: 0 -15px; scale: .96; }
+    to { translate: 0 0; scale: 1; }
+  }
+
+  @keyframes lc-fx-panel-out {
+    to { translate: 0 -5px; scale: .99; }
+  }
+
+  @keyframes lc-fx-toast-in {
+    from { opacity: .7; translate: 0 var(--lc-fx-toast-start, -10px); }
+    to { opacity: 1; translate: 0 0; }
+  }
+
+  @keyframes lc-fx-toast-out {
+    to { opacity: 0; }
+  }
+
+  @keyframes lc-fx-selection-in {
+    from { scale: .73; }
+    to { scale: 1; }
+  }
+}

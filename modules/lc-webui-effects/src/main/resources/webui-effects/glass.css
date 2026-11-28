@@ -1,0 +1,157 @@
+html.lc-liquid-glass {
+  --lc-glass-radius: 18px;
+  --lc-glass-ground: linear-gradient(135deg, #e3ede9, #f3f6f4 35%, #ebedf2);
+  --lc-glass-login: linear-gradient(128deg, #f3f6f9 8%, #e2efeb 37.6%, #b4d8cc 38%, #c8e4dd 49%, #edf4ef 49.5%, #f1eee6 62%, #d1e0ed 62.45%, #e7edf5 94%);
+  --lc-glass-pane: #fafcfb7a;
+  --lc-glass-popup: #f7faf8b3;
+  --lc-glass-field: #ffffffe0;
+  --lc-glass-line: #354c442d;
+  --lc-glass-edge: #fffffff5;
+  --lc-glass-lip: #405c5a38;
+  --lc-glass-depth: 0 2px 4px #243a3212, 0 10px 24px #263d3920;
+}
+
+html.lc-liquid-glass.dark {
+  --lc-glass-ground: linear-gradient(135deg, #202c2a, #1a201f 35%, #202329);
+  --lc-glass-login: linear-gradient(128deg, #171c21 8%, #232e33 37.6%, #2c5750 38%, #29443e 49%, #1d2825 49.5%, #292821 62%, #324751 62.45%, #1c2028 94%);
+  --lc-glass-pane: #171c20a6;
+  --lc-glass-popup: #202722c9;
+  --lc-glass-field: #151a1dea;
+  --lc-glass-line: #c0d3d541;
+  --lc-glass-edge: #e4fbf991;
+  --lc-glass-lip: #0009;
+  --lc-glass-depth: 0 2px 5px #0005, 0 12px 30px #0006;
+}
+
+html.lc-liquid-glass .app-shell {
+  background: var(--lc-glass-ground);
+}
+
+html.lc-liquid-glass .login-page {
+  background: var(--lc-glass-login);
+}
+
+html.lc-liquid-glass :is([data-lc-glass], .appearance-effects-popover) {
+  background: var(--lc-glass-pane);
+  background-clip: padding-box;
+  border: 1px solid var(--lc-glass-line);
+  border-radius: var(--lc-glass-radius);
+  box-shadow: var(--lc-glass-depth);
+}
+
+html.lc-liquid-glass .app-body {
+  --lc-glass-toolbar-inset: 8px;
+  position: relative;
+}
+
+html.lc-liquid-glass .app-main {
+  padding-block-start: calc(var(--lc-header-height) + var(--lc-glass-toolbar-inset));
+  scroll-padding-block-start: calc(var(--lc-header-height) + 2 * var(--lc-glass-toolbar-inset));
+}
+
+html.lc-liquid-glass .app-header {
+  position: absolute;
+  inset: var(--lc-glass-toolbar-inset) 8px auto;
+  z-index: 1;
+}
+
+@media (min-width: 900px) {
+  html.lc-liquid-glass .app-sidebar {
+    position: relative;
+    margin: 8px 0 8px 8px;
+    z-index: 0;
+  }
+}
+
+@media (max-width: 899px) {
+  html.lc-liquid-glass .app-sidebar {
+    inset: 8px auto 8px 8px;
+    transform: translateX(calc(-100% - 10px));
+  }
+
+  html.lc-liquid-glass .app-sidebar.mobile-open {
+    transform: none;
+  }
+}
+
+html.lc-liquid-glass .login-form {
+  --el-fill-color-blank: var(--lc-glass-field);
+  position: relative;
+  z-index: 0;
+  max-width: 392px;
+  padding: 26px min(6vw, 25px);
+  /* The finished entrance animation must release the lens's backdrop. */
+  animation-fill-mode: backwards;
+}
+
+html.lc-liquid-glass .lc-glass-layer:not(.optical-glass) {
+  -webkit-backdrop-filter: blur(8px) saturate(1.3);
+  backdrop-filter: blur(8px) saturate(1.3);
+}
+
+html.lc-liquid-glass .lc-glass-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 1px var(--lc-glass-edge), inset 0 -2px 4px var(--lc-glass-lip);
+}
+
+html.lc-liquid-glass .appearance-effects-popover {
+  background: var(--lc-glass-popup);
+}
+
+html.lc-liquid-glass .el-popper.is-light[role="menu"] {
+  --el-bg-color-overlay: var(--lc-glass-popup);
+  background: var(--el-bg-color-overlay);
+  border-color: var(--lc-glass-line);
+  box-shadow: inset 0 1px 0 var(--lc-glass-edge), var(--lc-glass-depth);
+  -webkit-backdrop-filter: blur(10px) saturate(1.25);
+  backdrop-filter: blur(10px) saturate(1.25);
+}
+
+/* Unknown media features must not suppress the default material. */
+@media (forced-colors: active), (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  html.lc-liquid-glass .app-shell {
+    background: none;
+  }
+
+  html.lc-liquid-glass :is(.app-main, .app-header, .login-page) {
+    background: var(--lc-surface);
+  }
+
+  html.lc-liquid-glass .app-sidebar {
+    background: var(--lc-sidebar);
+  }
+
+  html.lc-liquid-glass [data-lc-glass] {
+    border-color: var(--lc-line);
+    box-shadow: none;
+  }
+
+  html.lc-liquid-glass .app-sidebar.mobile-open {
+    box-shadow: var(--lc-overlay-shadow);
+  }
+
+  html.lc-liquid-glass .login-form {
+    --el-fill-color-blank: inherit;
+    max-width: 340px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  html.lc-liquid-glass .lc-glass-layer {
+    display: none;
+  }
+
+  html.lc-liquid-glass :is(.el-popper.is-light[role="menu"], .appearance-effects-popover) {
+    --el-bg-color-overlay: inherit;
+    background: var(--el-bg-color-overlay);
+    border-color: var(--el-border-color-light);
+    box-shadow: var(--lc-overlay-shadow);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

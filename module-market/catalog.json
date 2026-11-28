@@ -17,5 +17,6 @@
   {"id":"vote","name":"玩法投票","nameEn":"Gameplay votes","description":"由玩家投票决定限时玩法。","descriptionEn":"Player votes for temporary gameplay effects.","category":"survival","icon":"vote","depends":[]},
   {"id":"journal","name":"探索手册","nameEn":"Exploration journal","description":"记录生物群系、进度与钓获收藏。","descriptionEn":"Record discovered biomes, advancements and catches.","category":"survival","icon":"book-open","depends":[]},
   {"id":"landmarks","name":"建筑地标","nameEn":"Building landmarks","description":"投稿、审核与浏览领地建筑。需领地模块。","descriptionEn":"Submit, review and browse builds. Requires Land claims.","category":"survival","icon":"map-pin","depends":["land"]},
-  {"id":"qqauth","name":"QQ 认证","nameEn":"QQ authentication","description":"QQ 群绑定与玩家登录验证。需另行配置。","descriptionEn":"QQ group binding and player sign-in. Setup required.","category":"security","icon":"lock-keyhole","depends":[]}
+  {"id":"qqauth","name":"QQ 认证","nameEn":"QQ authentication","description":"QQ 群绑定与玩家登录验证。需另行配置。","descriptionEn":"QQ group binding and player sign-in. Setup required.","category":"security","icon":"lock-keyhole","depends":[]},
+  {"id":"webui-effects","name":"WebUI 外观增强","nameEn":"WebUI effects","description":"可选液态玻璃和全动效。","descriptionEn":"Optional liquid glass and full motion effects.","category":"server","icon":"sparkles","depends":[]}
 ]

@@ -1,0 +1,6 @@
+id: webui-effects
+name: WebUI 外观增强
+version: '${version}'
+main: com.lunarboreal.webuieffects.WebUiEffectsModule
+description: 可选液态玻璃和全动效。
+authors: [LunarBoreal]

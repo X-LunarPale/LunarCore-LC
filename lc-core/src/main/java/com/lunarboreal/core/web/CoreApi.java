@@ -346,6 +346,7 @@ final class CoreApi {
         info.put("version", plugin.getDescription().getVersion());
         info.put("gameLogin", true);
         info.put("ready", web.authReady());
+        info.put("webUiEffects", api().modules().isEnabled("webui-effects"));
         ctx.json(info);
     }
 

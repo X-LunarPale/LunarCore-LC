@@ -1,18 +1,18 @@
 # LunarCore 琉月
 
-**v0.1.0 Pre-release (0.1.0-pre.1)** · Paper 26.3 · Java 25 · GPL v3
+**v0.1.0 Pre-release (0.1.0-pre.3)** · Paper 26.3 · Java 25 · GPL v3
 
 **Note: Most of this project is created by AI and their Agents such as GPT-6.1-Sol, GPT-6-Astra, Claude-Opus-5.5, Deepseek-V4.1-Flash! Most have passed manual testing!**
 
 If you encounter any issues, please **submit an issue!**
 
-[简体中文](README.md) | [Download v0.1.0-pre.1](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.1.0-pre.1) | [Install and upgrade](docs/en-US/INSTALL.md) | [GitHub module market](module-market/README.en.md) | [Contribute](CONTRIBUTING.en.md)
+[简体中文](README.md) | [Download v0.1.0-pre.3](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.1.0-pre.3) | [Install and upgrade](docs/en-US/INSTALL.md) | [GitHub module market](module-market/README.en.md) | [Contribute](CONTRIBUTING.en.md)
 
 LunarCore 琉月 (LC) provides basic commands and a web panel for Minecraft survival servers. Install economy, land claims, chat, AI and other features separately.
 
 ## Install
 
-1. Download `LunarCore-0.1.0-pre.1.jar` (optionally rename it to `LunarCore.jar`) and place it in the server's `plugins/` folder.
+1. Download `LunarCore-0.1.0-pre.3.jar` (optionally rename it to `LunarCore.jar`) and place it in the server's `plugins/` folder.
 2. Start the server and wait for its libraries to download.
 3. Open `http://127.0.0.1:8765` on the server computer. Follow the console login instructions and change the password.
 4. Install features under **Modules → Module market**, then fully restart.
@@ -31,6 +31,7 @@ Upgrading keeps existing modules, settings, databases and worlds. Stop and back 
 | Players | Teleportation, chat and multiple AI characters, titles, scoreboard |
 | Protection | Punishments, anti-xray, GrimAC settings, game permissions, QQ authentication |
 | Server | Worlds, terrain, performance, server-list text |
+| Panel appearance | Optional Liquid Glass and Full motion with separate switches |
 
 ## LuckPerms Permissions
 

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { coreMenus } from '../router'
 import AppearanceControls from '../components/AppearanceControls.vue'
+import GlassSurface from '../components/GlassSurface.vue'
 import { useAuth } from '../stores/auth'
 import { useApp } from '../stores/app'
 import { socket, url } from '../api'
@@ -213,7 +214,8 @@ onUnmounted(() => {
     <Transition name="backdrop">
       <button v-if="narrow && mobileOpen" class="mobile-backdrop" :aria-label="t('关闭导航')" tabindex="-1" @click="closeMobile" />
     </Transition>
-    <aside ref="sidebar" class="app-sidebar" :class="{ 'mobile-open': mobileOpen }" :inert="narrow && !mobileOpen || undefined" :aria-hidden="narrow && !mobileOpen || undefined">
+    <aside ref="sidebar" class="app-sidebar" data-lc-glass :class="{ 'mobile-open': mobileOpen }" :inert="narrow && !mobileOpen || undefined" :aria-hidden="narrow && !mobileOpen || undefined">
+      <GlassSurface v-if="app.liquidGlassEnabled" />
       <div class="sidebar-heading">
         <button v-if="!collapsed" type="button" class="brand" :aria-label="t('返回仪表盘')" :title="brandName" @click="onSelect('/')">
           <img :src="logo" class="brand-logo" alt="" />
@@ -256,7 +258,8 @@ onUnmounted(() => {
       </nav>
     </aside>
     <div class="app-body" :inert="narrow && mobileOpen || undefined">
-      <header class="app-header">
+      <header class="app-header" data-lc-glass>
+        <GlassSurface v-if="app.liquidGlassEnabled" />
         <button v-if="narrow" ref="menuToggle" class="lc-icon-button" type="button" :aria-label="t('展开导航')" :aria-expanded="mobileOpen" aria-controls="primary-navigation" @click="toggleMenu">
           <Icon name="panel-left-open" :size="18" />
         </button>

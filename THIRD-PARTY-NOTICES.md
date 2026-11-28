@@ -1,5 +1,11 @@
 # Project attribution and third-party notices / 项目署名与第三方声明
 
+## QuickLiquid
+
+WebUI 外观增强模块使用 [QuickLiquid 0.2.0](https://github.com/amarnath3003/quickLiquid) 的原生 JavaScript 折射引擎，由 Amarnath 按 MIT 许可证发布。模块保留原始许可证和源码映射。
+
+The WebUI effects module uses the vanilla QuickLiquid 0.2.0 refraction engine by Amarnath under the MIT license. `quick-liquid.mjs` is `dist/chunk-QVU2VXRD.mjs` from that npm release. Its original source map and `QUICK-LIQUID-LICENSE.txt` ship alongside it in the optional module.
+
 ## QQAuth / QQ 认证模块
 
 QQAuth 由 LunarCore 作者与 [qqauth-private](https://github.com/crx97220130101-dotcom/qqauth-private) 的协作者共同开发。当前发行包从 `modules/lc-qqauth` 构建模块，随 LunarCore 以 GPL v3 发布，并保留 QQAuth 既有贡献者署名和许可说明。
