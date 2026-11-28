@@ -27,6 +27,7 @@ val modules = listOf(
     "lc-landmarks",
     "lc-qqauth",
     "lc-structures-web",
+    "lc-webui-effects",
 )
 modules.forEach {
     include(it)

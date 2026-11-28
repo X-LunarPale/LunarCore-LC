@@ -1,10 +1,10 @@
 # LunarCore 琉月模块市场
 
-[English](README.en.md) | [安装说明](../docs/zh-CN/MODULES.md) | [全部下载](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.1.0-pre.1)
+[English](README.en.md) | [安装说明](../docs/zh-CN/MODULES.md) | [全部下载](https://github.com/X-LunarPale/LunarCore-LC/releases/tag/v0.1.0-pre.2)
 
 [社区模块](community/) · [提交模块](../CONTRIBUTING.md) · [填表投稿](https://github.com/X-LunarPale/LunarCore-LC/issues/new?template=module-submission.yml)
 
-需要 Java 25、Paper 26.3 。核心只带基础命令，以下模块按需安装。
+以下模块适用于 LunarCore **v0.1.0-pre.2**、Java 25 和 Paper 26.3。核心只带基础命令，其他模块按需安装。
 
 ## 安装方式
 
@@ -18,47 +18,48 @@
 
 | 模块 | 用途 | 下载 |
 |---|---|---|
-| 经济 | 余额、转账、排行榜与可选 Vault 支持 | [lc-economy.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-economy.jar) |
-| 签到 | 每日签到与奖励，金币奖励需经济模块 | [lc-signin.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-signin.jar) |
-| 领地 | 圈地、成员与保护，付费购买需经济模块 | [lc-land.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-land.jar) |
-| 玩法投票 | 玩家投票选择玩法变化 | [lc-vote.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-vote.jar) |
-| 探索手册 | 记录生物群系、进度和钓获 | [lc-journal.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-journal.jar) |
-| 建筑地标 | 投稿、审核与浏览建筑，必需领地模块 | [lc-landmarks.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-landmarks.jar) |
+| 经济 | 余额、转账、排行榜与可选 Vault 支持 | [lc-economy.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-economy.jar) |
+| 签到 | 每日签到与奖励，金币奖励需经济模块 | [lc-signin.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-signin.jar) |
+| 领地 | 圈地、成员与保护，付费购买需经济模块 | [lc-land.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-land.jar) |
+| 玩法投票 | 玩家投票选择玩法变化 | [lc-vote.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-vote.jar) |
+| 探索手册 | 记录生物群系、进度和钓获 | [lc-journal.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-journal.jar) |
+| 建筑地标 | 投稿、审核与浏览建筑，必需领地模块 | [lc-landmarks.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-landmarks.jar) |
 
 ## 玩家
 
 | 模块 | 用途 | 下载 |
 |---|---|---|
-| 传送 | 家、传送申请、传送点与出生点 | [lc-teleport.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-teleport.jar) |
-| 聊天与 AI | 私聊、邮件、聊天格式、多 AI 与记忆 | [lc-chat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-chat.jar) |
-| 称号 | 创建、授予、撤销与佩戴称号 | [lc-titles.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-titles.jar) |
-| 计分板 | 侧边栏与顶部信息条 | [lc-scoreboard.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-scoreboard.jar) |
+| 传送 | 家、传送申请、传送点与出生点 | [lc-teleport.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-teleport.jar) |
+| 聊天与 AI | 私聊、邮件、聊天格式、多 AI 与记忆 | [lc-chat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-chat.jar) |
+| 称号 | 创建、授予、撤销与佩戴称号 | [lc-titles.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-titles.jar) |
+| 计分板 | 侧边栏与顶部信息条 | [lc-scoreboard.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-scoreboard.jar) |
 
 ## 保护
 
 | 模块 | 用途 | 下载 |
 |---|---|---|
-| 处罚 | 封禁、禁言、警告与历史 | [lc-ban.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-ban.jar) |
-| 反矿透 | Paper 配置与挖矿告警 | [lc-antixray.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-antixray.jar) |
-| 反作弊 | GrimAC 状态与中文配置，需另装 GrimAC | [lc-anticheat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-anticheat.jar) |
-| 游戏权限 | 用户组、临时权限与查询 | [lc-permissions.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-permissions.jar) |
-| QQ 认证 | 群验证与账号认证，默认关闭 | [lc-qqauth.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-qqauth.jar) |
+| 处罚 | 封禁、禁言、警告与历史 | [lc-ban.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-ban.jar) |
+| 反矿透 | Paper 配置与挖矿告警 | [lc-antixray.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-antixray.jar) |
+| 反作弊 | GrimAC 状态与中文配置，需另装 GrimAC | [lc-anticheat.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-anticheat.jar) |
+| 游戏权限 | 用户组、临时权限与查询 | [lc-permissions.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-permissions.jar) |
+| QQ 认证 | 群验证与账号认证，默认关闭 | [lc-qqauth.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-qqauth.jar) |
 
 ## 服务器
 
 | 模块 | 用途 | 下载 |
 |---|---|---|
-| 世界管理 | 创建、加载、卸载与配置世界 | [lc-world.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-world.jar) |
-| 宏伟地形 | 独立世界、气候与地形查找；需[启动补丁](../modules/lc-terrain/README.md) | [lc-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-terrain.jar) |
-| 性能 | 指标、清理和可选优化，优化默认关闭 | [lc-performance.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-performance.jar) |
-| 服务器列表 | 列表介绍文字、颜色与变量 | [lc-motd.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/lc-motd.jar) |
+| 世界管理 | 创建、加载、卸载与配置世界 | [lc-world.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-world.jar) |
+| 宏伟地形 | 独立世界、气候与地形查找；需[启动补丁](../modules/lc-terrain/README.md) | [lc-terrain.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-terrain.jar) |
+| 性能 | 指标、清理和可选优化，优化默认关闭 | [lc-performance.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-performance.jar) |
+| 服务器列表 | 列表介绍文字、颜色与变量 | [lc-motd.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-motd.jar) |
+| WebUI 外观增强 | 在面板顶部用“外观效果”分别开启液态玻璃和全动效 | [lc-webui-effects.jar](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/lc-webui-effects.jar) |
 
 ## 其他下载
 
-- [核心插件](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/LunarCore-0.1.0-pre.1.jar)
-- [全部附加模块](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/LunarCore-modules-0.1.0-pre.1.zip)
-- [对应源码](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/LunarCore-0.1.0-pre.1-source.zip)
-- [文件校验值](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.1/SHA256SUMS.txt)
+- [核心插件](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/LunarCore-0.1.0-pre.2.jar)
+- [全部附加模块](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/LunarCore-modules-0.1.0-pre.2.zip)
+- [对应源码](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/LunarCore-0.1.0-pre.2-source.zip)
+- [文件校验值](https://github.com/X-LunarPale/LunarCore-LC/releases/download/v0.1.0-pre.2/SHA256SUMS.txt)
 
 GrimAC、Multiverse 与 PlayerTitle 的管理入口/桥接需要其独立插件，需放入 `plugins/` 并安装对应第三方插件，详见[模块使用](../docs/zh-CN/MODULES.md)。
 
@@ -66,4 +67,4 @@ GrimAC、Multiverse 与 PlayerTitle 的管理入口/桥接需要其独立插件�
 
 所有人都可以上传自己的模块：在自己的公开 Release 上传 JAR，然后通过 PR 将模块条目加入 `community/`，也可使用 Issues 投稿表单。填写用途、适用版本、依赖、许可、源码和下载链接，提交前可运行附带的目录校验脚本。
 
-上方 19 个官方模块支持面板一键安装，社区模块下载后手动安装。投稿目录通过 PR 合入。本项目代码使用 GPL v3，第三方许可保留。
+上方官方模块支持面板一键安装，社区模块下载后手动安装。投稿目录通过 PR 合入。本项目代码使用 GPL v3，第三方许可保留。

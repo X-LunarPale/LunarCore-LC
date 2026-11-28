@@ -1,9 +1,11 @@
-# v0.1.0 Pre-release (0.1.0-pre.1)
+# v0.1.0 Pre-release (0.1.0-pre.2)
 
 [简体中文](../zh-CN/RELEASE.md) | [Home](../../README.en.md)
 
 ## Changes
 
+- The optional WebUI effects module adds separate **Liquid Glass** and **Full motion** switches under **Visual effects** in the panel header. Both are off by default, and each browser remembers its own settings.
+- Full motion adds spring transitions to page changes, tabs, menus, dialogs, mobile navigation and common controls. It skips the extra animations when the system requests reduced motion.
 - The dashboard displays several trend charts together. The module list shows versions, statuses and details again. The console shows how many logs match the filter, and the server page links to management tools.
 - The WebUI uses shadows to mark selections, with softer corners and updated spring animations.
 - Delegated operators can run only allowed commands in the Web console. Panel administrators can adjust `commands.web-allow` and `commands.web-deny` in `config.yml`. Denied commands take priority.
@@ -21,11 +23,12 @@ Terrain still needs `-javaagent:LC-Terrain-Agent.jar` before `-jar` in the Java 
 
 | File | Purpose |
 |---|---|
-| `LunarCore-0.1.0-pre.1.jar` | Core for `plugins/` |
+| `LunarCore-0.1.0-pre.2.jar` | Core for `plugins/` |
 | `lc-*.jar` | Optional modules for `plugins/LunarCore/modules/` |
-| `LunarCore-modules-0.1.0-pre.1.zip` | Official optional modules and the structure management module |
-| `LunarCore-0.1.0-pre.1-source.zip` | Source and build files |
-| `LunarCore-0.1.0-pre.1.zip` | Core, modules, source and installation guide |
+| `lc-webui-effects.jar` | Optional Liquid Glass and Full motion |
+| `LunarCore-modules-0.1.0-pre.2.zip` | Official optional modules and the structure management module |
+| `LunarCore-0.1.0-pre.2-source.zip` | Source and build files |
+| `LunarCore-0.1.0-pre.2.zip` | Core, modules, source and installation guide |
 | `LC-Terrain-Agent.jar` | Terrain startup agent, placed in the server directory |
 | `lc-structures-web.jar` | Structure management; download the generation plugin separately |
 | `LcMultiverseWeb.jar`, `LcPlayerTitleWeb.jar` | Optional standalone plugins |

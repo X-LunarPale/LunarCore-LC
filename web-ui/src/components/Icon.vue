@@ -10,7 +10,7 @@ import {
   MapPin, Megaphone, MessageCircle, MessageSquareWarning, Moon, Mountain, MountainSnow, Package,
   PanelLeftClose, PanelLeftOpen, Pause, Pickaxe, Play, Plus, Puzzle, RefreshCw,
   RotateCcw, RotateCw, Save, ScanSearch, ScrollText, Search, Send, Server,
-  Settings2, Shield, ShieldAlert, ShieldBan, ShieldCheck, SlidersHorizontal,
+  Settings2, Shield, ShieldAlert, ShieldBan, ShieldCheck, SlidersHorizontal, Sparkles,
   Sun, Table2, Terminal, Trash2, TriangleAlert, Undo2, User, UserCog,
   UserPlus, UserRound, Users, Vote, Workflow, Wrench, X
 } from 'lucide-vue-next'
@@ -26,7 +26,7 @@ const icons = {
   MapPin, Megaphone, MessageCircle, MessageSquareWarning, Moon, Mountain, MountainSnow, Package,
   PanelLeftClose, PanelLeftOpen, Pause, Pickaxe, Play, Plus, Puzzle, RefreshCw,
   RotateCcw, RotateCw, Save, ScanSearch, ScrollText, Search, Send, Server,
-  Settings2, Shield, ShieldAlert, ShieldBan, ShieldCheck, SlidersHorizontal,
+  Settings2, Shield, ShieldAlert, ShieldBan, ShieldCheck, SlidersHorizontal, Sparkles,
   Sun, Table2, Terminal, Trash2, TriangleAlert, Undo2, User, UserCog,
   UserPlus, UserRound, Users, Vote, Workflow, Wrench, X
 }

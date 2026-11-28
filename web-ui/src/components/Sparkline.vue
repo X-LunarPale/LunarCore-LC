@@ -109,14 +109,16 @@ function selectKey(event) {
           </linearGradient>
         </defs>
         <line x1="0" :x2="WIDTH" :y1="BASELINE" :y2="BASELINE" class="spark-baseline" vector-effect="non-scaling-stroke" />
-        <template v-for="path in chart.paths" :key="path.points[0][0]">
-          <template v-if="path.points.length > 1">
-            <polygon :points="path.area" :fill="`url(#${gradientId})`" />
-            <polyline :points="path.coordinates" fill="none" :stroke="color" stroke-width="2" vector-effect="non-scaling-stroke" />
+        <g v-if="chart.paths.length" class="spark-series">
+          <template v-for="path in chart.paths" :key="path.points[0][0]">
+            <template v-if="path.points.length > 1">
+              <polygon :points="path.area" :fill="`url(#${gradientId})`" />
+              <polyline :points="path.coordinates" fill="none" :stroke="color" stroke-width="2" vector-effect="non-scaling-stroke" />
+            </template>
+            <line v-else :x1="path.points[0][0]" :x2="path.points[0][0]" :y1="path.points[0][1]" :y2="path.points[0][1]"
+              :stroke="color" stroke-width="4" stroke-linecap="round" vector-effect="non-scaling-stroke" />
           </template>
-          <line v-else :x1="path.points[0][0]" :x2="path.points[0][0]" :y1="path.points[0][1]" :y2="path.points[0][1]"
-            :stroke="color" stroke-width="4" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-        </template>
+        </g>
         <line v-if="activeX != null" :x1="activeX" :x2="activeX" y1="4" :y2="BASELINE" class="spark-cursor" vector-effect="non-scaling-stroke" />
       </svg>
       <span v-if="!chart.paths.length" class="spark-empty">{{ t(samples.length ? '暂无采样' : '数据采集中…') }}</span>

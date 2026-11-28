@@ -1,6 +1,8 @@
 export default {
   '测试预览版': 'Test Preview',
   '模块市场': 'Module market',
+  'WebUI 外观增强': 'WebUI effects',
+  '可选液态玻璃和全动效。': 'Optional liquid glass and full motion effects.',
   '附加模块按需安装。安装、更新和卸载均在完整重启后生效。': 'Install optional modules as needed. Installs, updates and removals take effect after a full restart.',
   '模块分类': 'Module category',
   '全部分类': 'All categories',
