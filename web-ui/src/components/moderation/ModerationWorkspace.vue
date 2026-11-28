@@ -86,6 +86,8 @@ const canViewBan = computed(() => auth.can('ban.view'))
 const canManageBan = computed(() => auth.can('ban.manage'))
 const canViewAnti = computed(() => auth.can('anticheat.view'))
 const canManageAnti = computed(() => auth.can('anticheat.manage'))
+const backend = computed(() => stats.value.find(item => item.label === '检测后端')?.value || 'GrimAC')
+function backendText(message) { return t(message).replaceAll('GrimAC', backend.value) }
 const app = useApp()
 const canManage = computed(() => canViewAnti.value)
 const allSections = computed(() => ['ban', 'anticheat'].flatMap(namespace => {
@@ -105,7 +107,7 @@ const visibleTabs = computed(() => [
   { id: 'settings', label: '设置', icon: 'settings-2', visible: canViewAnti.value || canViewBan.value }
 ].filter(t => t.visible))
 const filteredCommands = computed(() => commands.value.filter(item =>
-  `${item.label} ${item.command} ${item.id}`.toLocaleLowerCase().includes(toolQuery.value.trim().toLocaleLowerCase())))
+  `${backendText(item.label)} ${item.command} ${item.id}`.toLocaleLowerCase().includes(toolQuery.value.trim().toLocaleLowerCase())))
 watch(filteredCommands, available => {
   if (available.length && !available.some(item => item.id === command.value?.id)) chooseCommand(available[0])
 })
@@ -153,7 +155,7 @@ async function runCommand() {
   const selectedGeneration = outputGeneration
   if (selectedCommand.permission === 'anticheat.manage') {
     commandConfirming.value = true
-    const confirmed = await ElMessageBox.confirm(t('确定执行「{name}」？', { name: selectedCommand.label }), t('确认操作'), { type: 'warning', confirmButtonText: t('执行'), cancelButtonText: t('取消') }).then(() => true, () => false)
+    const confirmed = await ElMessageBox.confirm(t('确定执行「{name}」？', { name: backendText(selectedCommand.label) }), t('确认操作'), { type: 'warning', confirmButtonText: t('执行'), cancelButtonText: t('取消') }).then(() => true, () => false)
     commandConfirming.value = false
     if (!confirmed) return
   }
@@ -211,14 +213,14 @@ onBeforeUnmount(() => {
       <div class="title-lockup"><h1><Icon name="shield-check" :size="22" />{{ t('封禁与反作弊') }}</h1></div>
       <div class="connection-state" :class="{ offline: !connected }"><span class="state-dot" />{{ t(connected ? '服务已连接' : '服务未连接') }}</div>
     </header>
-    <section v-if="canViewAnti" class="health-strip" :class="{ degraded: statsError }" :aria-label="t('GrimAC 运行状态')">
-      <div class="health-label"><span class="health-mark" />GrimAC <small>{{ t('运行状态') }}</small></div>
+    <section v-if="canViewAnti" class="health-strip" :class="{ degraded: statsError }" :aria-label="backendText('GrimAC 运行状态')">
+      <div class="health-label"><span class="health-mark" />{{ backend }} <small>{{ t('运行状态') }}</small></div>
       <div v-if="statsError" class="health-muted">{{ t('状态暂不可用') }}</div>
       <div v-else-if="stats.length" v-for="item in stats" :key="item.label" class="health-metric"><span>{{ item.label }}</span><strong>{{ item.value }}</strong></div>
       <div v-else class="health-muted">{{ t('等待状态数据') }}</div>
     </section>
     <nav class="workspace-tabs" :aria-label="t('封禁管理分区')" role="tablist">
-      <button v-for="(item, index) in visibleTabs" :key="item.id" :class="{ active: tab === item.id }" :aria-selected="tab === item.id" :tabindex="tab === item.id ? 0 : -1" role="tab" type="button" @click="onTab(item.id)" @keydown="onTabKeydown($event, index)"><Icon :name="item.icon" :size="15" />{{ t(item.label) }}</button>
+      <button v-for="(item, index) in visibleTabs" :key="item.id" :class="{ active: tab === item.id }" :aria-selected="tab === item.id" :tabindex="tab === item.id ? 0 : -1" role="tab" type="button" @click="onTab(item.id)" @keydown="onTabKeydown($event, index)"><Icon :name="item.icon" :size="15" />{{ backendText(item.label) }}</button>
     </nav>
     <main class="workspace-content">
       <section v-show="tab === 'punishments'" class="tab-panel">
@@ -237,15 +239,15 @@ onBeforeUnmount(() => {
           <aside class="tool-list" :aria-label="t('管理工具')">
             <el-input v-model="toolQuery" clearable :disabled="commandBusy || commandConfirming" :placeholder="t('搜索工具')" :aria-label="t('搜索工具')"><template #prefix><Icon name="search" :size="14" /></template></el-input>
             <div class="tool-options">
-              <button v-for="item in filteredCommands" :key="item.id" type="button" :disabled="commandConfirming" :aria-pressed="command?.id === item.id" :class="{ selected: command?.id === item.id }" @click="chooseCommand(item)"><strong>{{ item.label }}</strong><span>{{ item.command }}{{ item.supported ? '' : t(' · 使用受限') }}</span></button>
+              <button v-for="item in filteredCommands" :key="item.id" type="button" :disabled="commandConfirming" :aria-pressed="command?.id === item.id" :class="{ selected: command?.id === item.id }" @click="chooseCommand(item)"><strong>{{ backendText(item.label) }}</strong><span>{{ item.command }}{{ item.supported ? '' : t(' · 使用受限') }}</span></button>
               <p v-if="!filteredCommands.length" class="tool-empty">{{ t('没有匹配的工具') }}</p>
             </div>
           </aside>
           <div v-if="command && filteredCommands.some(item => item.id === command.id)" class="tool-form">
-            <h3>{{ command.label }}</h3><p v-if="command.description">{{ command.description }}</p>
+            <h3>{{ backendText(command.label) }}</h3><p v-if="command.description">{{ backendText(command.description) }}</p>
             <el-form :disabled="commandBusy || commandConfirming" label-position="top" @submit.prevent="runCommand">
               <el-form-item v-for="field in commandFields" :key="field.key" :label="field.label" :required="field.required"><FieldInput v-model="commandValues[field.key]" :field="field" /></el-form-item>
-              <el-alert v-if="!command.supported" :title="command.reason" type="info" :closable="false" />
+              <el-alert v-if="!command.supported" :title="backendText(command.reason)" type="info" :closable="false" />
               <pre v-if="commandMessage" class="command-output">{{ commandMessage }}</pre>
               <div class="command-actions"><el-button type="primary" native-type="submit" :loading="commandBusy" :disabled="commandConfirming || !command.supported || !auth.can(command.permission)"><Icon name="play" :size="14" />{{ t('执行工具') }}</el-button><el-button v-if="executionId" @click="readOutput"><Icon name="refresh-cw" :size="14" />{{ t('刷新输出') }}</el-button></div>
             </el-form>
@@ -256,7 +258,7 @@ onBeforeUnmount(() => {
         <div class="section-stack"><FormSection v-for="(section, index) in settingsSections" :key="index" :section="section" :namespace="section.ownerNamespace" :active="tab === 'settings'" /></div>
         <el-empty v-if="!settingsSections.length" :description="t('当前模块未声明设置项')" />
       </section>
-      <GrimConfigWorkspace v-if="configVisited && canManageAnti" v-show="tab === 'grim-config'" :active="tab === 'grim-config'" />
+      <GrimConfigWorkspace v-if="configVisited && canManageAnti" v-show="tab === 'grim-config'" :active="tab === 'grim-config'" :backend="backend" />
     </main>
   </div>
 </template>

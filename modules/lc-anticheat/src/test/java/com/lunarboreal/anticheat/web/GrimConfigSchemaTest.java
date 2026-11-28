@@ -44,6 +44,38 @@ class GrimConfigSchemaTest {
         }
     }
 
+    @Test void lightningSettingsAndMigratedGrimValuesRemainEditable() throws Exception {
+        String source = "config-flavor: V2\nconfig-version: 11\ntest-mode: false\n"
+                + "FastBreak:\n  break-threshold: 1000\n  delay-threshold: 1000\n"
+                + "WallHit:\n  setbackvl: 20\nEntityPierce:\n  setbackvl: 30\n"
+                + "GroundSpoof:\n  setbackvl: -1\nNoFall:\n  setbackvl: -1\n"
+                + "Reach:\n  ignore-non-player-targets: false\n";
+        for (String key : List.of("FastBreak.break-threshold", "FastBreak.delay-threshold")) {
+            var threshold = field("config", source, key);
+            assertFalse(threshold.readOnly());
+            assertEquals(0.0001, threshold.step());
+            assertEquals(1000.5, threshold.validate(1000.5));
+            assertThrows(HttpException.class, () -> threshold.validate(-1));
+        }
+        for (String check : List.of("WallHit", "EntityPierce", "GroundSpoof", "NoFall")) {
+            var setback = field("config", source, check + ".setbackvl");
+            assertFalse(setback.readOnly());
+            assertEquals(-1.0, setback.validate(-1));
+            assertEquals(20.5, setback.validate(20.5));
+            assertThrows(HttpException.class, () -> setback.validate(-0.5));
+        }
+        for (String key : List.of("test-mode", "Reach.ignore-non-player-targets")) {
+            var toggle = field("config", source, key);
+            assertFalse(toggle.readOnly());
+            assertEquals("bool", toggle.type());
+            assertEquals(true, toggle.validate(true));
+        }
+        var commands = field("punishments", "Punishments:\n  WallHit:\n    commands: ['10:5 [alert]']\n", "Punishments.WallHit.commands");
+        assertEquals("穿墙攻击", commands.group());
+        assertFalse(commands.readOnly());
+        assertTrue(field("config", source + "FutureCheck:\n  setbackvl: 20\n", "FutureCheck.setbackvl").readOnly());
+    }
+
     @Test void versionsAndUnknownFieldsAreReadonlyAndUnknownValuesAreHidden() throws Exception {
         var unknown = field("config", "custom:\n  private: do-not-expose\n", "custom.private");
         assertTrue(unknown.readOnly());

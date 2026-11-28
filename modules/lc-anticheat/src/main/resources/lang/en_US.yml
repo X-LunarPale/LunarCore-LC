@@ -1,6 +1,6 @@
 prefix: "<red>[AntiCheat]</red> "
 command:
-  usage: "<prefix><white>/ac status: GrimAC status; /ac reload: reload bridge settings."
-  status: "<prefix><white>GrimAC: <white>{status}</white>, version: <white>{version}</white>, recent flags: <white>{count}</white>."
+  usage: "<prefix><white>/ac status shows anticheat status. /ac reload reloads bridge settings."
+  status: "<prefix><white>{backend}: <white>{status}</white>, version: <white>{version}</white>, recent flags: <white>{count}</white>."
   no-permission: "<prefix><red>You do not have permission to perform this action."
-  reloaded: "<prefix><green>Bridge settings reloaded. Detection and punishment are managed by GrimAC."
+  reloaded: "<prefix><green>Bridge settings reloaded. Detection and punishment are managed by the anticheat backend."

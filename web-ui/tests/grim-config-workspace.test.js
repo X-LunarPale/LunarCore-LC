@@ -50,7 +50,7 @@ function snapshot(id = 'config', values = { enabled: true, lines: ['', 'hello'],
     values: { ...values, 'config-flavor': 'V2' }
   }
 }
-async function environment(context, active = true) {
+async function environment(context, active = true, backend = 'GrimAC') {
   const document = Object.assign(new TrackedTarget(), { hidden: false })
   const window = new TrackedTarget()
   globalThis.document = document
@@ -89,7 +89,7 @@ async function environment(context, active = true) {
   for (const name of imports) assert.ok(Object.hasOwn(scope, name), `Missing import: ${name}`)
   const component = new Function(...imports, `${body}; return __component`)(...imports.map(name => scope[name]))
   component.render = () => null
-  const root = { setup: () => () => vue.h(component, { active: activeProp.value }) }
+  const root = { setup: () => () => vue.h(component, { active: activeProp.value, backend }) }
   const app = renderer.createApp(root)
   app.mount({ children: [] })
   const state = app._instance.subTree.component.setupState
@@ -104,6 +104,13 @@ async function environment(context, active = true) {
   }
   return { app, state, api, calls, confirms, messages, messageBox, allowed, activeProp, timers, document, window, guards, visibility, tick }
 }
+test('configuration reload confirmation names the connected backend', async context => {
+  const env = await environment(context, true, 'LightningGrim')
+  assert.equal(env.state.backendText('GrimAC 配置'), 'LightningGrim 配置')
+  await env.state.reloadGrim()
+  assert.equal(env.confirms[0][1], '重载 LightningGrim')
+  assert.match(env.confirms[0][0], /LightningGrim/)
+})
 test('configuration is lazy and revisiting hidden tabs does not refetch or poll', async context => {
   const env = await environment(context, false)
   assert.equal(env.calls.length, 0)

@@ -1,8 +1,16 @@
 # 反作弊模块（anticheat）
 
-本模块连接独立安装的 GrimAC Bukkit 插件，提供连接状态、近期违规记录、中文可视化配置与桥接管理。检测、VL、豁免、回滚与处罚完全由 GrimAC 管理。原有内置检测及封禁逻辑已移除，旧配置项不再生效。
+本模块连接独立安装的 GrimAC 或 LightningGrim Bukkit 插件，提供连接状态、近期违规记录、中文可视化配置与桥接管理。检测、VL、豁免、回滚与处罚完全由反作弊后端管理。原有内置检测及封禁逻辑已移除，旧配置项不再生效。
 
-已按 `grimac-bukkit-2.3.75-b08e9b1.jar` 的公开 API 验证签名；不直接依赖或打包 Grim 类。模块通过 GrimAC 插件类加载器获取 `GrimAPIProvider.get()`，使用 `GrimAbstractAPI.getEventBus()` 订阅 `FlagEvent`。GrimAC 缺失、未启用或 API 不兼容时模块保持可用并显示未连接。
+已核对 GrimAC `2.3.75-b08e9b1` 与 Axionize/LightningGrim `71f4e44` 的公开 API。模块通过 GrimAC 插件类加载器获取 `GrimAPIProvider.get()`，使用 `GrimAbstractAPI.getEventBus()` 订阅 `FlagEvent`。插件缺失、未启用或 API 不兼容时模块保持可用并显示未连接。
+
+LightningGrim 继续使用 Bukkit 插件名 `GrimAC`、`/grim` 命令和 `plugins/GrimAC` 数据目录。桥接读取插件自身的 `grimac.properties` 识别 LightningGrim，状态、命令、占位符及网页显示实际后端名称。
+
+### 迁移到 LightningGrim
+
+替换旧 GrimAC JAR，保留 `plugins/GrimAC` 中的配置、`databases` 设置和 `data` 历史数据库。当前 LightningGrim 构建沿用 `config-flavor: V2` 与主配置版本 `11`，已有自定义阈值、处罚命令和桥接设置可继续使用。
+
+LightningGrim 新增 `WallHit` 与 `EntityPierce` 检测，缺失的同名处罚分组会由插件补全。上游默认规则只进行日志、告警、Webhook 与代理转发。对应 `setbackvl` 默认分别为 `20` 和 `30`，后台支持编辑这两个阈值。FastBreak 毫秒阈值及现有 `GroundSpoof`、`NoFall`、`test-mode` 设置也可在后台编辑。
 
 每次绑定创建独立 `BasicGrimPlugin` 所有者；模块停止、重载或 GrimAC 禁用时只注销自身监听器。GrimAC 启用后自动重新绑定。事件会被 Grim 重用，所有数据均在回调中复制为不可变快照；不保留事件、用户、检测对象，也不调用 Bukkit 玩家 API。
 
@@ -18,7 +26,7 @@
 
 ## 命令与后台
 
-- `/ac status`：查看连接状态、版本及缓存数，权限 `lc.anticheat.command`（默认 OP）。
+- `/ac status`：查看后端名称、连接状态、版本及缓存数，权限 `lc.anticheat.command`（默认 OP）。
 - `/ac reload`：重载桥接配置并重新绑定，另需 `lc.anticheat.reload`（默认 OP）。
 - 检测与处罚设置可在后台的“GrimAC 配置”中编辑，保存到 GrimAC 自身配置文件。
 - 后台权限：`anticheat.view`、`anticheat.manage`。
@@ -39,13 +47,13 @@
 
 固定命令目录由指定 JAR 的 `jar tf` 与 `javap -p -c -v` 验证，实际命令注册使用 Cloud builders，无命令注解。支持 help、version、perf（别名 performance）、profile、list（必须指定 players 或玩家）、history（别名 hist，含 player、page、session、detailed/verbose 与 name/match/grep 过滤分支）、reload、debug（网页必须指定目标，切换该目标的控制台调试）、consoledebug、dump、log（别名 logs 和 gl，必须提供 flagId）、sendalert、testwebhook、history repair check-ids、history migrate（可选 delete）。所有固定根命令另有 grimac 别名，网页统一使用 grim。
 
-注册但不支持网页执行的功能也完整显示：alerts/brands/verbose 涉及玩家订阅或共享控制台状态；spectate/stopspectating 要求游戏内玩家。history copy 的注册存在，但本构建 `DataStoreLifecycle.allBackendsForCommands()` 固定返回空 `Map.of()`，无法提供有效来源与目标，故元数据明确标为不支持。
+注册但不支持网页执行的功能也完整显示：alerts/brands/verbose 涉及玩家订阅或共享控制台状态；spectate/stopspectating 要求游戏内玩家。LightningGrim 的 hitboxdebug 同样要求游戏内玩家，按后端显示在目录中。history copy 的注册存在，但上述构建 `DataStoreLifecycle.allBackendsForCommands()` 固定返回空 `Map.of()`，无法提供有效来源与目标，故元数据明确标为不支持。
 
 命令参数不接受选择器、换行、额外参数或原始命令字符串。历史过滤限制为 128 字符的单 token 正则字符集。网页命令使用独立的 Bukkit CommandSender 代理捕获消息，权限查询委托服务器控制台；代理不实现 ConsoleCommandSender，避免 Grim 将输出路由到共享控制台，也不混用原生与 shaded Adventure Audience，以免动态代理接口返回类型冲突。字符串与原生 Adventure 组件输出均按请求捕获。网页 debug 操作映射到 consoledebug，维持切换目标控制台调试的行为；不会安装全局日志监听器、冒充玩家或修改控制台告警订阅。请求、权限拒绝、验证拒绝、命令提交与执行异常均审计。异步任务业务结果由输出展示，提交审计不等同于业务成功。
 
 ### GrimAC 中文可视化配置
 
-入口位于“封禁与反作弊 → GrimAC 配置”。读取和保存均需要 `anticheat.manage`，配置数据来自已安装 GrimAC 插件的实际数据目录。
+入口位于“封禁与反作弊 → GrimAC 配置”或“LightningGrim 配置”。读取和保存均需要 `anticheat.manage`，配置数据来自已安装插件的实际数据目录。
 
 - `config.yml`：主配置，包含告警、客户端识别、移动与战斗检测、回弹阈值和网络兼容设置。
 - `punishments.yml`：处罚规则，按现有分组编辑检测列表、违规过期时间、触发等级、重复间隔和执行命令；间隔为 `0` 表示仅执行一次。

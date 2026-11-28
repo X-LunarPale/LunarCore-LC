@@ -34,7 +34,7 @@ public final class AcWeb {
                 .post("/grim/config/{fileId}", MANAGE, this::saveConfigFile)
                 .post("/grim/reload", MANAGE, this::reloadGrim));
         m.webPanel(WebPanel.of("anticheat", "反作弊").icon("shield-alert").group("安全").order(30).permission(VIEW)
-                .section(new WebPanel.Stats("GrimAC 运行状态", "stats").refresh(5))
+                .section(new WebPanel.Stats("反作弊运行状态", "stats").refresh(5))
                 .section(new WebPanel.Table("近期违规记录", "violations")
                         .column("time", "时间", "datetime")
                         .column("player", "玩家", "player")
@@ -44,28 +44,29 @@ public final class AcWeb {
                         .column("ping", "延迟（毫秒）", "number")
                         .column("world", "世界")
                         .pageSize(20)
-                        .toolbarAction(new WebPanel.Action("reload-grim", "重载 GrimAC 配置", "grim/reload")
-                                .permission(MANAGE).confirm("确定重载 GrimAC 配置？检测与处罚配置将按照 GrimAC 的设置重新载入。")))
+                        .toolbarAction(new WebPanel.Action("reload-grim", "重载反作弊配置", "grim/reload")
+                                .permission(MANAGE).confirm("确定重载反作弊配置？检测与处罚配置将按照当前后端的设置重新载入。")))
                 .section(new WebPanel.Form("桥接设置", "settings", "settings").savePermission(MANAGE)
                         .field(new WebPanel.Field("bridge.capture-enabled", "采集近期违规记录", "bool")
-                                .help("关闭后停止新增后台记录。检测与处罚始终由 GrimAC 管理。"))
+                                .help("关闭后停止新增后台记录。检测与处罚始终由当前反作弊后端管理。"))
                         .field(new WebPanel.Field("bridge.recent-capacity", "近期记录上限", "number")
                                 .help("允许范围：1 至 10000 条。记录保存在内存中，模块停止时清空。"))));
     }
     private void health(WebContext ctx) {
-        ctx.json(Map.of("backend", "GrimAC", "connected", m.bridge().connected(), "status", m.bridge().status(),
+        ctx.json(Map.of("backend", m.bridge().backend(), "connected", m.bridge().connected(), "status", m.bridge().status(),
                 "version", m.bridge().version(), "captureEnabled", m.captureEnabled(), "cached", m.recent().size(),
                 "capacity", m.recent().capacity(), "captured", m.recent().captured(), "captureFailures", m.captureFailures(),
                 "reloadStatus", m.bridge().reloadStatus()));
     }
     private void commandCatalog(WebContext ctx) {
-        ctx.json(Map.of("artifact", GrimCommands.ARTIFACT, "commands", GrimCommands.CATALOG));
+        boolean lightning = m.bridge().lightningGrim();
+        ctx.json(Map.of("artifact", GrimCommands.artifact(lightning), "commands", GrimCommands.catalog(lightning)));
     }
     private void runCommand(WebContext ctx) throws Exception {
         Map<String, Object> body = ctx.bodyMap();
         if (body.keySet().stream().anyMatch(k -> !k.equals("id") && !k.equals("args"))) throw HttpException.badRequest("存在未声明的字段");
         if (!(body.get("id") instanceof String id)) throw HttpException.badRequest("缺少操作标识");
-        GrimCommands.Op op = GrimCommands.find(id);
+        GrimCommands.Op op = GrimCommands.find(id, m.bridge().lightningGrim());
         if (ctx.user() == null || !ctx.user().hasPermission(op.permission())) {
             m.audit(actor(ctx), "grim-command-denied", id);
             throw HttpException.forbidden("没有执行此操作的权限");
@@ -86,7 +87,7 @@ public final class AcWeb {
         ctx.json(run.json());
     }
     private void stats(WebContext ctx) {
-        ctx.json(List.of(stat("检测后端", "GrimAC"), stat("连接状态", m.bridge().status()),
+        ctx.json(List.of(stat("检测后端", m.bridge().backend()), stat("连接状态", m.bridge().status()),
                 stat("后端版本", m.bridge().version()), stat("违规采集", m.captureEnabled() ? "开启" : "关闭"),
                 stat("已缓存记录", m.recent().size() + " / " + m.recent().capacity()),
                 stat("累计采集", m.recent().captured()), stat("读取失败", m.captureFailures()),
@@ -131,12 +132,12 @@ public final class AcWeb {
         String actor = actor(ctx);
         try {
             ctx.sync(() -> {
-                m.audit(actor, "grim-reload-request", "请求重载 GrimAC 配置");
+                m.audit(actor, "grim-reload-request", "请求重载 " + m.bridge().backend() + " 配置");
                 m.bridge().reload(result -> m.audit(actor, "grim-reload-result", result));
                 return null;
             });
         } catch (IllegalStateException e) { throw HttpException.badRequest(e.getMessage()); }
-        ctx.ok("已提交 GrimAC 配置重载，请查看运行状态中的重载结果");
+        ctx.ok("已提交 " + m.bridge().backend() + " 配置重载，请查看运行状态中的重载结果");
     }
     private GrimConfigStore configStore(WebContext ctx) throws Exception {
         Path folder = ctx.sync(() -> {

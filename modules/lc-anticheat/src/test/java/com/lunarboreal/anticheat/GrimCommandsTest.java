@@ -35,4 +35,20 @@ class GrimCommandsTest {
         for (String id : new String[]{"dump", "log", "reload", "history-migrate", "sendalert", "debug"})
             assertEquals("anticheat.manage", GrimCommands.find(id).permission());
     }
+    @Test void lightningCatalogKeepsConsolePathsAndMarksPlayerOnlyDebug() {
+        assertEquals(GrimCommands.ARTIFACT, GrimCommands.artifact(false));
+        assertEquals(GrimCommands.LIGHTNING_ARTIFACT, GrimCommands.artifact(true));
+        assertEquals(GrimCommands.CATALOG, GrimCommands.catalog(false));
+        for (GrimCommands.Op op : GrimCommands.CATALOG)
+            assertEquals(op, GrimCommands.find(op.id(), true));
+        assertEquals("grim consoledebug Steve",
+                GrimCommands.build(GrimCommands.find("debug", true), Map.of("target", "Steve")));
+        var hitboxes = GrimCommands.find("hitboxdebug", true);
+        assertEquals("grim hitboxdebug", hitboxes.command());
+        assertEquals("grim.hitboxdebug", hitboxes.grimPermission());
+        assertFalse(hitboxes.supported());
+        assertThrows(HttpException.class, () -> GrimCommands.build(hitboxes, Map.of("target", "Steve")));
+        assertThrows(HttpException.class, () -> GrimCommands.find("hitboxdebug", false));
+        assertFalse(GrimCommands.find("history-copy", true).supported());
+    }
 }

@@ -11,7 +11,7 @@ import org.bukkit.permissions.PermissionDefault;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-/** Optional GrimAC management bridge. Detection and punishment belong exclusively to GrimAC. */
+/** Optional GrimAC / LightningGrim management bridge. Detection and punishment belong to the backend. */
 public final class AntiCheatModule extends LcModule implements Listener {
     private final RecentFlags recent = new RecentFlags();
     private final AtomicLong captureFailures = new AtomicLong();
@@ -25,7 +25,7 @@ public final class AntiCheatModule extends LcModule implements Listener {
         running = true;
         bridge = new GrimBridge(this);
         registerListener(this);
-        registerPermission("lc.anticheat.command", PermissionDefault.OP, "查看 GrimAC 桥接状态");
+        registerPermission("lc.anticheat.command", PermissionDefault.OP, "查看 GrimAC / LightningGrim 桥接状态");
         registerPermission("lc.anticheat.reload", PermissionDefault.OP, "重载反作弊桥接配置");
         registerCommand(new AcCommand(this));
         new AcWeb(this).register();
@@ -33,7 +33,7 @@ public final class AntiCheatModule extends LcModule implements Listener {
         // Plugin enable can precede Grim's API initialization; retry next tick once.
         runTaskLater(() -> { if (running && !bridge.connected()) bind(); }, 1L);
         placeholder((player, key) -> switch (key.toLowerCase(java.util.Locale.ROOT)) {
-            case "backend" -> "GrimAC";
+            case "backend" -> bridge.backend();
             case "connected" -> String.valueOf(bridge.connected());
             default -> null;
         });
@@ -65,6 +65,6 @@ public final class AntiCheatModule extends LcModule implements Listener {
     public GrimBridge bridge() { return bridge; }
     public long captureFailures() { return captureFailures.get(); }
     void captureFailed() {
-        if (captureFailures.incrementAndGet() == 1) logger().warning("无法读取 GrimAC 违规事件，请检查 API 版本兼容性");
+        if (captureFailures.incrementAndGet() == 1) logger().warning("无法读取反作弊违规事件，请检查 API 版本兼容性");
     }
 }

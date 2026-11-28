@@ -268,3 +268,19 @@ test('output failures release the request slot and retain manual retry', async c
   await env.state.readOutput()
   assert.equal(env.state.commandMessage, 'recovered')
 })
+
+test('backend labels follow the connected Grim variant', async context => {
+  const env = await environment(context)
+  assert.equal(env.state.backend, 'GrimAC')
+  env.state.stats = [{ label: '检测后端', value: 'LightningGrim' }]
+  assert.equal(env.state.backend, 'LightningGrim')
+  assert.equal(env.state.backendText('GrimAC 配置'), 'LightningGrim 配置')
+  env.state.commands = [{ ...command('reload'), label: '重载 GrimAC 配置' }]
+  env.state.toolQuery = 'lightninggrim'
+  assert.deepEqual(env.state.filteredCommands.map(item => item.id), ['reload'])
+  env.state.stats = [{ label: '检测后端', value: 'GrimAC' }]
+  assert.equal(env.state.backendText('GrimAC 配置'), 'GrimAC 配置')
+  assert.equal(env.state.filteredCommands.length, 0)
+  env.state.toolQuery = 'grimac'
+  assert.deepEqual(env.state.filteredCommands.map(item => item.id), ['reload'])
+})

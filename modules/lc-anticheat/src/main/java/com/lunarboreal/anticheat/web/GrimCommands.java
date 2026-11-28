@@ -3,9 +3,10 @@ package com.lunarboreal.anticheat.web;
 import com.lunarboreal.api.web.HttpException;
 import java.util.*;
 
-/** Fixed catalog verified against the Cloud builders in GrimAC 2.3.75-b08e9b1. */
+/** Fixed catalog verified against GrimAC 2.3.75-b08e9b1 and LightningGrim 71f4e44. */
 public final class GrimCommands {
     public static final String ARTIFACT = "grimac-bukkit-2.3.75-b08e9b1.jar";
+    public static final String LIGHTNING_ARTIFACT = "Axionize/LightningGrim@71f4e44";
     public record Arg(String name, String label, String type, boolean required, List<String> options, int min, int max) {}
     public record Op(String id, String label, String command, String permission, String grimPermission,
                      boolean supported, String reason, List<Arg> args) {}
@@ -42,7 +43,15 @@ public final class GrimCommands {
         unavailable("spectate", "观察玩家", "grim.spectate", "GrimAC 要求游戏内玩家执行。", arg("target", "player", true)),
         unavailable("stopspectating", "退出观察", "grim.spectate", "GrimAC 要求游戏内玩家执行。", new Arg("here", "here", "enum", false, List.of("here"), 0, 0))
     );
-    public static Op find(String id) { return CATALOG.stream().filter(o -> o.id.equals(id)).findFirst().orElseThrow(() -> HttpException.badRequest("未知操作")); }
+    private static final List<Op> LIGHTNING_CATALOG = java.util.stream.Stream.concat(CATALOG.stream(), java.util.stream.Stream.of(
+            unavailable("hitboxdebug", "碰撞箱可视化调试", "grim.hitboxdebug", "LightningGrim 要求游戏内玩家接收碰撞箱可视化。", arg("target", "player", false))
+    )).toList();
+    public static String artifact(boolean lightningGrim) { return lightningGrim ? LIGHTNING_ARTIFACT : ARTIFACT; }
+    public static List<Op> catalog(boolean lightningGrim) { return lightningGrim ? LIGHTNING_CATALOG : CATALOG; }
+    public static Op find(String id) { return find(id, false); }
+    public static Op find(String id, boolean lightningGrim) {
+        return catalog(lightningGrim).stream().filter(o -> o.id.equals(id)).findFirst().orElseThrow(() -> HttpException.badRequest("未知操作"));
+    }
     public static String build(Op op, Map<String, Object> values) {
         if (!op.supported) throw HttpException.badRequest(op.reason);
         if (values.keySet().stream().anyMatch(k -> op.args.stream().noneMatch(a -> a.name.equals(k)))) throw HttpException.badRequest("存在未声明的参数");
